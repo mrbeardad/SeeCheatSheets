@@ -37,6 +37,7 @@
 
 <!-- vim-markdown-toc -->
 # 硬盘与文件系统
+<!-- entry begin: GPT 分区表 -->
 * GPT分区表组成：
     * MBR保护
         > 防止不识别GPT的程序误读
@@ -48,8 +49,9 @@
         > 存储文件系统数据的硬盘区块
     * 备份区  
         > GPT头与分区项的备份
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: xfs 文件系统 -->
 * XFS文件系统：
     * 结构：
         * 分配组
@@ -65,18 +67,21 @@
         * 日志与恢复
         * 延迟分配
         * 扩展属性
-<!-- -->
+<!-- entry end -->
 
 ## 分区工具
-* gdisk  *DEV* [-l]
+<!-- entry begin: gdisk 分区 -->
+* gdisk  DEV [-l]
     * m ：普通模式
     * x ：专家模式
     * r ：恢复模式
     * ? ：帮助
-* partprobe：让内核重载硬盘信息
-<!-- -->
 
-* parted  *DEV*
+* partprobe：让内核重载硬盘信息
+<!-- entry end -->
+
+<!-- entry begin: parted 分区 -->
+* parted DEV
     * p
     * mktable
     * mkpart *LABLE* *START* *END*
@@ -86,8 +91,8 @@
     * name *NUM* *NAME*
     * set *NUM* *FLAG* on/off
         * FLAG       ：raid  lvm  boot  hidden  diag
+
 * partprobe：让内核重载硬盘信息
-<!-- -->
 
 * 分区标签
 ```
@@ -97,16 +102,18 @@
         diag        Windows RE                  -
         msftres     Micorsoft reserved          -
 ```
-<!-- -->
+<!-- entry end -->
 
 ## LVM
+<!-- entry begin: lvm pv -->
 * LVM-PV阶段
     * pvs
     * pvdisplay  *PV*
     * pvcreate  *DEV*
     * pvremove  *DEV*
-<!--  -->
+<!-- entry end -->
 
+<!-- entry begin: lvm vg -->
 * LVM-VG阶段
     * vgs
     * vgdisplay  *VG*
@@ -116,8 +123,9 @@
     * vgreduce *VG*  *PV*
     * vgchange  -a `y/n`
     * vgremove  *VG*
-<!--  -->
+<!-- entry end -->
 
+<!-- entry begin: lvm lv -->
 * LVM-LV阶段
     * lvs
     * lvdisplay  *LV*
@@ -130,9 +138,10 @@
         * -L +|-*SIZE*
     * lvchange  -a y|n
     * lvremove  *LV*
-<!-- -->
+<!-- entry end -->
 
 ## XFS
+<!-- entry begin: mkfs.xfs -->
 * mkfs.xfs  *DEV*
     * -f        ：强制
     * -L        ：设置文件系统标签
@@ -141,15 +150,17 @@
     * -d agcount=
     * -d file
     * -l  external,logdev=  ,size=
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: xfs_admin -->
 * xfs_admin
     * -l        ：查看文件系统标签
     * -L        ：修改标签
     * -u        ：查看文件系统uuid
     * -U        ：修改uuid
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: xfsdump xfsrestore -->
 * xfsdump *MP*
     > 注 ：挂载点*MP*末不能带/号
     * -l        ：备份级别0为全量，其他在前一级基础上增量
@@ -162,18 +173,20 @@
     * -f        ：指定使用的备份文件
     * -s        ：只还原指定的文件或目录
     * -I        ：查询基础数据库/var/lib/xfsdump/inventory/
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: xfs_repair -->
 * xfs_repair
     * -f        ：对image-file修复
     * -n        ：只检测
     * -l        ：指定logdev
     * -d        ：用于单用户模式强制恢复以ro挂载的/
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: xfs_info xfs_growfs -->
 * xfs_info
 * xfs_growfs
-<!-- -->
+<!-- entry end -->
 
 ## 挂载
 > 文件系统抽象由内核的VFS模块提供，Unix一切皆文件。  
@@ -182,25 +195,29 @@
 > 内存文件系统（内核接口）  
 > 硬件设备（udev映射）
 
+<!-- entry begin: lsblk -->
 * lsblk
     * -f        ：显示文件系统类型
     * -m        ：权限及所有者
-<!--  -->
+<!-- entry end -->
 
-* blkid [*DEV*]
+<!-- entry begin: blkid  -->
+* blkid [DEV]
     * 文件系统标签与类型
     * 文件系统UUID（fstab所用）
     * 分区标签
     * 分区UUID
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: df -->
 * df
     * -T        ：显示文件系统类型
     * -h        ：人性化size
     * -i        ：显示inode使用情况
-<!-- -->
+<!-- entry end -->
 
-* mount *DEV* *MP*
+<!-- entry begin: mount -->
+* mount DEV MP
     * -a        ：忽略其他参数，按/etc/fstab挂载
     * --bind    ：转移挂载点
     * --rbind   ：递归转移挂载点
@@ -219,32 +236,36 @@
         * exec/exec
         * userquota/grpquota/quota/noquota
 * umount
-<!-- -->
+<!-- entry end -->
 
 ## 归档包
 制作归档包时，应该让解包出来的文件都在一个目录中，故一般在要打包的目录的父目录进行操作从而将整个目录打包
 
-* zip  *ZIPFILE*  *FILES*
+<!-- entry begin: zip -->
+* zip  ZIPFILE  FILES
     * -[1-9]    ：压缩等级，越大压缩比越高
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: gzip bzip2 xz -->
 * gzip/bzip2/xz
     * -[1-9]    ：压缩等级，越大压缩比越高
     * -k        ：保存原文件不删除
     * -l        ：查看压缩包信息
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: tar -->
 * tar
-    * -[z|j|J]    ：gzip : bzip2 : xz
-    * -[c|x|t|u]  ：打包:解包:查询:更新
+    * -[z|j|J]    ：gzip | bzip2 | xz
+    * -[c|x|t|u]  ：打包|解包|查询|更新
     * --delete    ：删除
     * -f          ：指定压缩文件名
     * -v          ：详述
     * -p          ：保留权限等信息
     * --exlcude   ：排除，pattern
     * -C          ：解包时指定路径
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: dd -->
 * dd
     * if=
     * skip=
@@ -257,15 +278,17 @@
         * ucase      ：大写
         * notrunc    ：不截断，覆盖
 > 例：dd if=*manjaro.iso* of=*usb-dev* bs=8M oflag=sync status=progress
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: losetup -->
 * losetup */dev/loop0*  *loopfile*
     > 制作loop设备
 * losetup -d */dev/loop0*
     > 解除loop设备
-<!-- -->
+<!-- entry end -->
 
 ## 文件权限
+<!-- entry begin: linux 权限信息 -->
 * 权限信息
     > 只有owner与root能修改，使用stat命令可以查看详细信息  
     > `umask`即默认权限掩码，设置后会掩盖默认权限，默认为022，从而目录默认权限为755，文件默认644
@@ -273,23 +296,27 @@
     * `r w x`       ：**读/写/执**权限，以八进制数字表示时从高位到低位依次代表是否具有**读/写/执**权限
     * `s S t T`     ：**SUID/SGID/SBIT**特殊权限，以八进制表示时从高位到低位依次表示是否具有**SUID/SGID/SBIT**权限
     * OOOO          ：4位八进制数，第一个表示特殊权限，后三个分别表示owner/group/other的读/写/执权限
+
 * 对普通文件
     * r/w表示可读/写其对应block
     * x表示可以执行该文件形成进程
     * SUID表示执行时环境变量EUID改为owner
     * SGID表示执行时环境变量EGID改为group
+
 * 对目录
     * r/w表示可读/写其对应block内存储的entry
     * x表示能否对目录下文件进行访问，即使没有rw也可以“摸黑访问”
     * SGID表示所有创建在此目录的普通文件的gid默认为目录的gid
     * SBIT表示该目录下的普通文件只有其owner与目录owner能删除
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: setfacl getfacl -->
 * setfacl
     > 设置ACL权限，优先级在owner和group之后
 * getfacl
-<!--  -->
+<!-- entry end -->
 
+<!-- entry begin: chattr lsattr -->
 * chattr
     > 设置文件额外属性
     * -R：    递归目录
@@ -300,27 +327,31 @@
         * S   ：    同步存储文件
         * d   ：    不被dump
 * lsattr
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: su -->
 * su
     * `-`         ：转为root
     * `- user`    ：转为user
     * `-c`        ：用对应目标用户执行一条命令
-<!-- -->
+<!-- entry end -->
 
-* sudo *CMD*
+<!-- entry begin: sudo -->
+* sudo CMD
     * -u        ：使用目标用户权限(仅root可用)
     * -l        ：列出本用户sudo信息
     * -b        ：后台执行
-<!--  -->
+<!-- entry end -->
 
+<!-- entry begin: visudo -->
 * visudo
     > /etc/sudoers与/etc/sudoers.d  
     > user host=(root) cmd，!cmd  
     > %grp host=(%root) NOPASSWD:ALL
-<!-- -->
+<!-- entry end -->
 
 # 用户与登录
+<!-- entry begin: linux 登录文件 -->
 * 登录文件
     > 由PAM模块控制登录验证
     * /etc/nologin   ：若存在则只允许root登陆
@@ -328,12 +359,12 @@
     * /etc/issue     ：本地控制台登陆提示
     * /etc/motd      ：远程登录提示
     * /etc/login.defs：用户登陆设置
-<!--  -->
+<!-- entry end -->
 
+<!-- entry begin: 用户文件 -->
 * 用户文件
     * /etc/passwd
         * `用户名:密码:UID:GID:描述信息:主目录:默认Shell`
-
     * /etc/shadow
         * `用户名:加密密码:最后一次修改时间:最小修改时间间隔:密码有效期:密码需要变更前的警告天数:密码过期后的宽限时间:账号失效时间:保留`
         > 在密码前加上 "!"、"*" 或 "x" 使密码暂时失效
@@ -342,8 +373,9 @@
     * /etc/gshadow
         * `组名:加密密码:组管理员:组附加用户列表`
     * /etc/skel/：建立用户主目录时拷贝此目录
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: last lastlog lastb w -->
 * last      ：系统的启动与用户登陆日志
     > /var/log/wtmp
 * lastlog   ：每个用户最后一次登陆时间
@@ -352,12 +384,14 @@
     > /var/log/btmp
 * w         ：系统现在的登录情况
     > /var/run/ulmp
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: id groups -->
 * id    ：该用户信息
 * groups：该用户参与的group
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: useradd -->
 * useradd
     * -u        ：UID
     * -g        ：GID
@@ -369,8 +403,9 @@
     * -o        ：允许用户UID相同
     * -r        ：系统用户(1-499)
     * -D        ：查看或修改默认配置/etc/default/useradd
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: usermod -->
 * usermod
     * -l        ：用户名
     * -u        ：UID
@@ -379,19 +414,22 @@
     * -c        ：描述信息
     * -d        ：主目录绝对路径
     * -s        ：默认shell
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: userdel -->
 * userdel
     * -r        ：删除主目录，邮箱需要手动删除
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: passwd -->
 * passwd
     * -S        ：查看信息
     * -l        ：锁定用户
     * -u        ：解锁用户
     * --stdin   ：指明从管道读取密码
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: chage -->
 * chage
     * -l        ：详情
     * -d        ：最后一次修改YYYY-MM-DD，为0强制修改
@@ -400,18 +438,21 @@
     * -W        ：密码到期提前警告天数
     * -I        ：宽限天数，这段时间用户可以登录，但会强制其修改密码
     * -E        ：失效日期YYYY-MM-DD，-1则无
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: groupadd -->
 * groupadd
     * -g        ：GID
     * -r        ：系统群组
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: groupmod -->
 * groupmod
     * -g        ：GID
     * -n        ：组名
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: gpasswd -->
 * gpasswd
     * -A        ：管理员
     * -r        ：移除群组密码
@@ -419,15 +460,18 @@
     * -M        ：将用户加入群组(root)
     * -a        ：将用户加入群组
     * -d        ：移除用户
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: groupdel      ：不能删除初始组 -->
 * groupdel      ：不能删除初始组
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: newgrp        ：启动新shell并修改GID -->
 * newgrp        ：启动新shell并修改GID
-<!-- -->
+<!-- entry end -->
 
 # 系统资源
+<!-- entry begin: 进程标识 -->
 * 进程标识
     * STATE
     * CMD
@@ -435,8 +479,9 @@
     * UID、EUID、GID、EGID
     * PID、PPID、PGID、SID、TPGID
     * SELinux-Context
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: CPU使用时间 -->
 * CPU使用时间
     * real：运行期间流逝的时间
     * sy  ：内核进程
@@ -447,8 +492,9 @@
     * hi  ：硬中断请求服务
     * si  ：软中断请求服务
     * st  ：虚拟机偷取的时间，即虚拟CPU等待实际CPU
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: 进程优先级 -->
 * 进程优先级
     * PRI(Priority)与NI(Nice)
         * PRI (最终值) = PRI (原始值) + NI
@@ -458,10 +504,11 @@
     * 普通用户调整 NI 值的范围是 0~19，而且只能调整自己的进程。
     * 普通用户只能调高 NI 值，而不能降低
     * 只有 root 用户才能设定进程 NI 值为负值，而且可以调整任何用户的进程
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: signal -->
 * signal
-
+<!--  -->
 | 信号编号 | 信号名称          | 信号描述             | 详细解释                                   | 默认处理方式           | Exit Code |
 |----------|-------------------|----------------------|--------------------------------------------|------------------------|-----------|
 | 1        | SIGHUP            | 会话挂断             | 用户终端连接结束，通知同一session内的进程  | 终止                   | 1         |
@@ -498,21 +545,25 @@
 | 34~64    | SIGRTMIN~SIGRTMAX | 实时信号             |                                            | 终止                   | 34~64     |
 > 参考至[linux信号表](https://blog.csdn.net/xuyaqun/article/details/5338563)
 
+<!-- entry begin: jobs -->
 * jobs
     * -l        ：显示PID
     * -r        ：显示running jobs
     * -s        ：显示suspended jobs
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: fg/bg  *%JID* -->
 * fg/bg  *%JID*
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: ps pstree -->
 * ps
     * -l        ：只显示当前shell的进程
     * -le       ：显示所有进程
 * pstree -Uup
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: kill killall pkill -->
 * kill -(signal) PID
     PID为负，表示其绝对值为进程组号
 * killall -(signal) Pname
@@ -525,12 +576,14 @@
     * -P        ：PPID
     * -s        ：PSID
     * -t        ：TTY
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: nice renice -->
 * nice -n NI CMD
 * renice -n PID
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: top -->
 * top
     * -bn       ：指定刷新次数并手动重定向到文件
     * -d        ：指定刷新周期
@@ -545,51 +598,59 @@
         * f   ：选择域的显示/排序
         * t/m ：切换cpu/mem显示模式
         * k/r ：kill/renice
-* htop：top的替代品
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: free -->
 * free
     * -wh       ：人性化输出
     * -s        ：刷新周期
     * -c        ：刷新次数
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: vmstat -w -->
 * vmstat -w  [周期]  [次数]
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: iostat -h -->
 * iostat -h
-* iotop
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: lspci lsusb lspci -->
 * lspci
     * -s        ：显示指定设备
     * -vv       ：显示详情
 * lsusb -t
 * lscpu
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: nohup -->
 * nohup CMD [&]
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: lsof -->
 * lsof
     > 列出打开的文件
+    * -i        ：打开的端口
     * -a        ：and条件逻辑
     * -u        ：UID
     * -p        ：PID
     * -c        ：指定进程cmd的开头字符串
     * +d        ：列出目录下被打开的文件，+D递归
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: fuser -uv FILE/DIR -->
 * fuser -uv FILE/DIR
     > 列出打开目标文件的进程
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: ulimit  -a -HS -->
 * ulimit  -a -HS
     > /etc/security/ulimits.d/
-<!-- -->
+<!-- entry end -->
 
 
 # 日志
+<!-- entry begin: syslog.h 日志规范类型 -->
 * syslog.h规范类型
     * 0      ：kern(kernel)：内核日志，大都为硬件检测与内核功能加载
     * 1      ：user：用户层信息(如logger)
@@ -604,8 +665,9 @@
     * 10     ：authpriv：与auth类似，但记录较多账号私人信息，包括PAM模块
     * 11     ：ftp：与FTP协议有关
     * 16~23  ：local0 ~ local7：本地保留
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: syslog.h 日志规范级别 -->
 * syslog.h规范级别
     * 7      ：debug：除错
     * 6      ：info：基本信息说明；
@@ -615,8 +677,9 @@
     * 2      ：crit：严重错误
     * 1      ：alert：警报
     * 0      ：emerg(panic)：疼痛等級，意指系統几乎要死机，通常大概只有硬件出问题导致内核无法运行
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: journalctl -->
 * journalctl
     * -b        ：开机启动日志
     * -n        ：最近的几行日志
@@ -630,12 +693,14 @@
         * `_PID=`
         * `_UID=`
         * `_COMM=`
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: logger  -p  user.info -->
 * logger  -p  user.info
-<!-- -->
+<!-- entry end -->
 
 # systemd
+<!-- entry begin: systemd-units -->
 * systemd-units
     * unit配置目录   ：(优先级降序)
         > /etc/systemd/system/  
@@ -653,17 +718,19 @@
         > * systemd无法管理手动执行启动的服务  
         > * 只有在配置目录的unit才在systemd视线里  
         > * 是否开机启动取决于满足上述的unit是否在default.target的依赖链中
-<!-- -->
+<!-- entry end -->
 ## units配置
+<!-- entry begin: unit配置 -->
 * unit配置
     * 选项可重复设置，后面覆盖前面
     * bool值可为     ：1/0，yes/no，ture/false，on/off
     * #与;开头为注释
     * foo.service.wants/requires依赖目录
     * 若unit名字为foo@bar.service，且目标不存在，则使用foo@.service(模板)，配置中%I为bar
-<!-- -->
+<!-- entry end -->
 
 ### [Unit]
+<!-- entry begin: [Unit] -->
 * [Unit]
     > 指定条件下开启或关闭自己或其他Units
     * Description    ：简介
@@ -679,9 +746,10 @@
     * Requisite(只检查，不启动，检查失败则fail)
     * PartOf(跟着同时关闭或重启)
     * Conflicts(不能同时存在)
-<!-- -->
+<!-- entry end -->
 
 ### [Install]
+<!-- entry begin: [Install] -->
 * [Install]
     > 只在enable与disable时使用
     * Alias  ：实质便是在递归启动链中创建符号链接
@@ -690,9 +758,10 @@
         > 加入到.wants/.requires目录中
     * Also   ：空格分隔单元列表
         > enable与disable它时也对列表中单元进行相同操作
-<!-- -->
+<!-- entry end -->
 
 ### [Service]
+<!-- entry begin: [Service] -->
 * [Service]
     * Type
         * simple
@@ -723,9 +792,10 @@
         * none         ：仅执行ExecStop
     * User
     * Group
-<!-- -->
+<!-- entry end -->
 
 ### [Timer]
+<!-- entry begin: [Timer] -->
 * [Timer]
     * OnBootSec              ：相对内核启动
     * OnStartupSec           ：相对systemd启动
@@ -746,9 +816,10 @@
     * WakeSystem     ：是否到时唤醒系统
     * Unit           ：指定匹配unit，默认同名.service
     * 注             ：时间单位us ms s m h d w M y
-<!-- -->
+<!-- entry end -->
 
 ### [Socket]
+<!-- entry begin: [Socket] -->
 * [Socket]
     * ListenStream：监听的port或`(IP/)port`，TCP
     * ListenDatagram：监听的port或`(IP/)port`，UDP
@@ -756,9 +827,10 @@
     * FreeBind=yes：在指定IP可用前监听它， 出于健壮性考虑， 当你希望将套接字绑定到特定的IP地址时应该设置此项，否则网络未及时启动时socket将无法启动
     * Accept=yes：为每个连接都产生实例
     * 注：可能希望在foo.service中[Unit]设置Conflicts=foo.socket
-<!-- -->
+<!-- entry end -->
 
 ## 命令
+<!-- entry begin: systemctl -->
 * systemctl
     * 信息查看
         * status
@@ -792,16 +864,18 @@
         * isolate
     * systemd重新读取unit
         * daemon-reload
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: systemd-analyze systemd-escape -->
 * systemd-analyze
     * systemd-analyze blame
     * systemd-analyze plot > plot.svg
 * systemd-escape --path ：路径转义
-<!-- -->
+<!-- entry end -->
 
 # GRUB
 ## GRUB配置
+<!-- entry begin: grub配置 -->
 * /etc/default/grub
 ```
     GRUB_DEFAULT=0
@@ -818,19 +892,24 @@
     * 20_os-prober：确定其他OS选单
     * 40_custom   ：自定义选单
 ```
-<!-- -->
+<!-- entry end -->
 
 ## GRUB Shell
 * 模块   ：默认自动加载command.lst与crypto.lst
+<!-- entry begin: grub 设备命名 -->
 * 命令规则       ：
     * 分区       ：(hd0，gpt1)
     * 文件       ：(hd0，gpt1)/path/to/file
     * 扇区       ：(hd0，gpt1)0+1
+<!-- entry end -->
+<!-- entry begin: grub 特殊变量 -->
 * 特殊变量
     * prefix     ：grub安装目录
     * root       ：根设备，未指定设备名的文件的默认设备
     * cmdpath    ：core.image所在目录
     * superusers ：超级用户，逗号分隔
+<!-- entry begin: grub命令 -->
+<!-- entry end -->
 * grub命令
     * ls                    ：列出已知设备/设备中的文件/目录的内容
     * cat                   ：显示文件内容，--dos选项处理换行符
@@ -844,6 +923,8 @@
     * insmod/rmmod          ：加载/卸载模块
     * loopback dev isofile  ：建立loop设备，-d删除
     * halt/reboot           ：关机/重启
+<!-- entry begin: GRUB安全 -->
+<!-- entry end -->
 * GRUB安全
     * 设置超级用户
         set superusers="root"
@@ -857,9 +938,10 @@
         * --unrestricted    ：所有人可执行
         * --users ""        ：仅超级用户
         * --users "user"    ：仅user与超级用户
-<!-- -->
+<!-- entry end -->
 
 ## GRUB选单
+<!-- entry begin: menuentry -->
 * menuentry
     * "title"    ：选单名
     * --class    ：选单主题样式
@@ -869,25 +951,27 @@
         * initrd      ：加载内核映像
         * boot        ：启动已加载的os或loader，选单结束时隐含
         * chianloader ：链式加载文件
-<!-- -->
+<!-- entry end -->
 
 ## 系统救援
+<!-- entry begin: 系统救援 -->
 * 系统救援
     * 修改选单内核参数为rd.break，并chroot
         > 注 ：rd.break模式下无SELinux，修改密码会导致其安全上下文失效而导致无法登陆
     * 修改选单内核参数为systemd-unit=rescu.target
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: grub-install grub-mkconfig -->
 * grub-install
     * --target=x86_64-efi
     * --efi-directory=/boot/efi
     * --bootloader-id=GRUB
-<!-- -->
 
 * grub-mkconfig  -o  /boot/grub/grub.cfg
-<!-- -->
+<!-- entry end -->
 
 # 主机配置
+<!-- entry begin: 主机配置 -->
 * 主机配置
     * /etc/shells           ：可用shell
     * /etc/services         ：服务名与端口对照
@@ -897,8 +981,9 @@
     * /etc/locale.conf      ：语系与字符集
     * /etc/localtime        ：本地时区/usr/share/zoneinfo/
     * /etc/adjtime          ：系统时间校准类型
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: FONT -->
 * FONT
     * mkfontdir
     * mkfontscale
@@ -906,22 +991,26 @@
     > 以上三条命令为字体安装三部曲
     * fc-list       ：字体缓存查看
 
+<!-- entry begin: hostnamectl -->
 * hostnamectl
     * set-hostname
-<!--  -->
+<!-- entry end -->
 
+<!-- entry begin: locale  localectl -->
 * locale [-a]
 * localectl
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: timedatectl -->
 * timedatectl
     * set-timezone
     * set-local-rtc
     * set-ntp     ：chronyd服务
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: date -->
 * date
-    * +*timeformat*
+    * +timeformat
         > * `%Y %y`         ：年份、年份后两位
         > * `%m %b %B`      ：月份、月份单词缩写、月份单词
         > * `%d %j %s`      ：一月中第几天、一年中第几天、从epoch开始的秒数
@@ -930,12 +1019,14 @@
     * -d *timeformat*       ：将参数转换为时间
     * -d @`N`               ：epoch之后N秒
     * -d '19700101  Ndays'  ：epoch之后N天
-<!-- -->
+<!-- entry end -->
 
-* cal *[MONTH YEAR]*
-<!-- -->
+<!-- entry begin: cal -->
+* cal [MONTH YEAR]
+<!-- entry end -->
 
 # 计算机网络
+<!-- entry begin: OSI TCP/IP 模型 -->
 * OSI七层模型与TCP/IP四层模型
 
 | TCP/IP | OSI                    |
@@ -944,8 +1035,9 @@
 | 传输层 | 传输层                 |
 | 网络层 | 网络层                 |
 | 链路层 | 数据链路层、物理层     |
+<!-- entry end -->
 
-* TCP三次握手与四次挥手
+<!-- entry begin: 网络协议栈 -->
 * 网络协议栈
     * 发送：
         * 应用层调用socket接口函数，发送message
@@ -958,29 +1050,46 @@
         * 网络层确认目的IP是否为本机IP或本机网段广播，若为ICMP则本层解决
         * 传输层确认socket的协议与端口，上传给应用层
         * 应用层控制会话的挂断
+<!-- entry end -->
+
+<!-- entry begin: 交换机 -->
 * 交换机
     * 将端口与frame的源MAC地址进行绑定(一个端口可绑定多个MAC地址，反之不行)
     * 若arp表中无frame的目的MAC地址则泛洪(在其他端口转发原frame)
     * 二层交换机配置有IP地址与默认路由，管理员远程管理，目的MAC地址与目的IP地址都为交换机才行
+<!-- entry end -->
+
+<!-- entry begin: 路由器 -->
 * 路由器
     * 检查目的MAC地址，判断是否接收
     * 检查目的IP地址，判断接收、转发或丢弃
     * 转发时可能需要NAT
+<!-- entry end -->
+
 * 防火墙(内核钩子)
 ![图片来自网络](../images/netfilter.jpg)
+
+<!-- entry begin: 虚拟网卡与虚拟网桥 -->
 * 虚拟网卡与虚拟网桥
     * 物理网卡接收的包发送到虚拟网桥，其通过类似交换机原理转发包，且虚拟网桥自身有IP与MAC
     * 虚拟网卡接收到虚拟网桥转发的数据包，并开始解包流程
+<!-- entry end -->
+
+<!-- entry begin: VPN -->
 * VPN
     * 与远程主机连接形成VLAN，通过建立隧道和修改路由，将某目的网络/主机的路由修改到隧道另一端
     * 数据包封装了访问请求，由VPS转发
+<!-- entry end -->
+
+<!-- entry begin: 代理 -->
 * 代理
     * 正向代理   ：客户端设置代理后，所有消息发送至代理服务器并由其修改源IP后转发
     * 反向代理   ：服务器设置代理后，客户端连接代理服务器，由代理服务器分配连接到真正服务器
-<!-- -->
+<!-- entry end -->
 
 ## 网络配置
-* ip --color
+<!-- entry begin: ip -->
+* ip [--color]
     * link/l
         * set IF up/down
         * set name NAME
@@ -994,9 +1103,10 @@
         * del IP/MASK  via GWIP  dev IF
     * neigh/n
         * add/del IP  lla MAC  dev IF
-<!-- -->
+<!-- entry end -->
 
 ## NetworkManager服务
+<!-- entry begin: nmcli nmtui -->
 * nmcli
     * radio/r
         * wifi on|off
@@ -1010,21 +1120,22 @@
         * dis IF
         * wifi c SSID  password PASSWD  (hidden yes)
 * nmtui
-<!-- -->
+<!-- entry end -->
 
 ## 其它网络命令
 * nmap
 ![图片来自网络](../images/nmap.png)
-<!-- -->
 
+<!-- entry begin: ss -->
 * ss
     * -at        ：TCP端口
     * -atn       ：TCP端口，指定端口号
     * -au        ：UDP端口
     * -ax        ：UNIX类型socket
 * ping
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: pacman -->
 * pacman
     * 更新数据库
         * -Sy：同步源
@@ -1059,8 +1170,9 @@
         [custom]     #添加在其他仓库之前
         Server = file:///mnt/iso/arch/pkg
         * pacman  -Sy
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: curl -->
 * curl -o *File* *URL*
 * curl -fsSL *URL* | bash
 * curl -fsSL *URL* | bash -s -- {-opt}
@@ -1070,8 +1182,9 @@
     * 空白用`+`代替
     * `curl cheat.sh/~keyword`
     * `curl cheat.sh/python/:list` 列出可选项
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: sendEmail -->
 * sendEmail
     * -s        ：SMTP服务器
     * -f        ：发送者的邮箱
@@ -1085,15 +1198,17 @@
     * -a        ：附件
     * -o message-content-type=*html*/*text* ：邮件的格式
     * -o message-charset=utf8               ：邮件的编码
-<!-- -->
+<!-- entry end -->
 
 # 基础命令
 ## 读取文件信息
+<!-- entry begin: stat -->
 * stat
     * `默认`    ：显示文件详细信息
     * -f        ：显示文件所处文件系统信息
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: ls -->
 * ls
     * -d        ：显示目录本身
     * -i        ：显示inode
@@ -1104,52 +1219,61 @@
     * -S        ：按大小排序（降序）
     * -t        ：按modify时间排序（降序）
     * -Z        ：安全上下文
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: du -->
 * du
     * -sh       ：显示目标占用block大小
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: file -->
 * file
     * -i        ：文件的格式信息
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: cat -->
 * cat
     * -A        ：打印特殊空白符
     * -n        ：显示行号
     * -b        ：显示行号但空行不算行号
 * tac：翻转首尾
 * rev：每行翻转
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: head -->
 * head
     * -v        ：显示文件名
     * -n        ：指定显示多少行
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: tail -->
 * tail
     * -v        ：显示文件名
     * -n        ：指定显示多少行
     * -f        ：监听
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: xxd -->
 * xxd
     > 以十六进制读取文件数据
 
 ## 文件的修改、创建与删除
+<!-- entry begin: touch -->
 * touch
     * `默认`    ：修改a/m/ctime
     * -a        ：只改atime
     * -m        ：只改mtime
     * -d        ：指定touch的时间，date模式
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: ln -->
 * ln *SRC* *TAG*
     * `默认`    ：硬连接
     * -s        ：软连接
     * -f        ：强制覆盖
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: cp -->
 * cp  *SRC*  *TAG*
     * -a        ：尽可能复制所有信息
     * -r        ：目录递归
@@ -1158,31 +1282,36 @@
     * -u        ：只更新
     * -f        ：强制覆盖
     * -n        ：直接不覆盖
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: mv -->
 * mv *SRC*  *TAG*
     * -v        ：详述
     * -i        ：询问是否覆盖
     * -u        ：只更新
     * -f        ：强制覆盖
     * -n        ：直接不覆盖
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: rm -->
 * rm
     * -r        ：目录递归
     * -v        ：详述
     * -f        ：强制覆盖
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: mkdir -->
 * mkdir
     * -p        ：递归
     * -m        ：设置权限
-<!-- -->
+<!-- entry end -->
 
 ## 文件的搜索
+<!-- entry begin: whereis -->
 * whereis       ：搜索可执行，头文件和帮助信息的位置，使用系统内建数据库
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: locate updatedb -->
 * locate
     * -i        ：忽略大小写
     * -r        ：正则表达式（默认通配符）
@@ -1192,8 +1321,9 @@
     > 更新locate命令需要的数据库  
     > 配置  ：/etc/updatedb.conf  
     > 数据库：/var/lib/mlocate/mlocate.db  
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: find -->
 * find *DIR* *OPTS...*
     * 打印：
         * -print
@@ -1233,46 +1363,50 @@
         * -inum             ：inode号
     * 复合逻辑关系          ：-a、-o、-not
     * 对搜索到的文件执行CMD ：-exec  *CMD*  {} \;
-<!--  -->
-
-* fzf   ：交互式模糊搜索
-<!-- -->
+<!-- entry end -->
 
 ## 其它
+<!-- entry begin: echo -->
 * echo
     * -n        ：不自动加入换行符（zsh会将无换行结尾的输出的尾部标记`反显的%`）
     * -e        ：启用转义语义（zsh自动开启）
-<!-- -->
+<!-- entry end -->
 
 
+<!-- entry begin: pwd -->
 * pwd
     * -P        ：显示真实路径而非软连接
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: bc -->
 * bc
     * -l        ：可以使用数学库函数 s(sin x)，c(cos x)，a(arctan x)，l(ln x)，e(e^x)
     * 特殊变量  ：scale，last，ibase，obase，支持^运算符求幂
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: split *FILE* *Preffix* -->
 * split *FILE* *Preffix*
     > 注：preffix最后最好加dot，大小单位可指定，默认byte
     * -b        ：按大小分割
     * -l        ：按行数分割
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: iconv  FILE -->
 * iconv  FILE
     * -f        ：原字符集
     * -t        ：目标字符集
     * -o        ：输出文件
     * --list    ：列出可选字符集
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: col -->
 * col -x ：将tab替换为等宽space，该命令只从stdin读取
-<!-- -->
+<!-- entry end -->
 
+<!-- entry begin: diff patch -->
 * diff -Naur *OLD* *NEW* > *.patch
 * patch -p`n`  < *.patch
     > * new和old不要在同一目录下  
     > * n为去掉的/个数
-<!-- -->
+<!-- entry end -->
 

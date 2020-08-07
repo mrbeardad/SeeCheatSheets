@@ -1,5 +1,6 @@
 # 开机启动
 ## UEFI BOIS
+<!-- entry begin: uefi bios boot -->
 > 需要掌握：
 > * 进入UEFI BIOS界面
 > * 设置开机启动项
@@ -11,8 +12,10 @@
 2. CPU加载主板上固件
 3. 读取硬件信息并检查
 4. 读取并加载硬盘ESP中的boot-loader(GRUB)
+<!-- entry end -->
 
 ## GRUB
+<!-- entry begin: boot grub -->
 > 需要掌握：
 > * 了解选单制作
 > * 修改选单中内核参数以进行系统救援
@@ -26,13 +29,15 @@
 4. 执行$prefix/grub.cfg
     > 无grub.cfg则进入命令模式
 5. 进入普通模式
-    * 选单界面  
-    * 按`e`进入编辑模式  
+    * 选单界面
+    * 按`e`进入编辑模式
     * 按`c`进入命令模式
 6. 加载initramfs
 7. 加载kernel
+<!-- entry end -->
 
 ## Kernel
+<!-- entry begin: boot kernel -->
 > 需要掌握：
 > * 内核的抽象模型与功能
 
@@ -44,12 +49,15 @@
 2. 挂载硬盘中真正`/ (根目录设备)`
 3. 释放initramfs
 4. 准备启动磁盘上的default.target
+<!-- entry end -->
 
 ## Systemd
+<!-- entry begin: boot systemd -->
 > 需要掌握：
 > * 掌握Systemd-Unit的配置，自动启动或关闭服务
 > * systemctl工具管理daemon
 > * journalctl工具查看日志
+> * coredumpctl工具管理coredump
 
 1. 启动default.target并递归检查依赖
 
@@ -70,6 +78,7 @@
         > 动态设备管理器
     * 加载本地文件系统与swap
         > 读取/etc/fstab
+
 3. basic.target
     * SELlinux
     * FireWall
@@ -80,13 +89,15 @@
     * timers.target
 4. multi-user.target
 5. graphical.target
+<!-- entry end -->
 
 ## Login
+<!-- entry begin: boot login -->
 * 启动登录程序
     > 文本界面通过logind  
     > 图形界面通过GDM之类的display-manager
 * 通过PAM模块进行认证
     > 通过/etc/pam.d/${daemon-name}进行配置
 * 开启会话
-<!-- -->
+<!-- entry end -->
 

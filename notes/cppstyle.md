@@ -50,13 +50,13 @@
 >
 可用于命名标识符的一些通用前后缀：
 * 位置：`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`
-* 循环：`pos`，`idx`，`this`，`cur`，`beg`，`end`
+* 循环：`itr`，`idx`，`pos`，`this`，`cur`，`beg`，`end`
 * 时间：`new`，`old`，`early`，`late`，`last`，`now`，`orig`
 * 计数：`size`，`len`，`num`，`cnt`，`nr`，`dep`，`wid`，`hei`
 * 序数：`1st`，`2nd`，`3th`，`last`
 * bool：`is`，`not`，`and`，`or`，`any`，`all`，`none`，`has`
 * 介词：`in`，`on`，`at`，`of`，`2`，`4`
-* 类型：`int`，`char`，`str`，`strm`，`ptr`，`iter`
+* 类型：`int`，`char`，`str`，`strm`，`ptr`，`p2`
 * 用途：`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`tag`
 
 ## 注释
