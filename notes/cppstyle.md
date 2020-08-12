@@ -21,7 +21,7 @@
   - [易错点](#易错点)
   - [解题经验](#解题经验)
 - [附](#附)
-  - [底层const](#底层const)
+  - [底层const优点](#底层const优点)
   - [类的封装](#类的封装)
   - [reference-return](#reference-return)
   - [异常安全](#异常安全)
@@ -30,10 +30,9 @@
   - [默认初始化](#默认初始化)
   - [内存引用优化](#内存引用优化)
   - [set_new_handle](#set_new_handle)
-  - [inline函数](#inline函数)
+  - [莫滥用inline函数](#莫滥用inline函数)
   - [标签分派](#标签分派)
   - [模板类型限制](#模板类型限制)
-  - [拒绝某个类型转换](#拒绝某个类型转换)
   - [const函数重载技巧](#const函数重载技巧)
 
 <!-- vim-markdown-toc -->
@@ -42,27 +41,29 @@
 部分风格参考自[HosseinYousefi/CompetitiveCPPManifesto](https://github.com/HosseinYousefi/CompetitiveCPPManifesto)
 
 ## 名字
-* 模板类型参数、类名、类型别名、静态变量：大驼峰拼写法`ExampleName`
-* 动态变量&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;：小驼峰拼写法`exampleName`
-* 类的数据成员&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;：依据以上两写法并带`_m`后缀`exampleName_m`
-* 模板非类型参数、宏、常量&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;：全部大写和下划线间隔`EXAMPLE_NAME`
-* 命名空间、函数名称&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;：全部小写和下划线间隔`example_name`
+| 内容                                   | 规范                               |
+|----------------------------------------|------------------------------------|
+| 类名、类型别名、模板类型参数、静态变量 | 大驼峰拼写法`ExampleName`          |
+| 动态变量                               | 小驼峰拼写法`exampleName`          |
+| 类的non-static数据成员                 | 带`_m`后缀`exampleName_m`          |
+| 宏、常量、模板非类型参数               | 全部大写和下划线间隔`EXAMPLE_NAME` |
+| 命名空间、函数名称                     | 全部小写和下划线间隔`example_name` |
 >
 可用于命名标识符的一些通用前后缀：
 * 位置：`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`
-* 循环：`itr`，`idx`，`pos`，`this`，`cur`，`beg`，`end`
+* 循环：`itr`，`idx`，`this`，`cur`，`beg`，`end`
 * 时间：`new`，`old`，`early`，`late`，`last`，`now`，`orig`
 * 计数：`size`，`len`，`num`，`cnt`，`nr`，`dep`，`wid`，`hei`
 * 序数：`1st`，`2nd`，`3th`，`last`
 * bool：`is`，`not`，`and`，`or`，`any`，`all`，`none`，`has`
 * 介词：`in`，`on`，`at`，`of`，`2`，`4`
 * 类型：`int`，`char`，`str`，`strm`，`ptr`，`p2`
-* 用途：`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`tag`
+* 用途：`pos`，`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`tag`
 
 ## 注释
 * 块注释`/* comment */`：
-    * 注释大片代码
     * 源文件标题
+    * 注释大片代码
 * 单行注释`// comment ` ：代码步骤解释
     * 尾后注释：解释 <u>*该行*</u> 或 <u>*该语句块*</u> 或 <u>*该作用域*</u> 的功能
     * 行前注释：解释接下来一段的代码的功能
@@ -107,7 +108,7 @@
             //statement
         }
     ```
-* 二元运算符两边空格，一元只隔一边，三元全隔，`x + y` `*x` `x < y ? x : y`
+* 一元运算符只隔一边空格，二元两边空格，三元全隔，`*x` `x + y` `x < y ? x : y`
 * 逗号与分号只与右边隔空格，`func(a, b, c)` `for ( init; condition; iterate )` `return 0;`
 * 除了条件运算符与range-based-for，其它地方的冒号只与右边隔空格
 * lambda函数体超过2行时应该分行
@@ -124,41 +125,16 @@
 
 * 不对外链接的符号应该都写在无名命名空间中
 
-## 函数设计
-* 形参修饰
-> 对比
-
-| 类型          | 特性                                 |
-|---------------|--------------------------------------|
-| T             | 拷贝                                 |
-| T&            | 引用、左值（非常量）                 |
-| T&&           | 引用、右值                           |
-| const T&      | 引用、左值、右值、隐式类型转换、只读 |
-| temp T&       | 引用、左值、泛型                     |
-| temp const T& | 引用、左值、右值、泛型、只读         |
-| temp T&&      | 引用、左值、右值、泛型、转发         |
-
-> 选择
-
-<img align="center" height=600 src="../images/cpp_args.png"></img>
-
-* 属性：
-    * 不要忘记限定成员函数的`this`，包括const限定和引用限定
-    * 只要函数不抛出异常，就应该限定为`noexcept`
-    * 莫滥用inline修饰函数，inline函数应符合：规模短小、流程直接、调用频繁
-    * 利用`=delete`来在调用函数时[拒绝某个类型转换](#const拒绝某个类型转换)
-
-* 右值、转发与移动：
-    * 针对右值引用形参使用move，对万能引用形参使用forward；并注意应该在最后使用对象时才进行操作
-    * 以传值形式返回右值引用或万能引用形参的“副本”时，return语句使用中move或forward
-    * 解决与万能引用相关的重载问题
-        * [标签分派](#标签分派)：利用`std::true_type`与`std::false_type`进行工具重载
-        * [模板类型限制](#模板类型限制)：利用`std::enable_if_t<bool>`限制类型
+## 泛型编程
+* 减少代码膨胀
+    * 将与模板参数无关的代码从类模板与函数模板中抽离
+    * 与非类型数值模板参数有关的代码应该使用一份共享的相同的实现代码
+    * 二进制表述相同的类型（指针）也应该使用一份共享的相同的实现代码
 
 ## 面向对象
 ### 类的设计
 * 友元
-    * 注意声明与定义的顺序
+    * 注意类之间声明与定义的顺序
     * 思考是否可提供接口成员函数以取消友元函数的friend属性
 
 * 类型成员
@@ -166,7 +142,7 @@
 
 * 数据成员
     * 构造顺序与对齐问题
-    * 若有const与引用成员，则无法合成default构造与operator=
+    * 若有const与引用成员，则无法合成default构造与赋值操作
     * private封装
     * handle与interface封装
 
@@ -174,7 +150,7 @@
     * 思考default构造是否有意义
     * 单参构造最好`explicit`
     * 构造函数抛出异常时不会调用析构函数，
-        故用`unique_ptr`代替裸指针成员避免资源泄漏
+        故handle成员的类型用`unique_ptr`代替裸指针成员避免资源泄漏
     * 构造函数与析构函数不要调用虚函数，
         因为调用的虚函数是静态版本从而违反直觉
 
@@ -182,15 +158,11 @@
     * 不要让异常逃离析构函数，同时可以提供`.destroy()`接口给用户来处理异常的机会
     * 多态基类的析构函数应该声明为`virtual`，并需要提供定义（即使是`pure virtual`）
 
-* copy操作
-    * 思考是否需要copy操作
+* copy与move
+    * 思考是否需要copy或move操作
     * copy构造函数一般不为`virtual`，
         可以提供`virtual unique_ptr<T> clone() const`接口来进行copy而不会发生切割（截断）
-
-* move操作
     * 利用成员函数的引用修饰，可以判断该类对象是否为右值，从而可以进行move优化
-
-* 三路比较
 
 * 类型转换
     * 不要在两个类之间定义相同方向的转换，例如，在A中定义由B到A的转换，又在B中定义从B到A的转换
@@ -198,11 +170,11 @@
     * 所有转换最好`explicit`
 
 * 重载operator
-    * 一般只有单目运算符都设计为成员
-    * 对于接收左值的操作符，限定this为左值
     * 不要重载`&&`、`||`、`,`
+    * 一般只有单目运算符和赋值运算符设计为成员
+    * 对于接收左值的操作符，限定this为左值
     * 若定义了算术运算符，也应定义相应的复合赋值
-    * 后置自增减运算符调用前置版本
+    * 后置自增减运算符应该调用前置版本以降低维护难度
 
 * 接口成员函数
     * [见函数设计](#函数设计)
@@ -233,11 +205,36 @@
 
 * 继承体系中，non-leaf类应该设计为抽象基类
 
-## 泛型编程
-* 减少代码膨胀
-    * 将与模板参数无关的代码从类模板与函数模板中抽离
-    * 与非类型数值模板参数有关的代码应该使用一份共享的相同的实现代码
-    * 二进制表述相同的类型（指针）也应该使用一份共享的相同的实现代码
+## 函数设计
+* 形参修饰
+> 对比
+
+| 类型          | 特性                                 |
+|---------------|--------------------------------------|
+| T             | 拷贝                                 |
+| T&            | 引用、左值（非常量）                 |
+| T&&           | 引用、右值                           |
+| const T&      | 引用、左值、右值、隐式类型转换、只读 |
+| temp T&       | 引用、左值、泛型                     |
+| temp const T& | 引用、左值、右值、泛型、只读         |
+| temp T&&      | 引用、左值、右值、泛型、转发         |
+
+> 选择
+
+<img align="center" height=600 src="../images/cpp_args.png"></img>
+
+* 属性：
+    * 不要忘记考虑限定成员函数的`this`
+    * 只要函数不抛出异常，就应该限定为`noexcept`
+    * 莫滥用inline修饰函数（尤其是构造函数于析构函数），inline函数应符合：规模短小、流程直接、调用频繁
+    * 利用`=delete技巧`来在调用函数时[拒绝某个类型转换](#const拒绝某个类型转换)
+
+* 右值、转发与移动：
+    * 需要创建形参副本时（包括return），针对右值引用形参使用move，对万能引用形参使用forward；
+        并注意应该在最后使用对象时才进行操作
+    * 解决与万能引用相关的重载问题
+        * [标签分派](#标签分派)：利用`std::true_type`与`std::false_type`进行工具重载
+        * [模板类型限制](#模板类型限制)：利用`std::enable_if_t<bool>`限制类型
 
 ## 异常
 * 异常的易错点
@@ -245,8 +242,7 @@
 
     * 以引用捕获，而非值捕获或指针捕获
 
-
-    * 重新抛出应该使用`throw;`而非`throw excep;`，因为后者会调用excep静态类型的拷贝构造函数，可能出现截断
+    * 重新抛出应该使用`throw;`而非`throw excep;`，因为一般拷贝构造函数为non-virtual，可能出现截断
 
 * 异常安全技巧：
     * 留心可能发生异常的代码
@@ -257,14 +253,6 @@
     * 使用copy-and-sawp技巧
     * 使用move_if_noexcept
 
-## 并发
-* 同步单个变量用`std::atomic`，同步多个变量用`std::mutex`
-
-* `volatile`用于特种内存（值的改变由程序之外的条件影响）
-
-* 保证const成员函数的线程安全性，因为const成员函数一般视为只读，如此在多线程环境应该是无需用户手动同步的；
-    但是若它更改了mutable数据成员，为了维护上述线程安全性，需要在const成员函数中进行同步
-
 ## 初始化
 * 初始化的形式
     * 具有***非代理类的初始化器***时，使用`auto x = proxy`
@@ -273,12 +261,12 @@
     * 调用容器的`initializer_list`的构造函数时，使用`vector<int> v{10, 1}`
     * 其它情况（该类无形参为initializer_list的构造函数）调用构造函数时，使用`string s{"string"}`
 
-* 尽可能延后对象的初始化直到使用的前一刻，并确认使用对象时其值是有效的
+* 尽可能延后对象的声明直到使用的前一刻，并一律马上初始化
 
 * 循环中使用的对象，一般在循环体中定义而非在循环外，因为
-    * **效率一般更好**。前者执行1次构造+1次析构，后者执行n次赋值，
-        除非1次赋值比1次构造+1次析构更高效。
-        > 一般来讲，长string、容器与流都是后者，即应该定义在循环外
+    * **效率一般更好**。前者执行n次构造+n次析构，后者执行1次构造+1次析构+n次赋值。
+        所以除非1次赋值比1次构造+1次析构更高效，否则定义再循环内
+        > 一般来讲，长string、容器与流这类构造开销大的类都应该定义在循环外
     * 减小其作用域范围，防止名称污染
 
 * 注意多个翻译单元(TU)中，non-local static对象的初始化顺序是未定义的，此时需要使用[reference-return技术](#reference-return)
@@ -292,7 +280,15 @@
     * 当需要更改它的指向时
 * 容器增删元素时，为防止一些引用对象失效，检查：
     * 是否在**range-based-for**中
-    * 是否之前获取了与改容器相关的**指针**、**引用**、**迭代器**
+    * 是否之前获取了与改容器相关的**引用**、**指针**、**迭代器**
+
+## 并发
+* 同步单个变量用`std::atomic`，同步多个变量用`std::mutex`
+
+* `volatile`用于特种内存（值的改变由程序之外的条件影响）
+
+* 保证const成员函数的线程安全性，因为const成员函数一般视为只读，如此在多线程环境应该是无需用户手动同步的；
+    但是若它更改了mutable数据成员，为了维护上述线程安全性，需要在const成员函数中进行同步
 
 ## 效率优化
 * 延迟评估：
@@ -302,14 +298,12 @@
         * RCSipport类维护引用计数
         * Handle类对象执行写入操作时，才通过new表达式构造新的Implement对象，否则与拷贝目标共享
     * 区分读写
-        * 利用proxy类作operator[]返回值  
+        * 利用proxy类作operator[]这些返回左值引用的操作
         * proxy类持有Handle类的指针以及所代理对象的下标
-        * 若对proxy对象执行赋值、取地址、自增减等操作时，则视为写入
+        * 若对proxy对象执行需要左值的操作，则视作写入
         * 其它情况可以利用转换函数解决
-    * 延迟获取
+    * 延迟获取（按需加载）
         > 类的数据成员设为`mutable optional<T>`，需要时再获取值
-    * 延迟计算
-        > 计算结果在需要时才进行计算获取，且只计算需要的部分结果
 
 * 超前预算：
     * Caching
@@ -334,10 +328,9 @@
     * 逆向思维，由起点到终点，变为求终点的起点
 
 # 附
-## 底层const
-* 底层const优点：
-    * 可以让编译器帮助我们查找违反本意（即修改了不该修改的数据）的代码
-    * <b>const T&</b>相比<b>T&</b>，前者可以接收更多类型，见下表
+## 底层const优点
+* 可以让编译器帮助我们查找违反本意（即修改了不该修改的数据）的代码
+* <b>const T&</b>相比<b>T&</b>，前者可以接收更多类型，见下表
 
 ## 类的封装
 * non-member non-friend函数比member具有更好的函数封装性，且可以前者可以分离编译
@@ -525,22 +518,38 @@ ObjB b{get_a()};    // 这样在构造b之前，a必定是已构造的
 ## set_new_handle
 * 为不同的类设计new失败时的处理函数
 ```cpp
+// 此例子中为简便而并未将实现分离
 // 让需要自定义new_handle的类public继承该类即可，例如`class Test: public NewHandlerSupport<Test>`
 template <typename T> // 模板的目的是为了让不同的类继承不同的实例，从而产生不同的static new_handler对象
 class NewHandlerSupport
 {
 public:
     static std::new_handler
-    set_new_handler(std::new_handler) noexcept;
+    set_new_handler(std::new_handler newHandle) noexcept
+    {
+        auto oldHandle = CurHandle;
+        CurHandle = newHandle;
+        return oldHandle;
+    }
 
     static void*
-    operator new(std::size_t);
-
+    operator new(std::size_t size);
+    {
+        NewHandlerHolder hd{std::set_new_handler(CurHandle)};
+        return ::operator new(size);
+    }
 private:
-    static std::new_handler curHandle;
+    struct NewHandlerHolder
+    {
+        std::new_handler holder_m;
+        NewHandlerHolder(std::new_handler hd): holder_m{hd} {}
+        ~NewHandlerHolder() { std::set_new_hanlder(holder_m); }
+    }
+    static inline std::new_handler CurHandle{nullptr};
 }
 ```
-## inline函数
+
+## 莫滥用inline函数
 **注意：莫要滥用inline函数，特别是构造函数与析构函数，因为**
 * 构造函数的会捕获成员构造时所抛出的异常并析构已构造的成员（不会调用类的析构函数），
     则会有大量的重复调用成员的析构函数，特别是第一个构造的成员的析构函数
@@ -574,13 +583,6 @@ template <typename T, typename = enable_if_t<
     !is_same_v<decay_t<T>, int>
 >
 void func(T&&);
-```
-
-## 拒绝某个类型转换
-```cpp
-void func(int); // 主函数
-
-void func(double) = delete; // func不再接收double实参
 ```
 
 ## const函数重载技巧

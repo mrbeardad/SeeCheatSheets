@@ -248,7 +248,7 @@ exception                 `<exception>`
 
 <!-- entry begin: simd immintrin.h -->
 * SIMD：`<immintrin.h>`
-    > SIMD指令可以通过给STL算法执行策略而应用到程序中
+    > C++17中SIMD指令可以通过给STL算法执行策略而应用到程序中
     * 需要利用`alignas(32)`对齐数组
     * 向量寄存器抽象类型：
         * `__m256`
@@ -287,11 +287,11 @@ exception                 `<exception>`
 * integer_sequence：`<utility>`
     > 与initializer_list的区别在于，integer_sequence可以用于编译期计算
     * 构造
-        * `integer_sequence<typename T, T... INTS>`
-        * `index_sequence<size_t... SIZETS>`
+        * `integer_sequence<typename T, T... INTS>{}`
+        * `index_sequence<size_t... SIZETS>{}`
         > 以下构造1 ~ N-1的T类型的整数序列
-        * `make_integer_sequence<typename T, T N>`
-        * `make_index_sequence<size_t N>`
+        * `make_integer_sequence<typename T, T N>{}`
+        * `make_index_sequence<size_t N>{}`
     * 读取
         * ::size()                                  ：获取整数个数
         * function(integer_sequece<T, INTS...> t)   ：利用模板参数解包与折叠表达式处理INTS
@@ -801,7 +801,7 @@ exception                 `<exception>`
     * equal_range(b, e, v, op2=lower_to)
 
     > 搜索子区间
-    * search(b, e, searchB, searchE, op2=equal_to)          ：op2(elem, v)
+    * search(b, e, searchB, searchE, op2=equal_to)
     * search_n(b, e, n, v, op2=equal_to)                    ：op2(elem, v)
     * find_end(b, e, searchB, searchE, op2=equal_to)
     * adjacent_find(b, e, op2=equal_to)                     ：搜索一对连续相等的元素, 返回第一个位置
@@ -975,54 +975,57 @@ exception                 `<exception>`
 
 <!-- entry begin: cpp regex -->
 * 正则表达式：`<regex>`
-    * 组件：
-        * regex
-        * sregex_iterator
-        * sregex_token_iterator
-        * smatch
-        * ssub_match
-        * regex_search()
-        * regex_match()
-        * regex_replace()
-        * regex_contants： 标志用于控制regex、match、replace行为
+* 组件：
     * regex
-        > flag 主要就有 regex_constants::icase
-        * (string, flag)
-        * (char*, flag)
-        * (char*, len, flag)
-        * (b, e, flag)
     * sregex_iterator
-        > 自增自减移动模式匹配到的子串  
-        > 解引用得到smatch
-        * 构造：(b, e, regex)，默认初始化为end
     * sregex_token_iterator
-        > 保留不匹配间的子字符串
-        * (b, e, r, -1)
     * smatch
-        > 存放ssub_match的容器  
-        > 0索引存放整个模式匹配到的子串
-        * .begin() .cbegin() .end() .cend()
-        * .size()
-        * .empty()
-        * .operator[](idx)
-        * .prefix()
-        * .suffix()
-        * .length(n)
-        * .position(n)  ：返回difference_type数字
-        * .str(n)
-        * .format(dest, fmt, flag)
-        * .format(fmt, flag)
-    * ssub_match： 指向表达式匹配到的子表达式
-        * .operator basic_string<charT>()
-    * regex_replace((str|b, e), regex, repl, flag)
+    * ssub_match
+    * regex_search()
+    * regex_match()
+    * regex_replace()
+    * regex_contants： 标志用于控制regex、match、replace行为
+
+* regex
+    > flag 主要就有 regex_constants::icase
+    * (string, flag)
+    * (char*, flag)
+    * (char*, len, flag)
+    * (b, e, flag)
+* sregex_iterator
+    > 自增自减移动模式匹配到的子串  
+    > 解引用得到smatch
+    * 构造：(b, e, regex)，默认初始化为end
+* sregex_token_iterator
+    > 保留不匹配间的子字符串
+    * (b, e, r, -1)
+
+* smatch
+    > 存放ssub_match的容器  
+    > 0索引存放整个模式匹配到的子串
+    * .begin() .cbegin() .end() .cend()
+    * .size()
+    * .empty()
+    * .operator[](idx)
+    * .prefix()
+    * .suffix()
+    * .length(n)
+    * .position(n)  ：返回difference_type数字
+    * .str(n)
+    * .format(dest, fmt, flag)
+    * .format(fmt, flag)
+* ssub_match： 指向表达式匹配到的子表达式
+    * .operator basic_string<charT>()
+
+* regex_replace((str|b, e), regex, repl, flag)
     * 替换语法：
     ```
-        $0
-        $1, $2, $3, ...
-        $&：全部
-        $'：后缀
-        $`：前缀
-        $$：转义$
+    $0
+    $1, $2, $3, ...
+    $&：全部
+    $'：后缀
+    $`：前缀
+    $$：转义$
     ```
 <!-- entry end -->
 
@@ -1401,6 +1404,7 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
         * .replace_filename()
         * .replace_extension()
     * 判断
+        * .empty()
         * .is_absolute()
         * .is_relative()
         * .has_root_name()
@@ -1416,11 +1420,11 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
 * directory_entry `<filesystem>`
     > 目录项可能是目录下的任何类型的文件
     * 读取
-        * .path()       ：也可隐式转换为path
-        * .hard_link_count()
-        * .last_write_time()
+        * .path()：也可隐式转换为path
         * .status()
         * .symlink_status()
+        * .hard_link_count()
+        * .last_write_time()
         * .file_size()
     * 判断
         * .exists()
