@@ -90,8 +90,8 @@
 
 ## 分支
 首先要明确分支操作所需要的条件
-* `if-else`                             ：不可能或不应该同时发生的条件，有时可用`if{return}`或`if{continue}`代替
 * `if-if`                               ：可能同时发生的条件
+* `if-else`与`if{continue或return}`     ：不可能或不应该或没必要同时发生的条件，后者相当于前者一分支为空，根据可读性选择一种
 * `if-elseif-else`与`if-else{if-else}`  ：有公共语句则前者转为后者，无则后者转前者
 * `for{if-break}与for{}`                ：若`if-break`语句的条件中的变量为循环体内的，则转为前者，否则将条件合并入for而转为后者
 * `if{for}`

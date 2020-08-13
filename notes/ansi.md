@@ -17,7 +17,7 @@
 |  white |     37     |     37     |
 
 * 256 color
-    > `${fg_bg}`：前景为`38m`，背景为`48m`  
+    > `${fg_bg}`：前景为`38`，背景为`48`  
     > `${ID}`：见<https://jonasjacek.github.io/colors/>
     * `\033[${fg_bg};5;${ID}m`
 

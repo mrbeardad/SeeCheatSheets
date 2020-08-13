@@ -255,8 +255,8 @@
 
 ## 初始化
 * 初始化的形式
-    * 具有***非代理类的初始化器***时，使用`auto x = proxy`
-    * 具有***代理类的初始化器***时，使用`T x = proxy`
+    * 具有***非代理类的类型精准的初始化器***时，使用`auto x = proxy`
+        > 拿不准是否应该使用`auto&`时，则直接用`auto&`并让编译器推断是否可行
     * 调用容器的非`initializer_list`的构造函数时，使用`vector<int> v(10, 1)`
     * 调用容器的`initializer_list`的构造函数时，使用`vector<int> v{10, 1}`
     * 其它情况（该类无形参为initializer_list的构造函数）调用构造函数时，使用`string s{"string"}`

@@ -1388,6 +1388,8 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
 <!-- entry begin: cpp filesystem fs path -->
 * path `<filesystem>`
     * 读取
+        * .c_str()                  ：返回char*
+        * .native()                 ：返回string&
         * .begin()与.end()          ：若存在root_name则从root_name开始，否则从root_path开始，每个元素即是每层目录名（除了root_path外不加`/`或`\`）
         * .root_name()              ：` `或`C:`
         * .root_path()              ：`/`或`\`
@@ -1399,7 +1401,7 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
     * 修改
         * operator<<(strm, path)    ：`/tmp/fs.cpp`或`C:\tmp\fs.cpp`
         * operator>>(strm, path)    ：`/tmp/fs.cpp`或`C:\tmp\fs.cpp`
-        * operator/()
+        * operator/()与operator/=()
         * .remove_filename()
         * .replace_filename()
         * .replace_extension()
@@ -1416,13 +1418,12 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
         * .has_extension()
 <!-- entry end -->
 
-<!-- entry begin: cpp fs dir -->
+<!-- entry begin: cpp filesystem fs dir directory_entry directory_iterator -->
 * directory_entry `<filesystem>`
     > 目录项可能是目录下的任何类型的文件
     * 读取
-        * .path()：也可隐式转换为path
-        * .status()
-        * .symlink_status()
+        * .path()                       ：返回path&，也可隐式转换为path
+        * .status()与.symlink_status()  ：返回file_status
         * .hard_link_count()
         * .last_write_time()
         * .file_size()
@@ -1436,6 +1437,48 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
         * .is_blovk_file()
         * .is_character_file()
 * directory_iterator `<filesystem>`
+    * range-based-for：
+        ```cpp
+        for ( auto& entry : directory_iterator{"/tmp"} ) {
+            /* ... */
+        }
+        ```
+<!-- entry end -->
+
+<!-- entry begin: cpp filesystem fs file_status file_type file_perm -->
+* file_status
+    * .type()
+    * .permissions()
+* file_type：领域枚举
+    * ::none
+    * ::not_found
+    * ::regular
+    * ::directory
+    * ::symlink
+    * ::block
+    * ::character
+    * ::fifo
+    * ::socket
+    * ::unkown
+* file_perm：领域枚举
+    * ::none          0000
+    * ::owner_read    0400
+    * ::owner_write   0200
+    * ::owner_exec    0100
+    * ::owner_all     0700
+    * ::group_read    0040
+    * ::group_write   0020
+    * ::group_exec    0010
+    * ::group_all     0070
+    * ::others_read   0004
+    * ::others_write  0002
+    * ::others_exec   0001
+    * ::others_all    0007
+    * ::all           0777
+    * ::set_uid       4000
+    * ::set_gid       2000
+    * ::sticky_bit    1000
+    * ::mask          7777
 <!-- entry end -->
 
 # BOOST
