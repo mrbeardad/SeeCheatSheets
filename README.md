@@ -6,6 +6,20 @@
   - [网络](#网络)
   - [其它](#其它)
 
+# 安装
+***仓库中提供了一支C++程序`see`用于快速查看笔记***  
+它会搜索`~/.cheat/notes`中的markdown文档中的entry，查找匹配的entry并打印  
+每个entry以`<!-- entry begin:.*-->`的形式开头，其中`.*`表示关键字，see便会搜索其中的关键子决定是否匹配  
+每个entry又以`<!-- entry end -->`结尾，see会打印头不到尾部的内容
+
+安装步骤：
+```sh
+git clone https://github.com/mrbeardad/learning-notes-and-cheat-sheets ~/.cheat
+# 国内访问github不太友好的话，可以用这条命令代替
+# git clone https://gitee.com/mrbeardad/learning-notes-and-cheat-sheets ~/.cheat
+g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
+```
+
 ## Linux
 * [学习资源](notes/learning-resource.md)
     > 很久没更新了，希望还有效

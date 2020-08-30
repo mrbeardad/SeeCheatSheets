@@ -30,7 +30,7 @@
   - [lang#c](#langc)
   - [lang#markdown](#langmarkdown)
   - [杂项](#杂项)
-- [基础概念](#基础概念)
+- [Vim其他特性](#vim其他特性)
   - [命令模式](#命令模式)
   - [范围](#范围)
   - [寄存器](#寄存器)
@@ -39,11 +39,16 @@
   - [临时文件](#临时文件)
   - [runtimepath目录结构](#runtimepath目录结构)
   - [命令别名](#命令别名)
-  - [初步配置](#初步配置)
-  - [gvim配置](#gvim配置)
+  - [自动命令](#自动命令)
+  - [键映射](#键映射)
+  - [特殊字符](#特殊字符)
 - [简单的vimscript语法](#简单的vimscript语法)
   - [变量](#变量)
+  - [语句](#语句)
+- [Vim命令、函数与变量](#vim命令函数与变量)
   - [函数](#函数)
+  - [命令](#命令)
+  - [变量](#变量-1)
 
 <!-- vim-markdown-toc -->
 # SpaceVim定制版
@@ -51,8 +56,7 @@
 手册中还介绍了vim自带的按键，一些按键功能未具体指出，读者可以打开vim试试便知其意
 
 ## 插入模式
-* 插入模式
-    > 进入插入模式：`gi` `i` `a` `I` `A` `o` `O`
+> 进入插入模式：`gi` `i` `a` `I` `A` `o` `O`
 
 | 按键                   | 作用                                                                |
 |------------------------|---------------------------------------------------------------------|
@@ -70,6 +74,7 @@
 | `<m-e>`                | 将光标后的字符向后移                                                |
 | `<m-{char}>`           | {char}可以是`}` `]` `)`等，表示将光标后的字符移动到下一个{char}后面 |
 | `<c-o>`                | 下行插入                                                            |
+| `<c-left>与<c-right>`  | 向前缩进与向后缩进                                                  |
 | `<c-s-down>与<c-s-up>` | 将本行下移，将本行上移                                              |
 | `<c-v>{char}`          | 插入{char}（控制）字符                                              |
 | `<c-v>x{hh}`           | 插入编码为0xhh的ascii字符                                           |
@@ -78,7 +83,6 @@
 <!--  -->
 
 ## 普通模式
-* 普通模式
 > 复合操作符可以结合光标移动，对初始位置与移动后位置之间的文本进行操作  
 > 也可以结合文本对象，对文本对象中的内容进行操作
  * 复合操作符：  
@@ -120,7 +124,6 @@
 | `.`                    | 重复上次操作                         |
 
 ## 可视模式
-* 可视模式
 > 进入可视模式：`v` `V` `<c-v>` `gv`  
 > 其中`<c-v>`进入可视块模式，按`I` `A` `s`修改后按`<esc>`，可以对所有选中的行进行修改  
 > 其中`v`可以作为复合操作符，见[普通模式](#普通模式)  
@@ -141,27 +144,25 @@
 ## 窗口
 * 窗口
 
-| 按键                       | 作用                            |
-|----------------------------|---------------------------------|
-| `<c-w>=`                   | 所有窗口等高等宽                |
-| `<c-w>-与<c-w>+`           | 减少与增加窗口高度              |
-| `<c-w><与<c-w>>`           | 减少与增加窗口宽度              |
-| `{num}<c-w>_与{num}<c-w>|` | 设置窗口高度与宽度为num         |
-| `<c-w>c`                   | 关闭窗口                        |
-| `<c-w>o`                   | 关闭其它所有窗口                |
-| `<c-w>s`                   | 水平分割窗口                    |
-| `<c-w>v`                   | 垂直分割窗口                    |
-| `<space>{numr}`            | 切换至第{numr}号窗口            |
-| `<tab>`                    | 切换至下个窗口                  |
-| `<s-tab>`                  | 切换至上个窗口                  |
-| `<c-{arrow}>`              | 切换至指定方向上的窗口          |
-| `<c-w>H`                   | 将当前窗口移动到最左边，JKL同理 |
-| `<c-q>`                    | 关闭窗口                        |
+| 按键                        | 作用                            |
+|-----------------------------|---------------------------------|
+| `<c-w>=`                    | 所有窗口等高等宽                |
+| `<c-w>-与<c-w>+`            | 减少与增加窗口高度              |
+| `<c-w><与<c-w>>`            | 减少与增加窗口宽度              |
+| `{num}<c-w>_与{num}<c-w>|`  | 设置窗口高度与宽度为num         |
+| `<c-w>c`                    | 关闭窗口                        |
+| `<c-w>o`                    | 关闭其它所有窗口                |
+| `<c-w>s`                    | 水平分割窗口                    |
+| `<c-w>v`                    | 垂直分割窗口                    |
+| `<space>{numr}`             | 切换至第{numr}号窗口            |
+| `<tab>`                     | 切换至下个窗口                  |
+| `<s-tab>`                   | 切换至上个窗口                  |
+| `<c-{arrow}>`               | 切换至指定方向上的窗口          |
+| `<c-w>H`                    | 将当前窗口移动到最左边，JKL同理 |
+| `<c-q>`                     | 关闭窗口                        |
 <!-- -->
 
 ## 标签页
-* 标签页
-
 | 按键         | 作用                   |
 |--------------|------------------------|
 | `<F7>`       | 打开标签管理器         |
@@ -170,7 +171,6 @@
 <!-- -->
 
 ## 缓冲区
-* 缓冲区
 > 常用命令：:ene，:e，:bd，:qa，:wa，:wq，:wqa，:saveas  
 > 参数列表：:args，:arga，:argd，:argdo  
 > 详情：:h ls
@@ -178,6 +178,7 @@
 | 按键                   | 作用                     |
 |------------------------|--------------------------|
 | `<leader>n与<leader>b` | 下/上一个缓冲区          |
+| `]b与[b`               | 下/上一个缓冲区          |
 | `<leader>{numr}`       | 第{numr}个buffer         |
 | `<c-s>`                | 保存buffer至硬盘         |
 | `<c-w>x`               | 安全删除该buffer         |
@@ -186,7 +187,6 @@
 <!--  -->
 
 ## 屏幕滚动
-* 屏幕滚动
 > 前三组是为了滚动屏幕以获取窗口视野之外的内容，且当前光标行仍然需要在窗口中可见  
 > 第四组是只为了翻页，即接下来无需处理当前光标行  
 > 故前三组的按键会尽量保持滚动后光标行的行号不变
@@ -202,8 +202,6 @@
 <!--  -->
 
 ## 快速搜索及移动光标
-* 快速移动光标
-
 | 按键               | 作用                                  |
 |--------------------|---------------------------------------|
 | `*与#`             | 搜索当前单词，向下/上                 |
@@ -221,8 +219,6 @@
 <!-- -->
 
 ## 其它g命令
-* g命令
-
 | 按键     | 作用                           |
 |----------|--------------------------------|
 | `g+与g-` | 新/旧撤销树(按时间)            |
@@ -235,8 +231,6 @@
 | `g8`     | 查看utf-8字符编码              |
 <!-- -->
 ## 其它z命令
-* z命令
-
 | 按键       | 作用                                           |
 |------------|------------------------------------------------|
 | `zF`       | 手动折叠N行，需要用`<space>tf`切换手动折叠模式 |
@@ -253,8 +247,6 @@
 <!-- -->
 
 ## 界面与工具
-* 界面与工具：
-
 | 按键        | 作用                                    |
 |-------------|-----------------------------------------|
 | `<F1>`      | 开关标签栏                              |
@@ -269,7 +261,6 @@
 <!-- -->
 
 ## 文件树
-* 文件树
 <!-- entry begin: defx -->
 | 按键        | 作用                                    |
 |-------------|-----------------------------------------|
@@ -294,8 +285,6 @@
 <!-- -->
 
 ## 制表与对齐
-* 制表与对齐：
-
 | 按键               | 作用                                |
 |--------------------|-------------------------------------|
 | `<leader>tt`       | 快速自动制表                        |
@@ -306,8 +295,6 @@
 <!-- -->
 
 ## 代码注释
-* 代码注释：
-
 | 按键        | 作用               |
 |-------------|--------------------|
 | `<space>cl` | 切换该行注释状态   |
@@ -317,8 +304,6 @@
 <!-- -->
 
 ## 补全
-* 补全
-
 | 按键         | 作用                                           |
 |--------------|------------------------------------------------|
 | `<CR>`       | YCM结束补全，解决了与AutoPair的映射冲突        |
@@ -326,7 +311,6 @@
 | `<c-x><c-f>` | 补全路径                                       |
 
 ## 符号包围
-* 符号包围
 > 举例：`cs{[`将`{content}`替换成`[ content ]`，`cs{]`则是将`{content}`替换成`[content]`(内部无空格)，
 > 其它同理。替换的字符(第二个{char})若是`<`，则还可以继续输入直到`>`来添加**html标签**  
 > 详见[surround](https://github.com/tpope/vim-surround)
@@ -340,8 +324,6 @@
 <!-- -->
 
 ## Toggle命令
-* Toggle命令
-
 | 按键        | 作用                             |
 |-------------|----------------------------------|
 | `<space>tl` | 切换linebreak                    |
@@ -354,11 +336,10 @@
 | `<space>tb` | 切换背景颜色                     |
 | `<space>tc` | 切换隐藏符号显示，如`\n` `\t` 等 |
 | `<space>tn` | 切换行号显示                     |
+| `<space>ti` | 切换缩进线显示                   |
 | `<bs>`      | 关闭高亮搜索                     |
 <!-- -->
 ## Git
-* Git
-
 | 按键         | 作用                |
 |--------------|---------------------|
 | `<space>gs`  | git status          |
@@ -371,8 +352,6 @@
 | `<space>ghv` | preview cursor hunk |
 <!-- -->
 ## 浏览器搜索
-* 浏览器搜索
-
 | 按键  | 作用            |
 |-------|-----------------|
 | `gss` | 智能搜索URL     |
@@ -382,8 +361,6 @@
 <!--  -->
 
 ## 翻译
-* 翻译
-
 | `<leader>tc` | 在命令行显示翻译     |
 | `<leader>tw` | 在pop-window显示翻译 |
 | `<leader>tx` | 翻译剪切板中的内容   |
@@ -391,8 +368,6 @@
 
 <!-- -->
 ## 文件内容搜索
-* 文件内容搜索
-
 | 按键        | 作用                 |
 |-------------|----------------------|
 | `<space>ss` | 搜索当前缓冲区       |
@@ -401,11 +376,9 @@
 | `<space>sf` | 搜索指定目录         |
 | `<space>sp` | 搜索工程目录         |
 | `<space>sj` | 后台搜索工程目录     |
-| `<space>lt` | 打开上次后台搜索结果 |
+| `<space>sl` | 打开上次后台搜索结果 |
 <!-- -->
 ## LeaderF模糊搜索
-* LeaderF模糊搜索
-
 | 按键               | 作用                    |
 |--------------------|-------------------------|
 | `<leader>fr`       | 重置上次搜索            |
@@ -429,7 +402,6 @@
 | `<leader>fop`      | 搜索当时工程目录文件    |
 
 ## 代码符号跳转
-* 代码符号搜索及跳转
 > 前三个是基于`Leaderf gtags`，有时需要手动更新`Leaderf gtags --update`  
 > 后面四个基于`YCM`语义
 
@@ -444,8 +416,6 @@
 | `gc` | 更名对象            |
 <!-- -->
 ## 语法错误检测
-* 语法错误检测
-
 | 按键        | 作用                                   |
 |-------------|----------------------------------------|
 | `<space>en` | 跳转下一个语法检测提示                 |
@@ -455,8 +425,6 @@
 | `<space>et` | 立即进行语法检测，并强制使用clang-tidy |
 <!-- -->
 ## 书签记号
-* 书签记号
-
 | 按键        | 作用                   |
 |-------------|------------------------|
 | `<space>mm` | 切换标签状态           |
@@ -468,8 +436,6 @@
 | `<space>mC` | 删除所有所有标签       |
 <!-- -->
 ## lang#c
-* lang#c
-
 | 按键        | 作用                       |
 |-------------|----------------------------|
 | `<space>lr` | 快速运行程序               |
@@ -479,304 +445,328 @@
 <!-- -->
 
 ## lang#markdown
-* lang#markdown
-
 | 按键        | 作用                            |
 |-------------|---------------------------------|
 | `<space>lp` | 开启markdown预览                |
 | `<space>lg` | 添加或删除GFM目录               |
 | `<space>lk` | 利用系统剪切板的URL插入链接元素 |
+| `[[与]]]`   | 上/下个标题                     |
+| `[c`        | 当前标题                        |
+| `[u`        | 上级标题                        |
 <!--  -->
 
 ## 杂项
-* 杂项
 > Last but not least
 
 | 按键        | 作用               |
 |-------------|--------------------|
-| `<space>xc` | 计算选中区域字符数 |
 | `+或-`      | 加或减当前数字     |
+| `<space>xc` | 计算选中区域字符数 |
 | `<space>fC` | 转换文件格式       |
 | `<leader>m` | 快速编辑宏         |
 | `<space>se` | 多光标编辑         |
 <!-- -->
 
-# 基础概念
+# Vim其他特性
 > 参考：[vim-galore-zh_cn](https://github.com/wsdjeg/vim-galore-zh_cn)  [ VIM中文文档 ](https://yianwillis.github.io/vimcdoc/doc/help.html)
 
 ## 命令模式
-* 命令模式
- * 进入：`:`
- * 外部命令：!cmd
+* 进入：`:`
+* 外部命令：!cmd
     > 利用`:r`与`:w`，将外部命令I/O重定向到该缓冲区  
- * 外部过滤：{范围}!cmd
+* 外部过滤：{范围}!cmd
     > 将外部命令的I/O同时重定向到目标指定区域  
- * 常用命令
+* 常用命令
     * `:g/pat/cmd`      ：在匹配`pat`的行执行cmd，`:g!`表示不匹配的行，默认范围%  
     * `:s/pat/rel/flag` ：修改匹配的`pat`为`rel`，默认范围.  
         > s_flags       ：e不报错，g全替换，i忽略大小写    
     * `:r/w`            ：范围表示read到范围行后，write指定范围  
     * `:X`              ：设置密码，为空解除  
     * `:profile`        ：调试  
-<!--  -->
 
 ## 范围
-* 范围
- * 先输入数字后再键入:冒号
- * `%`                  ：整个文件
- * `0`                  ：第一行行前
- * `n`                  ：第n行
- * `$`                  ：最后一行
- * `.`                  ：当前行
- * `+n`                 ：当前行后n行
- * `-n`                 ：当前行前n行
- * `'m`                 ：标签行
- * `/pattern/+1`        ：模式匹配行
- * `?pattern?+1`        ：前向模式匹配行
- * `/foo//bar/`         ：多次模式匹配行
-<!-- -->
+* 先输入数字后再键入:冒号
+* `%`                  ：整个文件
+* `0`                  ：第一行行前
+* `n`                  ：第n行
+* `$`                  ：最后一行
+* `.`                  ：当前行
+* `+n`                 ：当前行后n行
+* `-n`                 ：当前行前n行
+* `'m`                 ：标签行
+* `/pattern/+1`        ：模式匹配行
+* `?pattern?+1`        ：前向模式匹配行
+* `/foo//bar/`         ：多次模式匹配行
 
-<!-- -->
 ## 寄存器
-* 寄存器
- * 查看：:reg
- * 使用：" + □ + y/p
- * 寄存器：  
-用户：a-z和A-Z（大写用来向寄存器添加）  
-系统：`*`(选择区) 和 `+`(剪切板)  
-只读：`%`文件、`.` 修改、`:` 命令、`/`搜索  
-数字：0为最近一次复制，1-9最近1-9次删除  
-<!-- -->
+* 查看：:reg
+* 使用：" + □ + y/p
+* 寄存器：  
+    用户：a-z和A-Z（大写用来向寄存器添加）  
+    系统：`*`(选择区) 和 `+`(剪切板)  
+    只读：`%`文件、`.` 修改、`:` 命令、`/`搜索  
+    数字：0为最近一次复制，1-9最近1-9次删除  
 
-<!-- -->
 ## 宏录制
 * 宏录制
  * 录制：q+□+操作+q
  * 使用：@+□，@@
  * 特殊：. 执行上次的单次修改操作
-<!-- -->
 
-<!-- -->
 ## 标记与跳转
-* 标记与跳转
- * 查看：:marks 与 :jumps
- * 标记：m + 字母
- * 跳转：' + 标记
- * 标记：
+* 查看：:marks 与 :jumps
+* 标记：m + 字母
+* 跳转：' + 标记
+* 标记：
 
 | 意义           | 标记             |
 |----------------|------------------|
 | 用户           | 字母（大写全局） |
 | 上次跳转       | `'`              |
-| 上次修改       | `.`              |
-| 上次修改或复制 | `[` `]`          |
-| 上次插入       | `^`              |
 | 上次关闭       | `"`              |
+| 上次修改       | `.`              |
+| 上次插入       | `^`              |
+| 上次修改或复制 | `[` `]`          |
 | 返回较旧跳转   | `<c-o>`（全局）  |
 | 返回较新跳转   | `<c-i>`（全局）  |
 
 注：因为`<c-i>`在vim中被映射为`<tab>`，故将返回较新跳转映射为`<c-p>`
-<!-- -->
 
-<!-- -->
 ## 临时文件
-* 临时文件
- * swap文件
-    > set noswapfile  
- * backup文件
-    > set nobackup  
- * undo文件
-    > set undofile  
-    > set undodir=$HOME/.vim/undo  
- * viminfo文件
-    > set viminfo='100,<50,s10,h,n$HOME/.vim/viminfo  
-    > set history=1000  
-    > 保存标记文件数、寄存器保存行数、寄存器最大字节、启动时关闭hlsearch、viminfo文件名、搜索/命令/输入历史  
- * session文件
+* swap文件
+    > 防止多开的vim同时打开同一个文件，并且防止非正常关机导致进度未保存
+* backup文件
+    > 修改任何文件时，都会备份原文件
+* undo文件
+    > 用于记录文件的更改记录，从而可进行撤销或回溯修改历史
+* viminfo文件
+    > 存储vim使用信息，如打开文件记录、历史命令、寄存器值、跳转标签等
+* session文件
     > :makesession mysession.vim  
     > :source mysession.vim  
-<!-- -->
 
-<!-- -->
 ## runtimepath目录结构
-* runtimepath目录结构
- * 查看配置加载：:scriptnames
- * `:filetype plugin indent on`
+* 查看配置加载：:scriptnames
+    * `:filetype plugin indent on`
     * 加载`filetype.vim`与`script.vim`，并加载`ftdetect/*.vim`
     * 加载`ftplugin.vim`，并加载`ftplugin/*.vim`
     * 加载`indent.vim`，并加载`indent/*.vim`
- * `:syntax enable`与`:syntax on`
+* `:syntax enable`与`:syntax on`
     * 加载`syntax/*.vim`
- * `:set loadplugins`
+* `:set loadplugins`
     * 加载`plugin/*.vim`
- * `:set packpath=`与`:set runtimepath=`
+* `:set packpath=`与`:set runtimepath=`
     * `/pack/foo/start/bar/类vim目录/`
     * `/pack/foo/opt/bar/类vim目录/`
- * `/autoload/*.vim`
-    > 存放自动载入的函数，调用时使用  
-    > `:call (dirname#)*filename#funcname()`
- * `/ftplugin/`
+    * `/autoload/*.vim`
+        > 存放自动载入的函数，调用时使用  
+        > `:call (dirname#)*filename#funcname()`
+* `/ftplugin/`
     > 根据文件类型加载的配置
     * `<filetype>.vim`  
     * `<filetype>_<name>.vim`  
     * `<filetype>/<name>.vim`
-<!-- -->
 
 ## 命令别名
-* 命令别名
- * 命令别名
- * 形式：:command oldcmd Newcmd
- * 参数：`-nargs=0/1/*/?/+` 
-`<args>`：用命令别名的参数代替该位置  
-`<q-args>`："str \'str\' "  
-`<f-args>`："str","str"  
- * 默认范围：-range/-range=%  
- * 自动命令
- * 形式：  
-:autocmd [group] {events} {file_pattern} [nested] {command}
- * 查询：不加{command}
- * 键映射
- * 映射按键若局部冲突会导致vim等待
- * 映射`<leader>`：let mapleader="\\"
- * 禁用映射：映射到`<nop>`
- * `<silent>、<buffer>、<expr>`
- * `特殊字符`：
+* 形式： :command oldcmd Newcmd
+* 参数：`-nargs=0/1/*/?/+` 
+    `<args>`：用命令别名的参数代替该位置  
+    `<q-args>`："str \'str\' "  
+    `<f-args>`："str","str"  
+* 默认范围：-range/-range=%  
+
+## 自动命令
+* 形式： :autocmd [group] {events} {file_pattern} [nested] {command}
+* 查询：不加{command}
+
+## 键映射
+* 特殊参数
+    * `<buffer>`    ：buf局部映射
+    * `<nowait>`    ：映射冲突时不等待
+    * `<silent>`    ：不在命令行回显操作
+    * `<expr>`      ：将{rhs}替换为表达式结果
+    * `<SID>`       ：添加独一无二编号
+
+## 特殊字符
 `<c-v>`{key}  
 `<c-v>`{字符编码}：0，x，u，U  
 `<c-k>`{二合字符}  
 查看：:digraphs，ga，g8  
-<!-- -->
 
 
- * 代码缩进
-    * 配置：
-    filetype indent on：自适应不同语言缩进  
-    set autoindent：基于上行缩进  
-    set expandtab：空格代替tab，:retab恢复本行tab  
-    set tabstop=8：默认的tab宽，不足则为空格  
-    set softtabstop=4：键入的tab宽  
-    set shiftwidth=4：缩进的tab宽  
-<!-- -->
 
- * 代码折叠
-    * 配置  
-set foldmethod=syntax|indent：基于语法折叠  
-set nofoldenable：启动vim时不开启折叠
-    * 常用命令：
-za：切换折叠状态  
-zM：折叠所有代码  
-zR：取消所有折叠
-<!-- -->
 
- * 基于Tags跳转
-    * 配置：
-set tags=./.tags;,.tags
-    * 操作：
-^}：直接本窗口跳转  
-^W } ：打开preview窗口跳转  
-g]：显示跳转选项
 
- * 基于Cscope跳转
-    * 配置：
-cs add ~/Projects/.cscope.out  
-set nocst  
-set cscopequickfix=  
-set csre  
-    * 操作
-cs find s/g/d/c/a 符号
 
- * 文件跳转
-    * 配置：
-set path= ：vim搜寻文件名，\*\*表示递归搜索
-    * 操作：
-gf ：还可下载URL
 
-<!-- -->
-## 初步配置
-* 初步配置
- * set nocompatibale ：vi不兼容模式
- * set ignorecase ：搜索时忽略大小写
- * set smartcase：搜索时有大写保证大小写敏感
- * set hlsearch ：搜索高亮
- * set incsearch ：键入搜索时即时跳转
- * set nowrapscan ：搜索到头时不折返回另一头
- * set number ：显示行号，rnu显示相对行号
- * set autochdir：自动改变工作目录
- * set noshowmod ：不显示模式，airline会显示
- * set showcmd ：显示普通模式指令
- * set cmdheight=2 ：底部信息显示需要的行数
- * set ruler ：状态栏显示光标位置
- * set laststatus=2 ：显示状态栏
- * set wildmenu ：命令行模式自动补全
- * set wildignorecase：命令行补全文件名igcase
- * set wrap ：长行回绕到下一行(gj，gk，g0，g$)
- * set linebreak：回绕避免断词
- * set scrolloff=N：保持N行始终在光标之下或之上
- * set whichwrap=<,>,[,] ：使<Left>和<Right>可在普通/插入模式中移动到上行尾,下行首
- * set list ：显示空白符
- * set listchar=tab: eol: ,trail: ：设置空白符符号
- * set backspace=indent,eol,start ：允许插入模式<BS>删除字符处，行首空白符、换行符、进入插入模式之前的字符
- * set showmatch：左括号匹配提示，无则响铃
- * set matchtime= ：左括号匹配提示时间(0.1s)
- * set hidden：自动隐藏缓冲区
- * set virtualedit=block,onemore：光标可出现在无字符的空间(设置all用于制表)
- * set previewheight=16：preview窗口高度
- * set ttimeoutlen=：
 
-<!-- -->
-## gvim配置
-* gvim配置
- * behave xterm/mswin：鼠标行为模式
- * set guifont=\* ：gvim字体
- * set guioptions-=l/L/r/R：禁止显示滚动条
- * set guicursor=n:block，i:hor10：光标切换
- * set background=dark/light：背景颜色
- * colorscheme 主题：颜色主题
+
+
 
 # 简单的vimscript语法
-<!-- -->
 ## 变量
-* 变量
- * 变量作用域
-    * g:var ： 全局
-    * a:var ： 函数参数
-    * l:var ： 函数局部变量
-    * b:var ： buffer 局部变量
-    * w:var ： window 局部变量
-    * t:var ： tab 局部变量
-    * s:var ： 当前脚本内可见的局部变量
-    * v:var ： Vim 预定义的内部变量
- * `$环境变量`，`&选项值`
- * 整数：32为有符型，支持八/十/十六进制
- * 浮点数：支持科学记数法
- * 字符串：
-    * NULL结尾，支持转义序列，且有" 与 ' 形式
-    * 用 . 连接字符串与变量替换
-    * 非零数字开头的字符串会转换为非零子串对应的数值，否则为0
- * 函数引用：大写首字母
- * 有序列表：[00，'10'，[20，21]]
-    > 引用：list[0]、list[1]
- * 无序字典：{'key':'value'，}
-    > 引用：dict[key1]、dict[key2]
+* 变量的声明、销毁与引用
+    ```vim
+    let var = val
+    echo var
+    echo foo_{var}_bar
+    unlet var
+    unlet! var
+    ```
 
-<!-- -->
+* 变量作用域
+    > 若在函数体外则默认**全局变量**，若在函数体内则默认为**函数局部变量**
+    * g:var     ：全局变量
+    * a:var     ：函数参数
+    * l:var     ：函数局部变量
+    * b:var     ：buf局部变量
+    * w:var     ：win局部变量
+    * t:var     ：tab局部变量
+    * s:var     ：脚本内可见的局部变量
+    * v:var     ：Vim预定义的内部变量
+
+* 表达式
+    * `$环境变量`
+    * `&选项变量`
+    * `@寄存器`
+    * `* / % + -`
+    * ` ? : `
+    * 字符串比较：
+
+| use 'ignorecase' | match case | ignore case |
+|------------------|------------|-------------|
+| ==               | ==#        | ==?         |
+| !=               | !=#        | !=?         |
+| >                | >#         | >?          |
+| >=               | >=#        | >=?         |
+| <                | <#         | <?          |
+| <=               | <=#        | <=?         |
+| =~               | =~#        | =~?         |
+| !~               | !~#        | !~?         |
+
+* 数据类型
+    > **:echo type(varname) 可以查看变量类型**
+    * 布尔值
+        ```vim
+        let bool = v:true
+        ```
+    * 空值
+        ```vim
+        let null = v:null
+        ```
+    * 整数      ：32为有符型，支持8/10/16进制
+        ```vim
+        let integer = -19 + 0x1f + 017 +0b1010
+        ```
+    * 浮点数    ：支持科学记数法
+        ```vim
+        let float = 1.5 + 1.5e-3 * -1.5e3
+        ```
+    * 字符串    ：8位无符号字符串
+        ```vim
+        let string = "\t\n\r\e\b\"\\ \<esc>" . 'all is original'
+        ```
+        * NULL结尾
+        * 非零数字开头的字符串会转换为非零子串对应的数值，否则为0
+    * 函数引用  ：首字母必须大写
+        ```vim
+        let Function = function("printf")
+        echo Function("parameter")
+        ```
+    * 有序列表List
+        ```vim
+        let list = [1, "str1", [2, "str2"]] " 下标从0开始
+        echo list[0]
+        echo list[2][0]
+        ```
+    * 无序字典Dictionary
+        ```vim
+        let dict = {"key": "value", "foo": {"bar": 1}} "key值必须是字符串类型
+        echo dict.key
+        ```
+
+* 定义与删除：
+    ```vim
+    function! Func(arg1, arg2, ...) " 感叹号表示强制覆盖
+        " `...`表示变参，使用`a:1`表示`...`中的第一个参数并依此类推，`a:0`表示`...`共有多少参数
+    endfunction
+
+    delfunction <function>
+    ```
+
+* 调用：
+    ```vim
+    call Funcname(args)      "只进行函数调用
+    echo Funcname(args)      "将函数返回值当作变量
+    ```
+
+* 范围：
+    ```vim
+    function! Func() range
+        echo a: lastline - a:firstline "范围中最后一行行号减去第一行行号
+    endfunction
+    ```
+
+* 面向对象：
+    ```vim
+    let MyClass = {"foo": "bar"}
+    function! MyClass.Func() dict
+        echo self.foo   "通过self引用字典
+    endfunction
+    call MyClass.Func()
+    ```
+
+## 语句
+* 条件判断
+    ```vim
+    if <expression>
+        ...
+    elseif <expression>
+        ...
+    else
+        ...
+    endif
+    ```
+* 循环语句
+    ```vim
+    for <var> in <list>
+        continue
+        break
+    endfor
+
+    for [var1, var2] in [[1, 2], [3, 4]]
+        " on 1st loop, var1 = 1 and var2 = 2
+        " on 2nd loop, var1 = 3 and var2 = 4
+    endfor
+
+    while <expression>
+    endwhile
+    ```
+* 异常捕获
+    ```vim
+    try
+        ...
+    catch <pattern (optional)>
+        " HIGHLY recommended to catch specific error.
+    finally
+        ...
+    endtry
+    ```
+
+# Vim命令、函数与变量
 ## 函数
-* 函数
- * 调用：
-    * :call Func(args)
-    * :echo Funcname(args)
-    * let Myfunc=function("Func")
-    * call(Myfunc，[args])
- * range：
-a:firstline，a:lastline
- * dict：
-self：将函数引用装入字典，self指代该字典
+* exists("varname")
+* eval("expression")
+* search("pattern")
+* getline("line")
+* setline("line", "replace")
+* substitute("expr", "pattern", "replace", "flag")  ：flag可以是"g"或""
+* function("funcname")
 
- * 语句
-    * if语句
-    * for语句
-    * while语句
-    * try-catch语句
+## 命令
+* execute "c-cmd"
+* normal "n-cmd"
+* substitute/pattern/replace/flag
 
- * 特性
-    * foo_{val}_bar：先计算val后字符替换
+## 变量
+* v:version

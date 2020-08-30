@@ -15,8 +15,9 @@
 # 编译工具链
 <!-- entry begin: gcc -->
 * gcc
+    * 指定输出文件          ：-o
     * 优化级别              ：-O1  -O2  -O3
-    * 编译程度              ：-E(.i)  -S(.s)  -c(.o)  -o
+    * 编译程度              ：-E(.i)  -S(.s)  -c(.o)
     * 指定标准              ：-std=c11
     * 使用AVX指令           ：-mavx2
     * 并发库                ：-lpthread
@@ -227,11 +228,11 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     * `<c-f>`       ：fzf搜索
     * `rn`          ：重命名
     * `rm`          ：删除文件
+    * `yp`          ：复制文件路径
     * `yy`          ：复制
     * `dd`          ：剪切
     * `pp`          ：粘贴（冲突时自动更名）
     * `po`          ：粘贴时强制覆盖
-    * `yp`          ：复制文件路径
     * `pl`          ：为复制的文件创建软链接
 <!-- entry end -->
 
@@ -403,9 +404,9 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     * gsh TAG   ：`git show TAG`
     > 例：
     > ```bash
-    > $ git tag -a <TAG> -m 'discription'   ：强标签
-    > $ git tag <TAG-lw>                    ：轻量标签
-    > $ git tag -d <TAG>                    ：删除标签
+    > git tag -a <TAG> -m 'discription'   ：强标签
+    > git tag <TAG-lw>                    ：轻量标签
+    > git tag -d <TAG>                    ：删除标签
     > ```
 <!-- entry end -->
 
@@ -423,8 +424,8 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     * gcb，gct  ：如下示例
     > 例：
     > ```
-    > $ git checkout -b <branch> <remote>/<branch>：创建、检出并跟踪
-    > $ git checkout --track <remote>/<branch>    ：当前分支直接跟踪
+    > git checkout -b <branch> <remote>/<branch>：创建、检出并跟踪
+    > git checkout --track <remote>/<branch>    ：当前分支直接跟踪
     > ```
     > 注：切换分支时，先`git add --all ; git stash`保存工作区改动
 <!-- entry end -->
