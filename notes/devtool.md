@@ -1,39 +1,42 @@
+**注意：整个工具集的快捷键或命令都依赖[这套配置](https://github.com/mrbeardad/DotFiles)，即某些操作可能非原生的**
 # 目录
-
 <!-- vim-markdown-toc GFM -->
 
 - [编译工具链](#编译工具链)
-- [GDB调试](#gdb调试)
-- [LLDB调试](#lldb调试)
-- [TMUX](#tmux)
+- [调试](#调试)
+  - [GDB](#gdb)
+  - [CGDB](#cgdb)
+  - [LLDB](#lldb)
 - [SSH](#ssh)
-- [ranger](#ranger)
-- [git概念](#git概念)
-- [构建系统](#构建系统)
+- [TMUX](#tmux)
+- [ZSH](#zsh)
+  - [Some Alias](#some-alias)
+  - [Some Tools](#some-tools)
+- [git](#git)
+  - [git概念](#git概念)
+  - [git命令](#git命令)
 
 <!-- vim-markdown-toc -->
+
 # 编译工具链
 <!-- entry begin: gcc -->
 * gcc
     * 指定输出文件          ：-o
-    * 优化级别              ：-O1  -O2  -O3
-    * 编译程度              ：-E(.i)  -S(.s)  -c(.o)
+    * 优化级别              ：-O0 -O1 -O2 -O3-Ofast -Os -Og
+    * 编译程度              ：-E（.i） -S（.s） -c（.o）
     * 指定标准              ：-std=c11
-    * 使用AVX指令           ：-mavx2
-    * 并发库                ：-lpthread
-    * 制作动态库            ：-shared  -fpic
-    * 调用链接器            ：-rdynamic  -ldl
-    * 链接库打桩            ：-Wl,--wrap,func
     * 定义宏                ：-Dmacros_define
     * 指定inclide目录       ：-I
-    * 指定lib目录           ：-L -lxxx（库名libxxx.a、libxxx.so）
+    * 指定lib目录与lib      ：-L -lxxx（库名libxxx.a、libxxx.so）
+    * 指定机器              ：-m32 -m64
+    * 指定程序规模          ：-mcmodel=medium或large（数据段默认32位跳转）
+    * 制作动态库            ：-shared -fpic
+    * 调用链接器            ：-ldl -rdynamic 
+    * 链接库打桩            ：-Wl,--wrap,func
     * GPROF剖析             ：-pg（最好也加下述参数）
-    * 调试                  ：-Og  -g3  -fno-inline
-    * 指定机器              ：-m32  -m64
-    * 指定程序规模          ：-mcmodel= medium|large
-        > 代码数据段默认32位跳转
-    * 开启标准库debug模式   ：-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
-    * 报错                  ：-Werror  -Wall  -Wextra -Wconversion -Wfloat-equal
+    * 调试                  ：-Og -g3 -fno-inline
+    * 开启C++标准库debug模式：-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
+    * 报错                  ：-Werror -Wall -Wextra
 <!-- entry end -->
 
 <!-- entry begin: ar 静态库 -->
@@ -50,16 +53,15 @@
 <!-- entry end -->
 
 <!-- entry begin: bojdump readelf ldd strace pmap gprof -->
-* objdump -dx
 * readelf
-
+* objdump -dx
 * ldd -V
 * strace
 * pmap
-
 * gprof
 <!-- entry end -->
 
+# 调试
 <!-- entry begin: coredump -->
 * coredump设置
 ```bash
@@ -68,7 +70,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 ```
 <!-- entry end -->
 
-# GDB调试
+## GDB
 <!-- entry begin: gdb -->
 * gdb EXEC CORE PID
 
@@ -97,10 +99,9 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     * step      s   ：`N`
     * next      n   ：`N`
     * until     u   ：`line-num`
-    * finish    f
     * return        ：`ret-val`
-    * bt
-    * frame
+    * finish    f
+    * backtrace bt
 
 * 打印：
     * print     p   ：`val`，`expr`，`"%s",addr`
@@ -122,6 +123,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     * thread `<thread-num>`
 <!-- entry end -->
 
+## CGDB
 <!-- entry begin: cgdb -->
 * cgdb
     * `i`：进入GDB模式
@@ -131,7 +133,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     * `o`：打开文件
 <!-- entry end -->
 
-# LLDB调试
+## LLDB
 <!-- entry begin: lldb -->
 * lldb `<exe>` [-c `<core>`] [-p `<pid>`]
 
@@ -167,57 +169,87 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     t [threadnum]
 <!-- entry end -->
 
+# SSH
+<!-- entry begin: ssh -->
+* `ssh-keygen -t ecdsa -b 512  -C "注释"`
+* `ssh-keygen -t rsa   -b 4096 -C "注释"`
+* `ssh-keygen -f ~/.ssh/id_ecdsa -p`        ：更改密码短语
+* `ssh-copy-id -i KEY.pub -p port user@host`：将公钥上传到主机
+* `ssh -p Port User@Host`                   ：SSH连接主机
+<!-- entry end -->
+
 # TMUX
 <!-- entry begin: tmux -->
 * tmux
+    * -S socketfile [attach]
     * tl    ：`tmux list-session`
     * ts    ：`tmux new-session -s <session-name>`
     * ta    ：`tmux attach -t <session-name>`
     * tad   ：`tmux attach -d -t <session-name>`
     * tkss  ：`tmux kill-session -t <session-name>`
     * tksv  ：`tmux kill-server`
-    * -S socketfile [attach]
 
 * 快捷键： `Alt`+`w` 为快捷键前缀
-    * meta操作：
-        * `R`：重载配置
-        * `:`：命令模式
+    * meta操作
+        * `R`       ：重载配置
+        * `:`       ：命令模式
     * pane操作：
-        * `s`：水平切分panes
-        * `v`：竖直切分panes
-        * `x`：关闭当前pane
-        * `z`：最大化该pane或恢复大小
-        * `方向键`：跳转到该方向的pane
-        * `q`：选择一个pane
+        * `s`       ：水平切分panes
+        * `v`       ：竖直切分panes
+        * `x`       ：关闭当前pane
+        * `z`       ：最大化该pane或恢复大小
+        * `方向键`  ：跳转到该方向的pane
+        * `q`       ：选择一个pane
         * `Ctrl`+`o`：交换pane
-        * `!`：新窗口打开该pane
+        * `!`       ：新窗口打开该pane
     * window操作：
-        * `b`：上一个window
-        * `n`：下一个window
+        * `b`       ：上一个window
+        * `n`       ：下一个window
     * session操作：
-        * `d`：卸离会话(可通过`tmux a -t session-name`重新恢复)
-        * `w`：预览整个会话窗口
+        * `d`       ：卸离会话(可通过`tmux a -t session-name`重新恢复)
+        * `w`       ：预览整个会话窗口
         * `Ctrl`+`S`：保存会话到磁盘文件
         * `Ctrl`+`R`：从磁盘文件恢复会话
     * 其他操作：
-        * `h`：打开htop
-        * `i`：打开iotop
-        * `r`：打开ranger
-        * `n`：打开ncdu
-        * `m`：打开cmatrix
-        * `c`：打开cmatrix -r
-<!-- entry end -->
-# SSH
-<!-- entry begin: ssh -->
-* SSH
-    * `ssh-keygen -t ecdsa -b 512  -C "注释"`
-    * `ssh-keygen -t rsa   -b 4096 -C "注释"`
-    * `ssh-keygen -f ~/.ssh/id_ecdsa -p`：更改密码短语
-    * `ssh-copy-id -i KEY.pub -p port user@host`
-    * `ssh -p Port User@Host`
+        * `h`       ：打开htop
+        * `i`       ：打开iotop
+        * `r`       ：打开ranger
+        * `n`       ：打开ncdu
+        * `m`       ：打开cmatrix
 <!-- entry end -->
 
-# ranger
+# ZSH
+## Some Alias
+<!-- entry begin: alias -->
+```sh
+alias l='ls -lah  --time-style="+%Y %m-%d %H:%M:%S "'
+alias l.='ls -ladh  --time-style="+%Y %m-%d %H:%M:%S " .*'
+alias ll='ls -lh  --time-style="+%Y %m-%d %H:%M:%S "'
+alias psa='ps axo stat,euid,ruid,tty,tpgid,sess,pgrp,ppid,pid,pcpu,pmem,comm'
+alias dif='diff -Naur'
+alias ra='ranger'
+alias apt='sudo apt'
+```
+<!-- entry end -->
+
+## Some Tools
+<!-- entry begin: tools -->
+| 命令    | 用途                                        |
+|---------|---------------------------------------------|
+| f       | 利用fzf搜索当前目录并用ranger预览选择的文件 |
+| j       | 模糊搜索跳转目录历史并跳转                  |
+| s       | 解压各种压缩/归档包                         |
+| h       | history                                     |
+| ncdu    | 查看当前目录下文件的磁盘占用情况            |
+| htop    | 系统资源监控                                |
+| iotop   | 系统磁盘IO监控                              |
+| cloc    | 计算指定目录下的代码量                      |
+| cpv     | 使用rsync代替cp                             |
+| fuck    | 纠正命令行错误                              |
+| Ctrl+\[ | 进入vi模式，该模式下可使用vi快捷键修改命令  |
+| V       | vi模式下，打开$EDITOR编辑命令               |
+<!-- entry end -->
+
 <!-- entry begin: ranger -->
 * ranger
     * `<left>`      ：关闭目录，或进入上级目录
@@ -236,36 +268,32 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     * `pl`          ：为复制的文件创建软链接
 <!-- entry end -->
 
-# git概念
-<!-- entry begin: git 基本概念 -->
+# git
+## git概念
 * 管理目录
+    > 注：不管git底层是如何实现的，我们需要知道git给我们的抽象模型是每次提交历史都是**全量备份**的，这一点很重要
     * 工作区`W`相对暂存区`S`：untraced，deleted，rename，modified  
     * 暂存区`S`相对仓库区`R`：traced，new，deleted，rename，modified  
     * 仓库区`R`             ：各种对象  
-    * 注：不管git底层是如何实现的，我们需要知道git给我们的抽象模型是每次提交历史都是**全量备份**的，这一点很重要
-<!-- entry end -->
 
-<!-- entry begin: git 分支模型 -->
 * 分支模型
+    * data对象：
+        > 这就是每个文件的每次历史的数据文件实体，每次提交其实并不会备份未改动的文件，
+        > 而只要一个文件改动的，就会被全量备份而创建一个新的data对象  
+        > 注：其实git会在每次push时整理data对象，将一些小改动改为增量备份而非全量备份
+    * tree对象：
+        > 为每个commit管理“快照”，指向该commit所有的各个data对象
     * 分支指针：
-        > 分支指针指向某个**commit**
+        > 分支指针指向某个commit
         * HEAD          ：指向本地当前分支
-        * branch        ：指向本地已存在的分支
-        * remote/branch ：指向远程仓库的分支
+        * BRANCH        ：指向本地已存在的分支
+        * REMOTE/BRANCH ：指向远程仓库的分支
             > 远程分支只读，通过创建本地分支来跟踪并修改
     * commit信息：
         * 作者、提交者、日期、校验、描述、父指针、"快照"
             > 父指针指向上次**commit**，可能有多个
-    * tree对象：
-        > 为每个commit管理"快照"，指向各个data对象
-    * data对象：
-        > 这就是每个文件的每次历史的数据文件实体，每次提交其实并不会备份未改动的文件，
-        > 由tree对象负责指向那个未改动的文件，而只要一个文件改动的，就会被全量备份而创建一个新的data对象  
-        > 注：其实git会在每次push时整理data对象，将一些小改动改为增量备份而非全量备份
-<!-- entry end -->
 ![图片来自网络](../images/git-branch.png)
 
-<!-- entry begin: git 工作流程 -->
 * 工作流程
     * 贡献者
         * 将目标项目仓库fork到自己的远程仓库
@@ -281,7 +309,6 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
             * 添加贡献者的仓库到remote并fetch到本地
             * 若贡献太多，则配置remote仓库的[refs](#refs)
             * 审查、修改、合并后push到项目发布点
-<!-- entry end -->
 
 <!-- entry begin: git config -->
 * git config
@@ -298,7 +325,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
         * credential.helper cache ：托管私钥的密码短语
     * 配置<span id="refs">refs</span>
     ```toml
-    [remote "RPO"]
+    [remote "REMOTE"]
     url = URL
     fetch = +refs/heads/*:refs/remote/origin/*
     fetch = +refs/pull/*/head:refs/remote/origin/pr/*
@@ -334,308 +361,219 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
         * tags/         ：本地标签引用
 <!-- entry end -->
 
+## git命令
+* FILE表示文件
+* DIR表示目录
+* PATH表示路径
+* COMMIT表示提交，一般可用SHA值、TAG值、分支指针
+* BRANCH表示分支
+* REMOTE表示远程仓库
+* REF表示引用，即指定ref目录下的文件
+
 <!-- entry begin: git add -->
-* git add
-    * ga    ：更新`S`
-    * gaa   ：更新所有管理目录下为被忽略的文件
+* git add PATH
+    > 将工作区中变更的文件添加到暂存区
+    * ga    ：`git add`
+    * gaa   ：`git add --all`
 <!-- entry end -->
 
 <!-- entry begin: git rm -->
-* git rm
-    * grm   ：删除文件并更新`S`
+* git rm PATH
+    > 删除工作区与暂存区中的文件（只需要暂存区中存在目标文件）
+    * grm   ：`git rm`
 <!-- entry end -->
 
 <!-- entry begin: git mv -->
-* git mv
-    * gmv   ：移动文件并更新`S`
-    > 注：若通过`mv`来移动文件，git会将其当作删除一个文件又新建一个文件
+* git mv PATH newPATH
+    > 移动或重命名工作区与暂存区中的文件（需要工作区与暂存区都存在目标文件）
+    * gmv   ：`git mv`
 <!-- entry end -->
 
-<!-- entry begin: git restore *Path* -->
-* git restore *Path*
-    * grs   ：撤销W
-    * grst  ：撤销S
+<!-- entry begin: git restore -->
+* git restore PATH
+    > 撤销工作区或暂存区的变更
+    * grs   ：`git restore`
+    * grst  ：`git restore --staged`
 <!-- entry end -->
 
 <!-- entry begin: git commit -->
 * git commit
-    * gc
-    * gc!
-    * gca
-    * gca!
-    > 注：  
-    > `a`代表直接W->H提交  
-    > `!`代表覆盖上次提交
+    > 提交变更到本地仓库中当前分支  
+    > `!`代表覆盖上次提交，`a`代表直接从工作区提交而跳过暂存区
+    * gc    ：`git commit`
+    * gc!   ：`git commit --amend`
+    * gca   ：`git commit -a`
+    * gca!  ：`git commit --amend`
 <!-- entry end -->
 
-<!-- entry begin: git reset *Commit* -->
-* git reset *Commit*
-    > 通过reset可以后移分支指针，merge可以前移
-    * grh   ：撤销commit历史，回溯分支
-    * grhh  ：完全撤销，不保留撤销commit的改动
+<!-- entry begin: git reset -->
+* git reset COMMIT
+    > 撤销/回退当前分支指针到指定COMMIT
+    * grh   ：`git reset`
 <!-- entry end -->
 
 <!-- entry begin: git status -->
 * git status
-    * gst   ：查看`W`与`S`状态
-    * gss   ：左`W`右`S`
+    > 查看当前项目变更与提交状态
+    * gst   ：`git status`
+    * gss   ：`git status -s`
 <!-- entry end -->
 
 <!-- entry begin: git diff -->
 * git diff
-    * gd    ：查看`W-S`的diff
-    * gds   ：查看`S-R`的diff
-    * gdt   ：利用vim查看gd
-    * gdts  ：利用vim查看gds
-    * gdi   ：精简的展示diff
-    * 参数：
-    ```
-    [<path>]                    ：比较W-S或S-H
-    <commit> [<path>]           ：比较W-C或S-C
-    <commit> <commit> [<path>]  ：比较C-C
-    ```
+    > 参数：
+    >
+    >       [PATH]
+    >       COMMIT [PATH]
+    >       COMMIT COMMIT [PATH]
+    * gd    ：`git diff`
+    * gds   ：`git diff --staged`
+    * gdt   ：`git difftool --tool=vimdiff`
+    * gdts  ：`git difftool --tool=vimdiff --staged`
+    * gdi   ：`git diff-index`
 <!-- entry end -->
 
 <!-- entry begin: git tag -->
 * git tag
-    * gt
-    * gtl
-    * gtv
-    * gsh TAG   ：`git show TAG`
-    > 例：
-    > ```bash
-    > git tag -a <TAG> -m 'discription'   ：强标签
-    > git tag <TAG-lw>                    ：轻量标签
-    > git tag -d <TAG>                    ：删除标签
-    > ```
+    * gt        ：`git tag`
+    * gtl与gtv  ：显示tag
+    * 其他
+    ```sh
+    git tag -a TAG -m 'discription'     #强标签
+    git tag -f TAG-lw                   #强制轻量标签
+    git tag -d TAG                      #删除标签
+    ```
 <!-- entry end -->
 
 <!-- entry begin: git log -->
-* git log [file|branch|commit]
-    * glg
-    * glgga     ：可视化
-    * glola     ：精简可视化
+* git log [FILE|COMMIT]
+    * glgga     ：提交历史可视化
+    * glola     ：提交历史精简可视化
+<!-- entry end -->
+
+<!-- entry begin: git stash -->
+* git stash
+    > 隐藏暂存区已安全跳转分支
+    * gsta      ：`git stash push`
+    * gstp      ：`git stash pop`
+    * gstl      ：`git stash list`
 <!-- entry end -->
 
 <!-- entry begin: git checkout -->
 * git checkout
-    * gco       ：切换分支
-    * gcm，gcd  ：切换到master、develop分支
-    * gcb，gct  ：如下示例
-    > 例：
-    > ```
-    > git checkout -b <branch> <remote>/<branch>：创建、检出并跟踪
-    > git checkout --track <remote>/<branch>    ：当前分支直接跟踪
-    > ```
-    > 注：切换分支时，先`git add --all ; git stash`保存工作区改动
+    * gco       ：`git checkout`
+    * gcm       ：`git checkout master`
+    * gcd       ：`git checkout develop`
+    * gcb       ：`git checkout -b BRANCH REMOTE/BRANCH`（创建、检出并跟踪）
+    * gct       ：`git checkout --track REMOTE/BRANCH`（当前分支直接跟踪）
 <!-- entry end -->
 
 <!-- entry begin: git branch -->
 * git branch
-    * gb    ：在当前commit(HEAD)创建分支
-    * gbav  ：查看分支信息，以及跟踪分支与远程分支的对比
-    * gbda  ：删除已合并的分支
-    * gbnm  ：查看未合并的分支
+    * gb        ：`git branch`
+    * gbav      ：`git branch -a -vv`
+    * gbda      ：删除已合并的分支
+    * gbnm      ：查看未合并的分支
 <!-- entry end -->
 
 <!-- entry begin: git merge -->
 * git merge
-    * gm        ：合并分支
-    * gmt       ：启动vim解决分支冲突
-    * gmc       ：继续合并
-    * gma       ：打断合并
-    > 合并形式  ：快进，递归  
     > 原理      ：将两分支相对共同祖先的**变更**合并，若对同一个文件均有变更则冲突  
-    > 选项      ：--allow-unrelated-histories，在`merge` `pull`等出现无关分支（无共同祖先）时使用
+    * gm        ：`git merge`
+    * gmt       ：`git mergetool --tool=vimdiff`
+    * gmc       ：`git merge --continue`
+    * gma       ：`git merge --abort`
 <!-- entry end -->
 
 <!-- entry begin: git rebase -->
 * git rebase
-    * grb
-    * grbc  ：继续
-    * grba  ：打断
-    * grbs  ：跳过
-    > 例：
-    ```bash
-    $ git rebase <主branch>   ：本分支变基到<branch>
-    $ git rebase <主branch> <被branch>
-    $ git rebase -i HEAD~n    ：压缩前n次commit，pick为主，squash为辅
-    ```
-    > 变基操作：将分支完全并入以简化commit历史  
     > 原理：将本分支相对共同祖先的各个变更作用于目标分支而形成各个commit，并删除该分支历史  
-    > 注意：因为删除历史的缘故，不要rebase已经发布了的分支commit  
-    > rebase分支的分支应该使用--onto选项，以免将分支上的另一个子分支的历史改变
+    * grb       ：`git rebase`
+    * grbc      ：`git rebase --continue`
+    * grba      ：`git rebase --abort`
+    * 其他
+    ```sh
+    git rebase 主BRANCH                 # 本分支变基到<主branch>
+    git rebase 主BRANCH 被BRANCH        # <被branch>变基到<主branch>
+    git rebase -i REV                   # 压缩前n次commit：pick为主，squash为辅
+    ```
 <!-- entry end -->
 
 <!-- entry begin: git clone -->
-* git clone URL  Dirname
+* git clone URL DIR
     * --depth=1
-    * --mirror
     * --recurse-submodules
 <!-- entry end -->
 
 <!-- entry begin: git submodule -->
 * git submodule
-    * git submodule add `URL` [Dir]             ：添加子模块信息
-    * git submodule init                        ：根据本地记载的子模块信息，初始化子模块
-    * git submodule update                      ：上次提交时记录的子模块的“快照”可能并不是最新的，需要更新
-    * git submodule update --init               ：相当于上两步一起  
-    * git submodule update --init --recursive   ：递归
+    ```sh
+    git submodule add URL [Dir]               # 添加子模块信息
+    git submodule init                        # 根据`.gitmodules`初始化子模块
+    git submodule update                      # 拉取上游来更新子模块
+    git submodule update --init               # 初始化并更新
+    git submodule update --init --recursive   # 递归初始化并更新所有子模块
+    ```
 <!-- entry end -->
 
 <!-- entry begin: git remote -->
 * git remote
-    * gr
-    * grv
-    * gra
-    * grrm
-    * grmv
-    * glr   ：查看ref
-    > 例：
-    ```bash
-    git remote add <remote> URL
-    git remote set-url <remote> URL
-    ```
-    > 流程：
-gra -> gcb|gct -> gf|gl -> gco -> gc -> gm|grb -> gp
+    * gr        ：`git remote`
+    * grv       ：`git remote -v`
+    * gra       ：`git remote add REMOTE URL`
+    * grrm      ：`git remote remove REMOTE URL`
+    * grmv      ：`git remote rename REMOTE newRepo`
+    * grset     ：`git remote set-utl REMOTE URL`
+    * glr       ：`git ls-remote`
 <!-- entry end -->
 
-<!-- entry begin: git fetch -->
-* git fetch `<remote>`
+<!-- entry begin: git fetch pull -->
+* git fetch REMOTE
     * gf
-<!-- entry end -->
-
-<!-- entry begin: git pull -->
-* git pull `<remote>`
+* git pull REMOTE
     * gl
 <!-- entry end -->
 
 <!-- entry begin: git push -->
-* git push [-f]
-    * gp
-    * 例：
-    ```bash
-    $ git push <remote> <本地branch>
-    $ git push <remote> <本地branch>:<远程branch>
-    $ git push <remote> <本地ref>:<远程ref>
-    $ git push <remote> --delete <branch> ：销毁远程仓库某分支
-    $ git push <remote> <tag>
-    $ git push --tags
-    $ git push <remote> :refs/tags/tagname
-    ```
-<!-- entry end -->
-
-<!-- entry begin: git stash -->
-* git stash
-    > 隐藏暂存区，方便跳转分支，记得先`git add --all`哦
-    * gsta
-    * gstp
-    * gstl
+* git push
+    > 参数：
+    >
+    >       git push REMOTE 本地BRANCH            # 推送本地分支到远程仓库同名分支
+    >       git push REMOTE 本地BRANCH:远程BRANCH # 推送本地分支到远程仓库分支
+    >       git push REMOTE TAG                   # 推送指定TAG
+    >       git push REMOTE --tags                # 推送所有TAG
+    >       git push REMOTE 本地REF:远程REF       # 推送本地引用到远程仓库引用
+    >       git push REMOTE --delete REF          # 删除云端仓库指定引用
+    * gp        ：`git push`
+    * gpf       ：`git push --force-with-lease`
+    * gpf!      ：`git push --force`
 <!-- entry end -->
 
 <!-- entry begin: git cherry-pick -->
-* git cherry-pick Commit
-    > 复制(合并)目标commit相对其前一次的修改到当前分支
-    * gcp
-    * gcpa
-    * gcpc
+* git cherry-pick COMMIT
+    > 复制(合并)目标commit相对其前一次的diff到当前分支
+    * gcp       ：`git cherry-pick`
+    * gcpc      ：`git cherry-pick --continue`
+    * gcpa      ：`git cherry-pick --abort`
 <!-- entry end -->
 
-<!-- entry begin: git archive -->
-* git archive [--format] --output FILE BRANCH
+<!-- entry begin: git bundle 打包 -->
+* git bundle create BUNDLE_FILE HEAD BRANCH
+    > 注：最好带上HEAD自动checkout  
+    > 注：可用`git clone BUNDLE_FILE|FILE_URL [DIR]`重建目录
+<!-- entry end -->
+
+<!-- entry begin: git archive 打包 -->
+* git archive
     > 不同于bundle，该操作打包不带有`.git`目录
-<!-- entry end -->
-
-<!-- entry begin: git bundle create TargetFile HEAD Branch -->
-* git bundle create TargetFile HEAD Branch
-    > 打包本应该用push操作的数据  
-    > 注： 最好带上HEAD自动checkout  
-    > 可用`git clone <file> [<dirname>]`重建目录
-<!-- entry end -->
-
-<!-- entry begin: git format-patch -->
-* git format-patch
-    > 制作补丁
-    > 例：
-    ```bash
-    git format-patch <branch> -n            ：目标分支最近n次更新
-    git format-patch <commit>               ：本分支自目标commit(不含)之后的更新
-    git format-patch <commit1>..<commit2>   ：两个commit(包含)之间的更新
-    ```
-<!-- entry end -->
-
-<!-- entry begin: git apply -->
-* git apply
-    > 引用补丁
-    * gap
-    * 例：
-    ```bash
-    $ git apply [|--check|--stat] ：直接更新|确认是否冲突|确认哪些更改
-    ```
+    * --preffix=PATH：指定打包路径
+    * -o FILE       ：指定打包文件，归档包的格式也通过文件后缀自动判断
+    * COMMIT        ：指定打包版本
 <!-- entry end -->
 
 <!-- entry begin: git filter-branch 彻底删除文件历史 -->
-* git filter-branch：彻底删除文件历史
+* 彻底删除文件历史
 ```bash
 $ git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch path-to-your-remove-file' --prune-empty --tag-name-filter cat -- --all
 ```
 <!-- entry end -->
-
-# 构建系统
-* Makefile
-    * 规则：
-        * 格式：
-        ```makefile
-        <target>: <prerequisites>
-        <tab> <command>
-        ```
-        * 前置条件与命令至少要有一个存在
-    * 目标：默认执行第一个目标
-        * 文件(默认)：  
-            依赖前置条件(也是一系列目标)生成目标文件
-        * 伪目标(用`.PHONY:<target>`指定)：  
-            用于表示该目标不是文件，无条件执行
-    * 前置条件：用空格分隔
-        * 依赖文件：  
-            若依赖文件存在且时间戳旧于目标文件，则不生成目标文件
-        * 依赖伪目标：  
-            直接执行伪目标
-    * 命令：
-        * 前导符用`.RECIPEPREFIX = {char}`指定，默认<tab>
-        * 每行命令在单独shell中，用`.ONESHELL:`则在同一个shell中
-    * 语法
-        * `#`：注释
-        * `@`：关闭回响，默认回响每行命令与注释
-        * 支持通配符
-        * 支持变量：用$(var)引用，shell变量用$$var
-        * 内置变量：$(CC)代指编译器
-<!-- -->
-
-* CMake：CMakeLists.txt
-    * CMake 最低版本号要求  
-    `cmake_minimum_required (VERSION 2.8)`
-    * 项目信息  
-    `project (Demo1)`
-    * 指定生成目标  
-    `add_executable(Demo main.cc)`
-    * 查找当前目录下的所有源文件，并将名称保存到变量  
-    `aux_source_directory(. DIR_SRCS)`
-    * 指定生成目标  
-    `add_executable(Demo ${DIR_SRCS})`
-    * 把当前文件夹下的源码列表存到变量 SRCS 中  
-    `file( GLOB SRCS `*.c *.cpp *.cc *.h *.hpp )  
-    * 把源码编译成一个二进制这里的 ${PROJECT_NAME} 就是 CPP，是在第一行设置的  
-    `add_executable( ${PROJECT_NAME} ${SRCS} )`
-    * 添加 math 子目录，在子目录执行cmake  
-    `add_subdirectory(math)`
-    * 指定生成目标  
-    `add_executable(Demo main.cc)`
-    * 添加链接库  
-    `target_link_libraries(Demo MathFunctions)`
-    * 制作链接库  
-    `add_library( 动态链接库名称  SHARED  源码列表 )  `
-    `add_library( 静态链接库名称  STATIC  源码列表 )  `
-    `add_executable( 二进制文件名  源码列表 )  `
-    `target_link_libraries( 二进制文件名  动静态库名 )`
-<!-- -->
-
