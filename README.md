@@ -32,16 +32,14 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [CMake构建系统](notes/cmake.md)
 
 ## Linux
-* [学习资源](notes/learning-resource.md)
-    > 该笔记早已停止更新，希望还有效
 * [Linux基础](notes/linux.md)
     > 相当于命令手册，外加点基础概念
 * [开发者工具](notes/devtool.md)
     > 包含gcc、gdb、ssh、tmux、zsh、git等工具使用
-* [Vim](notes/vim.md)
-    > [定制版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 * [Bash](notes/bash.md)
     > 包含bash语法、正则技巧与流处理命令
+* [Vim](notes/vim.md)
+    > [定制版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 * [Linux系统启动](notes/boot.md)
     > 从启动电源到用户登录整个过程的简短总结
 

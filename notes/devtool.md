@@ -135,6 +135,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 
 ## LLDB
 <!-- entry begin: lldb -->
+```
 * lldb `<exe>` [-c `<core>`] [-p `<pid>`]
 
 * 断点：
@@ -167,6 +168,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     reg     ：寄存器
     thread info
     t [threadnum]
+```
 <!-- entry end -->
 
 # SSH

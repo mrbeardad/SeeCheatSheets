@@ -294,8 +294,8 @@
     > `umask`即默认权限掩码，设置后会掩盖默认权限，默认为022，从而目录默认权限为755，文件默认644
     * Uid与Gid      ：指明文件所属的owner与group
     * `r w x`       ：**读/写/执**权限，以八进制数字表示时从高位到低位依次代表是否具有**读/写/执**权限
-    * `s S t T`     ：**SUID/SGID/SBIT**特殊权限，以八进制表示时从高位到低位依次表示是否具有**SUID/SGID/SBIT**权限
-    * OOOO          ：4位八进制数，第一个表示特殊权限，后三个分别表示owner/group/other的读/写/执权限
+    * `sS sS tT`    ：**SUID/SGID/SBIT**特殊权限，以八进制表示时从高位到低位依次表示是否具有**SUID/SGID/SBIT**权限
+    * 7777          ：4位八进制数，第一个表示特殊权限，后三个分别表示owner/group/other的读/写/执权限
 
 * 对普通文件
     * r/w表示可读/写其对应block
@@ -590,15 +590,6 @@
     * -d        ：指定刷新周期
     * -u        ：指定监视用户
     * -p        ：指定监视PID
-    * 交互命令
-        * P/M/T/N     ：按cpu/mem/time/pid排序
-        * c   ：显示完整命令
-        * e   ：切换内存单位
-        * 1   ：显示多核
-        * z   ：切换颜色
-        * f   ：选择域的显示/排序
-        * t/m ：切换cpu/mem显示模式
-        * k/r ：kill/renice
 <!-- entry end -->
 
 <!-- entry begin: free -->
@@ -639,12 +630,12 @@
     * +d        ：列出目录下被打开的文件，+D递归
 <!-- entry end -->
 
-<!-- entry begin: fuser -uv FILE/DIR -->
+<!-- entry begin: fuser -->
 * fuser -uv FILE/DIR
     > 列出打开目标文件的进程
 <!-- entry end -->
 
-<!-- entry begin: ulimit  -a -HS -->
+<!-- entry begin: ulimit -->
 * ulimit  -a -HS
     > /etc/security/ulimits.d/
 <!-- entry end -->
@@ -680,6 +671,10 @@
     * 0      ：emerg(panic)：疼痛等級，意指系統几乎要死机，通常大概只有硬件出问题导致内核无法运行
 <!-- entry end -->
 
+<!-- entry begin: logger -->
+* logger -p user.info
+<!-- entry end -->
+
 <!-- entry begin: journalctl -->
 * journalctl
     * -b        ：开机启动日志
@@ -696,12 +691,8 @@
         * `_COMM=`
 <!-- entry end -->
 
-<!-- entry begin: logger  -p  user.info -->
-* logger  -p  user.info
-<!-- entry end -->
-
 # systemd
-<!-- entry begin: systemd-units -->
+<!-- entry begin: systemd -->
 * systemd-units
     * unit配置目录   ：(优先级降序)
         > /etc/systemd/system/  
@@ -720,6 +711,7 @@
         > * 只有在配置目录的unit才在systemd视线里  
         > * 是否开机启动取决于满足上述的unit是否在default.target的依赖链中
 <!-- entry end -->
+
 ## units配置
 <!-- entry begin: unit配置 -->
 * unit配置
@@ -878,7 +870,7 @@
 ## GRUB配置
 <!-- entry begin: grub配置 -->
 * /etc/default/grub
-```
+```sh
     GRUB_DEFAULT=0
     GRUB_TIMEOUT=5
     GRUB_GFXMODE=auto
@@ -886,23 +878,22 @@
     GRUB_CMDLINE_LINUX-DEFAULT=
 ```
 * /etc/grub.d/
-```
+```sh
     * 00_header
-    * 01_user     ：自定义环境
-    * 10_linux    ：确定linux选单
-    * 20_os-prober：确定其他OS选单
-    * 40_custom   ：自定义选单
+    * 01_user     #自定义环境
+    * 10_linux    #确定linux选单
+    * 20_os-prober#确定其他OS选单
+    * 40_custom   #自定义选单
 ```
 <!-- entry end -->
 
 ## GRUB Shell
 * 模块   ：默认自动加载command.lst与crypto.lst
-<!-- entry begin: grub 设备命名 -->
 * 命令规则       ：
     * 分区       ：(hd0，gpt1)
     * 文件       ：(hd0，gpt1)/path/to/file
     * 扇区       ：(hd0，gpt1)0+1
-<!-- entry end -->
+
 <!-- entry begin: grub 特殊变量 -->
 * 特殊变量
     * prefix     ：grub安装目录
@@ -910,6 +901,7 @@
     * cmdpath    ：core.image所在目录
     * superusers ：超级用户，逗号分隔
 <!-- entry begin: grub命令 -->
+
 <!-- entry end -->
 * grub命令
     * ls                    ：列出已知设备/设备中的文件/目录的内容
@@ -925,16 +917,14 @@
     * loopback dev isofile  ：建立loop设备，-d删除
     * halt/reboot           ：关机/重启
 <!-- entry begin: GRUB安全 -->
+
 <!-- entry end -->
 * GRUB安全
-    * 设置超级用户
-        set superusers="root"
-        * 注 ：设置后只有超级用户才能修改选单
-    * 设置加密密码
-        password_pbkdf2 root grub.pbkdf2.sha512...
-        * 注 ：使用grub-mkpasswd-pbkdf2命令产生密码
-    * 设置明文密码
-        password user ...
+    * 设置超级用户：`set superusers="root"`
+        > 注 ：设置后只有超级用户才能修改选单
+    * 设置加密密码：`password_pbkdf2 root grub.pbkdf2.sha512...`
+        > 注 ：使用grub-mkpasswd-pbkdf2命令产生密码
+    * 设置明文密码：`password user ...`
     * menuentry选项
         * --unrestricted    ：所有人可执行
         * --users ""        ：仅超级用户
@@ -984,13 +974,14 @@
     * /etc/adjtime          ：系统时间校准类型
 <!-- entry end -->
 
-<!-- entry begin: FONT -->
-* FONT
+<!-- entry begin: 字体 fontconfig mkfontdir mkfontscale fc-cache fc-list -->
+* fontconfig
+    * fc-list       ：字体缓存查看
+    > 以下三条命令为字体安装三部曲
     * mkfontdir
     * mkfontscale
     * fc-cache -f
-    > 以上三条命令为字体安装三部曲
-    * fc-list       ：字体缓存查看
+<!-- entry end -->
 
 <!-- entry begin: hostnamectl -->
 * hostnamectl
@@ -1023,7 +1014,7 @@
 <!-- entry end -->
 
 <!-- entry begin: cal -->
-* cal [MONTH YEAR]
+* cal [MONTH] [YEAR]
 <!-- entry end -->
 
 # 计算机网络
@@ -1042,10 +1033,10 @@
 * 网络协议栈
     * 发送：
         * 应用层调用socket接口函数，发送message
-        * 传输层确认socket的协议与端口号，并封装为segment
-        * 网络层利用路由表确认参数(协议、目的IP、本地IP等)，分片并封装为packet，若目的IP为本地则直接上传
+        * 传输层确认参数（协议、目的端口号、本地端口号），并封装为segment
+        * 网络层利用路由表确认参数（协议、目的IP、本地IP等），分片并封装为packet，若目的IP为本地则直接上传
             > 将目的IP与本地子网掩码进行位与运算，得到网络号，再与路由表对比，收包时同理
-        * 链路层通过驱动程序，利用ARP表确认目的MAC地址，若不存在则发送ARP请求，最后封装成frame，然后发送到物理网卡进行信号转换并传输
+        * 链路层通过驱动程序，利用ARP表确认目的MAC地址，若不存在则发送ARP请求，最后封装成frame，然后发送到网卡进行信号转换并传输
     * 接收：
         * 链路层中网卡默认会将MAC地址非本机且非广播的frame丢弃，若为ARP包则本层(驱动)解决
         * 网络层确认目的IP是否为本机IP或本机网段广播，若为ICMP则本层解决
@@ -1106,7 +1097,7 @@
         * add/del IP  lla MAC  dev IF
 <!-- entry end -->
 
-## NetworkManager服务
+## NetworkManager
 <!-- entry begin: nmcli nmtui -->
 * nmcli
     * radio/r
@@ -1124,8 +1115,10 @@
 <!-- entry end -->
 
 ## 其它网络命令
+<!-- entry begin: nmap -->
 * nmap
 ![图片来自网络](../images/nmap.png)
+<!-- entry end -->
 
 <!-- entry begin: ss -->
 * ss
@@ -1134,6 +1127,34 @@
     * -au        ：UDP端口
     * -ax        ：UNIX类型socket
 * ping
+<!-- entry end -->
+
+<!-- entry begin: curl -->
+* curl -o File URL
+* curl -fsSL URL | bash
+* curl -fsSL URL | bash -s -- {-opt}
+* curl cheat.sh/`CMD`
+* curl cheat.sh/`LANG`/`SPECIFIC`
+    > [cheat.sh](https://github.com/chubin/cheat.sh)是github上一个nice的项目
+    * 空白用`+`代替
+    * `curl cheat.sh/~keyword`
+    * `curl cheat.sh/python/:list` 列出可选项
+<!-- entry end -->
+
+<!-- entry begin: sendEmail -->
+* sendEmail
+    * -s        ：SMTP服务器
+    * -f        ：发送者的邮箱
+    * -t        ：接收者的邮箱
+    * -cc       ：表示抄送发给谁
+    * -bcc      ：表示暗抄送给谁
+    * -xu       ：SMTP验证的用户名
+    * -xp       ：SMTP验证的密码
+    * -u        ：标题
+    * -m        ：内容
+    * -a        ：附件
+    * -o message-content-type=*html*/*text* ：邮件的格式
+    * -o message-charset=utf8               ：邮件的编码
 <!-- entry end -->
 
 <!-- entry begin: pacman -->
@@ -1171,34 +1192,6 @@
         [custom]     #添加在其他仓库之前
         Server = file:///mnt/iso/arch/pkg
         * pacman  -Sy
-<!-- entry end -->
-
-<!-- entry begin: curl -->
-* curl -o *File* *URL*
-* curl -fsSL *URL* | bash
-* curl -fsSL *URL* | bash -s -- {-opt}
-* curl cheat.sh/`CMD`
-* curl cheat.sh/`LANG`/`SPECIFIC`
-    > [cheat.sh](https://github.com/chubin/cheat.sh)是github上一个nice的项目  
-    * 空白用`+`代替
-    * `curl cheat.sh/~keyword`
-    * `curl cheat.sh/python/:list` 列出可选项
-<!-- entry end -->
-
-<!-- entry begin: sendEmail -->
-* sendEmail
-    * -s        ：SMTP服务器
-    * -f        ：发送者的邮箱
-    * -t        ：接收者的邮箱
-    * -cc       ：表示抄送发给谁
-    * -bcc      ：表示暗抄送给谁
-    * -xu       ：SMTP验证的用户名
-    * -xp       ：SMTP验证的密码
-    * -u        ：标题
-    * -m        ：内容
-    * -a        ：附件
-    * -o message-content-type=*html*/*text* ：邮件的格式
-    * -o message-charset=utf8               ：邮件的编码
 <!-- entry end -->
 
 # 基础命令
@@ -1373,7 +1366,6 @@
     * -e        ：启用转义语义（zsh自动开启）
 <!-- entry end -->
 
-
 <!-- entry begin: pwd -->
 * pwd
     * -P        ：显示真实路径而非软连接
@@ -1400,14 +1392,12 @@
     * --list    ：列出可选字符集
 <!-- entry end -->
 
-<!-- entry begin: col -->
-* col -x ：将tab替换为等宽space，该命令只从stdin读取
-<!-- entry end -->
-
 <!-- entry begin: diff patch -->
-* diff -Naur *OLD* *NEW* > *.patch
-* patch -p`n`  < *.patch
-    > * new和old不要在同一目录下  
-    > * n为去掉的/个数
+```sh
+diff -Naur OLD NEW > patch
+patch -p`n`  < patch
+```
+> * new和old不要在同一目录下  
+> * n为去掉的/个数
 <!-- entry end -->
 

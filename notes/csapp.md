@@ -1,9 +1,9 @@
-该笔记是原本的精简版，隐去了太过底层的细节  
+该笔记是原本的精简版，隐去了太过底层的细节。
 [笔记原本](http://note.youdao.com/noteshare?id=8e8bc1bd1b6105cd97dc35e694eddc9d)放在有道云上了，
 没转移，又臭又长。。。  
 
-**NOTE**!!!!!: 笔记里插入有$L^AT_EX$公式(github不支持)，
-<div title="别问我为啥要加中文，，.">调用api的话如果在公式里用中文，还得用浏览器转移URL</div>
+**NOTE**!!!!!: 笔记里插入有$L^AT_EX$公式(github不支持)
+<div title="别问我为啥要加中文，，.">调用api的话如果在公式里用中文，还得用浏览器转义URL。</div>
 
 所以各位记得给你的chrome安个[插件](https://github.com/orsharir/github-mathjax/issues/24#issuecomment-438140315)，
 该插件若从chrome商店安装的话要出问题，记得clone下来手动安装，链接里的issue提到了
@@ -64,6 +64,7 @@
 
 * 整数表示
     * 无符型整数：无符型编码 **U**
+
         ![unsigned](../images/csapp2.png)
     * 有符型整数：补码编码 **T**
         > 注意补码正负范围不对称，|Tmin| = |Tmax| + 1
@@ -71,7 +72,7 @@
         ![signed](../images/csapp3.png)
 <!-- entry end -->
 
-## 整数操作  
+## 整数操作
 <!-- entry begin: csapp 整数操作 -->
 **限制从不受信任的源接收数据的数量和格式！**
 * 截断
@@ -138,7 +139,7 @@
     > 规格化数  ：$frac$ 为小数部分，整数部分为$1$  
     > 非规格化数：$frac$ 为小数部分，整数部分为$0$
 * 性质：
-    * 浮点数不具备**结合律**且其*加法*不具备**分配律**
+    * 浮点数不具备**结合律**且其加法不具备**分配律**
         > 因为**精度丢失**与**无穷溢出**
     * 浮点数**加法**具有单调性
         > 若$a\geq b$且$c \neq NAN$，则$a+c\geq b+c$  
@@ -485,7 +486,7 @@
 ## 系统I/O
 <!-- entry begin: csapp io -->
 * 访问文件需要：
-    * fd-table  ：进程独有，fork时子进程会继承此项
+    * fd-table  ：进程独有，指向file-table，fork时子进程会继承此项
     * file-table：所有进程共享，包含了读写位置，同一个文件可能有多个file-table
     * v-node    ：系统唯一，记录文件在系统中的位置
 
