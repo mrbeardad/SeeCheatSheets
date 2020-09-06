@@ -173,7 +173,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 
 # SSH
 <!-- entry begin: ssh -->
-* `ssh-keygen -t ecdsa -b 512  -C "注释"`
+* `ssh-keygen -t ecdsa -b 521  -C "注释"`
 * `ssh-keygen -t rsa   -b 4096 -C "注释"`
 * `ssh-keygen -f ~/.ssh/id_ecdsa -p`        ：更改密码短语
 * `ssh-copy-id -i KEY.pub -p port user@host`：将公钥上传到主机

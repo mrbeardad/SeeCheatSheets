@@ -244,6 +244,8 @@
 <!-- entry begin: zip -->
 * zip  ZIPFILE  FILES
     * -[1-9]    ：压缩等级，越大压缩比越高
+* unzip ZIPFILE LIST
+    * `LIST`指定提取ZIPFILE中的哪些文件
 <!-- entry end -->
 
 <!-- entry begin: gzip bzip2 xz -->
@@ -1130,7 +1132,12 @@
 <!-- entry end -->
 
 <!-- entry begin: curl -->
-* curl -o File URL
+* curl
+    * -s        ：silent mode
+    * -S        ：打印错误消息，即使使用了`-s`
+    * -L        ：接受链接跳转
+    * -o        ：指定输出文件
+* curl -Lo File URL
 * curl -fsSL URL | bash
 * curl -fsSL URL | bash -s -- {-opt}
 * curl cheat.sh/`CMD`
