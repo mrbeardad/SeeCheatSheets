@@ -1,22 +1,10 @@
 **关系型数据库的典型实现主要被调整用于执行规模小而读写频繁，或者大批量极少写访问的事务。**
 
-* 密码验证策略
-    * validate_password_check_user_name     ：不得使用当前会话用户名作为密码的一部分
-    * validate_password_dictionary_file     ：验证密码强度的字典文件路径
-    * validate_password_length              ：密码最小长度
-    * validate_password_mixed_case_count    ：密码至少要包含的小写字母个数和大写字母个数
-    * validate_password_number_count        ：密码至少要包含的数字个数
-    * validate_password_policy              ：密码强度检查等级，0/LOW、1/MEDIUM、2/STRONG
-        * 0/LOW     ：只检查长度。
-        * 1/MEDIUM  ：检查长度、数字、大小写、特殊字符。
-        * 2/STRONG  ：检查长度、数字、大小写、特殊字符字典文件。
-    * validate_password_special_char_count  ：密码至少要包含的特殊字符数
-
-<!-- entry begin: mysql -->
+<!-- entry begin: mysql init install -->
 * 初始化mysql
-    * `mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql`或
+    * `mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
+    > 或
     * `mysqld --initialize --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
-    * `mysql_secure_installation`
 
 * mysql
     * -h    ：主机名
@@ -26,254 +14,293 @@
     * -D    ：数据库名
 <!-- entry end -->
 
-# SQL
-<!-- entry begin: sql 基础 -->
+# SQL基础
 * `--`开启注释
 * SQL语句以分号`;`结束
 * 可以忽略大小写
-* 库名、表名、字段名等，一般都可以使用`*`通配
-```sql
----------------------------------------------------------------------------------------------------
--- <user_name>                  ：用户名，<user_name>后面可选添加 @<host_name>（默认 @'%'）
--- <host_name>                  ：主机名
-    -- '%'                      ：默认任意机器可登录
-    -- localhost                ：只能本机登录
-    -- <IP>                     ：只能从该IP地址登录
 
--- <db_name>                    ：数据库名
--- <tbl_name>                   ：表名，<tbl_name>前面可选添加 <db_name>.（默认当前`use`选中的库）
+## 用户
+两种表达形式：
+* user@host
+* user          ：默认host为`'%'`
 
--- <privileges_code>            ：权限码
-    -- all privileges
-    -- create
-    -- drop
-    -- select
-    -- delete
-    -- update
+其中host有三种类型：
+* '%'           ：允许从任意主机登录
+* localhost     ：只允许本机登录
+* 192.168.0.1   ：只允许从指定IP的主机登录
 
--- <passwd>                     ：明文密码
+## 库、表、域
+* 数据库一般表示：
+    * `<db_name>`
+    * `*`
+* 数据表表示：
+    * `<db_name>.<tbl_name>`
+    * `*.*`
+    * `<tbl_name>`          ：默认db_name为当前`use`选中的数据库
+    * `*`
+* 关系域表示：
+    * `<db_name>.<tbl_name>.<fd_name>`
+    * `<tbl_name>.<fd_name>`
+    * `<fd_name>`
+    * `<fd1_name>, <fd2_name>`
+    * `*`
 
--- <type>                       ：类型，后面可选添加 <const>（默认无）
-    -- 数值类型
-        -- tinyint(size)        +-------------------------------------------------------------------+
-        -- smallint(size)       | 每个整数类型之后可选添加`unsigned`指明为无符号型整数              |
-        -- mediumint(size)      | 每个类型之后可选指定`(size)`表示显示时的十进制长度，用0填充不足的 |
-        -- int(size)            | `(d)`表示浮点数十进制小数部分数字位数                             |
-        -- bigint(size)         +-------------------------------------------------------------------+
-        -- float(size, d)
-        -- double(size, d)
-    -- 字符串
-        -- blob                 +-------------------------------------------------------+
-        -- varchar(N)           | 字符串'string'，日期时间'1970-1-1'，BLOB十六进制x'FF' |
-        -- 等等...              +-------------------------------------------------------+
-    -- 日期时间
-        -- date                 ：YYYY-mm-dd
-        -- time                 ：HH:MM:SS
-        -- datetime             ：YYYY-mm-dd HH:MM:SS
-        -- timestamp            ：%s
-        -- year                 ：%Y
+## 数据类型
+* 整数类型
+    > * 支持在其后添加`(N) ZEROFILL`，指定十进制显示时的最小显示位数，不足时用0填充（不限制数值大小）
+    > * 支持在其后添加`UNSIGNED`，指定为无符型整数
 
--- <const>                      ：约束
-    -- not null                 ：不能有NULL值，primary key的必要条件
-    -- unique                   ：不能有重复值，primary key的必要条件，unique key的充分条件（foreign key指向的键必须为unique key）
-    -- default <value>          ：设置默认值，
-    -- auto_increment           ：初始值为1，每次递增1，其后可选添加`=n`设置初始值
----------------------------------------------------------------------------------------------------
-```
-<!-- entry end -->
+    | 类型      | 字节 |
+    |-----------|------|
+    | TINYINT   | 1    |
+    | SMALLINT  | 2    |
+    | MEDIUMINT | 3    |
+    | INT       | 4    |
+    | BIGINT    | 8    |
 
+* 浮点类型
+    > * 支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数（限制数值大小）与小数位数精度
+    > * DECIMAL是用字符串表示的高精度数值，默认的十进制显示模式为`(10, 0)`
+
+    | 类型    | 字节 |
+    |---------|------|
+    | FLOAT   | 4    |
+    | DOUBLE  | 8    |
+    | DECIMAL | ∞    |
+
+* 字符串类型
+    > * CHAR支持在其后添加`(N)`，指定固定字节数
+    > * VARCHAR支持在其后添加`(N)`，指定最大字符数
+    | 类型    | 字节    | 说明                           |
+    |---------|---------|--------------------------------|
+    | CHAR    | 0~255   | 固定字节数，忽略输入的尾后空格 |
+    | VARCHAR | 0~65535 | 可变字节数                     |
+    | BLOB    | 0~65535 | 二进制数据                     |
+
+* 时间日期
+    > 表示字符串类型域日期时间类型的值，都需要使用单引号
+    | 类型      | 字节 | 格式                |
+    |-----------|------|---------------------|
+    | DATE      | 3    | YYYY-mm-dd          |
+    | TIME      | 3    | HH:MM:SS            |
+    | DATETIME  | 8    | YYYY-mm-dd HH:MM:SS |
+    | TIMESTAMP | 4    | YYYY-mm-dd HH:MM:SS |
+
+## 类型约束
+| 约束              | 说明         | 备注                                           |
+|-------------------|--------------|------------------------------------------------|
+| `NOT NULL`        | 不能为空     | PRIMARY KEY的必要条件                          |
+| `UNIQUE`          | 不能重复     | PRIMARY KEY的必要条件，UNIQUE KEY的充分条件    |
+| `DEFAULT <VALUE>` | 设置默认值   |                                                |
+| `AUTO_INCREMENT`  | 自动增加数值 | 其后可选添加`=n`设置初始值，默认为1，每次递增1 |
+
+# SQL语句
 ## 用户管理
-<!-- entry begin: sql 用户管理  密码-->
-* sql用户管理
+<!-- entry begin: sql user password grant -->
 ```sql
 -- 创建用户
-create user <user_name> [identified by '<passwd>'];
+CREATE USER <user_name> [IDENTIFIED BY '<passwd>'];
 
 -- 删除用户
-drop user <user_name>;
-
--- 查询用户信息
-select user,host,password,... from mysql.user ... ;
-
--- 授权用户
-grant <pribileges_code> on <db_name>.<tbl_name> to <user_name>;
-flush privileges;
+DROP USER <user_name>;
 
 -- 修改密码
-set password for <user_name> = password('<passwd>');
+SET PASSWORD FOR <user_name> = PASSWORD('<passwd>');
+
+-- 查询用户信息
+SELECT user,host,password FROM mysql.user;
+
+-- 授权用户
+GRANT <pribileges_code> ON <db_name>.<tbl_name> TO <user_name>;
+FLUSH PRIVILEGES;
+-- 权限码包括
+    -- ALL PRIVILEGES
+    -- SELECT
+    -- INSERT
+    -- 等等...
 ```
 <!-- entry end -->
 
 ## 数据库、数据表、视图
-<!-- entry begin: 数据库 数据表 视图 -->
-* 数据库、数据表、视图
+<!-- entry begin: sql database db table tbl view -->
 ```sql
 -- 数据库
-show databases;
-create database <db_name>;
-drop database <db_name>;
+SHOW DATABASES;
+CREATE DATABASE <db_name>;
+DROP DATABASE <db_name>;
 
 -- 数据表
-show tables [from <db_name>];
-create table <tbl_name> (
-        <fd_name> <type>,
-        ...,
-        [constraint <pk_name>] primary key (<fd_name>),
-        [constraint <fk_name>  foreign key (<fd_name>) references <tbl_name>(<fd_name>)] -- 两关联字段的类型要相同
-        [constraint <ck_name>  check (<Clause>)]
-    ) ;
-drop table <tbl_name>,...;
-alter table <tbl_name> rename to <new_tbl_name>;
+SHOW TABLES [FROM <db_name>];
+CREATE TABLE <tbl_name> (
+    <fd_name> <type> [<const>],
+    ...,
+    [PRIMARY KEY (<fd_name>),]
+    [CONSTRAINT <fk_name>  FOREIGN KEY (<fd_name>) REFERENCES <tbl_name>(<fd_name>),]
+    [CONSTRAINT <ck_name>  CHECK (<Clause>)]
+) ENGINE=innodb CHARSET=utf8;
+DROP TABLE <tbl_name>;
+ALTER TABLE <tbl_name> RENAME TO <new_tbl_name>;
 
 -- 视图
-create view <view_name> as select 语句 ;
-drop view <view_name>;
+CREATE VIEW <view_name> AS SELECT 语句;
+DROP VIEW <view_name>;
 ```
 <!-- entry end -->
 
 ## 操作元数据
-<!-- entry begin: sql table 元数据 metadata -->
+<!-- entry begin: sql table index metadata -->
 * 操作元数据
 ```sql
 -- field
-show cloumns from <tbl_name>;
-alter table <tbl_name> add <fd_name> <type>;
-alter table <tbl_name> drop <fd_name>;
-alter table <tbl_name> change <fd_name> <new_fd_name> <type>; -- 可以修改字段名、类型与约束
+SHOW COLUMNS FROM <tbl_name>;
+ALTER TABLE <tbl_name> ADD <fd_name> <type> [<const>] [FIRST| AFTER <fd_name>];
+ALTER TABLE <tbl_name> DROP <fd_name>;
+ALTER TABLE <tbl_name> CHANGE <fd_name> <new_fd_name> <type> [<const>];
 
 -- index
-show index from <tbl_name>;
-alter table <tbl_name> add index <idx_name>(<fd_name>);
-alter table <tbl_name> drop index <idx_name>;
+SHOW INDEX FROM <tbl_name>;
+ALTER TABLE <tbl_name> ADD INDEX <idx_name>(<fd_name>);
+ALTER TABLE <tbl_name> DROP INDEX <idx_name>;
 
--- primary key
-alter table <tbl_name> add primary key (<fd_name>);
-alter table <tbl_name> drop primary key;
+-- PRIMARY KEY
+    -- 目标域必须为`NOT NULL UNIQUE`
+ALTER TABLE <tbl_name> ADD PRIMARY KEY (<fd_name>);
+ALTER TABLE <tbl_name> DROP PRIMARY KEY;
 
--- foreign key
-alter table <tbl_name> add constraint <fk_name> foreign key (<fd_name>) references <tbl_name>(<fd_name>);
-alter table <tbl_name> drop foreign key <fk_name>;
+-- FOREIGN KEY
+    -- 两域类型必须相同，且被引用的域必须为`UNIQUE`
+ALTER TABLE <tbl_name> ADD CONSTRAINT <fk_name> FOREIGN KEY (<fd_name>) REFERENCES <tbl_name>(<fd_name>);
+ALTER TABLE <tbl_name> DROP FOREIGN KEY <fk_name>;
 
--- check
-alter table <tbl_name> add constraint <ck_name> check (<Clause>);
-alter table <tbl_name> drop check <ck_name>;
+-- CHECK
+ALTER TABLE <tbl_name> ADD CONSTRAINT <ck_name> CHECK (<Clause>);
+ALTER TABLE <tbl_name> DROP CHECK <ck_name>;
 ```
 <!-- entry end -->
 
 ## 操作行数据
-<!-- entry begin: sql 行数据 事务 -->
+<!-- entry begin: sql insert delete 事务 -->
 * 操作行数据
 ```sql
 -- 插入
-insert into <tbl_name> (<fd_name>, ...) -- 外键列需要指定为该键所指向的列中已存在的值以进行关联
-values (<value>, ...), ... ; -- 若类型为字符串或日期时间，则`value`必须使用单引号
+INSERT INTO <tbl_name> [(<fd_name>, ...)] VALUES    -- 外键列需要指定为该键所指向的列中已存在的值以进行关联
+(<value>, ...), ... ;                               -- 若类型为字符串或日期时间，则`value`必须使用单引号
 
 -- 删除
-delete from <tbl_name>
-[where <Clause>] ; -- 默认删除所有数据
+DELETE FROM <tbl_name>
+[WHERE <Clause>] ;                      -- 默认删除所有数据
 
 -- 修改
-update <tbl_name> set <fd_name> = <value>, ...
-[where <Clause>] ; -- 默认修改所有行
+UPDATE <tbl_name> SET <fd_name>=<value>, ...
+[WHERE <Clause>] ;                      -- 默认修改所有行
 
 -- 复制
-insert into <tbl_name> (<fd_name>, ...)
-select 语句 ; -- 两语句中的<fd_name>部分两两对应
+INSERT INTO <tbl_name> (<fd_name>, ...)
+SELECT 语句 ;                            -- 两语句中的<fd_name>部分两两对应
 
 -- 事务
-begin;                      -- 开启事务
+BEGIN;                                  -- 开启事务
 ...
-savepoint <point>           -- 设置保存点
+SAVEPOINT <point>;                      -- 设置保存点
 ...
-release savepoint <point>   --删除保存点
+RELEASE SAVEPOINT <point>;              -- 删除保存点
 ...
-rollback to <point>         -- 撤销至保存点
+ROLLBACK TO <point>;                    -- 撤销至保存点
 ...
-commit 或 rollback          -- 提交事务 或 撤销此次事务
+COMMIT; 或 ROLLBACK;                    -- 提交事务 或 撤销此次事务
 ```
 <!-- entry end -->
 
-## select语句
+## SELECT语句
 ### 查询
-<!-- entry begin: sql select 查询 -->
+<!-- entry begin: sql select -->
 * sql查询
 ```sql
--- 查询，select基础语句
-select <fd_name>或function(...) [as <fd_alias>],... from <tbl_name> [<tbl_alias>],...
-[where <Clause>] -- 多个<tbl_name>时，需要在<fd_name>前添加<tbl_name>或<tbl_alias>
-[limit N]
-[offset M] ;
+-- SELECT基础查询语句
+SELECT <fd_name>或<call_func> [AS <fd_alias>], ... FROM <tbl_name> [<tbl_alias>], ...
+[LIMIT N] [OFFSET M]
+[WHERE <Clause>] ;
+
+-- SELECT 语句会对表中每一行筛选、处理，然后放入SELECT结果中
+-- SELECT 语句的结果就是一个列表`(<val1>, <val2>),(<val3>, <val4>)`
+-- 子SELECT 语句作为列表可出现在WHERE和FROM后
+<!-- entry end -->
 ```
 <!-- entry end -->
 
-### 分组
-<!-- entry begin: sql select 分组 group -->
+<!-- entry begin: group  -->
 * sql分组
 ```sql
-select 语句
-group by <fd_name> [with rollup]
-[having (Clause)] ;
--- 将各行进行分组，按选中的<fd_name>中相等的行归为一组
--- select 语句中可以使用aggregate函数对组中的行进行操作
--- with roolup 会把所有行当作一组（调用aggregate函数）再添加一行数据
--- having 语句代替where，从而可以使用aggregate函数
-```
-<!-- entry end -->
+SELECT <fd_name>或<call_func> [AS <fd_alias>], ... FROM <tbl_name> [<tbl_alias>], ...
+GROUP BY <fd_name> [WITH ROLLUP]
+[HAVING (Clause)] ;
 
-### 连接
-<!-- entry begin: sql select join 连接 -->
-* sql连接
-```sql
--- inner|left|right分别表示至少两者中一者|只要左边|只要右边 满足`on`条件就打印，否则过滤掉
--- 原始的、未过滤的join表可设`on 1`来查看
--- on与where的区别在于前者在生成临时表时，后者在生成临时表后
-select ... from <tbl_name> [<tbl_alias>] [inner|left|right] join <tbl_name> [<tbl_alias>]
-on <tbl_alias>.<fd_name> = <tbl_alias>.<fd_name> ;
-```
-<!-- entry end -->
-
-### 合并
-<!-- entry begin: sql select union 合并 -->
-* sql合并
-```sql
--- 将两个select语句查询的字段按顺序对应地合并在一列中，字段名由第一个select指出
-select 语句
-union [all] -- all表示允许重复，默认删掉重复值
-select 语句 ;
+-- 将指定域相同的行合并到一行，从而可以对该组中的行使用aggregate函数（若不分组则会将所有行压缩到一行再调用aggregate函数）
+-- WITH ROOLUP会将所有合并后的行再合并成一行并添加到最后，非aggregate函数的列为NULL
+-- HAVING代替WHERE，从而可以使用aggregate函数
 ```
 <!-- entry end -->
 
 ### 排序
-<!-- entry begin: sql select sort 排序 -->
+<!-- entry begin: sql sort -->
 * sql排序
 ```sql
-select 语句
-order by <fd_name> [desc], ... ; -- 默认升序，desc指明为降序
+SELECT 语句
+ORDER BY <fd_name> [DESC], ... ; -- 默认升序，DESC指明为降序
+```
+<!-- entry end -->
+
+### 连接
+<!-- entry begin: sql join -->
+* sql连接
+```sql
+SELECT 语句
+[INNER|LEFT|RIGHT] JOIN <tbl_name> [<tbl_alias>]
+ON <tbl_alias>.<fd_name> = <tbl_alias>.<fd_name> ;
+
+-- 原始的、未过滤的join表可设`ON 1`来查看
+-- ON与WHERE的区别在于前者在生成临时表时，后者在生成临时表后
+```
+下图中的交集表示符合`ON`表达式的行，两个集合则分别表示两张表的所有行
+![JOIN](https://www.runoob.com/wp-content/uploads/2019/01/sql-join.png)
+<!-- entry end -->
+
+### 合并
+<!-- entry begin: sql union -->
+* sql合并
+```sql
+-- 将两个SELECT 语句查询的字段按顺序对应地合并在一列中，字段名由第一个SELECT指出
+SELECT 语句
+UNION [ALL] -- ALL表示允许重复，默认删掉重复值
+SELECT 语句 ;
 ```
 <!-- entry end -->
 
 ## WHERE语句
 <!-- entry begin: sql where 条件 -->
 * where语句
-  * `where <fd_name> <OP> <value>`
-  * `where <fd_name> [not] regexp 'regex_pattern'`
-  * `where <fd_name> [not] between <value> and <value>`
-  * `where <fd_name> [not] in (<value>, ...)`
+    * `WHERE <fd_name> <OP> <value>`
+    * `WHERE <fd_name> [NOT] REGEXP 'regex_pattern'`
+    * `WHERE <fd_name> [NOT] BETWEEN <value> AND <value>`
+    * `WHERE <fd_name> [NOT] IN (<value>, ...)`
 <!-- entry end -->
 
 ## 运算符
 <!-- entry begin: sql operator -->
 * sql运算符
-  * 算术：`+` `-` `*` `/` `%`
-  * 逻辑：`not` `and`、`or`、`xor`      ：可以用`()`来改变优先级
-  * 比较：
-      * `=` `!=` `<` `<=` `>` `=>`      ：若有一边为NULL则会返回false
-      * `<=>`                           ：当两边相等或均为NULL返回true
-      * `is [not] null <value>`         ：是否[不]为空
-      * `[not] regexp '<pattern>'`
-      * `[not] between <value1> and <value2>`
-      * `[not] in (<value>, ...)`
-      * `[not] exists (select 语句)`
+    * 逻辑：`NOT` `AND`、`OR`、`XOR`        ：可以用`()`来改变优先级
+    * 算术：`+` `-` `*` `/` `%`
+    * 比较：
+        * `=` `!=` `<` `<=` `>` `=>`        ：若有一边为NULL则会返回false
+        * `<=>`                             ：当两边相等或均为NULL返回true
+    * 关系：
+        * `IS [NOT] NULL <value>`
+        * `[NOT] REGEXP '<pattern>'`
+        * `[NOT] BETWEEN <value1> AND <value2>`
+        * `[NOT] IN (SELECT 语句)`
+        * `[NOT] EXISTS (SELECT 语句)`
+        * `<OP> ALL (SELECT 语句)`          ：列表中所有行都符合`<OP>`
+        * `<OP> ANY (SELECT 语句)`          ：列表中有一行符合`<OP>`
 <!-- entry end -->
 
 ## 函数
@@ -282,23 +309,23 @@ order by <fd_name> [desc], ... ; -- 默认升序，desc指明为降序
 
 | 函数    | 描述           |
 |---------|----------------|
-| sum()   | 返回总和       |
-| avg()   | 返回平均值     |
-| count() | 返回行数       |
-| first() | 返回第一个值   |
-| last()  | 返回最后一个值 |
-| max()   | 返回最大值     |
-| min()   | 返回最小值     |
+| SUM()   | 返回总和       |
+| AVG()   | 返回平均值     |
+| COUNT() | 返回行数       |
+| FIRST() | 返回第一个值   |
+| LAST()  | 返回最后一个值 |
+| MAX()   | 返回最大值     |
+| MIN()   | 返回最小值     |
 
 * 用于blob的函数
 
 | 函数                  | 描述                 |
 |-----------------------|----------------------|
-| hex()                 | 输出十六进制底层数据 |
-| substring(fd,beg,len) | 截取字节，beg从1开始 |
-| concat(s, s)          | 拼接两数据           |
-| conv(s,hex,dec)       | 十六进制转十进制     |
-| load_file(str)        | 返回文件内容         |
+| HEX()                 | 输出十六进制底层数据 |
+| SUBSTRING(fd,beg,len) | 截取字节，beg从1开始 |
+| CONCAT(s, s)          | 拼接两数据           |
+| CONV(s,hex,dec)       | 十六进制转十进制     |
+| LOAD_FILE(str)        | 返回文件内容         |
 
 * [其它sql函数](https://www.runoob.com/mysql/mysql-functions.html)
 <!-- entry end -->

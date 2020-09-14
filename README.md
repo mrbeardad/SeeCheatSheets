@@ -1,11 +1,15 @@
 # 目录
-- [笔记](#笔记)
-  - [Linux](#linux)
+<!-- vim-markdown-toc GFM -->
+
+- [安装](#安装)
   - [C++](#c)
+  - [Linux](#linux)
   - [底层](#底层)
   - [网络](#网络)
+  - [技术](#技术)
   - [其它](#其它)
 
+<!-- vim-markdown-toc -->
 # 安装
 ***仓库中提供了一支C++程序`see`用于快速查看笔记：***  
 它会搜索`~/.cheat/notes`中的markdown文档中的entry，查找匹配的entry并打印  
@@ -52,11 +56,12 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 
 ## 技术
 * [MySQL](notes/mysql.md)
+* [Docker](notes/docker.md)
 
 ## 其它
-* [Manjaro安装](notes/manjaro.md)
-* [ANSI终端颜色](notes/ansi.md)
 * [Markdown概念](notes/markdown.md)
+* [ANSI终端颜色](notes/ansi.md)
+* [Manjaro安装](notes/manjaro.md)
 * [小鹤双拼](notes/xhup.md)
 * [英语音标](notes/english.md)
 

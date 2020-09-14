@@ -61,8 +61,8 @@
 | 按键                   | 作用                                                                |
 |------------------------|---------------------------------------------------------------------|
 | `<c-a>与<c-e>`         | 行首，行尾                                                          |
-| `<s-left>与<s-right>`  | 左移一个单词，右移一个单词                                          |
-| `<s-down>与<s-up>`     | 光标行下滚半屏，光标行上滚半屏                                      |
+| `<c-left>与<c-right>`  | 左移一个单词，右移一个单词                                          |
+| `<c-down>与<c-up>`     | 光标行下滚半屏，光标行上滚半屏                                      |
 | `<c-d>与<c-b>`         | 下半屏，上半屏                                                      |
 | `<c-u>与<c-k>`         | 删除光标前文本，删除光标后文本                                      |
 | `<c-w>`                | 删除光标前单词                                                      |
@@ -74,7 +74,7 @@
 | `<m-e>`                | 将光标后的字符向后移                                                |
 | `<m-{char}>`           | {char}可以是`}` `]` `)`等，表示将光标后的字符移动到下一个{char}后面 |
 | `<c-o>`                | 下行插入                                                            |
-| `<c-left>与<c-right>`  | 向前缩进与向后缩进                                                  |
+| `<s-left>与<s-right>`  | 向前缩进与向后缩进                                                  |
 | `<c-s-down>与<c-s-up>` | 将本行下移，将本行上移                                              |
 | `<c-v>{char}`          | 插入{char}（控制）字符                                              |
 | `<c-v>x{hh}`           | 插入编码为0xhh的ascii字符                                           |
@@ -157,7 +157,7 @@
 | `<space>{numr}`             | 切换至第{numr}号窗口            |
 | `<tab>`                     | 切换至下个窗口                  |
 | `<s-tab>`                   | 切换至上个窗口                  |
-| `<c-{arrow}>`               | 切换至指定方向上的窗口          |
+| `<s-{arrow}>`               | 切换至指定方向上的窗口          |
 | `<c-w>H`                    | 将当前窗口移动到最左边，JKL同理 |
 | `<c-q>`                     | 关闭窗口                        |
 <!-- -->
@@ -195,7 +195,7 @@
 |---------------------|--------------------------|
 | `z<cr>与zz与zb`     | 光标行滚动到屏幕顶/中/底 |
 | `z<down>与z<up>`    | 光标行下/上滚三行        |
-| `<s-down>与<s-up>`  | 光标行下/上滚半屏        |
+| `<c-down>与<c-up>`  | 光标行下/上滚半屏        |
 | `<c-d>与<c-b>`      | 下半屏，上半屏           |
 | `zs`                | 光标列移至屏幕左边       |
 | `z<left>与z<right>` | 屏幕左/右移半屏          |
@@ -355,7 +355,6 @@
 | 按键  | 作用        |
 |-------|-------------|
 | `gss` | 智能搜索URL |
-| `gsg` | github搜索  |
 <!--  -->
 
 ## 翻译
@@ -434,13 +433,12 @@
 | `<space>mc` | 删除当前文件的所有标签 |
 | `<space>mC` | 删除所有所有标签       |
 <!-- -->
-## lang#c
-| 按键        | 作用                       |
-|-------------|----------------------------|
-| `<space>lr` | 快速运行程序               |
-| `<space>lc` | 关闭运行程序的终端         |
-| `<space>li` | 快速打开输入窗口           |
-| `<space>ld` | 启动cgdb或gdb调试          |
+## QuickRun代码即使运行
+| 按键        | 作用             |
+|-------------|------------------|
+| `<space>lr` | 快速运行程序     |
+| `<space>li` | 快速打开输入窗口 |
+| `<space>ld` | 启动调试命令     |
 <!-- -->
 
 ## lang#markdown
@@ -452,7 +450,10 @@
 | `[[与]]]`   | 上/下个标题                     |
 | `[c`        | 当前标题                        |
 | `[u`        | 上级标题                        |
-<!--  -->
+| `<s-tab>`   | 插入内容`&emsp;`                |
+| `\<cr>`     | 插入内容`<br>`                  |
+
+[Ultisnips/markdown.snippets](Ultisnips/markdown.snippets)里有实用的代码片段
 
 ## 杂项
 > Last but not least
@@ -744,7 +745,7 @@
     ```vim
     try
         ...
-    catch <pattern (optional)>
+    catch /pattern/
         " HIGHLY recommended to catch specific error.
     finally
         ...
@@ -754,12 +755,14 @@
 # Vim命令、函数与变量
 ## 函数
 * exists("varname")
-* eval("expression")
 * search("pattern")
 * getline("line")
 * setline("line", "replace")
-* substitute("expr", "pattern", "replace", "flag")  ：flag可以是"g"或""
+* substitute("expr", "pattern", "replace", "flag")
 * function("funcname")
+* pyeval("py_expr")         ：转换为python表达式的结果
+* eval("expression")        ：转换为表达式的结果
+* execute("cmd")            ：将命令输出作为返回值
 
 ## 命令
 * execute "c-cmd"

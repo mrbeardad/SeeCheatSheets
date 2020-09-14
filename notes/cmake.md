@@ -1,5 +1,5 @@
-# CMake基础命令
-```sh
+# CMakeLists.txt基础命令
+```cmake
 # 版本要求
 cmake_minimum_required(VERSION 3.0)
 
@@ -83,7 +83,7 @@ add_subdirectory(dir_name)
 * RelWithDebInfo：`-O2 -g -DNDEBUG`
 
 # 搜索第三方库
-```sh
+```cmake
     # 需要在CMAKE_MODULE_PATH中存在FindBoost.cmake文件
     find_package(Boost
         [version] [EXACT]               # Minimum or EXACT version e.g. 1.67.0
@@ -102,14 +102,14 @@ add_subdirectory(dir_name)
 ```
 
 # conf期编程
-```sh
-# 搜索文件 path.h.in 并将其中的字符串字面值替换为cmake项目变量值后，安装到${PROJECT_BINARY_DIR}/ver.h
+```cmake
+# 搜索文件 path.h.in 并将其中的字符串字面值中的`${CMAKE_VAR}`替换为cmake项目变量值后，安装到${PROJECT_BINARY_DIR}/ver.h
 configure_file(ver.h.in ${PROJECT_BINARY_DIR}/ver.h)
 ```
 
 # 安装
 ## Linux
-```sh
+```cmake
 install(TARGETS targets
     DESTINATION bin
 )
@@ -125,7 +125,7 @@ install (FILES cmake-examples.conf
 ```
 
 ## Windows
-```sh
+```cmake
 install (TARGETS cmake_examples_inst
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin

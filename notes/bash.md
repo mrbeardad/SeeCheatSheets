@@ -12,11 +12,13 @@
   - [regex技巧](#regex技巧)
 - [变量](#变量)
 - [BASH脚本](#bash脚本)
-- [脚本命令](#脚本命令)
-- [流处理命令](#流处理命令)
+- [常用命令](#常用命令)
+  - [一般命令](#一般命令)
+  - [流处理命令](#流处理命令)
+  - [awk](#awk)
+  - [sed](#sed)
 
 <!-- vim-markdown-toc -->
-
 # BASH基础
 <!-- entry begin: bash cmd -->
 * bash：
@@ -68,8 +70,9 @@
 * 通配符：
     * `*`       ：任意长度的任意字符
     * `?`       ：一个任意字符
-    * `[^ ]`    ：序列中一个可能的字符
-    * `[ - ]`   ：序列中一个可能的字符
+    * `[  ]`    ：序列中一个可能的字符
+    * `[ - ]`   ：序列范围中一个可能的字符
+    * `[^ ]`    ：非序列中一个字符
     * `{ , }`   ：序列中的字符展开
     * `{ .. }`  ：序列中的字符展开
     * `**`      ：递归目录（zsh）
@@ -107,7 +110,7 @@
 <!-- entry end -->
 
 <!-- entry begin: $扩展 -->
-* $扩展：
+* `$扩展`：
     * `$$`                            ：扩展为当前shell的PID
     * `$?`                            ：扩展为上次命令返回值
     * `$!`                            ：扩展为上次后台进程的进程号
@@ -130,7 +133,8 @@
 * `&&`          ：逻辑与执行，放在一条命令后
 * `||`          ：逻辑或执行，放在一条命令后
 * `;`           ：顺序执行，放在一条命令后
-* `&`           ：后台执行，放在命令行最后
+* `&`           ：后台执行，放在命令行最后（但只会正对最后一条命令，
+    毕竟用`|` `&&` `||` `;` 连接命令的同时指定了执行顺序
 > 使用`(cmd; cmd)`与`{cmd; cmd}`将命令连接成一条命令
 <!-- entry end -->
 
@@ -154,7 +158,7 @@
 <!-- entry begin: escape 转义字符 -->
 * 转义字符
     * `\`   ：转义所有特殊字符
-    * `" "` ：其中只保留$扩展、!扩展、`"`、`\`的功能
+    * `" "` ：其中只保留`$扩展`、`!扩展`、`"`、`\`的功能
     * `' '` ：其中只保留 `'` 的功能
 <!-- entry end -->
 
@@ -295,11 +299,12 @@
 
 # 变量
 <!-- entry begin: 变量 -->
-注：zsh中数组下标从1开始，且无需${arr[i]}中的花括号  
+注：zsh中数组下标从1开始，且无需`${arr[i]}`中的花括号  
 注：shell变量默认都是字符串  
 注：字符串变量所有空白符等特殊字符，使用时应该用双引号包含
 
 * 定义或取消变量
+    > 支持数组，不支持字典（映射）
     * var=val
     * array[0]=valA
     * array=([0]=valA [1]=valB [2]=valC)
@@ -307,28 +312,28 @@
     * unset var
 
 * 读取变量
-    * ${+var}                   ：变量存在为1，否则为0
-    * ${var}                    ：读取变量值
-    * ${array[i]}               ：取得数组中的元素
-    * ${array[@]}               ：取得数组中所有元素
-    * ${#var}                   ：字符串长度
-    * ${#array[@]}              ：取得数组的长度
-    * ${#array[i]}              ：取得数组中某个变量的长度
-    * ${varname:-word}          ：若不为空则返回变量，否则返回 word
-    * ${varname:=word}          ：若不为空则返回变量，否则赋值成 word 并返回
-    * ${varname:?message}       ：若不为空则返回变量，否则打印错误信息并退出
-    * ${varname:+word}          ：若不为空则返回 word，否则返回空串
-    * ${varname:offset:len}     ：取得字符串的子字符串
+    * `${+var}`                   ：变量存在为1，否则为0
+    * `${var}`                    ：读取变量值
+    * `${array[i]}`               ：取得数组中的元素
+    * `${array[@]}`               ：取得数组中所有元素
+    * `${#var}`                   ：字符串长度
+    * `${#array[@]}`              ：取得数组的长度
+    * `${#array[i]}`              ：取得数组中某个变量的长度
+    * `${varname:-word}`          ：若不为空则返回变量，否则返回 word
+    * `${varname:=word}`          ：若不为空则返回变量，否则赋值成 word 并返回
+    * `${varname:?message}`       ：若不为空则返回变量，否则打印错误信息并退出
+    * `${varname:+word}`          ：若不为空则返回 word，否则返回空串
+    * `${varname:offset:len}`     ：取得字符串的子字符串
 
 * 修改变量
-    * ${variable#pattern}       ： 如果变量头部匹配 pattern，则删除最小匹配部分返回剩下的
-    * ${variable##pattern}      ： 如果变量头部匹配 pattern，则删除最大匹配部分返回剩下的
-    * ${variable%pattern}       ： 如果变量尾部匹配 pattern，则删除最小匹配部分返回剩下的
-    * ${variable%%pattern}      ： 如果变量尾部匹配 pattern，则删除最大匹配部分返回剩下的
-    * ${variable/pattern/str}   ： 将变量中第一个匹配 pattern 的替换成 str，并返回
-    * ${variable//pattern/str}  ： 将变量中所有匹配 pattern 的地方替换成 str 并返回
-    * eval \$$var               ： eval为关键字，整个表达式会替换成最终的"${$var}"（假设花括号中的变量会先被替换）
-    * eval var1=\$$var2         ： 将`eval \$$var2`的替换结果复制给`var1`
+    * `${variable#pattern}`       ： 如果变量头部匹配 pattern，则删除最小匹配部分返回剩下的
+    * `${variable##pattern}`      ： 如果变量头部匹配 pattern，则删除最大匹配部分返回剩下的
+    * `${variable%pattern}`       ： 如果变量尾部匹配 pattern，则删除最小匹配部分返回剩下的
+    * `${variable%%pattern}`      ： 如果变量尾部匹配 pattern，则删除最大匹配部分返回剩下的
+    * `${variable/pattern/str}`   ： 将变量中第一个匹配 pattern 的替换成 str，并返回
+    * `${variable//pattern/str}`  ： 将变量中所有匹配 pattern 的地方替换成 str 并返回
+    * `eval \$$var`               ： eval为关键字，整个表达式会替换成最终的"${$var}"（假设花括号中的变量会先被替换）
+    * `eval var1=\$$var2`         ： 将`eval \$$var2`的替换结果复制给`var1`
 <!-- entry end -->
 
 <!-- entry begin: export 环境变量 -->
@@ -533,7 +538,7 @@ esac
     * -q：静默模式
 <!-- entry end -->
 
-## AWK
+## awk
 <!-- entry begin: awk -->
 * awk '模式{语句;} 模式{语句;}' FILE
     * 语句语法类似C语言，额外有语句`for ( var in map )`；
@@ -616,7 +621,7 @@ esac
     * tolower(s); toupper(s)
 <!-- entry end -->
 
-## SED
+## sed
 <!-- entry begin: sed -->
 * sed '模式{语句;}; 模式{语句;}' FILE
 * sed -e '模式 语句块' -e '模式 语句块' FILE

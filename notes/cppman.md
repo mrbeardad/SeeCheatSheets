@@ -5,12 +5,32 @@
 - [C++标准库](#c标准库)
   - [规范解释](#规范解释)
   - [标准库异常](#标准库异常)
+    - [异常体系结构](#异常体系结构)
+    - [异常成员](#异常成员)
+    - [异常构造参数](#异常构造参数)
+    - [异常挂起](#异常挂起)
   - [C库](#c库)
+    - [调试处理](#调试处理)
+    - [CSTDLIB](#cstdlib)
+    - [字符处理](#字符处理)
+    - [选项处理](#选项处理)
+    - [数学库](#数学库)
+    - [SIMD](#simd)
   - [通用工具](#通用工具)
   - [STL](#stl)
+    - [STL容器](#stl容器)
+    - [STL迭代器](#stl迭代器)
+    - [STL算法](#stl算法)
+      - [更易算法](#更易算法)
+      - [非更易算法](#非更易算法)
   - [其它容器](#其它容器)
+  - [正则表达式](#正则表达式)
   - [流与格式化](#流与格式化)
+  - [随机数生成器](#随机数生成器)
   - [并发](#并发)
+  - [文件系统](#文件系统)
+    - [类](#类)
+    - [函数](#函数)
 - [BOOST](#boost)
   - [序列化](#序列化)
 - [Mysql++](#mysql)
@@ -19,186 +39,161 @@
 
 # C++标准库
 ## 规范解释
-* C++程序库规范解释
-    * 类聚合式构造    ：即是对每个数据成员进行copy/move构造
-    * 逐块式构造      ：利用tuple传递每个数据成员的构造函数的实参
-    * 成员模板构造    ：比如pair<int, char*>可以赋值给pair<int, string>，
-        尽管类型不一样，但提供了模板构造函数用于接收不同实例。
+* 多态类型：指存在虚函数的类类型
 
-    * 所有需要使用`foo<T>::type`与`bar<T>::value`，都提供了模板类型别名`foo_t<T>`与变量模板`bar_v<T>`代替
-    * **访问**表示可以读取也可以写入
-    * 一些参数内容很明显的函数不再指出形参列表，如`.operator()`
-    * 函数参数列表如`(x, y = 0)`，不一定表示y有默认实参，
-        也可能表示有两个重载函数，第一个为`(x)`，第二个为`(x, y)`，只不过若第二个中y=0则与第一个函数作用一样（实现细节不一样）
+* 构造函数
+    * 就地构造          ：将参数传递给数据成员的构造函数
+    * 类聚合式构造      ：将参数copy/move到数据成员
+    * 逐块式构造        ：将参数中的每个tuple解包作为每个成员的实参列表
+    * 成员模板构造      ：接受该模板类的其他实例作为参数，并对数据成员进行类型转换
+
+* 访问：表示可以**读取**也可以**写入**
+
+* 一些形参列表很明显的函数便不再指出形参列表，如`.operator()`
+
+* 函数参数列表如`(x, y = 0)`，不一定表示y有默认实参，
+也可能表示有两个重载函数，第一个为`(x)`，第二个为`(x, y)`，只不过若第二个中y=0则与第一个函数作用一样（实现细节不一样）
 
 ## 标准库异常
 <!-- entry begin: c++ cpp 标准库异常 -->
-* 异常体系结构
-```cpp
-exception                 `<exception>`  
-├─── bad_cast             `<typeinfo>`      ：多态引用的转换失败  
-├─── bad_typeid           `<typeinfo>`      ：在typeid()中解引用多态类型的空指针
-├─── bad_weak_ptr         `<memory>`        ：构造weak_ptr失败  
-├─── bad_function_call    `<functional>`    ：调用无目标的function类  
-├─── bad_alloc            `<new>`           ：内存申请失败  
-├─── bad_array_new_length `<new>`           ：传给new的size不在有效范围  
-│  
-├─── logic_error          `<stdexcept>`  
-│   │  
-│   ├─── domain_error                       ：数学库, 传入值域错误  
-│   ├─── invalid_argument                   ：bitset构造参数无效  
-│   ├─── length_error                       ：容器size超出限制  
-│   ├─── out_of_range                       ：容器的无效索引  
-│   └─── future_error     `<future>`        ：异步系统调用  
-│  
-└─── runtime_error        `<stdexcept>`  
-    │  
-    ├─── range_error                        ：wide string与byte string转换出错  
-    ├─── overflow_error                     ：bitset转换为整型时溢出  
-    ├─── underflow_error                    ：算术下溢  
-    └─── system_error     `<system_error>`  ：系统调用出错  
-        │  
-        └─── ios::failure `<ios>`           ：stream出错  
+### 异常体系结构
+```
+exception                 `<exception>`
+│
+├─── bad_cast             `<typeinfo>`      ：dynamic_cast<>()转换多态类型的引用失败（转换多态类型的指针失败则返回空指针）
+│   │
+│   └─── bad_any_cast     `<any>`           ：调用any_cast<>()转换any类型失败
+│
+├─── bad_variant_access   `<variant>`       ：读取get<>()转换variant类型失败
+├─── bad_typeid           `<typeinfo>`      ：typeid()接收解引用的多态类型的空指针（typeid()并不会真正执行括号内的表达式）
+├─── bad_weak_ptr         `<memory>`        ：由shared_ptr构造weak_ptr失败
+├─── bad_function_call    `<functional>`    ：调用无目标的function类
+├─── bad_alloc            `<new>`           ：内存申请失败
+├─── bad_array_new_length `<new>`           ：传给new的size不在有效范围
+│
+├─── logic_error          `<stdexcept>`
+│   │
+│   ├─── domain_error                       ：数学库, 传入值域错误
+│   ├─── invalid_argument                   ：bitset构造参数无效
+│   ├─── length_error                       ：容器size超出限制
+│   ├─── out_of_range                       ：容器的无效索引
+│   └─── future_error     `<future>`        ：异步系统调用
+│
+└─── runtime_error        `<stdexcept>`
+    │
+    ├─── range_error                        ：wide string与byte string转换出错
+    ├─── overflow_error                     ：bitset转换为整型时溢出
+    ├─── underflow_error                    ：算术下溢
+    └─── system_error     `<system_error>`  ：系统调用出错
+        │
+        └─── ios::failure `<ios>`           ：stream出错
 ```
 <!-- entry end -->
 
 <!-- entry begin: 异常成员 -->
-* 异常成员
-    * .what() ：返回`const char*`用于打印
-        > 根部基类**exception**的虚函数
-        > 异常类销毁后该C-string也不复存在  
-    * .code() ：返回error_code类对象
-        > error_code 与 error_condition 区别：**可移植性**  
-        > 前者由编译器定义(OS相关), 后者为默认标准
-        * error_code成员：
-            * .message()
-            * .category().name()
-            * .value()
-            * .default_error_condition().message()
-            * .default_error_condition().category().name()
-            * .default_error_condition().value()
-        * 比较：
-            > 重载了与**领域枚举值**的比较运算符
-            * errc::mem        ：`<cerrno>`
-            * io_errc::mem     ：`<ios>`
-            * future_errc::mem ：`<future>`
+### 异常成员
+* .what() ：返回`const char*`
+    > 根部基类**exception**的虚函数  
+    > 异常类销毁后返回的C-string也不复存在
+* .code() ：返回`error_code`对象
+    > `error_code`与`error_condition`区别在于**可移植性**：  
+    > 前者由编译器定义(OS相关), 后者为默认标准
+    * error_code成员：
+        * .message()
+        * .category().name()
+        * .value()
+        * .default_error_condition().message()
+        * .default_error_condition().category().name()
+        * .default_error_condition().value()
+    * 比较：
+        > 重载了与**领域枚举值**的比较运算符
+        * errc::mem        ：`<cerrno>`
+        * io_errc::mem     ：`<ios>`
+        * future_errc::mem ：`<future>`
 <!-- entry end -->
 
 <!-- entry begin: 异常构造 -->
-* 异常构造参数
-    * logic_error与runtime_error
-        * (const string&)
-        * (const char*)
-    * system_error
-        > 提供`make_error_code(errc)`构造error_code
-        * (error_code)
-        * (error_code, const string&)
-        * (error_code, const char*)
+### 异常构造参数
+* logic_error与runtime_error
+    * (const string&)
+    * (const char*)
+* system_error
+    > 标准库提供`make_error_code(errc)`构造error_code
+    * (error_code)
+    * (error_code, const string&)
+    * (error_code, const char*)
 <!-- entry end -->
 
 <!-- entry begin: 异常挂起 -->
-* 异常挂起
-    * current_exception()       ：返回exception_ptr对象
-    * rethrow_exception(exceptr)：重新抛出exception_ptr对象
+### 异常挂起
+* current_exception()       ：返回`exception_ptr`对象
+* rethrow_exception(exceptr)：重新抛出`exception_ptr`对象
 <!-- entry end -->
 
 ## C库
 <!-- entry begin: 调试 cassert -->
-* 调试：`<cassert>`
-    * assert(expr)                  ：运行时断言, false则执行
-        > #define NDEGUG  
-        > 可以取消**宏函数**assert()
-    * static_assert(constexpr, message)  ：编译期断言, 可以自定义打印消息
-        > #define NDEBUG  
-        > 并不会取消**关键字static_assert()**
-    * 编译器预处理宏：
-        * `__func__`
-        * `__LINE__`
-        * `__FILE__`
-        * `__TIME__`
-        * `__DATE__`
+### 调试处理
+**`<casset>`**
+* assert(expr)                      ：运行时断言, false则执行
+    > #define NDEGUG  
+    > 可以取消**宏函数**assert()
+* static_assert(constexpr, message) ：编译期断言, 可以自定义打印消息
+    > #define NDEBUG  
+    > 并不会取消**关键字static_assert()**
+* 编译器预处理宏：
+    * `__func__`
+    * `__LINE__`
+    * `__FILE__`
+    * `__TIME__`
+    * `__DATE__`
+    * `_WIN32`
+    * `__linux`
+    * `__clang__`
+    * `__GUNC__`
+    * `_MSC_VER`
 <!-- entry end -->
 
+### CSTDLIB
 <!-- entry begin: cstdlib -->
-* `<cstdlib>`
-    * EXIT_SUCCESS
-    * EXIT_FAILURE
-    * exit(status)
-    * atexit(void (*func)())
-    * quick_exit(status)
-    * at_quick_exit(void (*func)())
+**`<cstdlib>`**
+
+* EXIT_SUCCESS
+* EXIT_FAILURE
+* exit(status)
+* atexit(void (*func)())
+* quick_exit(status)
+* at_quick_exit(void (*func)())
+
+* getenv(var_name)
+* system(sh_cmd)
 <!-- entry end -->
 
 <!-- entry begin: cctype -->
-* `<cctype>`
-    * `isalnum(c)`     ：字母+数字
-    * `isalpha(c)`     ：字母
-    * `islower(c)`     ：小写字母
-    * `isupper(c)`     ：大写字母
-    * `isdigit(c)`     ：数字
-    * `isxdigit(c)`    ：数字+`xabcdefXABCDEF`
-    * `ispunct(c)`     ：符号
-    * `isblank(c)`     ：`空格`+`\t`
-    * `isspace(c)`     ：`空格`+`\t`+`\n`+`\r`+`\v`+`\f`
-    * `iscntrl(c)`     ：0x00-0x1F + 0x7F
-    * `isgraph(c)`     ：字母+数字+符号
-    * `isprint(c)`     ：字母+数字+符号+空格
-    * `toupper(c)`
-    * `tolower(c)`
+### 字符处理
+**`<cctype>`**
+
+> 见[正则表达式](https://github.com/mrbeardad/learning-notes-and-cheat-sheets/blob/master/notes/bash.md#%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
+* `isalnum(c)`
+* `isalpha(c)`
+* `islower(c)`
+* `isupper(c)`
+* `isdigit(c)`
+* `isxdigit(c)`
+* `ispunct(c)`
+* `isblank(c)`
+* `isspace(c)`
+* `iscntrl(c)`
+* `isgraph(c)`
+* `isprint(c)`
+* `toupper(c)`
+* `tolower(c)`
 <!-- entry end -->
 
-<!-- entry begin: cmath 数学 -->
-* 数学库：`<cmath>`
-    > 几乎所有函数的参数都对`float` `double` `long double` 和整数 有重载，故一般省略形参类型  
-    > 若只能为浮点数（float或double）会指明`double`
-
-* 三角函数
-    * cos(T)
-    * sin(T)
-    * tan(T)
-    * acos(T)
-    * asin(T)
-    * atan(T)
-
-* 对数与幂
-    * log(N)                    ：log_e(N)
-    * log1p(N)                  ：log_e(N + 1)（计算更精准）
-    * log2(N)                   ：log_2(N)
-    * log10(N)                  ：log_10(N)
-<!--  -->
-    * exp(x)                    ：e ^ x
-    * expm1(x)                  ：exp(x) - 1（计算更精准）
-    * exp2(x)                   ：2 ^ x
-    * exp10(x)                  ：10 ^ x
-<!--  -->
-    * pow(x, y)                 ：x ^ y
-    * sqrt(double x)            ：x的平方根
-    * cbrt(double x)            ：x的立方根
-    * hypot(x, y, z = 0)        ：`sqrt(x * x, y * y, z * z)`
-
-* 浮点数取整
-    * ceil(double x)            ：向上取整
-    * floor(double d)           ：向下取整
-    * trunc(double x)           ：丢弃小数
-    * round(double x)           ：四舍五入
-
-* 其它
-    * frexp(double x, int* exp) ：x = n * (2 ^ exp)，返回n值域为[0.5, 1.0)，并返回exp到指针所指的int
-    * ldexp(double x, int exp)  ：n = x * (2 ^ exp)，返回n，x的值域为[0.5, 1.0)
-    * fmod(double x, double y)  ：浮点数的x % y
-    * modf(double x, int* n)    ：将x分解为整数与小数部分，整数存于n，返回小数
-<!--  -->
-    * abs(x)                    ：x的绝对值
-    * fdim(x, y)                ：如果x > y则返回x - y，否则返回0
-    * fma(x, y, z)              ：返回x * y + z
-    * div(x, y)                 ：x除以y的商(div_t.quot)和余数(div_t.rem)   `<cstdlib>`
-<!--  -->
-    * gcd(x, y)                 ：`<numeric>`
-    * lcm(x, y)                 ：`<numeric>`
-<!-- entry end -->
+### 选项处理
+**`<unitstd.h>`**
 
 <!-- entry begin: getopt -->
-* `int getopt(int argc, char* const argv[], const char* optstring)`  `<unistd.h>`
+* `int getopt(int argc, char* const argv[], const char* optstring)`
     > 命令行参数，即`argv`字符串数组中的各个字符串的集合，每个字符串为一个命令行参数。有如下几种情况：
     > * 执行命令      ：即`argv[0]`
     > * 选项          ：即以`-`开头的命令行参数。选项分为三种类型，`-o`单选项、`-opt`多选项（`o`与`p`选项必须为无参选项）、`-tfile`选项`t`及其参数`file`
@@ -226,8 +221,10 @@ exception                 `<exception>`
             * `-1`表示解析结束，剩余的都是命令参数
 <!-- entry end -->
 
+**`<getopt.h>`**
+
 <!-- entry begin: getopt_long getopt_long_only -->
-* `int getopt_long(argc, argv, optstring, const struct option longopts[], int* longindex)`   `<getopt.h>`
+* `int getopt_long(argc, argv, optstring, const struct option longopts[], int* longindex)`
     > 基本规则同`getopt()`，增加了对长选项的解析：
     > “长选项的紧跟”为`--option=arg`, 而且长选项若无歧义可不用完整输入
     * 参数longopts：
@@ -246,55 +243,114 @@ exception                 `<exception>`
     > 注：规则同上, 但是`-opt`会优先解析为长选项, 不符合再为短
 <!-- entry end -->
 
+<!-- entry begin: cmath 数学 -->
+### 数学库
+**`<cmath>`**
+
+> 几乎所有函数的参数都对`float` `double` `long double` 和整数 有重载，故一般省略形参类型  
+> 若只能为浮点数（float或double）会指明`double`
+
+* 三角函数
+    * cos(T)
+    * sin(T)
+    * tan(T)
+    * acos(T)
+    * asin(T)
+    * atan(T)
+
+* 对数与幂
+    * log(N)                    ：`log_e(N)`
+    * log1p(N)                  ：`log_e(N + 1)`（计算更精准）
+    * log2(N)                   ：`log_2(N)`
+    * log10(N)                  ：`log_10(N)`
+<!--  -->
+    * exp(x)                    ：`e ^ x`
+    * expm1(x)                  ：`exp(x) - 1`（计算更精准）
+    * exp2(x)                   ：`2 ^ x`
+    * exp10(x)                  ：`10 ^ x`
+<!--  -->
+    * pow(x, y)                 ：`x ^ y`
+    * sqrt(double x)            ：`x的平方根`
+    * cbrt(double x)            ：`x的立方根`
+    * hypot(x, y, z = 0)        ：`sqrt(x * x, y * y, z * z)`
+
+* 浮点数取整
+    * ceil(double x)            ：向上取整
+    * floor(double d)           ：向下取整
+    * trunc(double x)           ：向零取整
+    * round(double x)           ：四舍五入
+
+* 其它
+    * frexp(double x, int* exp) ：将x分解为`x = n * 2 ^ exp，其中n ∈ [0.5, 1)`，exp存于exp并返回n
+    * ldexp(double x, int exp)  ：返回`x * 2 ^ exp`
+    * fmod(double x, double y)  ：返回浮点数的`x % y`
+    * modf(double x, int* n)    ：将x分解为整数与小数部分，整数存于n并返回小数
+<!--  -->
+    * abs(x)                    ：返回x的绝对值
+    * fdim(x, y)                ：如果x > y则返回x - y，否则返回0
+    * fma(x, y, z)              ：返回x * y + z
+    * div(x, y)                 ：返回`div_t`对象，`div_t::quot`为商，`div_t::rem`为余数（头文件`<cstdlib>`）
+<!--  -->
+    * gcd(x, y)                 ：返回最大公因数（头文件`<numeric>`）
+    * lcm(x, y)                 ：返回最小公倍数（头文件`<numeric>`）
+<!-- entry end -->
+
+### SIMD
 <!-- entry begin: simd immintrin.h -->
-* SIMD：`<immintrin.h>`
-    > C++17中SIMD指令可以通过给STL算法执行策略而应用到程序中
-    * 需要利用`alignas(32)`对齐数组
-    * 向量寄存器抽象类型：
-        * `__m256`
-        * `__m256d`
-        * `__m256i`
-    * 加载到向量寄存器：
-        ```c
-        _mm256_load_ps( float* )
-        _mm256_load_pd( double* )
-        _mm256_load_epi256( __m256i* )
-        ```
-    * SIMD运算：
-        ```c
-        _mm256_OP_ps( __m256, __m256 )
-        _mm256_OP_pd( __m256d, __m256d )
-        _mm256_OP_epi32( __m256i, __m256i )
-        _mm256_OP_epi64( __m256i, __m256i )
-        ```
-    * 存储回内存：
-        ```c
-        _mm256_store_ps( float* , __m256)
-        _mm256_store_pd( double* , __m256d )
-        _mm256_store_epi256( int* , __m256i )
-        ```
+**`<immintrin.h>`**
+
+> C++17中SIMD指令可以通过给STL算法执行策略而应用到程序中
+* 需要利用`alignas(32)`对齐数组
+* 向量寄存器抽象类型：
+    * `__m256`
+    * `__m256d`
+    * `__m256i`
+* 加载到向量寄存器：
+    ```c
+    _mm256_load_ps( float* )
+    _mm256_load_pd( double* )
+    _mm256_load_epi256( __m256i* )
+    ```
+* SIMD运算：
+    ```c
+    _mm256_OP_ps( __m256, __m256 )
+    _mm256_OP_pd( __m256d, __m256d )
+    _mm256_OP_epi32( __m256i, __m256i )
+    _mm256_OP_epi64( __m256i, __m256i )
+    ```
+* 存储回内存：
+    ```c
+    _mm256_store_ps( float* , __m256)
+    _mm256_store_pd( double* , __m256d )
+    _mm256_store_epi256( int* , __m256i )
+    ```
 <!-- entry end -->
 
 ## 通用工具
-<!-- entry begin: initializer_list -->
-* initializer_list：`<initializer_list>`
-    > 语言支持库，支持聚合初始化
-    > * 使用列表初始化时，会优先调用参数为initializer_list的构造函数
-    > * 在range-based-for中，可以直接在冒号右边用列表初始化构造initializer_list作为容器
-<!-- entry end -->
-
 <!-- entry begin: integer_sequence utility -->
 * integer_sequence：`<utility>`
     > 与initializer_list的区别在于，integer_sequence可以用于编译期计算
     * 构造
         * `integer_sequence<typename T, T... INTS>{}`
-        * `index_sequence<size_t... SIZETS>{}`
+        * `index_sequence<size_t... INTS>`
         > 以下构造1 ~ N-1的T类型的整数序列
         * `make_integer_sequence<typename T, T N>{}`
         * `make_index_sequence<size_t N>{}`
     * 读取
-        * ::size()                                  ：获取整数个数
-        * function(integer_sequece<T, INTS...> t)   ：利用模板参数解包与折叠表达式处理INTS
+        * ::size()      ：获取整数个数
+        * (INTS OP ...) ：模板函数接收后，利用折叠表达式处理模板参数包INTS
+<!-- entry end -->
+
+<!-- entry begin: initializer_list -->
+* initializer_list：`<initializer_list>`
+    > 语言支持库
+    * 构造：
+        * 聚合初始化
+        * 直接由初始列转换
+    * 作用：
+        * 设计形参为`initializer_list`的构造函数，来抢占初始列模拟聚合初始化
+        * 设计形参有`initializer_list`的函数，用来模拟变参函数，但只支持同类型数据变参
+        * 当作容器来使用
 <!-- entry end -->
 
 <!-- entry begin: pair utility -->
@@ -320,8 +376,8 @@ exception                 `<exception>`
         * `get<T>(t)` 与 `get<N>(t)`
             > 返回引用
     * 读取
-        * `tuple_size<TT>::value`
-        * `tuple_element<N, TT>::type`
+        * `tuple_size<TupleType>::value`
+        * `tuple_element<N, TupleType>::type`
         * `tuple_cat(tuple1, tuple2, ...)`
     * 比较：
         > 字典比较
@@ -331,8 +387,8 @@ exception                 `<exception>`
 * any：`<any>`
     * 构造：
         * 默认构造      ：构造为nullptr
-        * 类聚合式构造  ：支持移动语义
         * 就地构造      ：参数`(std::in_place_type<Type>, args...)`
+        * 类聚合式构造  ：支持移动语义
     * 访问：
         * `any_cast<T&>(any)`
     * 读取：
@@ -355,20 +411,20 @@ exception                 `<exception>`
         * 就地构造：
             * 参数`(std::in_place_type<Type>, args...)`
             * 参数`(std::in_place_index<Type>, args...)`
-    * 读取：
-        * .index()
-    * 修改：
-        * .operator=()
-        * `.emplace<T>()`
-        * `.emplace<N>()`
     * 访问：
+        > get<>错误匹配类型会抛出异常，get_if<>错误匹配类型返回空指针
         * `get<T>(vrt)`
         * `get<N>(vrt)`
         * `get_if<T>(vrt*)`
         * `get_if<N>(vrt*)`
-        > get<>错误匹配类型会抛出异常，get_if<>错误匹配类型返回空指针
-        * visit(func, vrt)
-            > func为能接受所有vrt模板参数类型的重载可调用类型
+        * `visit(func, vrt)`
+            > func为能接受vrt所有模板参数类型的可调用类型（模板或重载）
+    * 读取：
+        * `.index()`
+    * 修改：
+        * `.operator=()`
+        * `.emplace<T>()`
+        * `.emplace<N>()`
     * 比较：
         > 字典序
 <!-- entry end -->
@@ -391,13 +447,13 @@ exception                 `<exception>`
 <!-- entry begin: shaerd_ptr memory -->
 * shared_ptr：`<memory>`
     * 构造：
-        * 拷贝/移动构造         ：更新引用计数
+        * 拷贝构造          ：更新引用计数
         * `shared_ptr<T>(unique_ptr)`
         * `shared_ptr<T>(new_ptr, deleter)`
         * `make_shared<T>()`
             > 对象内存与引用计数器一次分配  
             > 同时避免new表达式与用shared_ptr管理new获取的指针这两步之间发生异常，而导致内存泄漏（make_unique同）
-    * 访问：
+    * 访问管理数据：
         * .operator*()
         * .operator->()
         * .get()
@@ -408,15 +464,15 @@ exception                 `<exception>`
         * .reset(ptr)
         * .reset(ptr, del)
     * 类型转换：
-        * static_pointer_cast<>(sp)
-        * dynamic_pointer_cast<>(sp)
-        * const_pointer_cast<>(sp)
+        * `static_pointer_cast<>(sp)`
+        * `dynamic_pointer_cast<>(sp)`
+        * `const_pointer_cast<>(sp)`
         * .operator bool()
     * 比较：
         > 比较存储的指针
     * 支持成员函数返回this的唯一的shaerd_ptr
-        * 继承`std::enable_shared_from_this<T>`
-        * 返回`shared_from_this()`
+        1. 继承`std::enable_shared_from_this<T>`
+        2. 返回`shared_from_this()`
     * 错误问题：
         * 循环依赖
         * 多组指向
@@ -426,7 +482,7 @@ exception                 `<exception>`
 * weak_ptr：`<memory>`
     * 构造：
         * `weak_ptr<T>(shared_ptr)`
-    * 访问
+    * 访问管理数据
         * .lock()
             > 返回shared_ptr
     * 读取
@@ -437,11 +493,11 @@ exception                 `<exception>`
 <!-- entry begin: unique_ptr memory -->
 * unique_ptr：`<memory>`
     * 构造：
-        * unique_ptr<T, Del>(new_ptr, del)
+        * `unique_ptr<T, Del>(new_ptr, del)`
             > del默认为delete表达式
-        * make_unique<>()
+        * `make_unique<>()`
         * 支持move, 拒绝copy
-    * 访问：
+    * 访问管理数据：
         * .operator*()
         * .operator->()
         * .get()
@@ -506,17 +562,6 @@ exception                 `<exception>`
 
 <!-- entry begin: chrono ctime get_time put_time -->
 * 时间库：`<chrono>`
-    * duration
-        * 构造：
-            * time_point相减
-            * 字面值构造
-        * 读取：
-            * .count()
-            * ::rep     ：整数的类型
-            * ::period  ：分数的类型
-        * 算术运算：会隐式转换为更高精度
-        * 类型转换：转为粗精度直接截断数值
-            * duration_cast<>()
     * Clock
         * 构造：
             * 预定义system_clock、steady_clock等
@@ -527,6 +572,17 @@ exception                 `<exception>`
             * system_clock还提供
                 * ::from_time_t()
                 * ::to_time_t()
+    * duration
+        * 构造：
+            * time_point相减
+            * 字面值构造
+        * 读取：
+            * .count()
+            * ::rep     ：整数的类型
+            * ::period  ：分数的类型
+        * 算术运算：会隐式转换为更高精度
+        * 类型转换：转为粗精度直接截断数值
+            * `duration_cast<>()`
     * time_point
         > 由Clock提供Epoch，
         > duration可相对为负值
@@ -536,65 +592,66 @@ exception                 `<exception>`
             * time_point与duration运算
         * 算术运算、关系运算、类型转换
 
-* `<ctime>`：
+* `<ctime>`
     * time(time_t*)                         ：获取当前时间并存储到time_t*指向的位置
     * localtime(time_t*); gmtime(time_t*)   ：传入上述的time_t*，返回`tm*`
 
-* `<iomanip>`：
+* `<iomanip>`
     > `fmt`格式见linux中date命令的格式
     * get_time(tm*, fmt)
     * put_time(tm*, fmt)
 <!-- entry end -->
 
 ## STL
-> * STL组件
->     * 容器：序列、关联、无序
->         * 异常发生：容器reallocate, 元素的copy与move等
->         * 异常处理：容器保证reallocate异常安全；对于元素增删时产生的异常, 随机访问容器无法恢复, 节点式容器保证安全
->     * 迭代器：输出、输入、单向、双向、随机
->     * 泛型算法：搜索比较、更替复制、涂写删除
-> * 解释：
->     * a : array
->     * s : string
->     * v : vector
->     * d : deque
->     * l : list
->     * fl: forward-list
->     * A : Assoicated
->     * U : Unordered
->     * M : all-kinds-of-Map
-> * STL算法
->     * 为了简化，将重载函数的形参当作同一函数的默认实参来处理
->     * op1表示接收一个实参的操作数，op2接收两个
->     * b表示begin，e表示end
->     * partB表示是和b是同一个容器的且非end的迭代器
->     * destB表示是作为算法的输出区间
+* STL组件
+    * 容器：序列、关联、无序
+        * 异常发生：容器reallocate, 元素的copy与move等
+        * 异常处理：容器保证reallocate异常安全；对于元素增删时产生的异常, 随机访问容器无法恢复, 节点式容器保证安全
+    * 迭代器：输出、输入、单向、双向、随机
+    * 泛型算法：搜索比较、更替复制、涂写删除
+* 解释：
+    * a : array
+    * s : string
+    * v : vector
+    * d : deque
+    * l : list
+    * fl: forward-list
+    * A : Assoicated
+    * U : Unordered
+    * M : all-kinds-of-Map
+* STL算法
+    * 为了简化，将重载函数的形参当作同一函数的默认实参来处理
+    * op1表示接收一个实参的操作数，op2接收两个
+    * b表示begin，e表示end
+    * partB表示是和b是同一个容器的且非end的迭代器
+    * destB表示是作为算法的输出区间
 <!-- entry end -->
 
-<!-- entry begin: 容器构造 -->
+### STL容器
+<!-- entry begin: container construct 容器构造 -->
 * 容器构造：
-    * 默认               ：all-a
-    * (initializer-list) ：all-a
-    * (beg, end)         ：all-a
-    * 聚合初始化         ：a
-    * 拷贝               ：all
-    * 移动               ：all
+    * 默认               ：ALL-a
+    * (initializer-list) ：ALL-a
+    * (beg, end)         ：ALL-a
     * (num)              ：v, d, l, fl
     * (num, value)       ：s, v, d, l, fl
+    * 聚合初始化         ：a
+    * 拷贝               ：ALL
+    * 移动               ：ALL
     > array为聚合类  
     > 前三条对于A与U都可加额外参数(..., cmpPred)与(..., bnum, hasher, eqPred)
 <!-- entry end -->
 
-<!-- entry begin: 容器赋值 -->
+<!-- entry begin: container assign 容器赋值 -->
 * 容器赋值：
-    * .operator=()                ：all
+    * .operator=()                ：ALL
     * .fill(v)                    ：a
-    * .assign(initializer-list)   ：all-a-A-U
-    * .assign(beg, end)           ：all-a-A-U
-    * .assign(num, value)         ：all-a-A-U
+    * .assign(initializer_list)   ：ALL-a-A-U
+    * .assign(beg, end)           ：ALL-a-A-U
+    * .assign(num, value)         ：ALL-a-A-U
 <!-- entry end -->
 
-<!-- entry begin: 容器访问 -->
+<!-- entry begin: container assess 容器访问 -->
 * 容器访问：
     * .at(idx)                                ：a, s, v, d
     * .at(key)                                ：Map
@@ -603,16 +660,16 @@ exception                 `<exception>`
     * .front()                                ：a, v, d, l, fl
     * .back()                                 ：a, v, d, l
     * .data()                                 ：a, s, v
-    * .begin(), .cbegin(), .end(), cend()     ：all
-    * .rbegin(), .crbegin(), .rend(), crend() ：all-U-fl
+    * .begin(), .cbegin(), .end(), cend()     ：ALL
+    * .rbegin(), .crbegin(), .rend(), crend() ：ALL-U-fl
 <!-- entry end -->
 
-<!-- entry begin: 元素插入 -->
+<!-- entry begin: container insert emplace push 元素插入 -->
 * 元素插入：
-    * .insert(pos, value)            ：all
-    * .insert(pos, num, val)         ：s, v, d, l
+    * .insert(pos, value)            ：ALL
     * .insert(pos, initializer-list) ：s, v, d, l
     * .insert(pos, beg, end)         ：s, v, d, l
+    * .insert(pos, num, val)         ：s, v, d, l
     * .insert(value)                 ：A, U(非multi返回pair<iter, bool>)
     * .insert(initializer-list)      ：A, U
     * .insert(beg, end)              ：A, U
@@ -625,21 +682,21 @@ exception                 `<exception>`
     * .push_front(v)                 ：d, l, fl
 <!-- entry end -->
 
-<!-- entry begin: 元素删除 -->
+<!-- entry begin: erase pop clear 元素删除 -->
 * 元素删除：
     * .erase(v)          ：A, U(返回删除个数)
-    * .erase(pos)        ：all-fl
-    * .erase(beg, end)   ：all-fl
+    * .erase(pos)        ：ALL-fl
+    * .erase(beg, end)   ：ALL-fl
     * .pop_back()        ：s, v, d, l
     * .pop_front()       ：d, l, fl
-    * .clear()           ：all
+    * .clear()           ：ALL
 <!-- entry end -->
 
-<!-- entry begin: 容器大小 -->
+<!-- entry begin: container size 容器大小 -->
 * 容器大小：
-    * .empty()                   ：all
-    * .size()                    ：all-fl
-    * .max_size()                ：all
+    * .empty()                   ：ALL
+    * .size()                    ：ALL-fl
+    * .max_size()                ：ALL
     * .resize(num)               ：s, v, d, l, fl
     * .resize(num, v)            ：s, v, d, l, fl
     * .capacity()                ：s, v
@@ -650,7 +707,7 @@ exception                 `<exception>`
 <!-- entry begin: 容器比较 -->
 * 容器比较：
     * 相等比较：U
-    * 非相等比较：all-U
+    * 非相等比较：ALL-U
 <!-- entry end -->
 
 <!-- entry begin: U A 无序 关联 A特有 -->
@@ -663,7 +720,7 @@ exception                 `<exception>`
     * .merge(C )        ：A, U
     * .extract(iter)    ：A, U
     * .extract(key)     ：A, U
-        > .extract()的作用是利用move语义获取元素handle
+        > .extract()的作用是直接获取元素handle
 <!-- entry end -->
 
 <!-- entry begin: U 无序 U特有 -->
@@ -697,6 +754,7 @@ exception                 `<exception>`
     * .reverse()
 <!-- entry end -->
 
+### STL迭代器
 <!-- entry begin: 迭代器辅助函数 iterator -->
 * 迭代器辅助函数： `<iterator>`
     * next(iter, n=1)
@@ -705,7 +763,7 @@ exception                 `<exception>`
     * iter_swap(iter1, iter2)
 <!-- entry end -->
 
-<!-- entry begin: 反向迭代器 -->
+<!-- entry begin: reverse iterator 反向迭代器 -->
 * 反向迭代器
     * 获取：容器的成员函数
         * .rbegin()
@@ -715,7 +773,7 @@ exception                 `<exception>`
     * .base()：反向迭代器的成员，转换为正常迭代器(+1)
 <!-- entry end -->
 
-<!-- entry begin: 流迭代器 -->
+<!-- entry begin: stream iterator 流迭代器 -->
 * 流迭代器
     * 获取：类模板构造
         * `istream_iterator<T>(istream)`              ：默认构造为end
@@ -723,7 +781,7 @@ exception                 `<exception>`
     > 注： 只是通过I/O操作符实现, 而非底层I/O, 迭代器保存上次读取的值
 <!-- entry end -->
 
-<!-- entry begin: 缓冲区迭代器 -->
+<!-- entry begin: streambuf iterator 缓冲区迭代器 -->
 * 流缓冲区迭代器
     * 获取：类模板构造
         * `istreambuf_iteratot<char>`
@@ -735,14 +793,14 @@ exception                 `<exception>`
             * (obuf_ptr)
 <!-- entry end -->
 
-<!-- entry begin: 移动迭代器 -->
+<!-- entry begin: move iterator 移动迭代器 -->
 * 移动迭代器
     * 获取：泛型函数获取
         * make_move_iterator(iter)
     * 作算法源区间, 需要保证元素只能处理一次
 <!-- entry end -->
 
-<!-- entry begin: 插入迭代器 -->
+<!-- entry begin: insert iterator 插入迭代器 -->
 * 插入迭代器
     * 获取：通过泛型函数
         * back_inserter(C)
@@ -750,66 +808,23 @@ exception                 `<exception>`
         * inserter(C, pos)
 <!-- entry end -->
 
-> * 泛型算法：`<algorithm>, <numeric>, <execution>`
-> * 默认by value传递pred, 算法并不保证在类内保存状态的pred能正确运作(重新构造pred可能导致重置状态)
-> * 获取谓词状态：
->     * 谓词指向外部状态
->     * 显式指定模板实参为reference
->     * 利用for_each()算法的返回值
-> * 执行策略：做第一个参数
->     * std::seq        ：顺序执行（默认）
->     * std::par        ：多线程并行
->     * std::unseq      ：使用SIMD
->     * std::par_unseq  ：并行或SIMD
-> * 规范：
->     * b, e代表源区间的begin与end
->     * op1, op2代表单参函数与双参函数
-<!-- entry end -->
+### STL算法
+* 泛型算法：`<algorithm>, <numeric>, <execution>`
+* 默认by value传递pred, 算法并不保证在类内保存状态的pred能正确运作(重新构造pred可能导致重置状态)
+* 获取谓词状态：
+    * 谓词指向外部状态
+    * 显式指定模板实参为reference
+    * 利用for_each()算法的返回值
+* 执行策略：做第一个参数
+    * std::execution::seq        ：顺序执行（默认）
+    * std::execution::par        ：多线程并行
+    * std::execution::unseq      ：使用SIMD
+    * std::execution::par_unseq  ：并行或SIMD
+* 规范：
+    * b, e代表源区间的begin与end
+    * op1, op2代表单参函数与双参函数
 
-<!-- entry begin: 非更易算法 -->
-* 非更易算法
-    * for_each(b, e, op1)                   ：返回op1(已改动过的)拷贝
-    * for_each_n(b, n, op1)
-    * count(b, e, v)
-    * count_if(b, e, op1)
-<!-- entry end -->
-
-<!-- entry begin: 最值比较算法 非更易 -->
-* 最值比较
-    * max(x, y)
-    * max(initializer_list)
-    * min(x, y)
-    * min(initializer_list)
-    * minmax(x, y)                          ：返回pair<min, max>
-    * minmax(initializer_list)              ：返回pair<min, max>
-    * clamp(x, min, max)                    ：返回三者中的第二大者
-    * min_element(b, e, op2=lower_to)       ：返回第一个最小值
-    * max_element(b, e, op2=lower_to)       ：返回第一个最大值
-    * minmax_element(b, e, op2=lower_to)    ：返回第一个最小值和最后一个最大值
-<!-- entry end -->
-
-<!-- entry begin: 搜索算法 非更易 -->
-* 搜索算法：返回搜索结果的第一个位置
-    > 搜索单个元素
-    * find(b, e, v)
-    * find_if(b, e, op1)
-    * find_if_not(b, e, op1)
-    > 以下四个为二分搜索，需要先排序
-    * binary_search(b, e, v, op2=lower_to)
-    * lower_bound(b, e, v, op2=lower_to)
-    * upper_bound(b, e, v, op2=lower_to)
-    * equal_range(b, e, v, op2=lower_to)
-
-    > 搜索子区间
-    * search(b, e, searchB, searchE, op2=equal_to)
-    * search_n(b, e, n, v, op2=equal_to)                    ：op2(elem, v)
-    * find_end(b, e, searchB, searchE, op2=equal_to)
-    * adjacent_find(b, e, op2=equal_to)                     ：搜索一对连续相等的元素, 返回第一个位置
-
-    > 搜索目标范围中的元素
-    * find_first_of(b, e, searchB, searchE, op2=equal_to)   ：搜索
-<!-- entry end -->
-
+#### 更易算法
 <!-- entry begin: 更易算法 -->
 * 更易算法：
     > 存在destB的算法返回dest区间的尾后迭代器
@@ -871,6 +886,51 @@ exception                 `<exception>`
     * partition_copy(b, e, destTrueB, destFalseB, op1)
 <!-- entry end -->
 
+#### 非更易算法
+<!-- entry begin: 非更易算法 -->
+* 非更易算法
+    * for_each(b, e, op1)                   ：返回op1(已改动过的)拷贝
+    * for_each_n(b, n, op1)
+    * count(b, e, v)
+    * count_if(b, e, op1)
+<!-- entry end -->
+
+<!-- entry begin: 最值比较算法 非更易 -->
+* 最值比较
+    * max(x, y)
+    * max(initializer_list)
+    * min(x, y)
+    * min(initializer_list)
+    * minmax(x, y)                          ：返回`pair<min, max>`
+    * minmax(initializer_list)              ：返回`pair<min, max>`
+    * clamp(x, min, max)                    ：返回三者中的第二大者
+    * min_element(b, e, op2=lower_to)       ：返回第一个最小值
+    * max_element(b, e, op2=lower_to)       ：返回第一个最大值
+    * minmax_element(b, e, op2=lower_to)    ：返回第一个最小值和最后一个最大值
+<!-- entry end -->
+
+<!-- entry begin: 搜索算法 非更易 -->
+* 搜索算法：返回搜索结果的第一个位置
+    > 搜索单个元素
+    * find(b, e, v)
+    * find_if(b, e, op1)
+    * find_if_not(b, e, op1)
+    > 以下四个为二分搜索，需要先排序
+    * binary_search(b, e, v, op2=lower_to)
+    * lower_bound(b, e, v, op2=lower_to)
+    * upper_bound(b, e, v, op2=lower_to)
+    * equal_range(b, e, v, op2=lower_to)
+
+    > 搜索子区间
+    * search(b, e, searchB, searchE, op2=equal_to)
+    * search_n(b, e, n, v, op2=equal_to)                    ：op2(elem, v)
+    * find_end(b, e, searchB, searchE, op2=equal_to)
+    * adjacent_find(b, e, op2=equal_to)                     ：搜索一对连续相等的元素, 返回第一个位置
+
+    > 搜索目标范围中的元素
+    * find_first_of(b, e, searchB, searchE, op2=equal_to)   ：搜索
+<!-- entry end -->
+
 <!-- entry begin: 区间检验算法 -->
 * 区间检验与比较：一般返回boolean
     * equal(b, e, cmpB, op2 = equal_to)
@@ -900,9 +960,9 @@ exception                 `<exception>`
     * set_symmetric_difference(b1, e1, b2, e2, destB, op2=lower_to)     ：并集去交集
 <!-- entry end -->
 
-<!-- entry begin: 数值算法 -->
+<!-- entry begin: numeric 数值算法 -->
 * 数值算法：`<numeric>`
-    * iota(b, e, v)                                                     ：依序赋值 V, V+1, V+2, ...
+    * iota(b, e, v)                                                     ：依序赋值 V, ++V, ++++V, ...
     * accumulate(b, e, initV, op2=plus)                                 ：求和
     * reduce(b, e, initV=0, op2=plus)                                   ：允许使用执行策略的求和
     * inner_product(b1, e1, b2, e2, initV, op2=plus, op2 = multiply)    ：内积
@@ -954,7 +1014,7 @@ exception                 `<exception>`
         * .find_last_not_of()
     * 比较
         * .compare()                        ：范围+目标（除了(char)、(n, char)）
-        * .operator<=>()                    ：(s)、(c)
+        * `.operator<=>()`                  ：(s)、(c)
     * 转换
         * stoi() stol() stoul() stof() stod()：(str, idx=nullptr, base=10)
         * to_string(val)
@@ -970,34 +1030,38 @@ exception                 `<exception>`
     > 目的：高效的提供string接口的拷贝操作, 尤其.substr(), 当需要const string时改用string_view  
     > 注意：所有拷贝共享一个底层数据, 所以.substr().data()会导致错误（因为'\0'只在最后才有）
     * 构造：(string) (string_view) (cstring) (cstring, len)
-    * 额外提供：.remove_prefix和.remove_suffix缩减视图范围
+    * 额外提供：.remove_prefix()和.remove_suffix()缩减视图范围
 <!-- entry end -->
 
+## 正则表达式
 <!-- entry begin: cpp regex -->
-* 正则表达式：`<regex>`
-* 组件：
-    * regex
-    * sregex_iterator
-    * sregex_token_iterator
-    * smatch
-    * ssub_match
-    * regex_search()
-    * regex_match()
-    * regex_replace()
-    * regex_contants： 标志用于控制regex、match、replace行为
-
+正则表达式：`<regex>`
+* regex_constants
+    * ::icase
 * regex
     > flag 主要就有 regex_constants::icase
-    * (string, flag)
-    * (char*, flag)
-    * (char*, len, flag)
+    * (str, flag)
+    * (c, flag)
+    * (c, l, flag)
     * (b, e, flag)
+* regex_match((str|b, e), [matchRet,] regex, flag)
+* regex_search((str|b, e), [matchRet,] regex, flag)
+* regex_replace((str|b, e), regex, repl, flag)
+    * 替换语法：
+    ```
+    $0
+    $1, $2, $3, ...
+    $&：全部
+    $'：后缀
+    $`：前缀
+    $$：转义$
+    ```
 * sregex_iterator
     > 自增自减移动模式匹配到的子串  
     > 解引用得到smatch
     * 构造：(b, e, regex)，默认初始化为end
 * sregex_token_iterator
-    > 保留不匹配间的子字符串
+    > 保留不匹配的子字符串
     * (b, e, r, -1)
 
 * smatch
@@ -1016,17 +1080,6 @@ exception                 `<exception>`
     * .format(fmt, flag)
 * ssub_match： 指向表达式匹配到的子表达式
     * .operator basic_string<charT>()
-
-* regex_replace((str|b, e), regex, repl, flag)
-    * 替换语法：
-    ```
-    $0
-    $1, $2, $3, ...
-    $&：全部
-    $'：后缀
-    $`：前缀
-    $$：转义$
-    ```
 <!-- entry end -->
 
 ## 流与格式化
@@ -1049,7 +1102,7 @@ exception                 `<exception>`
 <!-- entry begin: 底层IO -->
 * 底层I/O：
     * .get()
-    * .get(char&)
+    * .get(char*)
     * .get(char*, count, delim='\n')     ：读取 count - 1 个字符, 并自动添加'\0'在末尾
     * .getline(char*, count, delim='\n') ：其他同上, 但读取包括delim
     * .read(char*, count)                ：count代表指定读取的字符
@@ -1067,10 +1120,10 @@ exception                 `<exception>`
 
 <!-- entry begin: 随机访问 -->
 * 随机访问：
-    * .tellg()
-    * .tellp()
+    * .tellg()    .tellp()
     * .seekg(pos) .seekp(pos)
-    * .seekg(offset, rpos) .seekp(offset, rpos)：rpos可以是ios::beg ios::end ios::cur
+    * .seekg(offset, rpos) .seekp(offset, rpos)
+        > rpos可以是 ios::beg、ios::end、ios::cur
 <!-- entry end -->
 
 <!-- entry begin: IO运算符 -->
@@ -1123,10 +1176,10 @@ exception                 `<exception>`
     * right!                        ：使用setw()后输出右对齐
     * internal                      ：正负号靠左，数值靠右（无`no`版本）
     * noboolalpha! | boolalpha      ：是否字符化输出boolean，如`true`和`false`
-    * noshowpos! | showpos          ：是否正数输出正号
+    * noshowpos!   | showpos        ：是否正数输出正号
     * nouppercase! | uppercase      ：是否对数值输出中的字母强制大写或强制小写
     * noshowpoint! | showpoint      ：是否小数部分为零的浮点数也打印小数部分
-    * noshowbase! | showbase        ：是否对二/八/十六/进制的数字输出进制前缀
+    * noshowbase!  | showbase       ：是否对二/八/十六/进制的数字输出进制前缀
     * setprecision(v)               ：设置输出浮点数的精度
         > 使用以下两个操作符后, 精度的语义由“所有数字位数”变为“小数位数”
         * fixed                     ：强制用定点表示法输出浮点数
@@ -1282,11 +1335,13 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
 <!-- entry end -->
 
 <!-- entry begin: random 随机数 -->
-* 随机数生成器：`<random>`
+## 随机数生成器
+**`<random>`**
+
 * 引擎：
     * default_random_engine
-    * .seed()
-    * .seed(result_type)
+        * .seed()
+        * .seed(result_type)
 * 分布：
     > 使用：先构造分布对象，再用引擎作参数调用其.operator()(re)
     * uniform_int_distribution di(min=0, max=INTMAX)    ：min-max的均匀整数分布
@@ -1334,7 +1389,7 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
 * 互斥锁：`<mutex>`
     * mutex及其变种：
         * 用法：在全局中声明
-
+```
         | 操作                | mutex | recursive_mutex | shared_mutex | timed_mutex | recursive_timed_mutex | shared_timed_mutex |
         |---------------------+-------+-----------------+--------------+-------------+-----------------------+--------------------|
         | .lock()             |                                   捕获mutex，失败则阻塞                                           |
@@ -1342,7 +1397,8 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
         | .unlock()           |                                   解除锁定的mutex                                                 |
         | .try_lock_for(dur)  |   -   |        -        |      -       |                限制时间内尝试捕获                        |
         | .try_lock_until(tp) |   -   |        -        |      -       |                限制期限前尝试捕获                        |
-        | 多个lock            |   -   |        🉑️️       |      -       |      -      |          🉑️️           |         -          |
+        | 多个lock            |   -   |        可       |      -       |      -      |          可           |         -          |
+```
     * 辅助函数：
         * lock(mutex...)      ：避免死锁
         * try_lock(mutex...)  ：保证加锁次序
@@ -1350,14 +1406,14 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
         * call_once(once_flag, func, args...)
     * mutex托管：
         > 用法：mutex做模板类型, mutex对象做构造参数(可能还有其他参数), 在块作用域中初始化
-        * lock_guard<>额外参数：adopt_lock(已锁)
-        * unique_lock<>额外参数：
+        * `lock_guard<>`额外参数：adopt_lock(已锁)
+        * `unique_lock<>`额外参数：
             * adopt_lock(已锁)
             * defer_lock(不锁)
             * try_lock(试锁)
             * duration
             * time_point
-        * shared_lock<>
+        * `shared_lock<>`
     * 提供原子性操作原理：
         * 读取mutex - 判断mutex - 上锁或阻塞
         * 解锁-唤醒
@@ -1366,7 +1422,7 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
 <!-- entry begin: cv condition_variable 条件量 -->
 * 条件量：`<condition_variable>`
     > 依赖于unique_lock`<>`提供保护区, 在全局中声明，  
-    > 注意由mutex锁住的线程由mutex唤醒，被condition_variable锁住的线程由condition_variable唤醒，
+    > 注意由mutex锁住的线程由mutex唤醒，被condition_variable锁住的线程由condition_variable唤醒（在mutex作用域外），
     > 前者可由lock_guard自动触发唤醒机制，而condition_variable需要手动
     * 成员：
         * .wait(u_l, pred)
@@ -1385,6 +1441,7 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
 <!-- entry end -->
 
 ## 文件系统
+### 类
 <!-- entry begin: cpp filesystem fs path -->
 * path `<filesystem>`
     * 读取
@@ -1399,9 +1456,9 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
         * .stem()                   ：`fs`
         * .extension()              ：`.cpp`
     * 修改
-        * operator<<(strm, path)    ：`/tmp/fs.cpp`或`C:\tmp\fs.cpp`
-        * operator>>(strm, path)    ：`/tmp/fs.cpp`或`C:\tmp\fs.cpp`
-        * operator/()与operator/=()
+        * `operator<<(strm, path)`    ：`/tmp/fs.cpp`或`C:\tmp\fs.cpp`
+        * `operator>>(strm, path)`    ：`/tmp/fs.cpp`或`C:\tmp\fs.cpp`
+        * `operator/()与operator/=()`
         * .remove_filename()
         * .replace_filename()
         * .replace_extension()
@@ -1418,37 +1475,27 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
         * .has_extension()
 <!-- entry end -->
 
-<!-- entry begin: cpp filesystem fs dir directory_entry directory_iterator -->
+<!-- entry begin: cpp filesystem fs dir directory_entry -->
 * directory_entry `<filesystem>`
-    > 目录项可能是目录下的任何类型的文件
+    > 目录项可能是目录下的任何类型的文件，文件名尾缀最好别带`/`
+    * 构造与赋值
+        * (path)                        ：string与path，path与direcoty_entry都可相互转换
     * 读取
-        * .path()                       ：返回path&，也可隐式转换为path
-        * .status()与.symlink_status()  ：返回file_status
-        * .hard_link_count()
-        * .last_write_time()
-        * .file_size()
-    * 判断
-        * .exists()
-        * .is_regular_file()
-        * .is_directory()
-        * .is_symlink()
-        * .is_socket()
-        * .is_fifo()
-        * .is_blovk_file()
-        * .is_character_file()
-* directory_iterator `<filesystem>`
-    * range-based-for：
-        ```cpp
-        for ( auto& entry : directory_iterator{"/tmp"} ) {
-            /* ... */
-        }
-        ```
+        * .path()                       ：返回const path&（也可直接隐式转换为path）
 <!-- entry end -->
 
-<!-- entry begin: cpp filesystem fs file_status file_type file_perm -->
-* file_status
-    * .type()
-    * .permissions()
+<!-- entry begin: directory_iterator recursive_directory_iterator  -->
+* directory_iterator `<filesystem>`
+    * 构造：
+        * (path)，默认构造为尾后迭代器
+* recursive_directory_iterator  `<filesystem>`
+    * .depth()                  ：返回当前递归深度
+    * .pop()                    ：返回上级目录
+    * .recursion_pending        ：返回当前目录是否禁用递归
+    * .disable_recursion_pending：下次自增前禁用递归
+<!-- entry end -->
+
+<!-- entry begin: cpp filesystem fs file_type file_perm -->
 * file_type：领域枚举
     * ::none
     * ::not_found
@@ -1460,6 +1507,9 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
     * ::fifo
     * ::socket
     * ::unkown
+<!-- entry end -->
+
+<!-- entry begin: file_perm cpp fs -->
 * file_perm：领域枚举
     * ::none          0000
     * ::owner_read    0400
@@ -1479,6 +1529,80 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
     * ::set_gid       2000
     * ::sticky_bit    1000
     * ::mask          7777
+<!-- entry end -->
+
+<!-- entry begin: cpp fs copy_options -->
+* copy_options：领域枚举
+    * ::none
+    * ::skip_existing
+    * ::overwrite_existing
+    * ::update_existing
+    * ::recursive
+    * ::copy_symlinks
+    * ::skip_symlinks
+    * ::directories_only
+    * ::create_symlinks
+    * ::create_hard_links
+<!-- entry end -->
+
+<!-- entry begin: cpp fs perm_options -->
+* perm_options
+    * replace
+    * add
+    * remove
+    * nofollow（改变符号链接自身）
+<!-- entry end -->
+
+### 函数
+<!-- entry begin: cpp fs function is judge -->
+* 判断
+    * equivalent(path1, path2)  ：判断两路径是否为同一文件（包括链接）
+    * exists()
+    * is_regular_file()
+    * is_directory()
+    * is_symlink()              ：符号链接除此之外还具有链接目标的文件类型
+    * is_socket()
+    * is_fifo()
+    * is_block_file()
+    * is_character_file()
+    * status_known()
+<!-- entry end -->
+
+<!-- entry begin: cpp fs info 信息 -->
+* 信息获取
+    * file_size(path)               ：读取链接目标
+    * hard_link_count(path)         ：读取链接目标
+    * last_write_time(path)         ：读取链接目标
+    * space()   ：返回space_info
+        * .capacity
+        * .available
+        * .free
+    * status()与symlink_status()返回file_status
+        * .type()
+        * .permissions()
+<!-- entry end -->
+
+<!-- entry end -->
+<!-- entry begin: cpp fs function path -->
+* 路径
+    * absolute(path)        ：将path转换为绝对路径（可能带有`..`）
+    * canonical(path)       ：将path转换为绝对路径（不带有`..`）
+    * relative(path)        ：将path根据当前工作目录转换为相对路径
+    * read_symlink(path)    ：获取符号链接指向的文件path（可能为相对路径）
+    * current_path()        ：获取当前工作路径
+    * temp_directory_path() ：获取临时目录
+<!-- entry end -->
+
+<!-- entry begin: fs functions -->
+* 文件系统修改
+    * create_symlink(target, link)
+    * copy(source, target, copy_options)
+    * rename(old_path, new_path)        ：`mv`
+    * remove(path)                      ：`rm rmdir`
+    * remove_all(path)                  ：`rm -r`
+    * create_directory(path)            ：`mkdir`
+    * create_directories(path)          ：`mkdir -p`
+    * permissions(path, perms, perm_options)
 <!-- entry end -->
 
 # BOOST
@@ -1526,7 +1650,7 @@ int main()
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
-    std::fstream file{"test.bin", std::ios_base::in | std::ios_base::out | std::ios_base::trunc | std::ios_base::binary}; // Note
+    std::fstream file{"test.bin", std::ios_base::in | std::ios_base::out | std::ios_base::trunc}; // Note
 
     boost::archive::binary_oarchive toa{file};
     Test t{1, 2.5, "string"};
@@ -1549,6 +1673,7 @@ int main()
 
 # Mysql++
 <!-- entry begin: mysqlpp mysql++ 异常 exception -->
+* mysqlpp异常
 ```cpp
 BadIndex        ：`row[idx]`中idx越界
 BadFieldName    ：`row[fd_name]`中fd_name无效
@@ -1598,7 +1723,7 @@ TypeLookupFailed
 * mysqlpp::Query
     * 读取SQL语句
         * Query("SQL Statement")
-        * operator<<(Query, string)
+        * `operator<<(Query, string)`
     * 执行SQL语句
         * .exec()                           ：只返回bool
         * .execute()                        ：返回mysqlpp::SimpleResult，存储提示信息
@@ -1619,7 +1744,7 @@ TypeLookupFailed
     * .begin()
     * .end()
     * .operator bool()
-    * .operator[]()                         ：返回mysqlpp::Row
+    * `.operator[]()`                         ：返回mysqlpp::Row
     * .num_rows()                           ：返回总行数
 
 * mysqlpp::UseQueryReslt

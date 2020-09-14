@@ -1,4 +1,4 @@
-**注意：整个工具集的快捷键或命令都依赖[这套配置](https://github.com/mrbeardad/DotFiles)，即某些操作可能非原生的**
+**注意：整个工具集的快捷键或命令都依赖[这套配置](https://github.com/mrbeardad/DotFiles)或[这套配置](https://github.com/mrbeardad/Windows10)，即某些操作可能非原生的**
 # 目录
 <!-- vim-markdown-toc GFM -->
 
@@ -214,23 +214,40 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
         * `Ctrl`+`R`：从磁盘文件恢复会话
     * 其他操作：
         * `h`       ：打开htop
+        * `g`       ：打开gtop
         * `i`       ：打开iotop
         * `r`       ：打开ranger
-        * `n`       ：打开ncdu
         * `m`       ：打开cmatrix
+        * `f`       ：打开fzf
 <!-- entry end -->
 
 # ZSH
 ## Some Alias
 <!-- entry begin: alias -->
 ```sh
-alias l='ls -lah  --time-style="+%Y %m-%d %H:%M:%S "'
-alias l.='ls -ladh  --time-style="+%Y %m-%d %H:%M:%S " .*'
-alias ll='ls -lh  --time-style="+%Y %m-%d %H:%M:%S "'
+# alias l='ls -lah  --time-style="+%Y %m-%d %H:%M:%S "'
+# alias l.='ls -ladh  --time-style="+%Y %m-%d %H:%M:%S " .*'
+# alias ll='ls -lh  --time-style="+%Y %m-%d %H:%M:%S "'
+alias l='lsd -lah'
+alias l.='lsd -lah .*'
+alias ll='lsd -lh'
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -i'
+alias jobs='jobs -l'
+alias df='df -hT'
 alias psa='ps axo stat,euid,ruid,tty,tpgid,sess,pgrp,ppid,pid,pcpu,pmem,comm'
+alias pstree='pstree -Uup'
+alias free='free -wh'
+alias vmstat='vmstat -w'
+alias ip='ip -c'
+alias cgdb='cgdb -- -q'
+alias gdb='gdb --tui'
 alias dif='diff -Naur'
 alias ra='ranger'
 alias apt='sudo apt'
+alias expactf='expac --timefmt="%Y-%m-%d %T" "%l\t%n" | sort'
+alias sys='sudo systemctl'
 ```
 <!-- entry end -->
 
@@ -240,7 +257,7 @@ alias apt='sudo apt'
 |---------|---------------------------------------------|
 | f       | 利用fzf搜索当前目录并用ranger预览选择的文件 |
 | j       | 模糊搜索跳转目录历史并跳转                  |
-| s       | 解压各种压缩/归档包                         |
+| x       | 解压各种压缩/归档包                         |
 | h       | history                                     |
 | ncdu    | 查看当前目录下文件的磁盘占用情况            |
 | htop    | 系统资源监控                                |
@@ -249,7 +266,7 @@ alias apt='sudo apt'
 | cpv     | 使用rsync代替cp                             |
 | fuck    | 纠正命令行错误                              |
 | Ctrl+\[ | 进入vi模式，该模式下可使用vi快捷键修改命令  |
-| V       | vi模式下，打开$EDITOR编辑命令               |
+| v       | vi模式下，打开`$EDITOR`编辑命令               |
 <!-- entry end -->
 
 <!-- entry begin: ranger -->
@@ -398,6 +415,13 @@ alias apt='sudo apt'
     * grst  ：`git restore --staged`
 <!-- entry end -->
 
+<!-- entry begin: git status -->
+* git status
+    > 查看当前项目变更与提交状态
+    * gst   ：`git status`
+    * gss   ：`git status -s`
+<!-- entry end -->
+
 <!-- entry begin: git commit -->
 * git commit
     > 提交变更到本地仓库中当前分支  
@@ -406,33 +430,6 @@ alias apt='sudo apt'
     * gc!   ：`git commit --amend`
     * gca   ：`git commit -a`
     * gca!  ：`git commit --amend`
-<!-- entry end -->
-
-<!-- entry begin: git reset -->
-* git reset COMMIT
-    > 撤销/回退当前分支指针到指定COMMIT
-    * grh   ：`git reset`
-<!-- entry end -->
-
-<!-- entry begin: git status -->
-* git status
-    > 查看当前项目变更与提交状态
-    * gst   ：`git status`
-    * gss   ：`git status -s`
-<!-- entry end -->
-
-<!-- entry begin: git diff -->
-* git diff
-    > 参数：
-    >
-    >       [PATH]
-    >       COMMIT [PATH]
-    >       COMMIT COMMIT [PATH]
-    * gd    ：`git diff`
-    * gds   ：`git diff --staged`
-    * gdt   ：`git difftool --tool=vimdiff`
-    * gdts  ：`git difftool --tool=vimdiff --staged`
-    * gdi   ：`git diff-index`
 <!-- entry end -->
 
 <!-- entry begin: git tag -->
@@ -453,12 +450,26 @@ alias apt='sudo apt'
     * glola     ：提交历史精简可视化
 <!-- entry end -->
 
-<!-- entry begin: git stash -->
-* git stash
-    > 隐藏暂存区已安全跳转分支
-    * gsta      ：`git stash push`
-    * gstp      ：`git stash pop`
-    * gstl      ：`git stash list`
+<!-- entry begin: git diff -->
+* git diff
+    > 参数：
+    >
+    >       [PATH]
+    >       COMMIT [PATH]
+    >       COMMIT COMMIT [PATH]
+    * gd    ：`git diff`
+    * gds   ：`git diff --staged`
+    * gdt   ：`git difftool --tool=vimdiff`
+    * gdts  ：`git difftool --tool=vimdiff --staged`
+    * gdi   ：`git diff-index`
+<!-- entry end -->
+
+<!-- entry begin: git branch -->
+* git branch
+    * gb        ：`git branch`
+    * gbav      ：`git branch -a -vv`
+    * gbda      ：删除已合并的分支
+    * gbnm      ：查看未合并的分支
 <!-- entry end -->
 
 <!-- entry begin: git checkout -->
@@ -470,12 +481,26 @@ alias apt='sudo apt'
     * gct       ：`git checkout --track REMOTE/BRANCH`（当前分支直接跟踪）
 <!-- entry end -->
 
-<!-- entry begin: git branch -->
-* git branch
-    * gb        ：`git branch`
-    * gbav      ：`git branch -a -vv`
-    * gbda      ：删除已合并的分支
-    * gbnm      ：查看未合并的分支
+<!-- entry begin: git stash -->
+* git stash
+    > 隐藏暂存区已安全跳转分支
+    * gsta      ：`git stash push`
+    * gstp      ：`git stash pop`
+    * gstl      ：`git stash list`
+<!-- entry end -->
+
+<!-- entry begin: git reset -->
+* git reset COMMIT
+    > 撤销/回退当前分支指针到指定COMMIT
+    * grh   ：`git reset`
+<!-- entry end -->
+
+<!-- entry begin: git cherry-pick -->
+* git cherry-pick COMMIT
+    > 复制(合并)目标commit相对其前一次的diff到当前分支
+    * gcp       ：`git cherry-pick`
+    * gcpc      ：`git cherry-pick --continue`
+    * gcpa      ：`git cherry-pick --abort`
 <!-- entry end -->
 
 <!-- entry begin: git merge -->
@@ -501,23 +526,6 @@ alias apt='sudo apt'
     ```
 <!-- entry end -->
 
-<!-- entry begin: git clone -->
-* git clone URL DIR
-    * --depth=1
-    * --recurse-submodules
-<!-- entry end -->
-
-<!-- entry begin: git submodule -->
-* git submodule
-    ```sh
-    git submodule add URL [Dir]               # 添加子模块信息
-    git submodule init                        # 根据`.gitmodules`初始化子模块
-    git submodule update                      # 拉取上游来更新子模块
-    git submodule update --init               # 初始化并更新
-    git submodule update --init --recursive   # 递归初始化并更新所有子模块
-    ```
-<!-- entry end -->
-
 <!-- entry begin: git remote -->
 * git remote
     * gr        ：`git remote`
@@ -527,13 +535,6 @@ alias apt='sudo apt'
     * grmv      ：`git remote rename REMOTE newRepo`
     * grset     ：`git remote set-utl REMOTE URL`
     * glr       ：`git ls-remote`
-<!-- entry end -->
-
-<!-- entry begin: git fetch pull -->
-* git fetch REMOTE
-    * gf
-* git pull REMOTE
-    * gl
 <!-- entry end -->
 
 <!-- entry begin: git push -->
@@ -551,12 +552,28 @@ alias apt='sudo apt'
     * gpf!      ：`git push --force`
 <!-- entry end -->
 
-<!-- entry begin: git cherry-pick -->
-* git cherry-pick COMMIT
-    > 复制(合并)目标commit相对其前一次的diff到当前分支
-    * gcp       ：`git cherry-pick`
-    * gcpc      ：`git cherry-pick --continue`
-    * gcpa      ：`git cherry-pick --abort`
+<!-- entry begin: git fetch pull -->
+* git fetch REMOTE
+    * gf
+* git pull REMOTE
+    * gl
+<!-- entry end -->
+
+<!-- entry begin: git clone -->
+* git clone URL DIR
+    * --depth=1
+    * --recurse-submodules
+<!-- entry end -->
+
+<!-- entry begin: git submodule -->
+* git submodule
+    ```sh
+    git submodule add URL [Dir]               # 添加子模块信息
+    git submodule init                        # 根据`.gitmodules`初始化子模块
+    git submodule update                      # 拉取上游来更新子模块
+    git submodule update --init               # 初始化并更新
+    git submodule update --init --recursive   # 递归初始化并更新所有子模块
+    ```
 <!-- entry end -->
 
 <!-- entry begin: git bundle 打包 -->

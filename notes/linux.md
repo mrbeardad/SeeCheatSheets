@@ -242,8 +242,10 @@
 制作归档包时，应该让解包出来的文件都在一个目录中，故一般在要打包的目录的父目录进行操作从而将整个目录打包
 
 <!-- entry begin: zip -->
-* zip  ZIPFILE  FILES
-    * -[1-9]    ：压缩等级，越大压缩比越高
+* zip ZIPFILE  FILES
+    * -[1-9]        ：压缩等级，越大压缩比越高
+    * -r            ：打包目录时指定递归
+    * -e或-P密码    ：加密
 * unzip ZIPFILE LIST
     * `LIST`指定提取ZIPFILE中的哪些文件
 <!-- entry end -->
@@ -834,10 +836,10 @@
         * edit
     * unit查看
         * --state=
-        * list-units  ：已加载的
-        * -t          ：指定unit类型
-        * -a          ：所有
-        * list-unit-files    ：所有
+        * -t                ：指定unit类型
+        * -a                ：所有
+        * list-units        ：已加载的
+        * list-unit-files   ：所有
         * list-dependencies [--reverse]
     * 手动控制
         * start
@@ -845,9 +847,9 @@
         * restart
         * reload
     * 开机管理
-        * enable|disable      ：可使用--now同时执行start/stop
-        * static      ：只能作为依赖被启动
-        * mask        ：禁止启动，unmask解禁
+        * enable|disable    ：可使用--now同时执行start/stop
+        * static            ：只能作为依赖被启动
+        * mask              ：禁止启动，unmask解禁
     * 主机状态
         * suspend
         * hibernate
@@ -1124,10 +1126,10 @@
 
 <!-- entry begin: ss -->
 * ss
-    * -at        ：TCP端口
-    * -atn       ：TCP端口，指定端口号
-    * -au        ：UDP端口
-    * -ax        ：UNIX类型socket
+    * -atp       ：TCP端口
+    * -atpn      ：TCP端口，指定端口号
+    * -aup       ：UDP端口
+    * -axp       ：UNIX类型socket
 * ping
 <!-- entry end -->
 
@@ -1167,38 +1169,40 @@
 <!-- entry begin: pacman -->
 * pacman
     * 更新数据库
-        * -Sy：同步源
-            > 传入两次--refresh或-y将强制更新所有软件包列表，即使系统认为它们已经是最新。每次修改镜像之后都应该使用pacman -Syyu。
+        * -Sy   ：更新软件包列表
+        * -Syy  ：强制更新软件包列表
     * 查询软件包
-        * -Ss：模糊搜索远程数据库
-        * -Si：从远程数据库获取目的包的详细信息
-        * -Sl：列出目的仓库所有包
-        * -Qs：模糊搜索本地数据库
-        * -Qi：从本地数据库获取目的包的详细信息
-        * -Qc：查看目的包更新日志
-        * -Qg：查看软件包组中的包
-        * -Ql：查看目的包的文件安装路径
-        * -Qo：查询目的文件所属包
-        * -Qu：查询所有需要升级的包
+        * -Ss   ：模糊搜索远程数据库
+        * -Si   ：从远程数据库获取目的包的详细信息
+        * -Sl   ：列出目的仓库所有包
+        * -Qs   ：模糊搜索本地数据库
+        * -Qi   ：从本地数据库获取目的包的详细信息
+        * -Qc   ：查看目的包更新日志
+        * -Qg   ：查看软件包组中的包
+        * -Ql   ：查看目的包的文件安装路径
+        * -Qo   ：查询目的文件所属包
+        * -Qu   ：查询所有需要升级的包
     * 安装软件包
-        * -S：远程下载并安装，若以安装则用本地包重装
-        * -Sw：只下载软件包
-        * -U：安装已下载的软件包
-        * -Su：更新软件包
+        * -S    ：远程下载并安装，若以安装则用本地包重装
+        * -Sw   ：只下载软件包
+        * -U    ：安装已下载的软件包
+        * -Su   ：更新软件包
     * 删除软件包
-        缓存位于：/var/cache/pacman/pkg/
-        * -R：删除目的包
-        * -Rc：还包括依赖它的包
-        * -Rs：还包括只被它依赖的包
-        * -Rn：还包括其配置文件
-        * -Sc：清理未安装的软件包
-        * -Scc：清理所有软件包与数据库
+        > 缓存位于：/var/cache/pacman/pkg/
+        * -R    ：删除目的包
+        * -Rc   ：还包括依赖它的包
+        * -Rs   ：还包括只被它依赖的包
+        * -Rn   ：还包括其配置文件
+        * -Sc   ：清理未安装的软件包
+        * -Scc  ：清理所有软件包与数据库
     * 从iso文件安装软件包
-        * mount  -o  ro,loop  /path/to/iso  /mnt/iso
-        * /etc/pacman.conf
+        ```sh
+        mount -o ro,loop  /path/to/iso  /mnt/iso
+        echo '
         [custom]     #添加在其他仓库之前
-        Server = file:///mnt/iso/arch/pkg
-        * pacman  -Sy
+        Server = file:///mnt/iso/arch/pkg' | sudo tee /etc/pacman.conf
+        pacman  -Sy
+        ```
 <!-- entry end -->
 
 # 基础命令
@@ -1257,6 +1261,7 @@
 <!-- entry begin: xxd -->
 * xxd
     > 以十六进制读取文件数据
+<!-- entry end -->
 
 ## 文件的修改、创建与删除
 <!-- entry begin: touch -->
@@ -1328,6 +1333,8 @@
 * find *DIR* *OPTS...*
     * 打印：
         * -print
+    * 目录深度
+        * -depth
     * 正则名字：
         * -regex
         * -iregex
@@ -1404,7 +1411,7 @@
 diff -Naur OLD NEW > patch
 patch -p`n`  < patch
 ```
-> * new和old不要在同一目录下  
+> * new和old不要在同一目录下
 > * n为去掉的/个数
 <!-- entry end -->
 

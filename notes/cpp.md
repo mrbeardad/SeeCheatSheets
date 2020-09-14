@@ -9,8 +9,8 @@
     - [inline语义](#inline语义)
   - [函数](#函数)
     - [关键字](#关键字)
-    - [static变量](#static变量)
     - [默认实参](#默认实参)
+    - [static变量](#static变量)
     - [重载函数](#重载函数)
     - [函数查找](#函数查找)
   - [可调用对象](#可调用对象)
@@ -69,7 +69,7 @@
 
 &emsp;因为C++的特性很多且复杂，所以对一些特性的描述会故意略去风格不太好的部分，以简化记忆。
 
-&emsp;本文更适合有一点C++基础的朋友阅读，若文中有的特性并未细说，则读者可查阅[cppreference](#https://zh.cppreference.com/w/cpp)
+&emsp;本文更适合有一点C++基础的同学阅读，若文中有的特性并未细说，则读者可自行查阅[cppreference](#https://zh.cppreference.com/w/cpp)
 
 **学习C++时，可以将C++语言分为四大部分**
 * 基于C
@@ -89,16 +89,17 @@
     * `defined(标识符)`
 * 条件编译
     * `#if`
+        > 判断是否定义且非零
     * `#ifdef`
     * `#ifndef`
-    * `#elseif`
+    * `#elif`
     * `#else`
     * `#endif`
 * 文件引入
-    * `#include < >`
-    * `#include " "`
     * `__has_include(< >)`
     * `__has_include(" ")`
+    * `#include < >`
+    * `#include " "`
     * `#pragma once`
 * 错误指令
     * `#error 错误消息`
@@ -108,6 +109,11 @@
     * `__FILE__`
     * `__TIME__`
     * `__DATE__`
+    * `_WIN32`
+    * `__linux`
+    * `__clang__`
+    * `__GUNC__`
+    * `_MSC_VER`
 
 ## 命名空间
 * 普通命名空间
@@ -115,8 +121,11 @@
     * 第一次声明为定义，以后为打开
 
 * 嵌套命名空间
-    * 在外层命名空间中声明（一般用于版本库的更替）：`namespace A { namespace B{  } }`
-    * 在全局命名空间中声明（一般用于隔离库中组件）：`namespace A::B {  }`
+    > 在命名空间中使用`#include`要注意嵌套错误，
+    > 可在进入命名空间前提前`#include`从而利用头文件保护宏来避免嵌套
+    * 在全局命名空间中声明：`namespace A::B {  }`
+        > 外层命名空间不用提前声明
+    * 在外层命名空间中声明：`namespace A { namespace B{  } }`
 
 * 内联命名空间
     > `inline namespace std_v1 {  }`
@@ -134,32 +143,19 @@
     > `namespace AB = A::B`
 
 * 声明与定义：  
-    头文件中非模板的函数与全局变量，
-    要么只提供声明并在lib中提供定义（避免符号重定义），
-    要么提供inline定义
+头文件中非模板的函数与全局变量，
+要么只提供声明并在lib中提供定义（避免符号重定义），
+要么提供inline定义
 
 <!-- need reread -->
-* 设计版本库：  
+* 设计版本库：
 ```cpp
-// test.hpp
-#include <h3>   // 需要提前引入版本库中已引入的头文件，
-#include <h2>   // 利用头文件保护宏防止嵌套吃错
-// #include <h1>// 不用提前引入该头文件，因为该头文件不会嵌套引入
-namespace test
-{
-#include "test_v3.hpp"
-#include "test_v2.hpp"
-}
-#include "test_v1.hpp"
-// test_v3.hpp
-#include <h3>
-inline namespace test_v3 {}
-// test_v2.hpp
-#include <h2>
-namespace test_v2 {}
-// test_v1.hpp
-#include <h1>
-namespace test::test_v1 {}
+// test.hpp 第一个版本
+namespace test::test {...}
+
+// test.hpp 第二个版本
+#include <test_v1.hpp> // test_v1.hpp即第一个版本的test.hpp，其中的`namespace test::test`改为了`namespace test::test::v1`
+namespace test::test {...}
 ```
 
 ## 全局变量
@@ -192,6 +188,7 @@ namespace test::test_v1 {}
 
 * 对函数模板与变量模板：
     * 它们具有隐式`inline`属性，但是对于函数模板其作用仅限于“链接”而非“内联展开”
+    * 编译工具链可能会自动消除多个TU中重复的模板实例
 
 * 对类的static数据成员：
     * 同全局变量，将所有**TU**的同名`inline`变量链接到同一定义，
@@ -205,7 +202,7 @@ namespace test::test_v1 {}
 * constexpr：<span id="constexprhu"></span>
     * 隐式inline
     * 提示编译器：若调用实参是constexpr对象（如果有参数的话），**且将返回值传递给一个constexpr对象**，
-        则此函数应该进行编译期计算
+        则此函数**应该**进行编译期计算
     * 使用限制：<u>不太精准但实用的简化版</u>
         * 参数与返回值：必须是字面值类型（如果有的话）
         * 调用的函数：constexpr函数
@@ -215,10 +212,10 @@ namespace test::test_v1 {}
     > 此时的auto就像是无名的模板参数，而要获取其类型时需要对实参调用`decltype(t)`
     * 返回类型推断：
         > `auto func()`
-        * 所有return语句的返回类型均要相同（可以使用`constexpr-if`绕过）
+        * 所有return语句的返回类型均要相同（可以使用`if-constexpr`绕过）
         * 递归调用之前必须有return以确定返回类型
     * 实参类型推断：
-        > `void func(auto& t)`
+        > `void func(auto&& t)`
         * 调用时也可以指定auto的类型`func<int>(1)`
 
 * operator：
@@ -234,6 +231,7 @@ namespace test::test_v1 {}
             | `(long double)`         | 浮点数`2.5_d`      |
             | `(const char)`          | 字符`'2'_c`        |
             | `(const char*, size_t)` | 字符串`"string"_s` |
+
 * noexcept：<span id="noexcept"></span>
     * 用法：
         * `noexcept`
@@ -247,13 +245,13 @@ namespace test::test_v1 {}
     * 限定了**指针**与[**虚函数**](#xhu)对noexcept属性的传递：
         non-noexcept可接受noexcept，反之则不行
 
-    * 合成的特种成员函数会有合成的noexcept声明，合成的声明即相当于添加了`noexcept(noexcept(func))`。
+    * **合成的**特种成员函数会有合成的noexcept声明，合成的声明即相当于添加了`noexcept(noexcept(func))`。
         自定义的[析构函数](#xghu)若不显式指定也会合成noexcept声明，  
 
 <!-- need reread -->
 * = delete：
     * 删除合成的特种成员：default构造、析构、copy操作、move操作
-    * 删除成员函数或非成员函数，拒绝不希望的类型转换
+    * 删除成员函数或非成员函数，拒绝从某一类型进行类型转换而调用该函数
     * 删除一个模板实例，拒绝实例化出不希望的模板实例（也可使用`enable_if<>`）
         > `template <> void func(bool) = delete`相当于声明一个特化版本并将其删除
 
@@ -265,15 +263,14 @@ namespace test::test_v1 {}
         * 形参永远都是左值
         * 实参可能是左值或右值，这也决定了由实参构造形参是copy还是move
 
+### 默认实参
+* 若某一形参有默认实参，则其后的形参也必须有
+    > 故大概率会用到默认实参的形参放后边
+* 若声明时已指出默认实参，则定义时不能重复指出
 
 ### static变量
 * 在第一次调用该函数时初始化该static变量，存储于数据段，随函数的链接引用而被引用
 * 用于[reference-returning技术](https://github.com/mrbeardad/DotFiles/blob/master/notes/cppstyle.md#%E5%88%9D%E5%A7%8B%E5%8C%96)
-
-### 默认实参
-* 若某一形参有默认实参，则其后的形参也必须有
-    > 故大概率用不到默认实参的形参放前边
-* 若声明时已指出默认实参，则定义时不能重复指出
 
 ### 重载函数
 * 不允许定义形参列表相同的同名函数，即使返回类型不同
@@ -636,7 +633,6 @@ namespace test::test_v1 {}
         /* ... */
     }
     ```
-    * 允许使用内置数组、初始列作容器
 * 异常
     ```cpp
     void func() try
@@ -674,9 +670,10 @@ namespace test::test_v1 {}
 * 作用：
     * 用于调用构造函数（**initializer_list优先** ） `string s{"str"};`
     * 用于隐式构造为需要的类型（**需要non-explicit构造函数**） `string s = {"str"}`
+        > 若无法推断构造目标的类型，则构造initializer_list
 * 对于内置标准类型
-    * 拒绝丢失精度的转换（窄化）
     * 空的花括号可进行值初始化
+    * 拒绝丢失精度的转换（窄化）
 
 ### 类型转换
 > 不鼓励使用旧式的C-style-cast，下面的新式转换更容易在文件中搜索，且更容易由编译期帮助检测
@@ -687,9 +684,9 @@ namespace test::test_v1 {}
 
 **有关指针类型的转换**
 * nullptr_t可以转换为任意指针类型，反之不成立
-* 任意指针类型可以转换为`void*`，反之不成立
+* 任意指针类型可以转换为`void*`，反之只能显式转换
 * `const char*`与`char const*`均为底层const；`char* const`才是顶层const
-* 默认的C-Style字符串类型为`const char*`，标准提供了一个特殊转换：可以将C-Style-String赋值给`char*`
+* 默认的C-Style字符串类型为`const char*`，标准提供了一个特殊转换：可以将C-Style-String转换为`char*`
 
 ### 左值与右值
 * 需要左值：赋值`=`、取地址`&`、自增减`--` `++`
@@ -730,7 +727,7 @@ namespace test::test_v1 {}
 * 形式：`[cap]<temp>(arg){sta}`
     > C++17支持constexpr修饰
 * 捕获列表：
-    * 捕获类型：非static的值与引用（static值可直接使用）
+    * 捕获类型：非static的值或引用（static值可直接使用）
     * 显式捕获：
         * `[x, &y]`：按值捕获x，按引用捕获y
         * `[this]`：捕获this，从而可以使用其成员且可省略`this->`
@@ -745,7 +742,7 @@ namespace test::test_v1 {}
 * 完整的泛型模板支持
 * 参数列表修饰：
     * 可以使用auto推断参数类型，且其返回类型默认就使用auto推断
-    * `[] (auto t) mutable {}`：修饰`mutable`可以在lambda中修改值捕获的对象（默认值捕获对象只读）
+    * `[] (auto&& t) mutable {}`：修饰`mutable`可以在lambda中修改值捕获的对象（默认值捕获对象只读）
 
 ### 字面值
 > 定义于：`inline namespace std::literals`
@@ -759,9 +756,9 @@ namespace test::test_v1 {}
         * 若不为十进制，为`int` `unsigned int` `long` `unsigned long` `long long` `unsigned long long`
            中的最小者
 * 字符：
-    * `R"del(string)del"`
-    * 前缀（C-char或C-string）：`u8`UTF-8、`u`UTF-16、`U`UTF-32、`L`wchar_t
-    * 后缀（仅限于C-string）：`s`、`sv`
+    * 原始字符串                ：`R"del(string)del"`
+    * 前缀（C-char或C-string）  ：`u8" UTF-8 "`、`u" UTF-16 "`、`U" UTF-32 "`、`L" wchar_t "`
+    * 后缀（仅限于C-string）    ：`s`、`sv`
 * [自定义](#zdyzmv)
 >
 
@@ -773,7 +770,7 @@ namespace test::test_v1 {}
 >
 
 ## 继承机制
-* 类中只要声明了虚函数，则就会引入虚指针与虚表
+* 类中只要声明了虚函数，则就会引入虚指针与虚表，该类便被称为多态类型
     * 虚指针：作为一个隐式数据成员，指向虚表
     * 虚表：存储着类型信息与虚函数的地址
 
@@ -802,7 +799,7 @@ namespace test::test_v1 {}
 <!-- need reread -->
 * 若基类是未实例化的类模板，则编译器默认不会进入外层（基类）作用域查找符号，
     因为类模板的具体定义需要实例化是才知晓，而其中可能没有你试图调用的符号，
-    此时便需要如此调用`this->temp_base_func()`
+    此时便需要如此显式调用`this->temp_base_func()`
 
 * 访问基类部分需要通过基类接口
     * 派生类：`member`或`base::member`
@@ -1052,7 +1049,7 @@ namespace test::test_v1 {}
         |---------------------|----------------|------------------|-----------------------------|
         | `t或t&`             | T&&            | t&               | T = t&                      |
         | `const t或const t&` | T&&            | const t&         | T = const t&                |
-        | `std::move(t)`      | T&&            | t&&              | T = t                       |
+        | `std::move(t)`      | T&&            | t                | T = t                       |
 >
 * decltype型推断：
     * 保留const与volatile
@@ -1068,10 +1065,10 @@ namespace test::test_v1 {}
     * 广义上的修饰符：`[]`、`()`、`<>`、`*`、`&`、`const`、`volatile`  
     工作原理即是：
         > 拿万能引用第二条举例，**修饰的模板参数类型**为T&&，**假想推断出的实参类型**为t&
-    1. 先忽略前者中比后者中多余的修饰符，即忽略`T&&`中的`&&`
-    2. 再将两者都有的修饰符抵消掉，`T`与`t&`无重叠部分
-    3. 此时前者必定只剩下了`T`，而后者为`t&`，即推断得`T = t&`
-    4. 则完整的形参实例即是`t& &&`，将第1条中忽略的部分补上，进行引用折叠后得`t&`
+    1. （去重）先将两者都有的修饰符抵消掉，`T&&`与`t&`无重叠部分
+    2. （减多）再忽略前者中比后者中多余的修饰符，即忽略`T&&`中的`&&`
+    3. （结果）此时前者必定只剩下了`T`，而后者为`t&`，即推断得`T = t&`
+    4. （合并）将第2条中忽略的部分补上，则完整的形参实例即是`t& &&`，进行引用折叠后得`t&`
 >
 * 引用折叠 <span id="yyvd"></span>
     * `t& &&` => `t&`
@@ -1093,7 +1090,6 @@ MetaFunc_t<T, N>        // 利用`using模板类型别名`包装`::type`
 // 获取值
 MetaFunc<T, N>::value   // 利用static const数据成员
 MetaFunc<T, N>          // 直接利用`变量模板`取代`::value`，但无法利用static_assert进行编译期判断
-MetaFunc()              // constexpr函数，需要将返回值赋值给constexpr对象
 ```
 * 循环：
     * 变参递归，设计参数个数固定的特化模板结束递归
