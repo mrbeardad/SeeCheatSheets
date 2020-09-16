@@ -93,7 +93,7 @@
 * `if-if`                               ：可能同时发生的条件
 * `if-else`与`if{continue或return}`     ：不可能或不应该或没必要同时发生的条件，若需要跳过的语句不多则选择前者
 * `if-elseif-else`与`if-else{if-else}`  ：有公共语句则前者转为后者，无则后者转前者
-* `for{}与for{if-break}`                ：若前者初始化头部语句过于繁琐，则转为后者
+* `for{}与for{if-break}`                ：若条件检测需要插在循环操作之间进行，则使用`if-break`
 * `if{for}`
     * 条件：if与for的检测条件重合时
     * 目的：某条件下需要进行循环操作
@@ -564,7 +564,7 @@ struct Trie
 * T ≤ O
 * T ≥ Ω 
 * T = Θ 
-* T < o
+* T `<` o
 
 ## 复杂度计算
 复杂度合并：

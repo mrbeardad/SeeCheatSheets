@@ -33,7 +33,14 @@
     - [函数](#函数)
 - [BOOST](#boost)
   - [序列化](#序列化)
+- [nlohmann-json](#nlohmann-json)
+  - [序列化](#序列化-1)
+  - [反序列](#反序列)
+  - [自定义变量转换](#自定义变量转换)
 - [Mysql++](#mysql)
+  - [异常](#异常)
+  - [连接](#连接)
+  - [SQL语句执行](#sql语句执行)
 
 <!-- vim-markdown-toc -->
 
@@ -1189,7 +1196,7 @@ exception                 `<exception>`
     * setw(n)                       ：设定下次输出的栏宽，或输入的字符限制最多n-1个
 <!-- entry end -->
 
-<!-- entry begin: quote -->
+<!-- entry begin: quoted iomanip -->
 * quoted：`<iomanip>`
     > 将字符串引用转义  
     > 输出(`<<`)时quoted()的参数作为引用转义的输入对象  
@@ -1671,9 +1678,59 @@ int main()
 ```
 <!-- entry end -->
 
+# nlohmann-json
+## 序列化
+* 构造nlohmann::json
+    * 变量转换：
+        > 转换时注意使用`{}`还是`()`
+        * bool  : bool
+        * number: INT, FLOAT
+        * string: string
+        * list  : `initializer_list<non-pair>`, Seq, Set
+        * object: `initializer_list<pair>`, Map
+    * 支持STL容器接口
+        > 将容器元素类型想象为`std::any`
+        * Seq类接口创建List
+        * Map类接口创建Object
+
+* 修改nlohmann::json
+    * .patch(jsonPatch)
+        ```cpp
+        auto jsonPatch = R"([
+            { "op": "replace", "path": "/baz", "value": "boo" },
+            { "op": "add", "path": "/hello", "value": ["world"] },
+            { "op": "remove", "path": "/foo"}
+        ])"_json;
+        // jsonPatch is an array of object
+        // 3 kinds of "op": replace, add(may override), remove
+        // path is similar to filesystem path: /foo -> {"foo":"bar"}, /0 -> ["foo", "bar"]
+        ```
+    * .merge_patch(json)：合并或覆盖源json
+
+* 序列化为JSON
+    * 输出流：`ostream << setw(INDENT) << json;`
+    * 字符解析：`.dump()与.dump(INDENT)`
+        > 前者返回只一行字符串，后者可指定缩进且多行排版
+
+## 反序列
+* 构造nlohmann::json
+    * 输入流：`istream >> json;`
+    * 字符解析：`json::parse(strWithJson); json::parse(beg, end);`
+    * 字面值：`R"({"json": "yes"})"`
+
+* 反序列为cpp对象
+    > 取决于当前json对象所存储的实际数据类型，类型转换失败会抛出异常（**就像std::any**）  
+    > 弱类型系统与强类型系统的交互原理可参见[mysqlpp](#mysqlpplx)
+    * `.get<cppType>(); .get_to(cppObj);`：支持的类型转换以及STL接口见上
+
+## 自定义变量转换
+为自己的类定义下列两个函数
+* `void from_json(const json&, myClass&);`
+* `void to_json(json&, const myClass&);`
+
 # Mysql++
 <!-- entry begin: mysqlpp mysql++ 异常 exception -->
-* mysqlpp异常
+## 异常
 ```cpp
 BadIndex        ：`row[idx]`中idx越界
 BadFieldName    ：`row[fd_name]`中fd_name无效
@@ -1687,6 +1744,7 @@ TypeLookupFailed
 <!-- entry end -->
 
 <!-- entry begin: mysqlpp mysql++ Connection -->
+## 连接
 * mysqlpp::Connection
     * 构造：
         * Connection(bool=true)                         ：若为false则表示用false flag代替抛出异常，其他任何构造方式都会开启异常机制
@@ -1720,6 +1778,7 @@ TypeLookupFailed
 <!-- entry end -->
 
 <!-- entry begin: mysqlpp mysql++ Query quote -->
+## SQL语句执行
 * mysqlpp::Query
     * 读取SQL语句
         * Query("SQL Statement")
@@ -1754,6 +1813,7 @@ TypeLookupFailed
 <!-- entry end -->
 
 <!-- entry begin: mysqlpp mysql++ Null type -->
+<span id="mysqlpplx"></span>
 MYSQL++中定义有类型映射到SQL类型，如：  
 `mysqlpp::sql_tinyint_unsigned_null`表示SQL类型`TINYINT UNSIGNED`  
 `mysqlpp::sql_tinyint_unsigned`表示SQL类型`TINYINT UNSIGNED NOT NULL`  
