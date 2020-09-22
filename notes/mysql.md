@@ -186,6 +186,10 @@ ALTER TABLE <tbl_name> DROP CHECK <ck_name>;
 INSERT INTO <tbl_name> [(<fd_name>, ...)] VALUES    -- 外键列需要指定为该键所指向的列中已存在的值以进行关联
 (<value>, ...), ... ;                               -- 若类型为字符串或日期时间，则`value`必须使用单引号
 
+-- 复制
+INSERT INTO <tbl_name> (<fd_name>, ...)
+SELECT 语句 ;                            -- 两语句中的<fd_name>部分两两对应
+
 -- 删除
 DELETE FROM <tbl_name>
 [WHERE <Clause>] ;                      -- 默认删除所有数据
@@ -193,10 +197,6 @@ DELETE FROM <tbl_name>
 -- 修改
 UPDATE <tbl_name> SET <fd_name>=<value>, ...
 [WHERE <Clause>] ;                      -- 默认修改所有行
-
--- 复制
-INSERT INTO <tbl_name> (<fd_name>, ...)
-SELECT 语句 ;                            -- 两语句中的<fd_name>部分两两对应
 
 -- 事务
 BEGIN;                                  -- 开启事务

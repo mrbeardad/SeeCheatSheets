@@ -247,7 +247,8 @@ alias dif='diff -Naur'
 alias ra='ranger'
 alias apt='sudo apt'
 alias expactf='expac --timefmt="%Y-%m-%d %T" "%l\t%n" | sort'
-alias sys='sudo systemctl'
+alias stl='sudo systemctl'
+alias dk='docker'
 ```
 <!-- entry end -->
 

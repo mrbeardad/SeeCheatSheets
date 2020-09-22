@@ -599,8 +599,8 @@ esac
         * `print或printf语句 > "file"`  ：文件输出（截断）
         * `print或printf语句 >> "file"` ：文件输出（追加）
     * 输入
-        * `"cmd" | getline var`         ：管道输入，若无`var`则直接赋值给$0
-        * `getline var < "file"`        ：文件输入，若无`var`则直接赋值给$0
+        * `"cmd" | getline var`         ：管道输入，若无`var`则直接赋值给`$0`
+        * `getline var < "file"`        ：文件输入，若无`var`则直接赋值给`$0`
     * 其他
         * `continue`
         * `break`

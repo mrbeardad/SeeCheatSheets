@@ -1,18 +1,18 @@
-<!-- entry begin: 一般 -->
+<!-- entry begin: cpp  一般 -->
 # 一般性原则
 * 头
 * 预
 * 无
 <!-- entry end -->
 
-<!-- entry begin: 泛型 -->
+<!-- entry begin: cpp  泛型 -->
 # 泛型编程
 * T无关
 * 算数类型
 * 指针类型
 <!-- entry end -->
 
-<!-- entry begin: 类设计 -->
+<!-- entry begin: cpp  类设计 -->
 # 类的设计
 * 声定顺序
 * 取消友元
@@ -42,7 +42,7 @@
     * explicit
 <!-- entry end -->
 
-<!-- entry begin: 类关系 -->
+<!-- entry begin: cpp  类关系 -->
 # 类间关系
 * **is-a**：public继承
     * 抽象分化
@@ -60,7 +60,7 @@
 * non-virtual       ：提供强制定义
 <!-- entry end -->
 
-<!-- entry begin: 函数 -->
+<!-- entry begin: cpp  函数 -->
 # 函数设计
 * GFM ? tempT&& :
     * !CWD ? T :
@@ -78,7 +78,7 @@
     * 类型限制
 <!-- entry end -->
 
-<!-- entry begin: 初始化 -->
+<!-- entry begin: cpp  初始化 -->
 # 初始化
 * 指针or引用
     * NULL
@@ -92,7 +92,7 @@
 * 循环声明
 <!-- entry end -->
 
-<!-- entry begin: STL -->
+<!-- entry begin: cpp  STL -->
 # STL
 * .emplace()
 * 容器增删
@@ -100,7 +100,7 @@
     * 引用、指针、迭代器
 <!-- entry end -->
 
-<!-- entry begin: 异常 -->
+<!-- entry begin: cpp  异常 -->
 # 异常
 * 标
 * 限
@@ -108,14 +108,14 @@
 * cas, up, min
 <!-- entry end -->
 
-<!-- entry begin: 并发 -->
+<!-- entry begin: cpp  并发 -->
 # 并发
 * automic
 * volatile
 * mutable
 <!-- entry end -->
 
-<!-- entry begin: 循环 -->
+<!-- entry begin: cpp  循环 -->
 # 循环
 * 多，变，顺，for-while
 * 变，迭，if-continue
@@ -125,17 +125,17 @@
 * 终
 <!-- entry end -->
 
-<!-- entry begin: 分支 条件 -->
+<!-- entry begin: cpp  分支 条件 -->
 # 分支
 * if-if
 * if-else if-continue if-return
-* if-elif-else `<=>` if-else{if-else}
-* for{} `<=>` for{if-break}
-* for{if{for}} `=>` for{if-else}
-* if{for} `=>` for
+* if-elif-else  `<=>` if-else{if-else}
+* for{}         `<=>` for{if-break}
+* for{if{for}}  ` =>` for{if-else}
+* if{for}       ` =>` for
 <!-- entry end -->
 
-<!-- entry begin: 递归 -->
+<!-- entry begin: cpp  递归 -->
 # 递归
 * 明确功能：所有副作用，参数，返回值
 * 基准情况：结束递归，并符合上述功能

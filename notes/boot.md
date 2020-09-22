@@ -21,7 +21,7 @@
 2. 定义变量`cmdpath` `prefix` `root`
 3. 加载normal.mod
     > 失败则进入救援模式
-4. 执行$prefix/grub.cfg
+4. 执行`$prefix/grub.cfg`
     > 无grub.cfg则进入命令模式
 5. 进入普通模式（选单界面）
     * 按`e`进入编辑模式

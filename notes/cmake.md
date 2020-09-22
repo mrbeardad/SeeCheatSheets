@@ -1,17 +1,33 @@
+# CMAKE命令
+<!-- entry begin: cmake -->
+* cmake
+    * -S        ：源码树
+    * -B        ：构建目录
+    * -D        ：指定CMAKE变量
+    * -G        ：指定生成的目标构建系统
+    * --build   ：指定构建目录并build
+        * -j    ：最大线程数
+        * -t    ：指定目标
+        * --config
+    * --install ：指定构建目录并install
+        * --prefix
+        * --config
+<!-- entry end -->
+
 # CMakeLists.txt基础命令
 ```cmake
 # 版本要求
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
 # 工程名字
-project(project_name)
+project(project_name VERSION 1.0)
 
 # 设置变量
 set(SOURCES src/main.cpp)
 file(GLOB SOURCES "src/*.cpp")
 
 # 打印消息
-message([FATAL_ERROR] "notification")
+message("notification")
 
 # 别名
 add_library(namespace::library ALIAS
@@ -34,6 +50,10 @@ add_library(library_name INTERFACE)
 # 可执行文件(target)
 add_executable(executable_name main.cpp)
 
+# 构建期操作
+# 搜索文件 path.h.in 中的`@CMAKE_VAR@`并替换为cmake项目变量值后，安装到${PROJECT_BINARY_DIR}/ver.hpp
+configure_file(ver.h.in ${PROJECT_BINARY_DIR}/ver.hpp)
+
 # PRIVATE   :只用于target
 # PUBLIC    :用于target和链接到它的其他target
 # 一般编译库时使用target_include_directories(... PUBLIC ...)，
@@ -45,6 +65,7 @@ target_include_directories(target
         include/static
         include/shared
         include/installing
+        ${PROJECT_BINARY_DIR}
 )
 
 # 链接库
@@ -53,24 +74,17 @@ target_link_libraries(target
         library_name
 )
 
-# 编译参数
-    # 指定编译器
-    cmake -DCMAKE_CXX_COMPILER=g++
+# 宏定义
+target_compile_definitions(target
+    PRIVATE
+        EX3
+)
 
-    # 指定构建类型
-    cmake -DCMAKE_BUILD_TYPE=Release
-
-    # 宏定义
-    target_compile_definitions(target
-        PRIVATE
-            EX3
-    )
-
-    # 标准版本
-    target_compile_features(target
-        PUBLIC
-            cxx_feature_name
-    )
+# 标准版本
+target_compile_features(target  # 或
+    PUBLIC                      # set(CMAKE_CXX_STANDARD 11)
+        cxx_feature_name        # set(CMAKE_CXX_STANDARD_REQUIRED True)
+)
 
 # 子项目可以使用父项目在添加该子项目之前作用域的所有数据，于是可以与其他子项目交互
 add_subdirectory(dir_name)
@@ -103,8 +117,6 @@ add_subdirectory(dir_name)
 
 # conf期编程
 ```cmake
-# 搜索文件 path.h.in 并将其中的字符串字面值中的`${CMAKE_VAR}`替换为cmake项目变量值后，安装到${PROJECT_BINARY_DIR}/ver.h
-configure_file(ver.h.in ${PROJECT_BINARY_DIR}/ver.h)
 ```
 
 # 安装
@@ -144,8 +156,8 @@ install (TARGETS cmake_examples_inst
 | PROJECT_BINARY_DIR   | The build directory of current project            |
 | CMAKE_BINARY_DIR     | The build directory of the top level project      |
 | name_BINARY_DIR      | The build directory of the project called "name"  |
-| CMAKE_CXX_COMPILER   |                                                   |
 | CMAKE_BUILD_TYPE     |                                                   |
+| CMAKE_CXX_COMPILER   |                                                   |
 | CMAKE_CXX_FLAGS      |                                                   |
 | CMAKE_CXX_STANDARD   |                                                   |
 | CMAKE_MODULE_PATH    | /usr/share/cmake/Modules                          |

@@ -51,6 +51,7 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [深入了解计算机系统](notes/csapp.md)
 
 ## 网络
+* [计算机网络](notes/network.md)
 * [比特币与区块链](notes/bitcoin.md)
     > 整理了一些加密技术与区块链原理
 
