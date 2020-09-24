@@ -137,7 +137,7 @@ CREATE TABLE <tbl_name> (
     [PRIMARY KEY (<fd_name>),]
     [CONSTRAINT <fk_name>  FOREIGN KEY (<fd_name>) REFERENCES <tbl_name>(<fd_name>),]
     [CONSTRAINT <ck_name>  CHECK (<Clause>)]
-) ENGINE=innodb CHARSET=utf8;
+) ENGINE=innodb CHARSET=utf8mb4;
 DROP TABLE <tbl_name>;
 ALTER TABLE <tbl_name> RENAME TO <new_tbl_name>;
 

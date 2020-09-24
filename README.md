@@ -36,16 +36,16 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [CMake构建系统](notes/cmake.md)
 
 ## Linux
-* [Linux基础](notes/linux.md)
-    > 相当于命令手册，外加点基础概念
-* [开发者工具](notes/devtool.md)
-    > 包含gcc、gdb、ssh、tmux、zsh、git等工具使用
-* [Bash](notes/bash.md)
-    > 包含bash语法、正则技巧与流处理命令
-* [Vim](notes/vim.md)
-    > [定制版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 * [Linux系统启动](notes/boot.md)
     > 从启动电源到用户登录整个过程的简短总结
+* [Linux基础](notes/linux.md)
+    > 相当于命令手册，外加点基础概念
+* [Bash与流处理](notes/bash.md)
+    > 包含bash语法、正则技巧与流处理命令
+* [开发者工具](notes/devtool.md)
+    > 包含gcc、gdb、ssh、tmux、zsh、git等工具使用
+* [Vim快捷键](notes/vim.md)
+    > [定制版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 
 ## 底层
 * [深入了解计算机系统](notes/csapp.md)
@@ -56,8 +56,8 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
     > 整理了一些加密技术与区块链原理
 
 ## 技术
-* [MySQL](notes/mysql.md)
 * [Docker](notes/docker.md)
+* [MySQL](notes/mysql.md)
 
 ## 其它
 * [Markdown概念](notes/markdown.md)

@@ -24,7 +24,9 @@ project(project_name VERSION 1.0)
 
 # 设置变量
 set(SOURCES src/main.cpp)
+set(ENV{SOURCE} src/main.cpp)
 file(GLOB SOURCES "src/*.cpp")
+# 使用系统环境变量：$ENV{HOME}
 
 # 打印消息
 message("notification")
@@ -51,8 +53,10 @@ add_library(library_name INTERFACE)
 add_executable(executable_name main.cpp)
 
 # 构建期操作
-# 搜索文件 path.h.in 中的`@CMAKE_VAR@`并替换为cmake项目变量值后，安装到${PROJECT_BINARY_DIR}/ver.hpp
-configure_file(ver.h.in ${PROJECT_BINARY_DIR}/ver.hpp)
+    # 将前者文件处理后安装到后者位置
+    # 将`@CMAKE_VAR@`替换为cmake项目变量值
+    # 若存在对应cmake变量则将`#cmakedefine MACRO`替换为`#define MACRO @MACRO@`
+configure_file(include/config/ver.h.in ${PROJECT_BINARY_DIR}/ver.hpp)
 
 # PRIVATE   :只用于target
 # PUBLIC    :用于target和链接到它的其他target
@@ -78,6 +82,12 @@ target_link_libraries(target
 target_compile_definitions(target
     PRIVATE
         EX3
+)
+
+# 编译参数
+target_compile_definitions(target
+    PRIVATE
+        -O3
 )
 
 # 标准版本
@@ -113,10 +123,6 @@ add_subdirectory(dir_name)
     # Boost_LIBRARIES        - Boost component libraries to be linked
     # Boost_<C>_FOUND        - True if component <C> was found (<C> is upper-case)
     # Boost_<C>_LIBRARY      - Libraries to link for component <C> (may include target_link_libraries debug/optimized keywords)
-```
-
-# conf期编程
-```cmake
 ```
 
 # 安装
