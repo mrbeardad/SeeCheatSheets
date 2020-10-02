@@ -22,7 +22,7 @@
 ## 用户
 两种表达形式：
 * user@host
-* user          ：默认host为`'%'`
+* user          ：默认host为`'%'`（见下）
 
 其中host有三种类型：
 * '%'           ：允许从任意主机登录
@@ -38,7 +38,7 @@
     * `*.*`
     * `<tbl_name>`          ：默认db_name为当前`use`选中的数据库
     * `*`
-* 关系域表示：
+* 域表示：
     * `<db_name>.<tbl_name>.<fd_name>`
     * `<tbl_name>.<fd_name>`
     * `<fd_name>`

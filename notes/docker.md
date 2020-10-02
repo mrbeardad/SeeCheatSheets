@@ -131,6 +131,8 @@ CMD         ["cmd", "args"] # 设置容器启动命令，以JSON-List形式写�
 version: "3"    # 指定版本
 services:       # 指定需要运行的容器
     mysql:              # 指定名称
+        depends_on:
+            - other_services
         images: "mysql:5.7"     # 指定使用的镜像，或使用下述build
         build: .                # 指定build需要的Dockerfile所在目录
         stdin_out: true         # -i

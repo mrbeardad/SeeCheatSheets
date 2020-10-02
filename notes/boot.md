@@ -6,10 +6,9 @@
 > * 设置开机启动项
 > * 了解安全启动模式
 
-1. 接通电源
-2. CPU加载主板上固件
-3. 读取硬件信息并检查
-4. 读取并加载硬盘ESP中的boot-loader(GRUB)
+1. 上电自检（加载固件）
+2. 读取硬件信息并检查
+3. 读取并加载硬盘ESP中的boot-loader(GRUB)
 
 ## GRUB
 > 需要掌握：
@@ -17,7 +16,7 @@
 > * 为GRUB界面加密
 > * 修改选单中内核参数以进行系统救援
 
-1. 加载bootx64(core.img)
+1. 加载bootx64.efi
 2. 定义变量`cmdpath` `prefix` `root`
 3. 加载normal.mod
     > 失败则进入救援模式

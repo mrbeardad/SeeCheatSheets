@@ -81,7 +81,7 @@ exception                 `<exception>`
 ├─── logic_error          `<stdexcept>`
 │   │
 │   ├─── domain_error                       ：数学库, 传入值域错误
-│   ├─── invalid_argument                   ：bitset构造参数无效
+│   ├─── invalid_argument                   ：bitset构造参数无效，string转数字时字符串无效
 │   ├─── length_error                       ：容器size超出限制
 │   ├─── out_of_range                       ：容器的无效索引
 │   └─── future_error     `<future>`        ：异步系统调用
@@ -138,9 +138,10 @@ exception                 `<exception>`
 <!-- entry end -->
 
 ## C库
-<!-- entry begin: 调试 cassert -->
 ### 调试处理
+<!-- entry begin: 调试 cassert -->
 **`<casset>`**
+
 * assert(expr)                      ：运行时断言, false则执行
     > #define NDEGUG  
     > 可以取消**宏函数**assert()
@@ -171,12 +172,18 @@ exception                 `<exception>`
 * quick_exit(status)
 * at_quick_exit(void (*func)())
 
+* `strtol(char*, char**, base)`
+* `strtod(char*, char**, base)`
+
 * getenv(var_name)
+* setenv(var_name, val, isoverwrite)
+* unsetenv(var_name)
+
 * system(sh_cmd)
 <!-- entry end -->
 
-<!-- entry begin: cctype -->
 ### 字符处理
+<!-- entry begin: cctype -->
 **`<cctype>`**
 
 > 见[正则表达式](https://github.com/mrbeardad/learning-notes-and-cheat-sheets/blob/master/notes/bash.md#%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
@@ -197,9 +204,9 @@ exception                 `<exception>`
 <!-- entry end -->
 
 ### 选项处理
+<!-- entry begin: getopt -->
 **`<unitstd.h>`**
 
-<!-- entry begin: getopt -->
 * `int getopt(int argc, char* const argv[], const char* optstring)`
     > 命令行参数，即`argv`字符串数组中的各个字符串的集合，每个字符串为一个命令行参数。有如下几种情况：
     > * 执行命令      ：即`argv[0]`
@@ -228,9 +235,9 @@ exception                 `<exception>`
             * `-1`表示解析结束，剩余的都是命令参数
 <!-- entry end -->
 
+<!-- entry begin: getopt_long getopt_long_only -->
 **`<getopt.h>`**
 
-<!-- entry begin: getopt_long getopt_long_only -->
 * `int getopt_long(argc, argv, optstring, const struct option longopts[], int* longindex)`
     > 基本规则同`getopt()`，增加了对长选项的解析：
     > “长选项的紧跟”为`--option=arg`, 而且长选项若无歧义可不用完整输入
@@ -250,8 +257,8 @@ exception                 `<exception>`
     > 注：规则同上, 但是`-opt`会优先解析为长选项, 不符合再为短
 <!-- entry end -->
 
-<!-- entry begin: cmath 数学 -->
 ### 数学库
+<!-- entry begin: cmath 数学 -->
 **`<cmath>`**
 
 > 几乎所有函数的参数都对`float` `double` `long double` 和整数 有重载，故一般省略形参类型  
@@ -1046,7 +1053,6 @@ exception                 `<exception>`
 * regex_constants
     * ::icase
 * regex
-    > flag 主要就有 regex_constants::icase
     * (str, flag)
     * (c, flag)
     * (c, l, flag)
@@ -1077,7 +1083,7 @@ exception                 `<exception>`
     * .begin() .cbegin() .end() .cend()
     * .size()
     * .empty()
-    * .operator[](idx)
+    * .operator[]
     * .prefix()
     * .suffix()
     * .length(n)
@@ -1086,7 +1092,7 @@ exception                 `<exception>`
     * .format(dest, fmt, flag)
     * .format(fmt, flag)
 * ssub_match： 指向表达式匹配到的子表达式
-    * .operator basic_string<charT>()
+    * .operator string()
 <!-- entry end -->
 
 ## 流与格式化
@@ -1127,9 +1133,9 @@ exception                 `<exception>`
 
 <!-- entry begin: 随机访问 -->
 * 随机访问：
-    * .tellg()    .tellp()
-    * .seekg(pos) .seekp(pos)
-    * .seekg(offset, rpos) .seekp(offset, rpos)
+    * .tellg()              .tellp()
+    * .seekg(pos)           .seekp(pos)
+    * .seekg(offset, rpos)  .seekp(offset, rpos)
         > rpos可以是 ios::beg、ios::end、ios::cur
 <!-- entry end -->
 
@@ -1156,7 +1162,7 @@ exception                 `<exception>`
 <!-- entry begin: iostream性能 -->
 * 关于性能
     * ios::sync_with_stdio(false)：关闭C-stream同步与多线程同步机制
-    * cin.tie(nullptr)：关闭cin与cout的关联
+    * cin.tie(nullptr)           ：关闭cin与cout的关联
 <!-- entry end -->
 
 <!-- entry begin: iostream 国际化 -->
@@ -1201,9 +1207,10 @@ exception                 `<exception>`
     > 将字符串引用转义  
     > 输出(`<<`)时quoted()的参数作为引用转义的输入对象  
     > 输入(`>>`)时quoted()的参数作为引用转义的输出对象
-    * 签名：
-        `quoted(char* s, delim='"', escape='\\')`  
-        `quoted(string& s, delim='"', escape='\\')`  
+    * 签名：  
+    `quoted(char* s, delim='"', escape='\\')`  
+    `quoted(string& s, delim='"', escape='\\')`  
+
 ```cpp
 string in{"hello \"world\""}, out;
 stringstream ss;
@@ -1602,7 +1609,7 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
     * temp_directory_path() ：获取临时目录
 <!-- entry end -->
 
-<!-- entry begin: fs functions -->
+<!-- entry begin: fs functions operator -->
 * 文件系统修改
     * create_symlink(target, link)
     * copy(source, target, copy_options)
@@ -1733,7 +1740,7 @@ int main()
 # Mysql++
 <!-- entry begin: mysqlpp mysql++ 异常 exception -->
 ## 异常
-```cpp
+```
 BadIndex        ：`row[idx]`中idx越界
 BadFieldName    ：`row[fd_name]`中fd_name无效
 BadConversion   ：SQL与C++数据类型之间的转换不合理（类型不匹配或窄化）
@@ -1805,7 +1812,7 @@ TypeLookupFailed
     * .begin()
     * .end()
     * .operator bool()
-    * `.operator[]()`                         ：返回mysqlpp::Row
+    * `.operator[]()`                       ：返回mysqlpp::Row
     * .num_rows()                           ：返回总行数
 
 * mysqlpp::UseQueryReslt
@@ -1821,7 +1828,7 @@ MYSQL++中定义有类型映射到SQL类型，如：
 `mysqlpp::sql_tinyint_unsigned`表示SQL类型`TINYINT UNSIGNED NOT NULL`  
 非NOT NULL的SQL类型可以接受`mysqlpp::null`的赋值，表示特殊值`TINYINT NULL`  
 NULL类型的基础便是该类
-* mysqlpp::Null<Type, mysqlpp::NullIsZero或mysqlpp::NullIsNull>
+* `mysqlpp::Null<Type, mysqlpp::NullIsZero或mysqlpp::NullIsNull>`
 
 String 可以将 SQL 类型字符串转换为 C++ 数据类型  
 STA 可以将 C++数据类型转换为 SQL 类型字符串  

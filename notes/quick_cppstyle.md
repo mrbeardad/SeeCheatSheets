@@ -28,7 +28,7 @@
     * no virtual
 * 析构
     * noexcept .destroy()
-    * (pure)virutal definition
+    * (pure) virutal definition
 * copy/move
     * copy?move?
     * .clone()
@@ -68,14 +68,14 @@
             * cT& -> T&  -> T&&
 
 * 修饰
+    * extern
+    * auto
     * this
     * noexcept
     * inline
     * =delete
 
-* 万能引用重载
-    * 标签分派
-    * 类型限制
+* 使用类/别名简化函数类型接口
 <!-- entry end -->
 
 <!-- entry begin: cpp  初始化 -->
@@ -84,7 +84,6 @@
     * NULL
     * 更改指向
 * 形式
-    * auto  =
     * auto& =
     * T     {}
     * T     ()
@@ -94,10 +93,13 @@
 
 <!-- entry begin: cpp  STL -->
 # STL
+* .operator()
 * .emplace()
+* .at()
 * 容器增删
     * range_based_for
     * 引用、指针、迭代器
+* stream.clear()
 <!-- entry end -->
 
 <!-- entry begin: cpp  异常 -->
@@ -128,7 +130,7 @@
 <!-- entry begin: cpp  分支 条件 -->
 # 分支
 * if-if
-* if-else if-continue if-return
+* if-else if-continue if-return if-exit
 * if-elif-else  `<=>` if-else{if-else}
 * for{}         `<=>` for{if-break}
 * for{if{for}}  ` =>` for{if-else}
@@ -142,6 +144,5 @@
 * 一般进展：利用递归获取下层结果，与本层计算结合得到本层结果
 * 建议：
     * 将尾递归转为循环
-    * 用`if-return`控制递归结束
     * 用`stack`存储递归路径
 <!-- entry end -->

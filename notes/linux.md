@@ -1,6 +1,9 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
+- [UEFI BIOS](#uefi-bios)
+  - [规范](#规范)
+  - [安全启动](#安全启动)
 - [硬盘与文件系统](#硬盘与文件系统)
   - [分区工具](#分区工具)
   - [LVM](#lvm)
@@ -36,6 +39,41 @@
   - [其它](#其它)
 
 <!-- vim-markdown-toc -->
+# UEFI BIOS
+## 规范
+* 主要规范
+    * 读取GPT分区表
+    * 读取ESP
+        > 设置GPT类型，文件系统类型为FAT家族
+    * 能够执行EFI可执行文件
+
+* 启动管理器
+    * 添加、删除、修改启动项
+        > 默认启动项位于每个ESP的/EFI/BOOT/BOOT{x64,IA32,IA64,ARM,A64}.EFI  
+        > 用于那些没有指定硬盘上具体目标，而只是让固件自行搜索的启动项
+    * 设置启动项顺序
+    * 设置启动项模式（UEFI or BIOS）
+
+## 安全启动
+UEFI 规范规定固件可以包含一系列签名，并拒绝运行未签名或签名与固件中包含的签名不一致的 EFI 可执行文件。
+
+**关于Microsoft Windows**：
+
+* 限制了需要获得预装Windows的批量许可（即“微软认证”）的在售PC：
+    * 默认启用安全启动 (Secure Boot)（服务器除外）
+    * 在其信任密钥列表中包含微软的密钥
+    * 启用安全启动 (Secure Boot) 时，必须禁用 BIOS 兼容模式（如果没记错的话，UEFI 规范也有此要求）
+    * 支持签名黑名单
+
+* 符合微软认证要求的 x86 计算机 还必须满足以下附加条件：
+    * 允许 自然人禁用安全启动 (Secure Boot)
+    * 允许 自然人启用自定义模式，以及修改固件的信任密钥列表
+
+* 符合微软认证要求的 ARM 计算机 还必须满足以下附加条件：
+    * 不允许 自然人禁用安全启动 (Secure Boot)
+    * 不允许 自然人启用自定义模式，以及修改固件的信任密钥列表
+
+
 # 硬盘与文件系统
 <!-- entry begin: GPT 分区表 -->
 * GPT分区表组成：
@@ -246,8 +284,9 @@
     * -[1-9]        ：压缩等级，越大压缩比越高
     * -r            ：打包目录时指定递归
     * -e或-P密码    ：加密
-* unzip ZIPFILE LIST
-    * `LIST`指定提取ZIPFILE中的哪些文件
+* unzip ZIPFILE [LIST]
+    > `LIST`指定提取ZIPFILE中的哪些文件
+    * -p            ：解压文件到stdout
 <!-- entry end -->
 
 <!-- entry begin: gzip bzip2 xz -->
@@ -315,22 +354,24 @@
 <!-- entry end -->
 
 <!-- entry begin: setfacl getfacl -->
-* setfacl
-    > 设置ACL权限，优先级在owner和group之后
-* getfacl
+* ACL权限
+    * setfacl
+        > 设置ACL权限，优先级在owner和group之后
+    * getfacl
 <!-- entry end -->
 
 <!-- entry begin: chattr lsattr -->
-* chattr
-    > 设置文件额外属性
-    * -R：    递归目录
-    * 以下选项的前缀，-设置，+取消
-        * a   ：    只能追加
-        * i   ：    无法变更
-        * A   ：    不更新atime
-        * S   ：    同步存储文件
-        * d   ：    不被dump
-* lsattr
+* 额外属性
+    * chattr
+        > 设置文件额外属性
+        * -R：    递归目录
+        * 以下选项的前缀，-设置，+取消
+            * a   ：    只能追加
+            * i   ：    无法变更
+            * A   ：    不更新atime
+            * S   ：    同步存储文件
+            * d   ：    不被dump
+    * lsattr
 <!-- entry end -->
 
 <!-- entry begin: su -->
@@ -359,7 +400,6 @@
 * 登录文件
     > 由PAM模块控制登录验证
     * /etc/nologin   ：若存在则只允许root登陆
-
     * /etc/issue     ：本地控制台登陆提示
     * /etc/motd      ：远程登录提示
     * /etc/login.defs：用户登陆设置
@@ -874,7 +914,7 @@
 ## GRUB配置
 <!-- entry begin: grub配置 -->
 * /etc/default/grub
-```sh
+```
     GRUB_DEFAULT=0
     GRUB_TIMEOUT=5
     GRUB_GFXMODE=auto
@@ -882,13 +922,11 @@
     GRUB_CMDLINE_LINUX-DEFAULT=
 ```
 * /etc/grub.d/
-```sh
     * 00_header
-    * 01_user     #自定义环境
-    * 10_linux    #确定linux选单
-    * 20_os-prober#确定其他OS选单
-    * 40_custom   #自定义选单
-```
+    * 01_user       #自定义环境
+    * 10_linux      #确定linux选单
+    * 20_os-prober  #确定其他OS选单
+    * 40_custom     #自定义选单
 <!-- entry end -->
 
 ## GRUB Shell
