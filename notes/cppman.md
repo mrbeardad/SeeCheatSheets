@@ -172,8 +172,11 @@ exception                 `<exception>`
 * quick_exit(status)
 * at_quick_exit(void (*func)())
 
+> `char**`指向的指针为解析字符的尾后指针
 * `strtol(char*, char**, base)`
 * `strtod(char*, char**, base)`
+* `atoi(char*)`
+* `atod(char*)`
 
 * getenv(var_name)
 * setenv(var_name, val, isoverwrite)
@@ -212,7 +215,8 @@ exception                 `<exception>`
     > * 执行命令      ：即`argv[0]`
     > * 选项          ：即以`-`开头的命令行参数。选项分为三种类型，`-o`单选项、`-opt`多选项（`o`与`p`选项必须为无参选项）、`-tfile`选项`t`及其参数`file`
     > * 选项参数      ：若某选项必有或可能有参数，则跟在该选项后面的同一命令行参数的字符，或下个命令行参数即为该选项的参数，见上
-    > * 命令参数      ：不属于上面三种情况的命令行参数，作为该命令本身的主要参数。**getopt会将所有命令参数保持顺序的移动到`argv`数组的尾部**
+    > * 命令参数      ：不属于上面三种情况的命令行参数，作为该命令本身的主要参数。**getopt会将所有命令参数保持顺序的移动到`argv`数组的尾部**。
+    > 特殊的，`-`被视作命令参数，`--`之后的所有命令行参数被视作命令参数
     * 参数argc与argv：
         * 来自`int main(int argc, char* argv[])`
     * 参数optstring：
@@ -1030,7 +1034,7 @@ exception                 `<exception>`
         * .compare()                        ：范围+目标（除了(char)、(n, char)）
         * `.operator<=>()`                  ：(s)、(c)
     * 转换
-        * stoi() stol() stoul() stof() stod()：(str, idx=nullptr, base=10)
+        * stoi() stol() stoul() stof() stod()：(str, size_t*=nullptr, base=10)
         * to_string(val)
     * 其它
         * .substr()                         ：范围
@@ -1563,10 +1567,10 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
 
 <!-- entry begin: cpp fs perm_options -->
 * perm_options
-    * replace
-    * add
-    * remove
-    * nofollow（改变符号链接自身）
+    * ::replace
+    * ::add
+    * ::remove
+    * ::nofollow（改变符号链接自身）
 <!-- entry end -->
 
 ### 函数
@@ -1589,11 +1593,11 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
     * file_size(path)               ：读取链接目标
     * hard_link_count(path)         ：读取链接目标
     * last_write_time(path)         ：读取链接目标
-    * space()   ：返回space_info
+    * space()                       ：返回space_info
         * .capacity
         * .available
         * .free
-    * status()与symlink_status()返回file_status
+    * status()与symlink_status()    ：返回file_status
         * .type()
         * .permissions()
 <!-- entry end -->

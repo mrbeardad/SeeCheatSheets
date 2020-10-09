@@ -1071,6 +1071,7 @@ UEFI 规范规定固件可以包含一系列签名，并拒绝运行未签名或
         * add IP/MASK  broadcast +  dev IF
         * del IP/MASK  dev IF
     * route/r
+        * list table TBL_NAME|TBL_NR
         * add IP/MASK  via GWIP  dev IF  src IP  metric 600
         * add [throw|unreachable|prohibit|blackhole] IP/MA
         * del IP/MASK  via GWIP  dev IF

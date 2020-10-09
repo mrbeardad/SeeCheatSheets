@@ -3,10 +3,11 @@
 
 - [安装](#安装)
   - [C++](#c)
+  - [编程](#编程)
   - [Linux](#linux)
+  - [技术](#技术)
   - [底层](#底层)
   - [网络](#网络)
-  - [技术](#技术)
   - [其它](#其它)
 
 <!-- vim-markdown-toc -->
@@ -27,15 +28,24 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 ## C++
 * [C++语法特性](notes/cpp.md)
     > 一份语法清单，适合有基础的同学
-* [C++风格与经验](notes/cppstyle.md)
-    > 列出了一些实用经验，部分参考自Scott Meyers作品
-* [编程技巧&数据结构与算法](notes/dsaa.md)
-    > 包含了基础的逻辑表达技巧、数据结构与算法
+* [C++编码风格](notes/cppstyle.md)
+    > 对代码风格进行规范，拒绝选择困难症
+* [C++编程向导](notes/cppguide.md)
+    > 编写健壮、可移植、可扩展的C++代码，部分参考自Scott Meyers作品
 * [C++程序库](notes/cppman.md)
-    > 目前包含了C++标准库、部分Boost库、MySQL++
+    > C++标准库、Boost库、MySQL++、JSON
 * [CMake构建系统](notes/cmake.md)
+    > CMake系统构建工具语法
+
+## 编程
+* [逻辑表达与简化](notes/logic.md)
+    > 代码的基本逻辑表达方式
+* [数据结构与算法](notes/dsaa.md)
+    > 基础数据结构与算法
 
 ## Linux
+* [UNIX环境高级编程](notes/apue.md)
+    > 未完待续。。。
 * [Linux系统启动](notes/boot.md)
     > 从启动电源到用户登录整个过程的简短总结
 * [Linux基础](notes/linux.md)
@@ -47,17 +57,18 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [Vim快捷键](notes/vim.md)
     > [定制版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 
+## 技术
+* [Docker](notes/docker.md)
+* [MySQL](notes/mysql.md)
+
 ## 底层
 * [深入了解计算机系统](notes/csapp.md)
 
 ## 网络
 * [计算机网络](notes/network.md)
+    > 互联网整体架构与协议栈细节
 * [比特币与区块链](notes/bitcoin.md)
     > 整理了一些加密技术与区块链原理
-
-## 技术
-* [Docker](notes/docker.md)
-* [MySQL](notes/mysql.md)
 
 ## 其它
 * [Markdown概念](notes/markdown.md)

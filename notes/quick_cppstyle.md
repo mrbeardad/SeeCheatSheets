@@ -1,15 +1,16 @@
 <!-- entry begin: cpp  一般 -->
-# 一般性原则
+# 预处理
 * 头
-* 预
-* 无
+* 条
+* 宏
 <!-- entry end -->
 
 <!-- entry begin: cpp  泛型 -->
 # 泛型编程
-* T无关
-* 算数类型
-* 指针类型
+* 抽离
+    * T无关
+    * 算数类型
+    * 指针类型
 <!-- entry end -->
 
 <!-- entry begin: cpp  类设计 -->
@@ -25,10 +26,12 @@
 * 构造
     * default?
     * explicit
-    * no virtual
+    * no-call virtual
+    * non-inline
 * 析构
     * noexcept .destroy()
     * (pure) virutal definition
+    * non-inline
 * copy/move
     * copy?move?
     * .clone()
@@ -62,20 +65,22 @@
 
 <!-- entry begin: cpp  函数 -->
 # 函数设计
-* GFM ? tempT&& :
-    * !CWD ? T :
-        * W ? T& -> T&& :
-            * cT& -> T&  -> T&&
+```
+GFM ? tempT&& :
+    !CWD ? T :
+        W ? T& -> T&& :
+            cT& -> T&  -> T&&
+```
+
+* 使用类/别名简化函数类型接口
 
 * 修饰
-    * extern
+    * unamedspace/extern
     * auto
     * this
     * noexcept
-    * inline
+    * inline/constexpr
     * =delete
-
-* 使用类/别名简化函数类型接口
 <!-- entry end -->
 
 <!-- entry begin: cpp  初始化 -->
@@ -104,8 +109,10 @@
 
 <!-- entry begin: cpp  异常 -->
 # 异常
-* 标
 * 限
+* 捕?
+    * 恢复
+    * 集中
 * 移
 * cas, up, min
 <!-- entry end -->

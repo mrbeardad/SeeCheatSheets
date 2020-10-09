@@ -1,11 +1,12 @@
 **关系型数据库的典型实现主要被调整用于执行规模小而读写频繁，或者大批量极少写访问的事务。**
 
 <!-- entry begin: mysql init install -->
-* 初始化mysql
-    * `mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
-    > 或
-    * `mysqld --initialize --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
+**初始化mysql**
+* `mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
+> 或
+* `mysqld --initialize --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
 
+**连接mysql**
 * mysql
     * -h    ：主机名
     * -P    ：端口号
@@ -125,9 +126,9 @@ FLUSH PRIVILEGES;
 <!-- entry begin: sql database db table tbl view -->
 ```sql
 -- 数据库
-SHOW DATABASES;
-CREATE DATABASE <db_name>;
-DROP DATABASE <db_name>;
+SHOW    DATABASES   [LIKE 'pattern'];
+CREATE  DATABASE    [IF NOT EXISTS]     <db_name>;
+DROP    DATABASE    [IF EXISTS]         <db_name>;
 
 -- 数据表
 SHOW TABLES [FROM <db_name>];
@@ -144,6 +145,11 @@ ALTER TABLE <tbl_name> RENAME TO <new_tbl_name>;
 -- 视图
 CREATE VIEW <view_name> AS SELECT 语句;
 DROP VIEW <view_name>;
+
+-- 导入与导出
+LOAD DATA LOCAL INFILE '<file_name>' INTO TABLE <tbl_name>;
+
+SELECT * FROM <tbl_name> INTO OUTFILE '<file_name>';
 ```
 <!-- entry end -->
 

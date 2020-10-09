@@ -136,18 +136,17 @@
 <!-- entry begin: 重定向 -->
 * I/O重定向
     > 重定向符号放在一条命令最后，或管道符之前
-    * `< file`          ：重定向stdin到file
-    * `<< EOF`          ：读取stdin直到EOF（不读取EOF）
-    * `<<< string`      ：将string内容作为stdin
+    * `[fd]<file`       ：重定向fd到file，fd默认为0
+    * `[fd]<<EOF`       ：重定向fd到（接下来内容直到一行只有EOF的行，不包括结束符EFO），fd默认为0
+    * `[fd]<<-EOF`      ：重定向fd到（接下来内容直到一行只有EOF的行，不包括行首的tab与结束符EFO），fd默认为0
+    * `[fd]<<<string`   ：重定向fd到（string内容），fd默认为0
     * `<(cmd)`          ：将cmd的stdout定向到临时文件并替换为该文件名
-    * `> file`          ：重定向stdout到file（截断）
-    * `>> file`         ：重定向stdout到file（追加）
-    * `2> file`         ：重定向stderr到file（截断）
-    * `2>> file`        ：重定向stderr到file（追加）
-    * `&> file`         ：重定向stdout与stderr到file（截断）
-    * `&>> file`        ：重定向stdout与stderr到file（追加）
-    * `1>&2`            ：重定向stdout到stderr
-    * `2>&1`            ：重定向stderr到stdout
+    * `fd>file`         ：重定向fd到file（截断），fd默认为1
+    * `fd>>file`        ：重定向fd到file（追加），fd默认为1
+    * `&>file`          ：重定向stdout与stderr到file（截断）
+    * `&>>file`         ：重定向stdout与stderr到file（追加）
+    * `fd1>&fd2`        ：重定向fd1到fd2
+    * `fd<>file`        ：打开文件描述符n指向file
 <!-- entry end -->
 
 <!-- entry begin: escape 转义字符 -->
@@ -293,7 +292,7 @@
 <!-- entry end -->
 
 # 变量
-<!-- entry begin: 变量 -->
+<!-- entry begin: 变量 bash -->
 注：zsh中数组下标从1开始，且无需`${arr[i]}`中的花括号  
 注：shell变量默认都是字符串  
 注：字符串变量所有空白符等特殊字符，使用时应该用双引号包含
@@ -322,6 +321,7 @@
     * `${varname:offset:len}`     ：取得字符串的子字符串（若varname为数组，则len为idx）
 
 * 修改变量
+    > 通配符匹配
     * `${variable#pattern}`       ： 如果变量头部匹配 pattern，则删除最小匹配部分返回剩下的
     * `${variable##pattern}`      ： 如果变量头部匹配 pattern，则删除最大匹配部分返回剩下的
     * `${variable%pattern}`       ： 如果变量尾部匹配 pattern，则删除最小匹配部分返回剩下的

@@ -52,7 +52,7 @@
     > 注：BSD风格：`cmd  opts  lib.a  a.o`
 <!-- entry end -->
 
-<!-- entry begin: bojdump readelf ldd strace pmap gprof -->
+<!-- entry begin: objdump readelf ldd strace pmap gprof -->
 * readelf
 * objdump -dx
 * ldd -V
@@ -75,7 +75,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * gdb EXEC CORE PID
 
 * 断点：
-    * break     b   ：`func`，`linenum`，`if CONDITION`
+    * break     b   ：`func`，`linenum`，`if CONDITION` `* address`
     * tbreak    tb  ：`func`，`linenum`
     * condition     ：`break-id expr`
     * watch     w   ：`expr`
@@ -97,14 +97,18 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 
 * 跟踪：
     * step      s   ：`N`
+    * stepi     si  ：`N`
     * next      n   ：`N`
+    * nexti     ni  ：`N`
     * until     u   ：`line-num`
     * return        ：`ret-val`
     * finish    f
     * backtrace bt
 
 * 打印：
-    * print     p   ：`val`，`expr`，`"%s",addr`
+    * print     p   ：`val`，`expr`，`"%s",addr` `$reg`
+        > 注意：使用`$pc=address`调整执行位置时，注意栈帧是否合法
+    * x             ：`/12b` `/12c` `/12g` `adress`
     * display       ：每次单步后打印变量
     * whatis        ：`value`
     * i locals
