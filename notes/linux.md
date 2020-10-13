@@ -350,7 +350,7 @@ UEFI 规范规定固件可以包含一系列签名，并拒绝运行未签名或
     * r/w表示可读/写其对应block内存储的entry
     * x表示能否对目录下文件进行访问，即使没有rw也可以“摸黑访问”
     * SGID表示所有创建在此目录的普通文件的gid默认为目录的gid
-    * SBIT表示该目录下的普通文件只有其owner与目录owner能删除
+    * SBIT表示该目录下的文件只有其owner与目录owner能删除或更名
 <!-- entry end -->
 
 <!-- entry begin: setfacl getfacl -->
