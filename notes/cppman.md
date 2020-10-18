@@ -29,6 +29,11 @@
   - [随机数生成器](#随机数生成器)
   - [并发](#并发)
   - [文件系统](#文件系统)
+    - [文件信息](#文件信息)
+    - [目录](#目录)
+    - [符号链接](#符号链接)
+    - [硬链接](#硬链接)
+    - [权限](#权限)
     - [类](#类)
     - [函数](#函数)
 - [BOOST](#boost)
@@ -1106,7 +1111,7 @@ exception                 `<exception>`
 * 状态与异常
     * .good()
     * .eof()
-    * .faile()
+    * .fail()
     * .bad()
     * .rdstate()
     * .clear()
@@ -1225,7 +1230,8 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
 
 <!-- entry begin: fstream -->
 * fstream：`<fstream>`
-    * 构造：(filename, flag=)
+    * 构造：
+        * (filename, flag=)
     * 成员：
         * .open(filename, flag=)
         * .is_open()
@@ -1256,8 +1262,9 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
 * streambuf：`<streambuf>`
     * 销毁问题：basic_i/ostream析构时不会销毁, 其他stream析构时只是不销毁.rdbuf()得到的
     * 高效非格式化I/O：
-        * streambuf_iterator    ：不通过stream对象直接I/O缓冲区
+        * streambuf_iterator    ：不通过stream对象直接I/O缓冲区（自动更新缓冲区块）
         * `streambuf*`          ：利用stream.rdbuf()获取后直接调用I/O运算符与另一个流缓冲区对接, 注意输入时需要std::noskipws
+    * 通过文件描述符改造：`__gnu_cxx::stdio_filebuf<char> buf{fd, std::ios_base::in}; std::istream istrm{buf};`
 <!-- entry end -->
 
 <!-- entry begin: locale -->
@@ -1464,8 +1471,131 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
 <!-- entry end -->
 
 ## 文件系统
+### 文件信息
+<!-- entry begin: filesystem fs status file_size hard_link_count last_write_time space -->
+* status(path); symlink_status(path)：返回file_status
+    * .type()
+    * .permissions()
+* file_size(path)
+* hard_link_count(path)
+* last_write_time(path)
+
+* space()                           ：返回space_info
+    * .capacity
+    * .available
+    * .free
+<!-- entry end -->
+
+<!-- entry begin: filesystem fs filetype ft -->
+* 文件类型：
+    * is_regular_file()
+    * is_directory()
+    * is_symlink()              ：符号链接除此之外还具有链接目标的文件类型
+    * is_socket()
+    * is_fifo()
+    * is_block_file()
+    * is_character_file()
+<!-- entry end -->
+
+<!-- entry begin: filesystem fs file_type ft -->
+* file_type
+    > 领域枚举
+    * ::none
+    * ::not_found
+    * ::regular
+    * ::directory
+    * ::symlink
+    * ::block
+    * ::character
+    * ::fifo
+    * ::socket
+    * ::unkown
+<!-- entry end -->
+
+
+### 目录
+<!-- entry begin: filesystem fs directory_entry -->
+* directory_entry `<filesystem>`
+    > 目录项可能是目录下的任何类型的文件，文件名尾缀最好别带`/`
+    * 构造与赋值
+        * (path)                        ：string与path，path与direcoty_entry都可相互转换
+    * 读取
+        * .path()                       ：返回const path&（也可直接隐式转换为path）
+<!-- entry end -->
+
+<!-- entry begin: filesystem fs directory_iterator recursive_directory_iterator  -->
+* directory_iterator `<filesystem>`
+    * 构造：
+        * (path)，默认构造为尾后迭代器
+* recursive_directory_iterator  `<filesystem>`
+    * .depth()                  ：返回当前递归深度
+    * .pop()                    ：返回上级目录
+    * .recursion_pending        ：返回当前目录是否禁用递归
+    * .disable_recursion_pending：下次自增前禁用递归
+<!-- entry end -->
+
+<!-- entry begin: filesystem fs mkdir create_directory create_directories -->
+* create_directory(path)            ：`mkdir`
+* create_directories(path)          ：`mkdir -p`
+<!-- entry end -->
+
+### 符号链接
+<!-- entry begin: read_symlink create_symlink -->
+* read_symlink(path)    ：获取符号链接指向的文件path（可能为相对路径）
+* create_symlink(target, link)
+<!-- entry end -->
+
+### 硬链接
+<!-- entry begin: filesystem fs copy rename remove remove_all -->
+* copy(source, target, copy_options)
+    > * copy_options：领域枚举
+    >     * ::none
+    >     * ::skip_existing
+    >     * ::overwrite_existing
+    >     * ::update_existing
+    >     * ::recursive
+    >     * ::copy_symlinks
+    >     * ::skip_symlinks
+    >     * ::directories_only
+    >     * ::create_symlinks
+    >     * ::create_hard_links
+* rename(old_path, new_path)        ：`mv`
+* remove(path)                      ：`rm rmdir`
+* remove_all(path)                  ：`rm -r`
+<!-- entry end -->
+
+### 权限
+<!-- entry begin: filesystem fs file_perm permissions 权限 -->
+* permissions(path, perms, perm_options)
+    > * perm_options
+    >     * ::replace
+    >     * ::add
+    >     * ::remove
+    >     * ::nofollow（改变符号链接自身）
+* file_perm
+    > 领域枚举
+    * ::none          0000
+    * ::owner_read    0400
+    * ::owner_write   0200
+    * ::owner_exec    0100
+    * ::owner_all     0700
+    * ::group_read    0040
+    * ::group_write   0020
+    * ::group_exec    0010
+    * ::group_all     0070
+    * ::others_read   0004
+    * ::others_write  0002
+    * ::others_exec   0001
+    * ::others_all    0007
+    * ::all           0777
+    * ::set_uid       4000
+    * ::set_gid       2000
+    * ::sticky_bit    1000
+    * ::mask          7777
+<!-- entry end -->
+
 ### 类
-<!-- entry begin: cpp filesystem fs path -->
+<!-- entry begin: filesystem fs path -->
 * path `<filesystem>`
     * 读取
         * .c_str()                  ：返回char*
@@ -1498,134 +1628,15 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
         * .has_extension()
 <!-- entry end -->
 
-<!-- entry begin: cpp filesystem fs dir directory_entry -->
-* directory_entry `<filesystem>`
-    > 目录项可能是目录下的任何类型的文件，文件名尾缀最好别带`/`
-    * 构造与赋值
-        * (path)                        ：string与path，path与direcoty_entry都可相互转换
-    * 读取
-        * .path()                       ：返回const path&（也可直接隐式转换为path）
-<!-- entry end -->
-
-<!-- entry begin: directory_iterator recursive_directory_iterator  -->
-* directory_iterator `<filesystem>`
-    * 构造：
-        * (path)，默认构造为尾后迭代器
-* recursive_directory_iterator  `<filesystem>`
-    * .depth()                  ：返回当前递归深度
-    * .pop()                    ：返回上级目录
-    * .recursion_pending        ：返回当前目录是否禁用递归
-    * .disable_recursion_pending：下次自增前禁用递归
-<!-- entry end -->
-
-<!-- entry begin: cpp filesystem fs file_type file_perm -->
-* file_type：领域枚举
-    * ::none
-    * ::not_found
-    * ::regular
-    * ::directory
-    * ::symlink
-    * ::block
-    * ::character
-    * ::fifo
-    * ::socket
-    * ::unkown
-<!-- entry end -->
-
-<!-- entry begin: file_perm cpp fs -->
-* file_perm：领域枚举
-    * ::none          0000
-    * ::owner_read    0400
-    * ::owner_write   0200
-    * ::owner_exec    0100
-    * ::owner_all     0700
-    * ::group_read    0040
-    * ::group_write   0020
-    * ::group_exec    0010
-    * ::group_all     0070
-    * ::others_read   0004
-    * ::others_write  0002
-    * ::others_exec   0001
-    * ::others_all    0007
-    * ::all           0777
-    * ::set_uid       4000
-    * ::set_gid       2000
-    * ::sticky_bit    1000
-    * ::mask          7777
-<!-- entry end -->
-
-<!-- entry begin: cpp fs copy_options -->
-* copy_options：领域枚举
-    * ::none
-    * ::skip_existing
-    * ::overwrite_existing
-    * ::update_existing
-    * ::recursive
-    * ::copy_symlinks
-    * ::skip_symlinks
-    * ::directories_only
-    * ::create_symlinks
-    * ::create_hard_links
-<!-- entry end -->
-
-<!-- entry begin: cpp fs perm_options -->
-* perm_options
-    * ::replace
-    * ::add
-    * ::remove
-    * ::nofollow（改变符号链接自身）
-<!-- entry end -->
-
 ### 函数
-<!-- entry begin: cpp fs function is judge -->
-* 判断
-    * equivalent(path1, path2)  ：判断两路径是否为同一文件（包括链接）
-    * exists()
-    * is_regular_file()
-    * is_directory()
-    * is_symlink()              ：符号链接除此之外还具有链接目标的文件类型
-    * is_socket()
-    * is_fifo()
-    * is_block_file()
-    * is_character_file()
-    * status_known()
-<!-- entry end -->
-
-<!-- entry begin: cpp fs info 信息 -->
-* 信息获取
-    * file_size(path)               ：读取链接目标
-    * hard_link_count(path)         ：读取链接目标
-    * last_write_time(path)         ：读取链接目标
-    * space()                       ：返回space_info
-        * .capacity
-        * .available
-        * .free
-    * status()与symlink_status()    ：返回file_status
-        * .type()
-        * .permissions()
-<!-- entry end -->
-
-<!-- entry end -->
-<!-- entry begin: cpp fs function path -->
-* 路径
-    * absolute(path)        ：将path转换为绝对路径（可能带有`..`）
-    * canonical(path)       ：将path转换为绝对路径（不带有`..`）
-    * relative(path)        ：将path根据当前工作目录转换为相对路径
-    * read_symlink(path)    ：获取符号链接指向的文件path（可能为相对路径）
-    * current_path()        ：获取当前工作路径
-    * temp_directory_path() ：获取临时目录
-<!-- entry end -->
-
-<!-- entry begin: fs functions operator -->
-* 文件系统修改
-    * create_symlink(target, link)
-    * copy(source, target, copy_options)
-    * rename(old_path, new_path)        ：`mv`
-    * remove(path)                      ：`rm rmdir`
-    * remove_all(path)                  ：`rm -r`
-    * create_directory(path)            ：`mkdir`
-    * create_directories(path)          ：`mkdir -p`
-    * permissions(path, perms, perm_options)
+<!-- entry begin: filesystem fs equivalent exists status_knows absolute canonical relative current_path temp_directory_path -->
+* equivalent(path1, path2)  ：判断两路径是否为同一文件（包括链接）
+* exists()
+* absolute(path)        ：将path转换为绝对路径（可能带有`..`）
+* canonical(path)       ：将path转换为绝对路径（不带有`..`）
+* relative(path)        ：将path根据当前工作目录转换为相对路径
+* current_path()        ：获取当前工作路径
+* temp_directory_path() ：获取临时目录
 <!-- entry end -->
 
 # BOOST

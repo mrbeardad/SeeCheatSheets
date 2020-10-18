@@ -433,6 +433,29 @@
     * 进入系统启动函数，再调用main
 <!-- entry end -->
 
+<!-- entry begin: csapp 动态链接目录 -->
+[转载自](https://blog.csdn.net/fan_hai_ping/article/details/6763733)
+
+Linux下搜索路径的次序：
+1. ELF可执行文件中动态段中DT_RPATH所指定的路径，不常用但是比较使用的方法；
+2. 编译目标代码时指定的动态库搜索路径（-WI,-rpath=./）；
+3. 环境变量LD_LIBRARY_PATH指定的动态库搜索路径；
+4. 配置文件/etc/ld.so.conf（或ld.so.cache）中指定的动态库搜索路径；
+5. 默认的动态库搜索路径/lib；
+6. 默认的动态库搜索路径/usr/lib。
+
+在上述1-3中指定的动态库搜索路径都可以指定多个搜索目录，其先后顺序是按指定路径的先后顺序搜索的。如果动态库之间存在依赖关系，那么先加载那些被依赖的动态库。
+
+
+Windows下搜索路径次序：
+1. 可执行文件所在的目录（当前目录）；
+2. Windows的系统目录（该目录可以通过GetSystemDirectory函数获得）；
+3. 16位的系统目录（Windows目录下的system子目录）；
+4. Windows目录（该目录可以通过GetWindowsDirectory函数获得）；
+5. 进程当前所在的工作目录；
+6. PATH环境变量中所列出的目录。
+<!-- entry end -->
+
 # 操作系统
 ## 异常控制流
 <!-- entry begin: csapp ECF 异常控制流 -->
@@ -555,7 +578,7 @@
     * 系统管理日志
 
 * **进程管理**
-    * 环境变量
+    * 进程控制块
         * SELinux
         * UID, EUID, GID, EGID
         * PID, PPID, PGID, TPGID, SID, TTY

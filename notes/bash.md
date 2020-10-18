@@ -13,10 +13,6 @@
 - [变量](#变量)
 - [BASH脚本](#bash脚本)
 - [常用命令](#常用命令)
-  - [一般命令](#一般命令)
-  - [流处理命令](#流处理命令)
-  - [awk](#awk)
-  - [sed](#sed)
 
 <!-- vim-markdown-toc -->
 # BASH基础
@@ -46,19 +42,6 @@
     * ^S：历史命令正向搜索
     * ^G：退出当前编辑或搜索
     * ^V：显示输入字符的按键序列
-<!-- entry end -->
-
-<!-- entry begin: bash builtin -->
-* bash部分内建命令
-    * :             ：空白命令，返回零
-    * alias         ：命令别名
-    * source        ：读取指定配置
-    * history       ：命令历史
-    * reset         ：重置因读取二进制文件导致的乱码
-    * wait          ：等待指定的子进程退出
-    * sleep         ：休眠指定时间
-    * exit          ：退出bash界面
-    * exec          ：调用exec()加载执行程序
 <!-- entry end -->
 
 # 特殊字符
@@ -328,7 +311,7 @@
     * `${variable%%pattern}`      ： 如果变量尾部匹配 pattern，则删除最大匹配部分返回剩下的
     * `${variable/pattern/str}`   ： 将变量中第一个匹配 pattern 的替换成 str，并返回
     * `${variable//pattern/str}`  ： 将变量中所有匹配 pattern 的地方替换成 str 并返回
-    * `eval \$$var`               ： eval为关键字，整个表达式会替换成最终的"${$var}"（假设花括号中的变量会先被替换）
+    * `eval \$$var`               ： eval为关键字，整个表达式会替换成最终的`${$var}`（假设花括号中的变量会先被替换）
     * `eval var1=\$$var2`         ： 将`eval \$$var2`的替换结果复制给`var1`
 <!-- entry end -->
 
@@ -418,7 +401,19 @@ esac
 <!-- entry end -->
 
 # 常用命令
-## 一般命令
+<!-- entry begin: bash builtin -->
+* bash部分内建命令
+    * :             ：空白命令，返回零
+    * alias         ：命令别名
+    * source        ：读取指定配置
+    * history       ：命令历史
+    * reset         ：重置因读取二进制文件导致的乱码
+    * exit          ：退出bash界面
+    * exec          ：调用exec()加载执行程序
+    * wait          ：等待指定的子进程退出
+    * sleep         ：休眠指定时间
+<!-- entry end -->
+
 <!-- entry begin: getopts -->
 * getopts optstring name
     > * 命令行参数    ：在shell中执行一条命令的所有字符，即脚本中的变量`$0` `$1`等。类型有：执行命令、选项、选项参数、命令参数  
@@ -442,14 +437,6 @@ esac
         * OPTIND    ：同print-mode
 <!-- entry end -->
 
-<!-- entry begin: read -->
-* read  VAR
-    * -p    ：提示符
-    * -t    ：限时
-    * -n    ：读取字符数
-    * -s    ：关闭回显
-<!-- entry end -->
-
 <!-- entry begin: trap signal -->
 * trap
     * `cmd signal1 signal2`    ：在脚本中设置信号处理命令
@@ -457,202 +444,4 @@ esac
     * `-   signal1 signal2`    ：恢复默认信号处理行为
 <!-- entry end -->
 
-## 流处理命令
-<!-- entry begin: col -->
-* col -x ：将tab替换为等宽space，该命令只从stdin读取
-<!-- entry end -->
-
-<!-- entry begin: xargs -->
-* xargs CMD
-    > 原理：将管道中的字符串的空白符符替换为空格后（若空白符前面有`\`则不被替换），作为CMD的参数
-    * -n  ：一次给予多少个参数
-    * -p  ：每个单词都提醒用户
-    * -e  ：直到遇到此单词停止
-    * -0  ：保留空白符不被替换
-<!-- entry end -->
-
-<!-- entry begin: tee -->
-* tee FILE
-    * -a：追加而非截断
-<!-- entry end -->
-
-<!-- entry begin: sort -->
-* sort
-    * -f    ：忽略大小写
-    * -b    ：忽略行前空白
-    * -M    ：月份名称排序
-    * -n    ：数值排序
-    * -r    ：降序
-    * -u    ：删除相同行
-    * -t    ：指定分隔符
-    * -k n,m：指定比较第n-m域
-        > field定义：blank开始到non-blank尾结束，从行首到分割符算1
-<!-- entry end -->
-
-<!-- entry begin: uniq -->
-* uniq
-    * -i：忽略大小写
-    * -c：计数
-    * -f：指定从哪个域开始比较（默认从1开始）
-<!-- entry end -->
-
-<!-- entry begin: join paste -->
-* join  -1 F1 FILE1 -2 F2 FILE2
-    > F1、F2：指定两文件比较的域  
-    > FILE1与FILE2其中之一可以为`-`，代表此文件从管道读取
-    * -t：指定分隔符
-    * -i：忽略大小写
-
-* paste FILE1  FILE2
-    * -t：指定分隔符
-<!-- entry end -->
-
-<!-- entry begin: cut -->
-* cut
-    * -d    ：指定分隔符
-    * -f    ：指定截取的域，可使用逗号与减号
-    * -c n-m：指定取出第n-m个字符
-<!-- entry end -->
-
-<!-- entry begin: wc -->
-* wc
-    * -l：行数
-    * -w：单词数
-    * -m：字符数
-<!-- entry end -->
-
-<!-- entry begin: grep -->
-* grep
-    * -E：扩展正则表达式
-    * -A：显示之后几行
-    * -B：显示之前几行
-    * -C：显示之前和之后几行
-    * -i：忽略大小写
-    * -n：显示行号
-    * -c：计数
-    * -v：显示不匹配的
-    * -q：静默模式
-<!-- entry end -->
-
-## awk
-<!-- entry begin: awk -->
-* awk '模式{语句;} 模式{语句;}' FILE
-    * 语句语法类似C语言，额外有语句`for ( var in map )`；
-    * 使用变量时无需前置声明，初值为空，参与运算时置0；
-    * 参与运算时map下标自动建立，故检查下标是否存在用in；
-    * 关系运算符要两边都是数字才进行数值比较，否则以字典序比较字符串；
-
-* 选项
-    * -F    ：分隔符，支持[]正则
-    * -f    ：读取脚本文件
-    * -v var=val
-
-* 模式：
-    * BEGIN
-    * END
-    * /pattern/
-    * !/pattern/
-    * /pattern1/&&/pattern2/
-    * /pattern1/||/pattern2/
-    * 表达式
-
-* 变量：C风格变量
-    * 定义：
-        * var=val
-        * map[key]=val
-    * 内置变量
-        * ARGC
-        * ARGV
-        * RS        ：行分隔符(默认`<CR>`)
-        * FS        ：字段分隔符(默认`<Space>`)
-        * ORS       ：输出的行分隔符(默认`<CR>`)
-        * OFS       ：输出的字段分隔符(默认`,`)
-        * NR        ：总行数
-        * FNR       ：在当前文件中的行数
-        * NF        ：字段数
-        * OFMT      ：数字输出格式(默认%.6g)
-        * IGNORECASE：为true则忽略大小写
-        * `$0`        ：整行内容
-        * `$N`        ：第N个字段
-
-* 运算符
-    * `+` `-` `*` `/` `%` `^`
-    * `>` `>=` `<` `<=` `==` `!=`
-    * `~`           ：子串匹配
-    * `~!`          ：子串不匹配
-    * `空格`        ：字符连接
-    * `in`          ：确认数组键值
-    * `|`           ：管道连接符
-    * `"cmd" |`     ：管道连接，读取`cmd`输出
-    * `| "cmd"`     ：管道连接，输出到`cmd`
-
-* 关键字
-    * 输出
-        > 注意：`>`与`>>`可在以上两个关键字最后作重定向，若需要关系运算，应该用圆括号包围
-        * `print var1,var2"str"`        ：标准输出，逗号替换为OFS，末尾自动添加换行符
-        * `printf "$1:%s\n",$1`         ：标准输出，类似C中的printf()函数
-        * `print或printf语句 | "cmd"`   ：管道输出
-        * `print或printf语句 > "file"`  ：文件输出（截断）
-        * `print或printf语句 >> "file"` ：文件输出（追加）
-    * 输入
-        * `"cmd" | getline var`         ：管道输入，若无`var`则直接赋值给`$0`
-        * `getline var < "file"`        ：文件输入，若无`var`则直接赋值给`$0`
-    * 其他
-        * `continue`
-        * `break`
-        * `next`                            ：读取下一行并回到脚本开始处重新执行
-        * `delete`                          ：删除map中的元素
-
-* 函数
-    * srand(); rand()
-        > 前者帮助后者用时间作种，后者返回随机值
-    * length(string); length(map)
-        > 检查字符串与数组的长度
-    * sub(/pattern/, "string", var); gsub(...)
-        > 将var中匹配的pattern替换为string，后者全部替换
-    * index(var, "string")
-        > string在var中出现的位置(1开始)，无则返回0
-    * substr(var, pos, length)
-        > 截取子串，从pos开始的length个字符(1开始)，无length则到结尾
-    * tolower(s); toupper(s)
-<!-- entry end -->
-
-## sed
-<!-- entry begin: sed -->
-* sed '模式{语句;}; 模式{语句;}' FILE
-* sed -e '模式 语句块' -e '模式 语句块' FILE
-    * a; i; c; r; w;操作只能单独存在，不能在块中，故它们只能用`-e`选项
-
-* 选项
-    > 选项要分开
-    * -n：仅显示处理结果，只有a i c r p操作才输出
-    * -r：支持扩展正则表达式
-    * -i：修改原文件
-    * -f：指定脚本文件
-
-* 模式
-    * /pattern/
-    * !/pattern/
-    * /pattern/I
-    * /pattern/,m
-    * n,m
-
-* 操作
-    * s/pattern/replace/g
-        * replace中&代表整个匹配到的字符串
-        * 替换标记：无g全部，Ng第N个
-    * a或i      ：行后或行前添加字符串
-    * c         ：会把所有匹配行转换成一个字符串
-    * d         ：删除匹配行
-    * r/w file  ：读取file到行后，写入匹配行到file
-    * n         ：跳转到下一行，执行后续操作
-    * =         ：行前打印行号
-    * q         ：退出
-    * N         ：读取下一行至模板块，形成多行组，并将行号改为新加行的行号
-    * P/D操作   ：分别用于多行组，打印与删除第一行
-    * h         ：拷贝模板块到缓冲区(模板块即当前处理的行)
-    * H         ：追加模板块到缓冲区
-    * g         ：获得内存缓冲区的内容替代当前行
-    * G         ：获得内存缓冲区的内容追加到当前行后
-<!-- entry end -->
 

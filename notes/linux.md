@@ -1,6 +1,23 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
+- [文件搜索](#文件搜索)
+- [文件I/O](#文件io)
+- [流处理命令](#流处理命令)
+  - [常用命令](#常用命令)
+  - [编辑三剑客](#编辑三剑客)
+    - [grep](#grep)
+    - [awk](#awk)
+    - [sed](#sed)
+- [文件与目录](#文件与目录)
+  - [文件信息](#文件信息)
+  - [目录文件](#目录文件)
+  - [符号链接](#符号链接)
+  - [硬链接](#硬链接)
+  - [权限与属主](#权限与属主)
+  - [文件日期](#文件日期)
+- [系统数据文件合信息](#系统数据文件合信息)
+- [日期与时间](#日期与时间)
 - [UEFI BIOS](#uefi-bios)
   - [规范](#规范)
   - [安全启动](#安全启动)
@@ -10,9 +27,10 @@
   - [XFS](#xfs)
   - [挂载](#挂载)
   - [归档包](#归档包)
-  - [文件权限](#文件权限)
 - [用户与登录](#用户与登录)
 - [系统资源](#系统资源)
+  - [CGroup](#cgroup)
+  - [进程管理](#进程管理)
 - [日志](#日志)
 - [systemd](#systemd)
   - [units配置](#units配置)
@@ -32,13 +50,607 @@
   - [网络配置](#网络配置)
   - [NetworkManager](#networkmanager)
   - [其它网络命令](#其它网络命令)
-- [基础命令](#基础命令)
-  - [读取文件信息](#读取文件信息)
-  - [文件的修改、创建与删除](#文件的修改创建与删除)
-  - [文件的搜索](#文件的搜索)
-  - [其它](#其它)
+- [其他命令](#其他命令)
 
 <!-- vim-markdown-toc -->
+# 文件搜索
+<!-- entry begin: whereis -->
+* whereis       ：搜索可执行，头文件和帮助信息的位置，使用系统内建数据库
+<!-- entry end -->
+
+<!-- entry begin: locate updatedb -->
+* locate
+    * -i        ：忽略大小写
+    * -r        ：正则表达式（默认通配符）
+    * -c        ：显示匹配的文件数量
+    * -S        ：显示数据库信息
+* updatedb
+    > 更新locate命令需要的数据库  
+    > 配置  ：/etc/updatedb.conf  
+    > 数据库：/var/lib/mlocate/mlocate.db  
+<!-- entry end -->
+
+<!-- entry begin: find -->
+* find *DIR* *OPTS...*
+    * 打印：
+        * -print
+    * 目录深度
+        * -depth
+    * 正则名字：
+        * -regex
+        * -iregex
+    * 通配符名字：
+        * -name
+        * -iname
+    * 用户：
+        * -uid
+        * -gid
+        * -user
+        * -group
+        * -nouser
+    * 权限：
+        * -writable
+        * -readable
+        * -executable
+        * -perm
+            > `-`表示权限为指定范围的非空子集  
+            > `/`表示权限为指定范围的非空交集  
+            > `无前缀`表示精准权限
+    * 大小：
+        * -size
+            > `+`表示大于  
+            > `-`表示小于  
+            > 单位用c/k/M/G
+    * 时间：
+        * -[a|m|c]time *n*  ：指定`n*24 h`之前的文件，`+/-`表示更早/更晚
+        * -[a|m|c]min  *n*  ：指定`n min`之前的文件
+        * -[a|m|c]newer *file*
+    * 文件类型：
+        * -type [f|d|l|b|c|p|s]
+    * 其他信息：
+        * -links            ：硬连接数
+        * -inum             ：inode号
+    * 复合逻辑关系          ：-a、-o、-not
+    * 对搜索到的文件执行CMD ：-exec  *CMD*  {} \;
+<!-- entry end -->
+
+# 文件I/O
+<!-- entry begin: sync -->
+* sync
+<!-- entry end -->
+
+<!-- entry begin: echo -->
+* echo
+    * -n        ：不自动加入换行符（zsh会将无换行结尾的输出的尾部标记`反显的%`）
+    * -e        ：启用转义语义（zsh自动开启）
+<!-- entry end -->
+
+<!-- entry begin: split -->
+* split *FILE* *Preffix*
+    > 注：preffix最后最好加dot，大小单位可指定，默认byte
+    * -b        ：按大小分割
+    * -l        ：按行数分割
+<!-- entry end -->
+
+<!-- entry begin: iconv  FILE -->
+* iconv  FILE
+    * -f        ：原字符集
+    * -t        ：目标字符集
+    * -o        ：输出文件
+    * --list    ：列出可选字符集
+<!-- entry end -->
+<!-- entry begin: read -->
+* read VARNAME
+    * -p    ：提示符
+    * -t    ：限时
+    * -n    ：读取字符数
+    * -s    ：关闭回显
+<!-- entry end -->
+
+<!-- entry begin: cat -->
+* cat：打印每行
+    * -A        ：打印特殊空白符
+    * -n        ：显示行号
+    * -b        ：显示行号但空行不算行号
+* tac：翻转首尾
+* rev：每行翻转
+<!-- entry end -->
+
+<!-- entry begin: head -->
+* head
+    * -v        ：显示文件名
+    * -n        ：指定显示多少行
+<!-- entry end -->
+
+<!-- entry begin: tail -->
+* tail
+    * -v        ：显示文件名
+    * -n        ：指定显示多少行
+    * -f        ：监听
+<!-- entry end -->
+
+<!-- entry begin: xxd -->
+* xxd：以十六进制读取文件数据
+    * -l        ：指定读取字节数
+<!-- entry end -->
+
+# 流处理命令
+## 常用命令
+<!-- entry begin: col -->
+* col -x ：将tab替换为等宽space，该命令只从stdin读取
+<!-- entry end -->
+
+<!-- entry begin: wc -->
+* wc
+    * -l：行数
+    * -w：单词数
+    * -m：字符数
+<!-- entry end -->
+
+<!-- entry begin: xargs -->
+* xargs CMD
+    > 原理：将管道中的字符串的空白符符替换为空格后（若空白符前面有`\`则不被替换），作为CMD的参数
+    * -n  ：一次给予多少个参数
+    * -p  ：每个单词都提醒用户
+    * -e  ：直到遇到此单词停止
+    * -0  ：保留空白符不被替换
+<!-- entry end -->
+
+<!-- entry begin: tee -->
+* tee FILE
+    * -a：追加而非截断
+<!-- entry end -->
+
+<!-- entry begin: sort -->
+* sort
+    * -f    ：忽略大小写
+    * -b    ：忽略行前空白
+    * -M    ：月份名称排序
+    * -n    ：数值排序
+    * -r    ：降序
+    * -u    ：删除相同行
+    * -t    ：指定分隔符
+    * -k n,m：指定比较第n-m域
+        > field定义：blank开始到non-blank尾结束，从行首到分割符算1
+<!-- entry end -->
+
+<!-- entry begin: uniq -->
+* uniq
+    * -i：忽略大小写
+    * -c：计数
+    * -f：指定从哪个域开始比较（默认从1开始）
+<!-- entry end -->
+
+<!-- entry begin: join paste -->
+* join  -1 F1 FILE1 -2 F2 FILE2
+    > F1、F2：指定两文件比较的域  
+    > FILE1与FILE2其中之一可以为`-`，代表此文件从管道读取
+    * -t：指定分隔符
+    * -i：忽略大小写
+
+* paste FILE1  FILE2
+    * -t：指定分隔符
+<!-- entry end -->
+
+<!-- entry begin: cut -->
+* cut
+    * -d    ：指定分隔符
+    * -f    ：指定截取的域，可使用逗号与减号
+    * -c n-m：指定取出第n-m个字符
+<!-- entry end -->
+
+## 编辑三剑客
+### grep
+<!-- entry begin: grep -->
+* grep
+    * -E：扩展正则表达式
+    * -A：显示之后几行
+    * -B：显示之前几行
+    * -C：显示之前和之后几行
+    * -i：忽略大小写
+    * -n：显示行号
+    * -c：计数
+    * -v：显示不匹配的
+    * -q：静默模式
+<!-- entry end -->
+
+### awk
+<!-- entry begin: awk -->
+* awk '模式{语句;} 模式{语句;}' FILE
+    * 语句语法类似C语言，额外有语句`for ( var in map )`；
+    * 使用变量时无需前置声明，初值为空，参与运算时置0；
+    * 参与运算时map下标自动建立，故检查下标是否存在用in；
+    * 关系运算符要两边都是数字才进行数值比较，否则以字典序比较字符串；
+
+* 选项
+    * -F    ：分隔符，支持[]正则
+    * -f    ：读取脚本文件
+    * -v var=val
+
+* 模式：
+    * BEGIN
+    * END
+    * /pattern/
+    * !/pattern/
+    * /pattern1/&&/pattern2/
+    * /pattern1/||/pattern2/
+    * 表达式
+
+* 变量：C风格变量
+    * 定义：
+        * var=val
+        * map[key]=val
+    * 内置变量
+        * ARGC
+        * ARGV
+        * RS        ：行分隔符(默认`<CR>`)
+        * FS        ：字段分隔符(默认`<Space>`)
+        * ORS       ：输出的行分隔符(默认`<CR>`)
+        * OFS       ：输出的字段分隔符(默认`,`)
+        * NR        ：总行数
+        * FNR       ：在当前文件中的行数
+        * NF        ：字段数
+        * OFMT      ：数字输出格式(默认%.6g)
+        * IGNORECASE：为true则忽略大小写
+        * `$0`        ：整行内容
+        * `$N`        ：第N个字段
+
+* 运算符
+    * `+` `-` `*` `/` `%` `^`
+    * `>` `>=` `<` `<=` `==` `!=`
+    * `~`           ：子串匹配
+    * `~!`          ：子串不匹配
+    * `空格`        ：字符连接
+    * `in`          ：确认数组键值
+    * `|`           ：管道连接符
+    * `"cmd" |`     ：管道连接，读取`cmd`输出
+    * `| "cmd"`     ：管道连接，输出到`cmd`
+
+* 关键字
+    * 输出
+        > 注意：`>`与`>>`可在以上两个关键字最后作重定向，若需要关系运算，应该用圆括号包围
+        * `print var1,var2"str"`        ：标准输出，逗号替换为OFS，末尾自动添加换行符
+        * `printf "$1:%s\n",$1`         ：标准输出，类似C中的printf()函数
+        * `print或printf语句 | "cmd"`   ：管道输出
+        * `print或printf语句 > "file"`  ：文件输出（截断）
+        * `print或printf语句 >> "file"` ：文件输出（追加）
+    * 输入
+        * `"cmd" | getline var`         ：管道输入，若无`var`则直接赋值给`$0`
+        * `getline var < "file"`        ：文件输入，若无`var`则直接赋值给`$0`
+    * 其他
+        * `continue`
+        * `break`
+        * `next`                            ：读取下一行并回到脚本开始处重新执行
+        * `delete`                          ：删除map中的元素
+
+* 函数
+    * srand(); rand()
+        > 前者帮助后者用时间作种，后者返回随机值
+    * length(string); length(map)
+        > 检查字符串与数组的长度
+    * sub(/pattern/, "string", var); gsub(...)
+        > 将var中匹配的pattern替换为string，后者全部替换
+    * index(var, "string")
+        > string在var中出现的位置(1开始)，无则返回0
+    * substr(var, pos, length)
+        > 截取子串，从pos开始的length个字符(1开始)，无length则到结尾
+    * tolower(s); toupper(s)
+<!-- entry end -->
+
+### sed
+<!-- entry begin: sed -->
+* sed '模式{语句;}; 模式{语句;}' FILE
+* sed -e '模式 语句块' -e '模式 语句块' FILE
+    * a; i; c; r; w;操作只能单独存在，不能在块中，故它们只能用`-e`选项
+
+* 选项
+    > 选项要分开
+    * -n：仅显示处理结果，只有a i c r p操作才输出
+    * -r：支持扩展正则表达式
+    * -i：修改原文件
+    * -f：指定脚本文件
+
+* 模式
+    * /pattern/
+    * !/pattern/
+    * /pattern/I
+    * /pattern/,m
+    * n,m
+
+* 操作
+    * s/pattern/replace/g
+        * replace中&代表整个匹配到的字符串
+        * 替换标记：无g全部，Ng第N个
+    * a或i      ：行后或行前添加字符串
+    * c         ：会把所有匹配行转换成一个字符串
+    * d         ：删除匹配行
+    * r/w file  ：读取file到行后，写入匹配行到file
+    * n         ：跳转到下一行，执行后续操作
+    * =         ：行前打印行号
+    * q         ：退出
+    * N         ：读取下一行至模板块，形成多行组，并将行号改为新加行的行号
+    * P/D操作   ：分别用于多行组，打印与删除第一行
+    * h         ：拷贝模板块到缓冲区(模板块即当前处理的行)
+    * H         ：追加模板块到缓冲区
+    * g         ：获得内存缓冲区的内容替代当前行
+    * G         ：获得内存缓冲区的内容追加到当前行后
+<!-- entry end -->
+
+# 文件与目录
+## 文件信息
+<!-- entry begin: stat -->
+* stat
+    * `默认`    ：显示文件详细信息
+    * -f        ：显示文件所处文件系统信息
+<!-- entry end -->
+
+<!-- entry begin: ls -->
+* ls
+    * -d        ：显示目录本身
+    * -i        ：显示inode
+    * -L        ：显示符号链接的目标
+    * -n        ：显示uid与gid
+    * -R        ：目录递归显示
+    * -s        ：显示文件占用block大小
+    * -S        ：按大小排序（降序）
+    * -t        ：按modify时间排序（降序）
+    * -Z        ：安全上下文
+<!-- entry end -->
+
+<!-- entry begin: du -->
+* du
+    * -sh       ：显示目标占用block大小
+<!-- entry end -->
+
+<!-- entry begin: file -->
+* file
+    * -i        ：文件的格式信息
+<!-- entry end -->
+
+## 目录文件
+<!-- entry begin: mkdir rmdir chdir pwd -->
+* mkdir
+    * -p        ：递归
+    * -m        ：设置权限
+
+* rmdir
+
+* chdir
+
+* pwd
+    * -P        ：显示真实路径而非软连接
+
+* chroot
+<!-- entry end -->
+
+## 符号链接
+<!-- entry begin: readlink ln -->
+* readlink
+* ln *SRC* *TAG*
+    * `默认`    ：硬连接
+    * -s        ：软连接
+    * -f        ：强制覆盖
+<!-- entry end -->
+
+## 硬链接
+<!-- entry begin: rm -->
+* rm
+    * -r        ：目录递归
+    * -v        ：详述
+    * -f        ：强制覆盖
+<!-- entry end -->
+
+<!-- entry begin: mv -->
+* mv *SRC*  *TAG*
+    * -v        ：详述
+    * -i        ：询问是否覆盖
+    * -u        ：只更新
+    * -f        ：强制覆盖
+    * -n        ：直接不覆盖
+<!-- entry end -->
+
+<!-- entry begin: cp -->
+* cp  *SRC*  *TAG*
+    * -a        ：尽可能复制所有信息
+    * -r        ：目录递归
+    * -v        ：详述
+    * -i        ：询问是否覆盖
+    * -u        ：只更新
+    * -f        ：强制覆盖
+    * -n        ：直接不覆盖
+<!-- entry end -->
+
+<!-- entry begin: mktemp -->
+* mktemp：创建并打印临时文件
+    * -d    ：创建临时目录而非普通文件
+<!-- entry end -->
+
+## 权限与属主
+<!-- entry begin: linux 权限信息 -->
+* 权限信息
+    > 只有owner与root能修改，使用stat命令可以查看详细信息  
+    > `umask`即默认权限掩码，设置后会掩盖默认权限，默认为022，从而目录默认权限为755，文件默认644
+    * Uid与Gid      ：指明文件所属的owner与group
+    * `r w x`       ：**读/写/执**权限，以八进制数字表示时从高位到低位依次代表是否具有**读/写/执**权限
+    * `sS sS tT`    ：**SUID/SGID/SBIT**特殊权限，以八进制表示时从高位到低位依次表示是否具有**SUID/SGID/SBIT**权限
+    * 7777          ：4位八进制数，第一个表示特殊权限，后三个分别表示owner/group/other的读/写/执权限
+
+* 对普通文件
+    * r/w表示可读/写其对应block
+    * x表示可以执行该文件形成进程
+    * SUID表示执行时环境变量EUID改为owner
+    * SGID表示执行时环境变量EGID改为group
+
+* 对目录
+    * r/w表示可读/写其对应block内存储的entry
+    * x表示能否对目录下文件进行访问，即使没有rw也可以“摸黑访问”
+    * SGID表示所有创建在此目录的普通文件的gid默认为目录的gid
+    * SBIT表示该目录下的文件只有其owner与目录owner能删除或更名
+<!-- entry end -->
+
+<!-- entry begin: setfacl getfacl -->
+* ACL权限
+    * setfacl
+        > 设置ACL权限，优先级在owner和group之后
+    * getfacl
+<!-- entry end -->
+
+<!-- entry begin: chattr lsattr -->
+* 额外属性
+    * chattr
+        > 设置文件额外属性
+        * -R：    递归目录
+        * 以下选项的前缀，-设置，+取消
+            * a   ：    只能追加
+            * i   ：    无法变更
+            * A   ：    不更新atime
+            * S   ：    同步存储文件
+            * d   ：    不被dump
+    * lsattr
+<!-- entry end -->
+
+<!-- entry begin: su -->
+* su
+    * `-`         ：转为root
+    * `- user`    ：转为user
+    * `-c`        ：用对应目标用户执行一条命令
+<!-- entry end -->
+
+<!-- entry begin: sudo -->
+* sudo CMD
+    * -u        ：使用目标用户权限(仅root可用)
+    * -l        ：列出本用户sudo信息
+    * -b        ：后台执行
+<!-- entry end -->
+
+<!-- entry begin: visudo -->
+* visudo
+    > /etc/sudoers与/etc/sudoers.d  
+    > user host=(root) cmd，!cmd  
+    > %grp host=(%root) NOPASSWD:ALL
+<!-- entry end -->
+
+<!-- entry begin: umask chmod -->
+* test
+    > [见](bash.md)
+* umask
+* chmod [+- ] PERM PATH
+    * -R        ：递归目录
+* chown OWNER:GROUP PATH
+    * -R        ：递归目录
+<!-- entry end -->
+
+## 文件日期
+<!-- entry begin: touch -->
+* touch
+    * `默认`    ：修改a/m/ctime
+    * -a        ：只改atime
+    * -m        ：只改mtime
+    * -d        ：指定touch的时间，date模式
+<!-- entry end -->
+
+# 系统数据文件合信息
+<!-- entry begin: linux 登录文件 -->
+* 登录文件
+    > 由PAM模块控制登录验证
+    * /etc/nologin   ：若存在则只允许root登陆
+    * /etc/issue     ：本地控制台登陆提示
+    * /etc/motd      ：远程登录提示
+    * /etc/login.defs：用户登陆设置
+<!-- entry end -->
+
+<!-- entry begin: 用户文件 -->
+* 用户文件
+    * /etc/passwd
+        * `用户名:密码:UID:GID:描述信息:主目录:默认Shell`
+    * /etc/shadow
+        * `用户名:加密密码:最后一次修改时间:最小修改时间间隔:密码有效期:密码需要变更前的警告天数:密码过期后的宽限时间:账号失效时间:保留`
+        > 在密码前加上 "!"、"*" 或 "x" 使密码暂时失效
+    * /etc/group
+        * `组名:密码:GID:组附加用户列表`
+    * /etc/gshadow
+        * `组名:加密密码:组管理员:组附加用户列表`
+    * /etc/skel/：建立用户主目录时拷贝此目录
+<!-- entry end -->
+
+<!-- entry begin: last lastlog lastb w journalctl -->
+* 系统日志
+    * w         ：系统现在的登录情况
+        > /var/run/utmp
+    * last      ：系统的启动与用户登陆日志
+        > /var/log/wtmp
+    * lastlog   ：每个用户最后一次登陆时间
+        > /var/log/lastlog
+    * lastb     ：上次错误登录记录
+        > /var/log/btmp
+    * journalctl：系统管理日志
+        > /var/log/journal/*
+<!-- entry end -->
+
+<!-- entry begin: 主机配置 -->
+* 主机配置
+    * /etc/shells           ：可用shell
+    * /etc/services         ：服务名与端口对照
+    * /etc/hosts            ：已知主机名
+    * /etc/hostname         ：主机名
+    * /etc/resolv.conf      ：DNS服务器
+    * /etc/locale.conf      ：语系与字符集
+    * /etc/localtime        ：本地时区/usr/share/zoneinfo/
+    * /etc/adjtime          ：系统时间校准类型
+<!-- entry end -->
+
+<!-- entry begin: uname -->
+* uname -a
+<!-- entry end -->
+
+<!-- entry begin: 字体 fontconfig mkfontdir mkfontscale fc-cache fc-list -->
+* 字体服务
+    * fc-list       ：字体缓存查看
+    > 以下三条命令为字体安装三部曲
+    * mkfontdir
+    * mkfontscale
+    * fc-cache -f
+<!-- entry end -->
+
+<!-- entry begin: hostnamectl -->
+* hostnamectl
+    * set-hostname
+<!-- entry end -->
+
+<!-- entry begin: locale  localectl -->
+* locale [-a]
+* localectl
+<!-- entry end -->
+
+<!-- entry begin: timedatectl -->
+* timedatectl
+    * set-timezone
+    * set-local-rtc
+    * set-ntp     ：chronyd服务
+<!-- entry end -->
+
+# 日期与时间
+<!-- entry begin: date -->
+* date
+    * +timeformat
+        > * `%Y %y`         ：年份、年份后两位
+        > * `%m %b %B`      ：月份、月份单词缩写、月份单词
+        > * `%d %j %s`      ：一月中第几天、一年中第几天、从epoch开始的秒数
+        > * `%H %M %S`      ：时（24小时值）、分、秒
+        > * `%a %A`         ：礼拜单词缩写、礼拜单词
+    * -d *timeformat*       ：将参数转换为时间
+    * -d @`N`               ：epoch之后N秒
+    * -d '19700101  Ndays'  ：epoch之后N天
+<!-- entry end -->
+
+<!-- entry begin: cal -->
+* cal [MONTH] [YEAR]
+<!-- entry end -->
+
+<!-- entry begin: time -->
+* time
+<!-- entry end -->
+
 # UEFI BIOS
 ## 规范
 * 主要规范
@@ -330,106 +942,7 @@ UEFI 规范规定固件可以包含一系列签名，并拒绝运行未签名或
     > 解除loop设备
 <!-- entry end -->
 
-## 文件权限
-<!-- entry begin: linux 权限信息 -->
-* 权限信息
-    > 只有owner与root能修改，使用stat命令可以查看详细信息  
-    > `umask`即默认权限掩码，设置后会掩盖默认权限，默认为022，从而目录默认权限为755，文件默认644
-    * Uid与Gid      ：指明文件所属的owner与group
-    * `r w x`       ：**读/写/执**权限，以八进制数字表示时从高位到低位依次代表是否具有**读/写/执**权限
-    * `sS sS tT`    ：**SUID/SGID/SBIT**特殊权限，以八进制表示时从高位到低位依次表示是否具有**SUID/SGID/SBIT**权限
-    * 7777          ：4位八进制数，第一个表示特殊权限，后三个分别表示owner/group/other的读/写/执权限
-
-* 对普通文件
-    * r/w表示可读/写其对应block
-    * x表示可以执行该文件形成进程
-    * SUID表示执行时环境变量EUID改为owner
-    * SGID表示执行时环境变量EGID改为group
-
-* 对目录
-    * r/w表示可读/写其对应block内存储的entry
-    * x表示能否对目录下文件进行访问，即使没有rw也可以“摸黑访问”
-    * SGID表示所有创建在此目录的普通文件的gid默认为目录的gid
-    * SBIT表示该目录下的文件只有其owner与目录owner能删除或更名
-<!-- entry end -->
-
-<!-- entry begin: setfacl getfacl -->
-* ACL权限
-    * setfacl
-        > 设置ACL权限，优先级在owner和group之后
-    * getfacl
-<!-- entry end -->
-
-<!-- entry begin: chattr lsattr -->
-* 额外属性
-    * chattr
-        > 设置文件额外属性
-        * -R：    递归目录
-        * 以下选项的前缀，-设置，+取消
-            * a   ：    只能追加
-            * i   ：    无法变更
-            * A   ：    不更新atime
-            * S   ：    同步存储文件
-            * d   ：    不被dump
-    * lsattr
-<!-- entry end -->
-
-<!-- entry begin: su -->
-* su
-    * `-`         ：转为root
-    * `- user`    ：转为user
-    * `-c`        ：用对应目标用户执行一条命令
-<!-- entry end -->
-
-<!-- entry begin: sudo -->
-* sudo CMD
-    * -u        ：使用目标用户权限(仅root可用)
-    * -l        ：列出本用户sudo信息
-    * -b        ：后台执行
-<!-- entry end -->
-
-<!-- entry begin: visudo -->
-* visudo
-    > /etc/sudoers与/etc/sudoers.d  
-    > user host=(root) cmd，!cmd  
-    > %grp host=(%root) NOPASSWD:ALL
-<!-- entry end -->
-
 # 用户与登录
-<!-- entry begin: linux 登录文件 -->
-* 登录文件
-    > 由PAM模块控制登录验证
-    * /etc/nologin   ：若存在则只允许root登陆
-    * /etc/issue     ：本地控制台登陆提示
-    * /etc/motd      ：远程登录提示
-    * /etc/login.defs：用户登陆设置
-<!-- entry end -->
-
-<!-- entry begin: 用户文件 -->
-* 用户文件
-    * /etc/passwd
-        * `用户名:密码:UID:GID:描述信息:主目录:默认Shell`
-    * /etc/shadow
-        * `用户名:加密密码:最后一次修改时间:最小修改时间间隔:密码有效期:密码需要变更前的警告天数:密码过期后的宽限时间:账号失效时间:保留`
-        > 在密码前加上 "!"、"*" 或 "x" 使密码暂时失效
-    * /etc/group
-        * `组名:密码:GID:组附加用户列表`
-    * /etc/gshadow
-        * `组名:加密密码:组管理员:组附加用户列表`
-    * /etc/skel/：建立用户主目录时拷贝此目录
-<!-- entry end -->
-
-<!-- entry begin: last lastlog lastb w -->
-* last      ：系统的启动与用户登陆日志
-    > /var/log/wtmp
-* lastlog   ：每个用户最后一次登陆时间
-    > /var/log/lastlog
-* lastb     ：上次错误登录记录
-    > /var/log/btmp
-* w         ：系统现在的登录情况
-    > /var/run/ulmp
-<!-- entry end -->
-
 <!-- entry begin: id groups -->
 * id    ：该用户信息
 * groups：该用户参与的group
@@ -515,6 +1028,23 @@ UEFI 规范规定固件可以包含一系列签名，并拒绝运行未签名或
 <!-- entry end -->
 
 # 系统资源
+## CGroup
+<!-- entry begin: cgroup -->
+* 基础组件：
+    * hierarchy     ：/sys/fs/cgroup/*
+    * cgroup        ：/sys/fs/cgroup/*/**/*
+* 接口文件：
+    * cgroup.clone_children ：是否继承父cgroup（默认0）
+    * cgroup.procs          ：加入该cgroup的GID
+    * task                  ：加入该cgroup的PID
+
+系统创建hierarchy后，所有进程都会加入该hierarchy的根cgroup；  
+同一进程可同时加入多个不同hierarchy中的cgroup；  
+新建的cgroup可以继承父cgroup的配置；
+<!-- entry end -->
+
+
+## 进程管理
 <!-- entry begin: 进程标识 -->
 * 进程标识
     * STATE
@@ -1004,61 +1534,6 @@ UEFI 规范规定固件可以包含一系列签名，并拒绝运行未签名或
 <!-- entry end -->
 
 # 主机配置
-<!-- entry begin: 主机配置 -->
-* 主机配置
-    * /etc/shells           ：可用shell
-    * /etc/services         ：服务名与端口对照
-    * /etc/hostname         ：主机名
-    * /etc/hosts            ：已知主机名
-    * /etc/resolv.conf      ：DNS服务器
-    * /etc/locale.conf      ：语系与字符集
-    * /etc/localtime        ：本地时区/usr/share/zoneinfo/
-    * /etc/adjtime          ：系统时间校准类型
-<!-- entry end -->
-
-<!-- entry begin: 字体 fontconfig mkfontdir mkfontscale fc-cache fc-list -->
-* fontconfig
-    * fc-list       ：字体缓存查看
-    > 以下三条命令为字体安装三部曲
-    * mkfontdir
-    * mkfontscale
-    * fc-cache -f
-<!-- entry end -->
-
-<!-- entry begin: hostnamectl -->
-* hostnamectl
-    * set-hostname
-<!-- entry end -->
-
-<!-- entry begin: locale  localectl -->
-* locale [-a]
-* localectl
-<!-- entry end -->
-
-<!-- entry begin: timedatectl -->
-* timedatectl
-    * set-timezone
-    * set-local-rtc
-    * set-ntp     ：chronyd服务
-<!-- entry end -->
-
-<!-- entry begin: date -->
-* date
-    * +timeformat
-        > * `%Y %y`         ：年份、年份后两位
-        > * `%m %b %B`      ：月份、月份单词缩写、月份单词
-        > * `%d %j %s`      ：一月中第几天、一年中第几天、从epoch开始的秒数
-        > * `%H %M %S`      ：时（24小时值）、分、秒
-        > * `%a %A`         ：礼拜单词缩写、礼拜单词
-    * -d *timeformat*       ：将参数转换为时间
-    * -d @`N`               ：epoch之后N秒
-    * -d '19700101  Ndays'  ：epoch之后N天
-<!-- entry end -->
-
-<!-- entry begin: cal -->
-* cal [MONTH] [YEAR]
-<!-- entry end -->
-
 # 计算机网络
 ## 网络配置
 <!-- entry begin: ip -->
@@ -1183,206 +1658,13 @@ UEFI 规范规定固件可以包含一系列签名，并拒绝运行未签名或
         ```
 <!-- entry end -->
 
-# 基础命令
-## 读取文件信息
-<!-- entry begin: stat -->
-* stat
-    * `默认`    ：显示文件详细信息
-    * -f        ：显示文件所处文件系统信息
-<!-- entry end -->
-
-<!-- entry begin: ls -->
-* ls
-    * -d        ：显示目录本身
-    * -i        ：显示inode
-    * -L        ：显示符号链接的目标
-    * -n        ：显示uid与gid
-    * -R        ：目录递归显示
-    * -s        ：显示文件占用block大小
-    * -S        ：按大小排序（降序）
-    * -t        ：按modify时间排序（降序）
-    * -Z        ：安全上下文
-<!-- entry end -->
-
-<!-- entry begin: du -->
-* du
-    * -sh       ：显示目标占用block大小
-<!-- entry end -->
-
-<!-- entry begin: file -->
-* file
-    * -i        ：文件的格式信息
-<!-- entry end -->
-
-<!-- entry begin: cat -->
-* cat
-    * -A        ：打印特殊空白符
-    * -n        ：显示行号
-    * -b        ：显示行号但空行不算行号
-* tac：翻转首尾
-* rev：每行翻转
-<!-- entry end -->
-
-<!-- entry begin: head -->
-* head
-    * -v        ：显示文件名
-    * -n        ：指定显示多少行
-<!-- entry end -->
-
-<!-- entry begin: tail -->
-* tail
-    * -v        ：显示文件名
-    * -n        ：指定显示多少行
-    * -f        ：监听
-<!-- entry end -->
-
-<!-- entry begin: xxd -->
-* xxd
-    > 以十六进制读取文件数据
-<!-- entry end -->
-
-## 文件的修改、创建与删除
-<!-- entry begin: touch -->
-* touch
-    * `默认`    ：修改a/m/ctime
-    * -a        ：只改atime
-    * -m        ：只改mtime
-    * -d        ：指定touch的时间，date模式
-<!-- entry end -->
-
-<!-- entry begin: ln -->
-* ln *SRC* *TAG*
-    * `默认`    ：硬连接
-    * -s        ：软连接
-    * -f        ：强制覆盖
-<!-- entry end -->
-
-<!-- entry begin: cp -->
-* cp  *SRC*  *TAG*
-    * -a        ：尽可能复制所有信息
-    * -r        ：目录递归
-    * -v        ：详述
-    * -i        ：询问是否覆盖
-    * -u        ：只更新
-    * -f        ：强制覆盖
-    * -n        ：直接不覆盖
-<!-- entry end -->
-
-<!-- entry begin: mv -->
-* mv *SRC*  *TAG*
-    * -v        ：详述
-    * -i        ：询问是否覆盖
-    * -u        ：只更新
-    * -f        ：强制覆盖
-    * -n        ：直接不覆盖
-<!-- entry end -->
-
-<!-- entry begin: rm -->
-* rm
-    * -r        ：目录递归
-    * -v        ：详述
-    * -f        ：强制覆盖
-<!-- entry end -->
-
-<!-- entry begin: mkdir -->
-* mkdir
-    * -p        ：递归
-    * -m        ：设置权限
-<!-- entry end -->
-
-## 文件的搜索
-<!-- entry begin: whereis -->
-* whereis       ：搜索可执行，头文件和帮助信息的位置，使用系统内建数据库
-<!-- entry end -->
-
-<!-- entry begin: locate updatedb -->
-* locate
-    * -i        ：忽略大小写
-    * -r        ：正则表达式（默认通配符）
-    * -c        ：显示匹配的文件数量
-    * -S        ：显示数据库信息
-* updatedb
-    > 更新locate命令需要的数据库  
-    > 配置  ：/etc/updatedb.conf  
-    > 数据库：/var/lib/mlocate/mlocate.db  
-<!-- entry end -->
-
-<!-- entry begin: find -->
-* find *DIR* *OPTS...*
-    * 打印：
-        * -print
-    * 目录深度
-        * -depth
-    * 正则名字：
-        * -regex
-        * -iregex
-    * 通配符名字：
-        * -name
-        * -iname
-    * 用户：
-        * -uid
-        * -gid
-        * -user
-        * -group
-        * -nouser
-    * 权限：
-        * -writable
-        * -readable
-        * -executable
-        * -perm
-            > `-`表示权限为指定范围的非空子集  
-            > `/`表示权限为指定范围的非空交集  
-            > `无前缀`表示精准权限
-    * 大小：
-        * -size
-            > `+`表示大于  
-            > `-`表示小于  
-            > 单位用c/k/M/G
-    * 时间：
-        * -[a|m|c]time *n*  ：指定`n*24 h`之前的文件，`+/-`表示更早/更晚
-        * -[a|m|c]min  *n*  ：指定`n min`之前的文件
-        * -[a|m|c]newer *file*
-    * 文件类型：
-        * -type [f|d|l|b|c|p|s]
-    * 其他信息：
-        * -links            ：硬连接数
-        * -inum             ：inode号
-    * 复合逻辑关系          ：-a、-o、-not
-    * 对搜索到的文件执行CMD ：-exec  *CMD*  {} \;
-<!-- entry end -->
-
-## 其它
-<!-- entry begin: echo -->
-* echo
-    * -n        ：不自动加入换行符（zsh会将无换行结尾的输出的尾部标记`反显的%`）
-    * -e        ：启用转义语义（zsh自动开启）
-<!-- entry end -->
-
-<!-- entry begin: pwd -->
-* pwd
-    * -P        ：显示真实路径而非软连接
-<!-- entry end -->
-
+# 其他命令
 <!-- entry begin: bc -->
 * bc
     * -l        ：可以使用数学库函数 s(sin x)，c(cos x)，a(arctan x)，l(ln x)，e(e^x)
     * 特殊变量  ：scale，last，ibase，obase，支持^运算符求幂
 <!-- entry end -->
 
-<!-- entry begin: split *FILE* *Preffix* -->
-* split *FILE* *Preffix*
-    > 注：preffix最后最好加dot，大小单位可指定，默认byte
-    * -b        ：按大小分割
-    * -l        ：按行数分割
-<!-- entry end -->
-
-<!-- entry begin: iconv  FILE -->
-* iconv  FILE
-    * -f        ：原字符集
-    * -t        ：目标字符集
-    * -o        ：输出文件
-    * --list    ：列出可选字符集
-<!-- entry end -->
 
 <!-- entry begin: diff patch -->
 ```sh

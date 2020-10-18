@@ -58,6 +58,7 @@
 * ldd -V
 * strace
 * pmap
+* size
 * gprof
 <!-- entry end -->
 
