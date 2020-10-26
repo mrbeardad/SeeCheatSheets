@@ -24,6 +24,13 @@
     - [权限](#权限)
   - [文件系统](#文件系统)
 - [第八章、进程控制](#第八章进程控制)
+- [第九章、进程关系](#第九章进程关系)
+  - [作业控制](#作业控制)
+  - [终端 TTY](#终端-tty)
+  - [会话 SID](#会话-sid)
+  - [进程组 PGID](#进程组-pgid)
+- [信号](#信号-1)
+- [线程](#线程)
 - [附](#附)
   - [错误处理](#错误处理)
   - [标准与限制](#标准与限制)
@@ -47,8 +54,10 @@
     - [services](#services)
     - [uname](#uname)
     - [时间](#时间)
-  - [进程环境](#进程环境)
+  - [进程环境与进程关系](#进程环境与进程关系)
   - [进程控制](#进程控制)
+  - [信号](#信号-2)
+  - [线程](#线程-1)
 
 <!-- vim-markdown-toc -->
 # 第一章、UNIX基础知识
@@ -85,9 +94,9 @@
 &emsp; **程序与进程** ：进程是正在运行中的程序实例。
 
 &emsp; **进程控制块** ：存储有进程的相关信息。
-与环境变量不同在于，后者可由进程随意更改，故内核只看前者。
+与环境变量不同在于，后者可由进程随意更改，故内核只查看前者。
 
-&emsp; **进程控制** ：主要的函数调用有`fork, exec, wait`
+&emsp; **进程控制** ：主要的函数调用有`fork, exec, wait、sleep、pause、exit`
 
 &emsp; **线程** ：一个进程内的线程共享进程的控制块信息与虚拟内存
 
@@ -150,7 +159,7 @@ UNIX系统实现了许多常量对系统的行为进行可移植性的标准化�
         > 注意可能造成空洞，空洞可能不会占用实际磁盘块
     * v节点表项指针
 * v节点表项
-    > 与文件缓存缓冲关联，以执行原子操作
+    > 与文件缓存缓冲区块关联，以执行原子操作
     * 文件系统相关i节点
     * 文件系统无关i节点
 
@@ -165,6 +174,7 @@ UNIX系统实现了许多常量对系统的行为进行可移植性的标准化�
 * socket
 * pipe,FIFO
 * 面向记录设备
+* 信号中断
 
 # 第四章、文件与目录
 ## 文件信息
@@ -222,43 +232,142 @@ UNIX系统实现了许多常量对系统的行为进行可移植性的标准化�
 # 第八章、进程控制
 进程的信息存储于进程控制块，环境变量可由用户更改而可能并非真实
 
-fork子进程继承信息：
-* UID, EUID, GID, EGID, 附属GID
-* SUID, SGID
-* PGID, SID, TTY
-* PWD, ROOTDIR
-* UMASK
+| 进程信息      | fork子进程继承信息 | exec保留信息                                   |
+|---------------|:------------------:|------------------------------------------------|
+| UID, GID      |          1         | 1                                              |
+| EUID, EGID    |          1         | 0 (依赖执行文件SUID与SGID)                     |
+| SUID, SGID    |          1         | 0 (依赖EUID与EGID)                             |
+| 附属GID       |          1         | 1                                              |
+| PID           |          0         | 1                                              |
+| PPID          |          0         | 1                                              |
+| PGID          |          1         | 1                                              |
+| SID           |          1         | 1                                              |
+| PWD           |          1         | 1                                              |
+| ROOTDIR       |          1         | 1                                              |
+| UMASK         |          1         | 1                                              |
+| FD            |          1         | 0 (依赖文件描述符FD_CLOEXEC)                   |
+| ENV           |          1         | 0 (依赖exec参数)                               |
+| VMEM          |          1         | 0                                              |
+| LIMITS        |          1         | 1                                              |
+| NICE          |          1         | 1                                              |
+| SIGNAL_HANDLE |          1         | 0 (设置了处理函数的信号恢复默认，其余设置不变) |
+| SIGNAL_MASK   |          1         | 1                                              |
+| SIGNAL_SET    |          0         | 1                                              |
+| alarm         |          0         | 1                                              |
+| times         |          0         | 1                                              |
+| 文件锁        |          0         | 1                                              |
+
+# 第九章、进程关系
+## 作业控制
+&emsp;在交互shell中，执行命令的进程会拥有自己的、独立的、不同与shell的PGID，
+而用管道连接的多个进程拥有相同的PGID。而每个进程组便是一个“作业”。  
+&emsp;作业分为前台与后台，前台进程组号(TPGID)由TTY保存，其余均为后台进程组。
+作业控制大都由终端驱动程序发送的信号构成。
+
+## 终端 TTY
+一个终端通常与一个进程会话相关联，并能辨别其中的前台进程组。
+
+终端的作用：帮助进程与用户通过键盘、屏幕、网络进行交互
+
+&emsp;终端驱动程序接收来自键盘的字符流（由键盘驱动程序负责将键盘扫描码转换为字符流）后，
+送入某个适当的tty的读缓冲区供用户进程读取。  
+&emsp;与此同时，将解析的ASCII编码转换后（方便用户观看）送给终端渲染程序 —— 如果终端设置了回显的话；
+除此之外，还会将适当tty的写缓冲区（由用户进程写入）中的字符流送给终端渲染程序。  
+&emsp;而终端渲染程序则根据ANSI规范，将字符流渲染为图形画面，最终呈现在屏幕上。
+&emsp;简言之，终端驱动程序接收字符输入流，并发送字符输出流（回显、打印）。
+同时为用户进程提供终端I/O缓冲区与作业控制（信号）。
+
+终端驱动程序可以向打开它的进程发送信号来交流信息：
+* 键盘输入`^C`，向前台进程组发送`SIGINT`
+* 键盘输入`^Z`，向前台进程组发送`SIGTSTP`
+* 键盘输入`^\`，向前台进程组发送`SIGQUIT`
+* 检测到后台作业试图读取终端，向该作业发送`SIGTTIN`
+* 检测到后台作业试图写入终端，向该作业发送`SIGTTOU`
+* 检测到窗口调整，向前台进程组发送`SIGWINCH`
+* 检测到连接挂断，向会话首进程发送`SIGHUP`
+* 额外还有非信号：
+    * 键盘输入`^M`时，冲刷缓冲区块
+    * 键盘输入`^D`时，触发`EOF`
+    * 键盘输入`^S`时，暂停打印与回显
+    * 键盘输入`^Q`时，继续打印与回显
+
+## 会话 SID
+会话是进程组的集合，每个会话有一个会话首进程（调用setsid(3)），一个会话可以与一个终端进行关联。
+
+新建会话的作用：用来切断与终端的联系，或新建与终端的联系
+
+&emsp;那些不与终端联系，不属于用户会话的进程，即被称为Daemon（守护进程）。
+通过fork后退出父进程然后子进程调用setsid即可形成。
+若不像与用户会话脱离则不用退出父进程。
+但是注意，退出了父进程但又不调用setsid，则可能形成孤儿进程组。
+
+&emsp;用户登录时，由init程序启动getty程序来连接终端。
+然后getty调用exec执行login提供用户登录界面，在执行login前会调用setsid建立会话。
+login调用PAM来验证用户身份并授权，再为用户会话准备基础的、安全的环境。
+然后再调用exec来执行shell（其argv[0]为"-sh"表示其为登录shell），shell加载配置以初始化环境。
+
+## 进程组 PGID
+进程组是进程的集合，每个进程组有一个组长进程（调用stdpgid(3)）
+
+新建进程组的作用：脱离原来的进程组，避免信号连带影响对方。  
+同一进程组的作用：可以使用信号来管理整个进程组
+
+同一进程组：
+* fork出的子进程与父进程同组
+* shell中使用管道连接的多个进程也同属一个进程组（因为不会发生终端竞争）
+* 非交互模式执行shell脚本时，shell与命令进程同属一个进程组
+
+孤儿进程：某进程的父进程终止后，该进程成为孤儿进程，由init进程收养，防止形成僵尸进程。  
+
+孤儿进程组：某进程组中的所有进程的父进程，没有一个是同会话中其他进程组的进程，
+表示该进程组与同会话中的其他进程组缺乏联系了。
+当孤儿进程组中有停止的进程时，内核向孤儿进程组发送信号`SIGHUP`与`SIGCONT`
+
+# 信号
+信号相关进程信息：
+* SIGNAL_SET
+    > 权限：只有发射UID或EUID匹配的进程（SIGCONT可发射给同一会话的所有进程）
 * SIGNAL_MASK
-* FD
-* ENV
-* VMEM
-* LIMITS
+    > 线程独立
+* SIGNAL_HANDLE
+    > 多线程中信号处理会占用一个线程的逻辑流
 
-fork子进程不同与父进程信息：
-* fork()返回值
-* PID, PPID
-* tms_utime, tms_stime, tms_cutime, tms_ustime都置零
-* 清除文件锁
-* 清除未处理闹钟
-* 清除未处理信号
+对于SIGCONT：  
+处理停止信号（SIGTSTP、SIGSTOP、SIGTTIN、SIGTTOU）时，丢弃未决决的SIGCONT。
+反之亦然。
 
-exec新进程继承旧进程信息：
-* UID, GID, 附属GID（EUID与EGID受程序文件的SUID与SGID影响）
-* （SUID与SGID从EUID与EGID复制，受上述因素间接影响）
-* PGID, SID, TTY
-* PWD, ROOTDIR
-* UMASK
-* SIGNAL_MASK
-* （FD受FD_CLOEXEC标识影响）
-* （ENV受exec调用实参影响）
-* （VMEM由exec函数清除并加载）
-* LIMITS
-* PID, PPID
-* tms_utime, tms_stime, tms_cutime, tms_ustime
-* 文件锁
-* 闹钟剩余时间
-* 未处理信号
+安全处理信号：
+* 只调用异步安全函数
+* 保存和恢复errno
+* 阻塞所有信号
+* `volatile sig_atomic_t`
+* 多次处理不排队的信号
 
+# 线程
+同步原语：
+* 互斥量：读取-测试-上锁/阻塞
+* 条件量：解锁-阻塞
+
+线程独立数据主要有：
+* 栈
+* errno变量
+* 调度优先级
+* 信号屏蔽字
+
+除此之外，绝大多数阻塞函数只针对调用线程阻塞
+
+进程终止（所有线程终止）：
+* main函数 **return**
+    > 调用析构函数
+* 调用exit
+    > 不调用析构函数
+* 终止信号默认处理
+    > 不调用析构函数
+
+单个线程终止：
+* return
+* pthread_exit（由主线程调用时会阻塞直到最后一个线程终止）
+* pthread_cancle
 
 # 附
 ## 错误处理
@@ -726,16 +835,9 @@ clock_t times(struct tms* buf);                                 // 返回值为w
 ```
 <!-- entry end -->
 
-## 进程环境
-<!-- entry begin: exit atexit getenv setenv -->
+## 进程环境与进程关系
+<!-- entry begin: getenv setenv getpid -->
 ```c
-#include <unistd.h>
-void    _exit(int status);
-
-#include <stdlib.h>
-void    exit(int status);
-int     atexit(void (*func)(void));                                 // 返回0，若出错返回非0
-
 #include <unistd.h>
 char**  environ;
 char*   getenv(const char* name);                                   // 返回value字符串，若出错返回NULL
@@ -744,22 +846,28 @@ int     unsetenv(const char* name);                                 // 返回0
 int     clearenv(void);                                             // 返回0
 
 #include <unistd.h>
-pid_t   getpid(void);           // 返回PID
-pid_t   getppid(void);          // 返回PPID
-pid_t   getpgid(pid_t pid);     // 返回PGID，pid==0表示获取调用进程的PGID
-pid_t   __gettpgid(pid_t pid);  // 返回TPGID，pid==0表示获取调用进程的TPGID
-pid_t   getsid(pid_t pid);      // 返回SID，pid==0表示获取调用进程的SID
+pid_t   getpid(void);                   // 返回PID
+pid_t   getppid(void);                  // 返回PPID
+pid_t   getpgid(pid_t pid);             // 返回PGID。pid==0表示获取调用进程的PGID
+pid_t   getsid(pid_t pid);              // 返回SID（等价PID,PGID）。pid==0表示获取调用进程的SID
+pid_t   tcgetpgrp(int fd);              // 返回TPGID
 
-char*   getlogin(void);         // 返回登录名
-uid_t   getuid(void);           // 返回UID
-uid_t   geteuid(void);          // 返回EUID
-gid_t   getgid(void);           // 返回GID
-gid_t   getegid(void);          // 返回EGID
+int     setpgid(pid_t pid, pid_t pgid); // 返回0。pid==0表示设置调用进程，pgid==0表示设置PGID为PID。只能设置调用进程及其子进程。
+int     setsid(void);                   // 返回SID。调用进程不能是进程组组长
+int     tcsetpgrp(int fd, pid_t pgid);  // 返回0。pgid必须属于同会话。若由后台进程组调用且其未忽略或阻塞SIGTTOU，则会发送SIGTTOU给该后台进程组
+#include <termios.h>
+pid_t   tcgetsid(int fd);               // 返回SID
 
-// 超级权限：同时设置euid,uid,suid
-// 普通用户：只设置uid为euid,uid,suid之一
-int     setuid(uid_t uid);
-int     setgid(gid_t gid);
+#include <unistd.h>
+char*   getlogin(void);                 // 返回登录名
+uid_t   getuid(void);                   // 返回UID
+uid_t   geteuid(void);                  // 返回EUID
+gid_t   getgid(void);                   // 返回GID
+gid_t   getegid(void);                  // 返回EGID
+
+
+int     setuid(uid_t uid);              // 超级权限：同时设置euid,uid,suid
+int     setgid(gid_t gid);              // 普通用户：只设置uid为euid,uid,suid之一
 int     seteuid(uid_t uid);
 int     setegid(gid_t gid);
 ```
@@ -781,7 +889,7 @@ int     fexecve(int fd, char* const argv[], char*const envp[]);
 
 #include <sys/wait.h>
 pid_t   wait(int* status);                                              // 返回子进程PID
-pid_t   waitpid(pid_t pid, int* status, int options);                   // 返回子进程PID，出错返回0，其他情况返回对应options
+pid_t   waitpid(pid_t pid, int* status, int options);                   // 返回进程PID，出错返回0，其他情况返回对应options
 int     waitid(idtype_t idtype, id_t id, siginfo* infop, int options);
 /*
  ****** pid ******
@@ -814,13 +922,16 @@ int     waitid(idtype_t idtype, id_t id, siginfo* infop, int options);
  * WNOWAIT
 */
 
+#include <unistd.h>
+void    _exit(int status);
 #include <stdlib.h>
-int     system(const char* cmdstring);              // 返回shell命令行返回值，同步调用
+void    exit(int status);
+int     atexit(void (*func)(void));                 // 返回0，若出错返回非0
 
 #include <unistd.h>
-int     nice(int incr);
+int     nice(int incr);                             // 返回新友好值，incr范围0~(2*NZERO-1)，自动调节incr到范围内的值
 #include <sys/resource.h>
-int     getpriority(int which, id_t who);               // 若作用于多个进程，则返回优先级最高到（nice最小的）
+int     getpriority(int which, id_t who);           // 返回新友好值，范围-NZERO~(NZERO-1)，若作用于多个进程，则返回优先级最高到（nice最小的）
 int     setpriority(int which, id_t who, int value);
 
 /*
@@ -836,12 +947,98 @@ int     setpriority(int which, id_t who, int value);
  * UID
 */
 
-int getrusage(int who, struct rusage* r_usage);
-/*
- * RUSAGE_SELF
- * RUSAGE_CHILDREN
- *
-*/
 ```
 <!-- entry end -->
 
+## 信号
+```c
+#include <bash/signames.h> // 该头文件依赖signal.h
+char *signal_names[NSIG + 4];                           // 信号名称数组
+#include <string.h>
+char*   strsignal(int signo);                           // 返回解释该信号的字符串
+#include <signal.h>
+int     sigemptyset(sigset_t* set);                     // 返回0
+int     sigfillset(sigset_t* set);                      // 返回0
+int     sigaddset(sigset_t* set, int signo);            // 返回0
+int     sigdelset(sigset_t* set, int signo);            // 返回0
+int     sigismember(const sigset_t* set, int signo);    // 返回true:false
+int     kill(pid_t pid, int signo);                     // 返回0
+int     raise(int signo);                               // 返回0
+int     sigqueue(pid_t pid, int signo,
+                const union sigval value);              // 发射实时可排队信号SIGMIN~SIGMAX
+int     pthread_kill(pthread_t tid, int signo);         // 返回0，错误返回errno。signo为0用来测试线程是否存在
+
+int     sigpending(sigset_t* set);                      // 返回0
+int     sigprocmask(int how,
+                    const sigset_t *restrict set,
+                    sigset_t *restrict oldset);         // 返回0
+int     pthread_sigmask(int how,
+                        const sigset_t *restrict set,
+                        sigset_t *restrict oleset);     // 返回0，错误返回errno
+
+void    (*signal(int signo, void (*func)(int)))(int);   // 返回之前的Handler。处理时阻塞同类信号，处理后重启终端的系统调用，且不重置Handler
+int     sigaction(int signo,
+                const struct sigaction *restrict act,
+                struct sigaction *restrict oldact);     // 返回0
+struct sigaction
+{
+    void        (*sa_handler)(int signo);
+    sigset_t    sa_mask;
+    int         sa_flag;
+    void        (*sa_sigaction)(int signo, siginfo_t* info, void* context);
+}
+/*
+ * ***** how ******
+ * SIG_BLOCK
+ * SIG_UNBLOCK
+ * SIG_SETMASK
+ *
+ * ***** sa_flag ******
+ * SA_SIGINFO       使用sa_sigaction代替sa_handler
+ * SA_RESTART       自动重启终端的系统调用
+ * SA_INTERRUPT     不自动重启打断的系统调用（默认重启）
+ * SA_RESETHAND     自动重置信号处理        （默认不重置）
+ * SA_NODEFER       不自动阻塞相同信号      （默认阻塞）
+ * SA_NOCLDSTOP     若signo为SIGCHLD则设置只在子进程终止而非停止时发送该信号
+ * SA_NOCLDWAIT     若signo为SIGCHLD则设置不创建僵尸进程，若调用进程随后调用wait则需等待所有子进程终止
+ * SA_ONSTACK       若用sigaltstack(2)已声明一个替换栈，则此信号递送给替换栈上的进程
+*/
+
+int             sigwait(const sigset_t *restrict set,
+                        int *restrict signop);          // 返回0（阻塞线程）
+int             sigsuspend(const sigset_t* sigmask);    // 返回0（阻塞线程）
+#include <unistd.h>
+int             pause(void)                             // 返回-1且errno置为EINTR。（阻塞线程）只有执行信号处理返回时返回
+unsigned int    sleep(unsigned int seconds);            // 返回未休眠的秒数。（阻塞线程）超时或信号处理返回即返回
+unsigned int    alarm(unsigned int seconds);            // 返回闹钟剩余秒数
+#include <stdlib.h>
+void            abort(void)                             // 发送SIGABRT给调用进程，处理函数返回则直接终止
+int             system(const char* cmdstring);          // 返回shell命令行返回值（若shell的子进程被信号终止，则返回128+SIGNAL）。
+                                                        // 同步调用，且期间阻塞SIGINT, SIGQUIT, SIGCHLD
+```
+
+## 线程
+```c
+#include <pthread.h>
+int         pthread_equal(pthread_t tid1, pthread_t tid2);
+pthread_t   pthread_self(void); 恐龙
+int         pthread_create(pthread_t *restrict tidp,
+                    const pthread_attr_t *restrict attr,
+                    void* (*start_rtn)(void*),
+                    void* restrict arg);
+void        pthread_join(pthread_t tid, void** retv_ptr);
+void        pthread_exit(void* retv_ptr);
+int         pthread_cancle(pthread_t tid);
+void        pthread_cleanup_push(void (*rtn)(void*), void* arg);    // 调用：1. pthread_exit 2. pthread_cancle 3. pthread_cleanup_pop(!0)
+void        pthread_cleanup_pop(int execute);
+int         pthread_detach(pthread_t tid);
+int         pthread_attr_init(pthread_attr_t* attr);
+int         pthread_attr_destroy(pthread_attr_t* attr);
+int         pthread_attr_getdetachstate(const pthread_attr_t *,
+                    int* detachstate);
+int         pthread_attr_setdetachstate(pthread_attr_t *,
+                    int* detachstate);                              // PTHREAD_CREATE_DETACHED、PTHREAD_CREATE_JOINABLE
+int         pthread_setcancelstate(int state, int *oldstate);       // PTHREAD_CANCEL_ENABLE、PTHREAD_CANCEL_DISABLE
+int         pthread_setcanceltype(int type, int *oldtype);          // PTHREAD_CANCLE_ASYNCHRONOUS、PTHREAD_CANCEL_DEFERRED
+void        pthread_testcancel(void);                               // 手动产生cancel点
+```

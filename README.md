@@ -2,10 +2,10 @@
 <!-- vim-markdown-toc GFM -->
 
 - [安装](#安装)
+  - [技术](#技术)
   - [C++](#c)
   - [编程](#编程)
   - [Linux](#linux)
-  - [技术](#技术)
   - [底层](#底层)
   - [网络](#网络)
   - [其它](#其它)
@@ -24,6 +24,9 @@ git clone https://github.com/mrbeardad/learning-notes-and-cheat-sheets ~/.cheat
 # git clone https://gitee.com/mrbeardad/learning-notes-and-cheat-sheets ~/.cheat
 g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 ```
+## 技术
+* [Docker](notes/docker.md)
+* [MySQL](notes/mysql.md)
 
 ## C++
 * [C++语法特性](notes/cpp.md)
@@ -44,22 +47,18 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
     > 基础数据结构与算法
 
 ## Linux
-* [UNIX环境高级编程](notes/apue.md)
-    > 未完待续。。。
 * [Linux系统启动](notes/boot.md)
     > 从启动电源到用户登录整个过程的简短总结
+* [UNIX环境高级编程](notes/apue.md)
+    > 未完待续。。。
 * [Linux基础](notes/linux.md)
     > 相当于命令手册，外加点基础概念
-* [Bash与流处理](notes/bash.md)
-    > 包含bash语法、正则技巧与流处理命令
+* [Bash](notes/bash.md)
+    > 包含bash语法、正则技巧
 * [开发者工具](notes/devtool.md)
     > 包含gcc、gdb、ssh、tmux、zsh、git等工具使用
 * [Vim快捷键](notes/vim.md)
     > [定制版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
-
-## 技术
-* [Docker](notes/docker.md)
-* [MySQL](notes/mysql.md)
 
 ## 底层
 * [深入了解计算机系统](notes/csapp.md)
