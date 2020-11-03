@@ -277,7 +277,7 @@ namespace test::test {...}
 
 ### static变量
 * 在第一次调用该函数时初始化该static变量，存储于数据段，随函数的链接引用而被引用
-* 用于[reference-returning技术](https://github.com/mrbeardad/DotFiles/blob/master/notes/cppstyle.md#%E5%88%9D%E5%A7%8B%E5%8C%96)
+* 用于[reference-returning技术](https://github.com/mrbeardad/DotFiles/blob/master/cppstyle.md#%E5%88%9D%E5%A7%8B%E5%8C%96)
 
 ### 重载函数
 * 不允许定义形参列表相同的同名函数，即使返回类型不同

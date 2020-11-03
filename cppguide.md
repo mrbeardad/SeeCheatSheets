@@ -157,7 +157,7 @@
 
 ## 初始化
 * 初始化的形式
-    * <u>具有类型精准的初始化器</u>时，使用`auto x = initializer`
+    * <u>具有类型精准的初始化器</u>时，使用`auto x = initializer`或`auto& x = initializer`或`auto* x = initializer`
         > 若初始化器为函数返回值，拿不准是否应该使用`auto&`时，则直接用`auto&`并让编译器推断是否可行
     * 调用容器的非`initializer_list`的构造函数时，使用`vector<int> v(10, 1)`
     * 调用容器的`initializer_list`的构造函数时，使用`vector<int> v{10, 1}`

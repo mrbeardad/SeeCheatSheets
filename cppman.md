@@ -27,7 +27,11 @@
   - [正则表达式](#正则表达式)
   - [流与格式化](#流与格式化)
   - [随机数生成器](#随机数生成器)
-  - [并发](#并发)
+  - [并发库](#并发库)
+    - [线程启动](#线程启动)
+    - [线程控制](#线程控制)
+    - [线程同步](#线程同步)
+    - [并发实例](#并发实例)
   - [文件系统](#文件系统)
     - [文件信息](#文件信息)
     - [目录](#目录)
@@ -194,7 +198,7 @@ exception                 `<exception>`
 <!-- entry begin: cctype -->
 **`<cctype>`**
 
-> 见[正则表达式](https://github.com/mrbeardad/learning-notes-and-cheat-sheets/blob/master/notes/bash.md#%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
+> 见[正则表达式](https://github.com/mrbeardad/SeeCheatSheets/blob/master/bash.md#%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
 * `isalnum(c)`
 * `isalpha(c)`
 * `islower(c)`
@@ -1265,6 +1269,7 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
         * streambuf_iterator    ：不通过stream对象直接I/O缓冲区（自动更新缓冲区块）
         * `streambuf*`          ：利用stream.rdbuf()获取后直接调用I/O运算符与另一个流缓冲区对接, 注意输入时需要std::noskipws
     * 通过文件描述符改造：`__gnu_cxx::stdio_filebuf<char> buf{fd, std::ios_base::in}; std::istream istrm{buf};`
+        > `fd = fileno(FILE* file);`
 <!-- entry end -->
 
 <!-- entry begin: locale -->
@@ -1381,93 +1386,242 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
     * normal_distribution dn(u=0, o=1)                  ：正态分布
 <!-- entry end -->
 
-## 并发
-<!-- entry begin: future async -->
-* 任务发射：`<future>`
-    * `async(func, args...)`与`async(launch::async | launch::deferred, func, args...)`
-        > 发射策略：
-        * launch::async         ：异步调用
-        * launch::deferred      ：延迟发射
-    * `future<>`与`shared_future<>`
-        > 对于由以异步执行策略运行的`async()`所创造的`future`对象，若它是最后一个指涉其共享状态的`future`对象，则当它析构时会阻塞当前线程直到它所代表的线程执行完毕。  
-        > 这也造成了：如果忽略`async()`函数的返回值（返回的future立即析构），因为阻塞的原因则相当于同步调用而非异步并行
-        * .valid()                  ：是否有效，即是否已调用过`.get()`或`.wait()`
-        * .share()                  ：返回`shared_future`
-        * .get()                    ：若线程被延迟则同步启动，并获取返回值或异常，同时取消其有效状态
-        * .wait()                   ：若线程被延迟则同步启动，不获取返回值或异常，但不取消其有效状态
-        * .wait_for(duration)与.wait_until(time_point)
-            > 不会启动延迟的线程  
-            > 返回值包括：
-            * future_status::deferred   ：线程被延迟启动，且此前未调用`.get()`与`.wait()`让其强制启动
-            * future_status::timeout    ：线程已启动，但是已超时，即还未执行完成
-            * future_status::ready      ：线程已启动，且执行完成
+## 并发库
+### 线程启动
+<!-- entry begin: async -->
+> 头文件：`<future>`  
+> 命名空间：`std::`
+* `async(Func, Args...)`                        ：优先异步调用，不可行则延迟发射
+* `async(std::launch::async, Func, Args...)`    ：异步调用，失败则抛出异常
+* `async(std::launch::deferred, Func, Args...)` ：延迟发射
+
+注释：
+* 以下情况调用线程会阻塞直到对应`future`所对应的线程退出：
+      * 最后一个`future`副本销毁
+      * 对`future`调用`wait()`或`get()`
 <!-- entry end -->
 
-<!-- entry begin: this_thread -->
-* this_thread：`<thread>`
-    * ::get_id()
-    * ::sleep_for(dur)
-    * ::sleep_until(tp)
-    * ::yield()
+* * * * * * * * * *
+
+<!-- entry begin: future shared_future -->
+> 头文件：`<future>`  
+> 命名空间：`std::`
+* `future<ResultType>`
+* `shared_future<ResultType>`
+特种成员：
+* `~future()`                   ：析构时令状态失效
+* Move                          ：支持move操作，拒绝copy操作。
+* `future()`                    ：构造为无效状态
+
+成员函数：
+* `.shared()`                   ：返回`shared_future`继承状态，并令本对象状态失效
+* `.valid()`                    ：返回bool表示状态是否有效
+* `.get()`                      ：返回对应线程返回值
+* `.wait()`                     ：等待对应线程结束
+* `.wait_for(duration)`         ：等待对应线程结束
+* `.wait_until(time_point)`     ：等待对应线程结束
+
+注释：
+* `get()`可获取future的状态（线程的返回值或抛出的异常），只能获取一次然后失效
+* `wait_for`与`wait_until`可能返回以下值
+    * `std::future_status::deferred`：线程使用延迟发射策略且仍未启动
+    * `std::future_status::timeout` ：等待超时
+    * `std::future_status::ready`   ：线程已结束
+* `shared_future`相对于`future`的区别：
+    * 相对`future`，提供了特种成员copy，并取消了成员函数`.shared()`
+    * `get()`可多次获取future的状态而不令其失效
 <!-- entry end -->
 
-> * 并发问题
->     * 访问共享数据： 数据竞争、数据销毁
->     * 编译器优化： 访存优化、顺序优化
+### 线程控制
+<!-- entry begin: this_thread thread -->
+> 头文件：`<thread>`  
+> 命名空间：`std::`
+* `thread`
+特种成员：
+* Move                          ：将原对象设为nonjoinable
+* `thread(Func, Args...)`       ：构造并启动线程
+成员函数：
+* `.joinable()`                 ：返回bool表示该线程是否joinable
+* `.join()`                     ：阻塞直至线程结束并将该对象设为nonjoinable。注意销毁一个joinable的`thread`对象时会调用`terminate()`
+* `.detach()`                   ：卸离线程
+* `.get_id()`                   ：返回TID（真TID）
 
+> 命名空间：`std::this_thread::`
+* `get_id()`                    ：返回TID（假TID）
+* `sleep_for(duration)`         ：休眠
+* `sleep_until(time_point)`     ：休眠
+* `yield()`                     ：建议该线程立即被调度
+<!-- entry end -->
+
+### 线程同步
 <!-- entry begin: mutex 互斥锁 -->
-* 互斥锁：`<mutex>`
-    * mutex及其变种：
-        * 用法：在全局中声明
-```
-        | 操作                | mutex | recursive_mutex | shared_mutex | timed_mutex | recursive_timed_mutex | shared_timed_mutex |
-        |---------------------+-------+-----------------+--------------+-------------+-----------------------+--------------------|
-        | .lock()             |                                   捕获mutex，失败则阻塞                                           |
-        | .try_lock()         |                               捕获mutex，失败则返回false                                          |
-        | .unlock()           |                                   解除锁定的mutex                                                 |
-        | .try_lock_for(dur)  |   -   |        -        |      -       |                限制时间内尝试捕获                        |
-        | .try_lock_until(tp) |   -   |        -        |      -       |                限制期限前尝试捕获                        |
-        | 多个lock            |   -   |        可       |      -       |      -      |          可           |         -          |
-```
-    * 辅助函数：
-        * lock(mutex...)      ：避免死锁
-        * try_lock(mutex...)  ：保证加锁次序
-        * once_flag类型
-        * call_once(once_flag, func, args...)
-    * mutex托管：
-        > 用法：mutex做模板类型, mutex对象做构造参数(可能还有其他参数), 在块作用域中初始化
-        * `lock_guard<>`额外参数：adopt_lock(已锁)
-        * `unique_lock<>`额外参数：
-            * adopt_lock(已锁)
-            * defer_lock(不锁)
-            * try_lock(试锁)
-            * duration
-            * time_point
-        * `shared_lock<>`
-    * 提供原子性操作原理：
-        * 读取mutex - 判断mutex - 上锁或阻塞
-        * 解锁-唤醒
+> 头文件：`<mutex>`  
+> 命名空间：`std::`
+* `mutex`                               ：支持前3个操作
+* `timed_mutex`                         ：支持前5个操作
+* `recursive_mutex`                     ：支持多次上锁与解锁
+* `recursive_timed_mutex`               ：支持多次上锁与解锁，且支持前5个操作
+* `shared_mutex`                        ：支持除后2个之外的操作
+* `shared_timed_mutex`                  ：支持所有操作
+
+成员函数：
+* `.lock()`                             ：获取锁（原子操作：读取-测试-上锁/阻塞）
+* `.try_lock()`                         ：尝试获取锁，成功返回true
+* `.unlock()`                           ：释放锁
+* `.try_lock_for(duration)`             ：尝试获取锁，成功返回true
+* `.try_lock_until(time_point)`         ：尝试获取锁，成功返回true
+* `.lock_shared()`                      ：释放读锁
+* `.unlock_shared()`                    ：释放读锁
+* `.try_lock_shared()`                  ：尝试获取锁读锁
+* `.try_lock_shared_for(duration)`      ：尝试获取锁读锁
+* `.try_lock_shared_until(time_point)`  ：尝试获取锁读锁
+
+全局函数：
+* `lock(Mutex...)`                      ：阻塞直至获取所有锁，或解锁已获取的锁并抛出异常（死锁）
+* `try_lock(Mutex...)`                  ：若全部获取则返回-1，否则解锁已获取的锁并返回第一个无法获取的锁的次序（加锁次序与实参次序相同且从0开始编号）
+* `call_once(once_flag, Func, Args...)` ：根据`once_flag`来判断并只调用一次`func(args...)`
+
+* * * * * * * * * *
+
+* `lock_guard<Mutex>`
+* `unique_lock<Mutex>`
+* `shared_lock<Mutex>`
+特种成员：
+* `~Lock()`                     ：释放锁
+* Move                          ：支持move操作，但不支持copy操作
+* `Lock(Mutex)`                 ：获取锁
+* `Lock(Mutex, std::adopt_lock)`：接管已上锁的锁
+* `Lock(Mutex, std::defer_lock)`：不上锁
+* `Lock(Mutex, std::try_lock)`  ：尝试上锁
+* `Lock(Mutex, duration)`       ：尝试上锁
+* `Lock(Mutex, time_point)`     ：尝试上锁
+
+成员函数：
+* `.lock()`
+* `.try_lock()`
+* `.unlock()`
+* `.try_lock_for()`
+* `.try_lock_until()`
+* `.owns_lock()`
+* `.operator bool()`
 <!-- entry end -->
 
-<!-- entry begin: cv condition_variable 条件量 -->
-* 条件量：`<condition_variable>`
-    > 依赖于unique_lock`<>`提供保护区, 在全局中声明，  
-    > 注意由mutex锁住的线程由mutex唤醒，被condition_variable锁住的线程由condition_variable唤醒（在mutex作用域外），
-    > 前者可由lock_guard自动触发唤醒机制，而condition_variable需要手动
-    * 成员：
-        * .wait(u_l, pred)
-        * .wait_for(u_l, dur, func)
-        * .wait_until(u_l, tp, func)
-            > 返回等待状态：
-            > * cv_status::time_out
-            > * cv_status::no_timeout
-        > 解锁后再notify
-        * .notify_one()
-        * .notify_all()
-        * notify_all_at_thread_exit(cv, ul)
-    * 提供原子性操作：
-        * 解锁-阻塞
-        * 唤醒
+* * * * * * * * * *
+
+<!-- entry begin: cv condition_variable 条件量  -->
+> 头文件：`<condition_variable>`  
+> 命名空间：`std::`
+* `condition_variable`
+特种成员：
+* `~condition_variable()`
+* `condition_variable()`
+
+成员函数：
+* `.wait(unique_lock, OP0 = Return_True)`
+* `.wait_for(unique_lock, duration, OP0 = Return_True)`
+* `.wait_until(unique_lock, time_point, OP0 = Return_True)`
+* `.notify_one()`
+* `.notify_all()`
+
+全局函数：
+* `notify_all_at_thread_exit(condition_variable, unique_lock)`
+
+注释：
+* wait时限系列成员函数的无OP0版本的返回值：
+    * `std::cv_status::timeout`
+    * `std::cv_status::no_timeout`
+* 条件量的使用需要互斥锁提供临时保护区，创造条件的线程负责在保护区外调用notify系列函数
+* 注意条件量与互斥锁的区别：
+    > 需要强调的是，因互斥锁而阻塞的线程由互斥锁解锁时唤醒，而因条件量阻塞的线程需要调用notify系列函数唤醒
+    * 互斥锁提供原子操作：读取-检测-上锁/阻塞
+    * 条件量提供原子操作：解锁-阻塞
+<!-- entry end -->
+
+* * * * * * * * * *
+
+<!-- entry begin: atomic -->
+> 头文件：`<atomic>`  
+> 命名空间：`std::`
+* `atomic<BasicType>`
+
+特种成员：
+* `atomic()`                            ：构造时初始化lock
+
+成员函数：
+* `.compare_exchange_strong(exp, val)`  ：若`this->load() == exp`，则`this->store(val);return true;`，否则`exp = this->load();return false;`
+* `.compare_exchange_weak(exp, val)`    ：同上，但可能假失败，也可能更高效
+* `.load()`                             ：返回原值拷贝
+* `.store(val)`                         ：赋值val
+* `.exchange(val)`                      ：赋值val并返回旧值拷贝
+* `.operator=(val)`                     ：赋值val并返回新值拷贝
+* `++a, a++`
+* `--a, a--`
+* `a += val`
+* `a -= val`
+* `a &= val`
+* `a |= val`
+* `a ^= val`
+<!-- entry end -->
+
+### 并发实例
+<!-- entry begin: 并发实例 -->
+```cpp
+#include <condition_variable>
+#include <future>
+#include <iostream>
+#include <mutex>
+#include <queue>
+
+namespace
+{
+    std::mutex Mx{};
+    std::condition_variable Cv{};
+    std::queue<int> Que{};
+
+    void consumer();
+    void producer();
+} // namespace
+
+int main()
+{
+    auto f0 = std::async(consumer);
+    auto f1 = std::async(consumer);
+    auto f2 = std::async(consumer);
+    auto f3 = std::async(consumer);
+
+    auto f4 = std::async(producer);
+    auto f5 = std::async(producer);
+    auto f6 = std::async(producer);
+    auto f7 = std::async(producer);
+
+    return 0;
+}
+
+namespace
+{
+    void consumer()
+    {
+        { // synchronism
+            std::unique_lock ul{Mx};
+            Cv.wait(ul, [](){return Que.size();});
+            std::cout << "consumer pop " << Que.front() << std::endl;
+            Que.pop();
+        }
+    }
+
+    void producer()
+    {
+        static int Cntr{};
+
+        { // synchronism
+            std::unique_lock ul{Mx};
+            Que.push(++Cntr);
+            std::cout << "producer push " << Cntr << std::endl;
+        }
+        Cv.notify_one();
+    }
+} // namespace
+```
 <!-- entry end -->
 
 ## 文件系统

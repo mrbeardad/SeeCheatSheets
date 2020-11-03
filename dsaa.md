@@ -81,7 +81,7 @@
 
 # 数据结构
 
-***接下来会含有$L^AT_EX$公式，记得安插件哦，看***[这里](https://github.com/mrbeardad/DotFiles/blob/master/notes/csapp.md)
+***接下来会含有$L^AT_EX$公式，记得安插件哦，看***[这里](https://github.com/mrbeardad/DotFiles/blob/master/csapp.md)
 ## 栈
 * LIFO表：后进先出
 * 单调栈

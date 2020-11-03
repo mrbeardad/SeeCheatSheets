@@ -16,7 +16,7 @@
   - [硬链接](#硬链接)
   - [权限与属主](#权限与属主)
   - [文件日期](#文件日期)
-- [系统数据文件合信息](#系统数据文件合信息)
+- [系统数据文件和信息](#系统数据文件和信息)
 - [日期与时间](#日期与时间)
 - [UEFI BIOS](#uefi-bios)
   - [规范](#规范)
@@ -549,7 +549,7 @@
     * -d        ：指定touch的时间，date模式
 <!-- entry end -->
 
-# 系统数据文件合信息
+# 系统数据文件和信息
 <!-- entry begin: linux 登录文件 -->
 * 登录文件
     > 由PAM模块控制登录验证
@@ -1212,6 +1212,7 @@ UEFI 规范规定固件可以包含一系列签名，并拒绝运行未签名或
 <!-- entry begin: ulimit -->
 * ulimit  -a -HS
     > /etc/security/ulimits.d/
+* ipcs -l
 <!-- entry end -->
 
 
@@ -1333,11 +1334,11 @@ UEFI 规范规定固件可以包含一系列签名，并拒绝运行未签名或
     * Type
         * simple
         * exec
-            > simple表示当fork()返回时即算启动完成，而 exec 则表示仅在 fork()与execve()都执行成功时才算是启动完成；  
+            > simple表示当fork()返回时即算启动完成，而 exec 则表示仅在 fork()与exec()都执行成功时才算是启动完成；  
             > 这意味着对于exec类型的服务来说， 如果不能成功调用主服务进程(例如User=不存在或者二进制可执行文件不存在)， 那么systemctl start将会执行失败
         * oneshot(主进程退出后才算完成，直接从activating到inactive)
-        * notify(要等待返回状态信息后才算完成)
         * forking(父进程退出且至少有一个子进程才算完成，应该设置PIDFile=以跟踪主进程)
+        * notify(要等待返回状态信息后才算完成)
         * dbus(从D-Bus获得名称后算完成，需设置BusName选项)
         * idle(所有任务完成后才启动，最多延迟5秒)
     * ExecStart
@@ -1675,3 +1676,7 @@ patch -p`n`  < patch
 > * n为去掉的/个数
 <!-- entry end -->
 
+stty -a
+stty echo
+stty -echo
+`stty </dev/tty`

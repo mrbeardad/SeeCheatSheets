@@ -28,7 +28,7 @@ namespace
     void print_help_then_exit() noexcept
     {
         std::cout << "\033[32mDescription:\033[m\n";
-        std::cout << "    \033[33msee\033[m will find cheat-sheets among ~/.cheat/notes/*.md.\n";
+        std::cout << "    \033[33msee\033[m will find cheat-sheets among ~/.cheat/*.md.\n";
         std::cout << "Yeah! They are markdown files. Each entry starts with '\033[34m<!-- entry begin: keywords... -->\033[m',\n";
         std::cout << "and ends with '\033[34m<!-- entry end -->\033[m'. \033[33msee\033[m will search apposite entries and print them.\n";
         std::cout << "    For example, \033[33msee echo.*\033[m will match :\n\033[36m";
@@ -41,7 +41,7 @@ namespace
         std::cout << "    see [<options>] <keyword> [<keyword>...]\n";
         std::cout << "\033[32mOptions:\033[m\n";
         std::cout << "    \033[36m-h\033[m                : Display this help information\n";
-        std::cout << "    \033[36m-f\033[m <file-prefix>  : Specify files in ~/.cheat/notes whoes file name prefix match <file-prefix> to search\n";
+        std::cout << "    \033[36m-f\033[m <file-prefix>  : Specify files in ~/.cheat/ whoes file name prefix match <file-prefix> to search\n";
         std::cout << "    \033[36m-w\033[m <keyword>      : Point out that the regex you give is a complete word, not a part of a word\n";
         std::cout << std::endl;
         std::exit(EXIT_FAILURE);
@@ -51,9 +51,9 @@ namespace
     void search_files(std::vector<std::string>& files) noexcept
     {
         std::filesystem::path cheatDir{std::getenv("HOME")};
-        cheatDir /= ".cheat/notes";
+        cheatDir /= ".cheat/";
         if ( !std::filesystem::is_directory(cheatDir) ) {
-            std::cerr << "Error: No such directory ~/.cheat/notes" << std::endl;
+            std::cerr << "Error: No such directory ~/.cheat/" << std::endl;
             std::exit(EXIT_FAILURE);
         }
 
@@ -254,7 +254,7 @@ namespace {
     void print_help() noexcept
     {
         std::cout << "\e[32mDescription:\e[m\n";
-        std::cout << "    \e[33msee\e[m will find cheat-sheets among ~/.cheat/notes/*.md.\n";
+        std::cout << "    \e[33msee\e[m will find cheat-sheets among ~/.cheat/*.md.\n";
         std::cout << "Yeah! They are markdown files. Each entry starts with '\e[34m<!-- entry begin: .* -->\e[m',\n";
         std::cout << "and ends with '\e[34m<!-- entry end -->\e[m'. \e[33msee\e[m will search apposite entries and print them.\n";
         std::cout << "    For example, \e[33msee echo\e[m will match :\n\e[36m";
@@ -267,7 +267,7 @@ namespace {
         std::cout << "    see [<options>] <regex>\n";
         std::cout << "\e[32mOptions:\e[m\n";
         std::cout << "    \e[36m-h\e[m                : Display this help information\n";
-        std::cout << "    \e[36m-f\e[m <file-prefix>  : Specify files in ~/.cheat/notes whoes file name prefix match <file-prefix> to search\n";
+        std::cout << "    \e[36m-f\e[m <file-prefix>  : Specify files in ~/.cheat/ whoes file name prefix match <file-prefix> to search\n";
         std::cout << "    \e[36m-w\e[m                : Point out that the regex you give is a complete word, not a part of a word\n";
         std::cout << std::endl;
     }
@@ -397,7 +397,7 @@ namespace {
         parse_cmdline_v1(argc, argv); // 解析命令行参数
 
         std::filesystem::path cheatDir{std::getenv("HOME")}; // 获取用户家目录
-        cheatDir /= ".cheat/notes";
+        cheatDir /= ".cheat/";
         if ( !std::filesystem::exists(cheatDir) ) { // 判断cheat-sheets所在目录是否存在
             std::cerr << "\e[31m`see` Error:\e[0m directory " << cheatDir << " doesn't exist";
             std::exit(EXIT_FAILURE);

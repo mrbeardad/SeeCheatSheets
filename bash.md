@@ -124,8 +124,8 @@
     * `[fd]<<-EOF`      ：重定向fd到（接下来内容直到一行只有EOF的行，不包括行首的tab与结束符EFO），fd默认为0
     * `[fd]<<<string`   ：重定向fd到（string内容），fd默认为0
     * `<(cmd)`          ：将cmd的stdout定向到临时文件并替换为该文件名
-    * `fd>file`         ：重定向fd到file（截断），fd默认为1
-    * `fd>>file`        ：重定向fd到file（追加），fd默认为1
+    * `[fd]>file`       ：重定向fd到file（截断），fd默认为1
+    * `[fd]>>file`      ：重定向fd到file（追加），fd默认为1
     * `&>file`          ：重定向stdout与stderr到file（截断）
     * `&>>file`         ：重定向stdout与stderr到file（追加）
     * `fd1>&fd2`        ：重定向fd1到fd2
@@ -296,10 +296,10 @@
     * `${#var}`                   ：字符串长度
     * `${#array[@]}`              ：取得数组的长度
     * `${#array[i]}`              ：取得数组中某个变量的长度
+    * `${varname:+word}`          ：若不为空则返回 word，否则返回空串
     * `${varname:-word}`          ：若不为空则返回变量，否则返回 word
     * `${varname:=word}`          ：若不为空则返回变量，否则赋值成 word 并返回
     * `${varname:?message}`       ：若不为空则返回变量，否则打印错误信息并退出
-    * `${varname:+word}`          ：若不为空则返回 word，否则返回空串
     * `${varname:offset}`         ：取得字符串的子字符串（若varname为数组，则len为idx）
     * `${varname:offset:len}`     ：取得字符串的子字符串（若varname为数组，则len为idx）
 

@@ -1,13 +1,30 @@
-# Docker基本概念
+# 目录
+<!-- vim-markdown-toc GFM -->
+
+- [Docker](#docker)
+  - [docker子命令](#docker子命令)
+    - [镜像](#镜像)
+      - [基础操作](#基础操作)
+      - [远程仓库](#远程仓库)
+      - [制作镜像](#制作镜像)
+    - [容器](#容器)
+      - [基础操作](#基础操作-1)
+      - [运行容器](#运行容器)
+      - [文件交互](#文件交互)
+  - [网络模型](#网络模型)
+
+<!-- vim-markdown-toc -->
+
+# Docker
 * 镜像：相当于一个Root文件系统
 
 * 容器：加载镜像创建的虚拟运行环境称为容器
 
 * 仓库：在本地或远程存储并管理镜像的系统
 
-# docker子命令
-## 镜像
-### 基础操作
+## docker子命令
+### 镜像
+#### 基础操作
 <!-- entry begin: docker image 镜像 -->
 > 所有`IMAGE`都可扩展为`REPO/IMAGE:TAG`
 * docker image
@@ -19,7 +36,7 @@
     * prune
 <!-- entry end -->
 
-### 远程仓库
+#### 远程仓库
 <!-- entry begin: docker pull push search 远程仓库 -->
 * docker login
 * docker logout
@@ -28,7 +45,7 @@
 * docker push      IMAGE
 <!-- entry end -->
 
-### 制作镜像
+#### 制作镜像
 <!-- entry begin: docker export import save load 镜像制作 -->
 > save/load与export/import的区别在于，前者会保留IMAGE所有信息（包括TAG, CMD），
 > 而后者只是保留容器中的文件系统。
@@ -44,9 +61,9 @@
 <!-- entry begin: docker build Dockerfile .dockerignore -->
 * docker build -t IMAGE
 ```conf
-# .dockerignoe语法与.gitignore一样
+## .dockerignoe语法与.gitignore一样
 
-# Dockerfile
+## Dockerfile
 FROM        IMAGE:TAG       # 指定基础镜像
 LABEL       maintainer="e@mail"
 ENV         PROJECT=/app    # 设置环境变量，环境变量也能在Dockerfile命令中使用
@@ -64,8 +81,8 @@ CMD         ["cmd", "args"] # 设置容器启动命令，以JSON-List形式写�
 ```
 <!-- entry end -->
 
-## 容器
-### 基础操作
+### 容器
+#### 基础操作
 <!-- entry begin: docker container -->
 * docker container
     * create
@@ -95,7 +112,7 @@ CMD         ["cmd", "args"] # 设置容器启动命令，以JSON-List形式写�
 * docker events
 <!-- entry end -->
 
-### 运行容器
+#### 运行容器
 <!-- entry begin: docker run -->
 * docker create|run [OPT] IMAGE CMD ARGS
     > 需要输入交互则加参数`-it`，需要后台运行则加参数`-d`
@@ -127,7 +144,7 @@ CMD         ["cmd", "args"] # 设置容器启动命令，以JSON-List形式写�
 * docker-compose
 
 ```yaml
-# docker-compose.yml
+## docker-compose.yml
 version: "3"    # 指定版本
 services:       # 指定需要运行的容器
     mysql:              # 指定名称
@@ -157,14 +174,14 @@ services:       # 指定需要运行的容器
 ```
 <!-- entry end -->
 
-### 文件交互
+#### 文件交互
 <!-- entry begin: docker cp -->
 > `-`表示从stdin读取tarball并解压到容器中，或将容器中的文件打包成tarball输出到stdout
 * docker cp [-aL] CONT:SRC_PATH DEST_PATH|-
 * docker cp [-aL] SRC_PATH|- CONT:DEST_PATH
 <!-- entry end -->
 
-# 网络模型
+## 网络模型
 考虑下列情况：
 
 &emsp;容器中运行了httpd，IP与端口为`172.17.0.2:80`；Docker0的IP为`172.17.0.1`；宿主机的IP为`192.168.0.2`。
