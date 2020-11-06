@@ -130,7 +130,7 @@
 
 > 选择
 
-<img align="center" height=600 src="../images/cpp_args.png"></img>
+<img align="center" height=600 src="images/cpp_args.png"></img>
 
 * 属性：
     * 只在本源文件使用的函数定义在`unnamedspace`中

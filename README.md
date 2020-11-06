@@ -2,9 +2,9 @@
 <!-- vim-markdown-toc GFM -->
 
 - [安装](#安装)
-  - [Linux](#linux)
-  - [运维](#运维)
+  - [运维技术](#运维技术)
   - [数据库](#数据库)
+  - [Linux](#linux)
   - [C++](#c)
   - [编程](#编程)
   - [网络](#网络)
@@ -13,37 +13,41 @@
 
 <!-- vim-markdown-toc -->
 # 安装
-***仓库中提供了一支C++程序`see`用于快速查看笔记：***  
-它会搜索`~/.cheat/`中的markdown文档中的entry，查找匹配的entry并打印  
-每个entry以`<!-- entry begin:.*-->`的形式开头，以`<!-- entry end -->`结尾。
-其中`.*`表示关键字，see便会搜索其中的关键子决定是否匹配  
+***本仓库中提供了一支C++程序`see`用于快速查看笔记：***  
+它会搜索`~/.cheat/*.md`中的entry，查找匹配的entry并打印；
+每个entry以`<!-- entry begin: .* -->`的形式开头，并以`<!-- entry end -->`结尾；
+其中`.*`表示关键字，see便会搜索其中的关键子决定是否匹配；
+详情请使用`see -h`查看。
 
-安装步骤：
+**安装步骤：**
 ```sh
-git clone https://github.com/mrbeardad/SeeCheatSheets ~/.cheat
-# 国内访问github不太友好的话，可以用这条命令代替
-# git clone https://gitee.com/mrbeardad/SeeCheatSheets ~/.cheat
+git clone --depth=1 https://github.com/mrbeardad/SeeCheatSheets ~/.cheat
+# 国内访问github不太友好的话，可以将URL中的github.com改为gitee.com
+if [ ! -d ~/.local/bin ] ;then
+    mkdir -p ~/.local/bin
+fi
 g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 ```
-## Linux
-* [Linux系统架构](boot.md)
-    > 从启动电源到用户登录整个过程的简短总结
-* [UNIX环境高级编程](apue.md)
-    > 未完待续。。。
-* [Bash](bash.md)
-    > 包含bash语法、正则技巧
-* [Linux基础](linux.md)
-    > 相当于命令手册，外加点基础概念
-* [开发者工具](devtool.md)
-    > 包含gcc、gdb、ssh、tmux、zsh、git、docker等工具使用
-* [VIM](vim.md)
-    > [定制版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 
-## 运维
+## 运维技术
 * [Docker](docker.md)
 
 ## 数据库
 * [MySQL](mysql.md)
+
+## Linux
+* [Linux知识框架](arch.md)
+    > 讲述Linux的开机过程，以及整个系统的用户态与内核态架构
+* [Linux基础操作](linux.md)
+    > Linux的基础命令手册
+* [Linux系统接口](apue.md)
+    > Linux的API，大部分都符合POSIX、XSI或USU规范
+* [Bash](bash.md)
+    > bash语法，以及正则表达式语法
+* [开发者工具](devtool.md)
+    > 包含gcc、gdb、ssh、tmux、zsh、git、docker等工具使用
+* [Vim](vim.md)
+    > [定制版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 
 ## C++
 * [C++语法特性](cpp.md)
@@ -73,9 +77,6 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [计算机系统导论](csapp.md)
 
 ## 其它
-* [Markdown概念](markdown.md)
-* [ANSI终端转义码](ansi.md)
-* [Manjaro安装](manjaro.md)
-* [小鹤双拼](xhup.md)
-* [英语音标](english.md)
+* [Markdown](markdown.md)
+* [English](english.md)
 

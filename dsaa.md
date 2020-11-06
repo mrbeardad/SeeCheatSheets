@@ -515,9 +515,9 @@ struct Trie
 * $F_{k+1}=F_k+F_{k-1}\qquad，则F_{k+1}\lt(5/3)^{k+1}$
 
 ## 经典复杂度
-![fzd](../images/fzd1.jpg)
-![fzd2](../images/fzd2.png)
-![fzd3](../images/fzd3.png)
+![fzd](images/fzd1.jpg)
+![fzd2](images/fzd2.png)
+![fzd3](images/fzd3.png)
 
 # 数论
 

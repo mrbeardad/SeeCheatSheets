@@ -704,7 +704,7 @@ namespace test::test {...}
 
 ### 运算符优先级
 * 运算符优先级
-![cpp](../images/cppman.png)
+![cpp](images/cppman.png)
 
 ### 求值顺序
 * 有序：

@@ -37,8 +37,8 @@ a
 # 互联网结构
 ## ISP
 <!-- 层次结构 -->
-![Internet1](../images/internet1.png)
-![Internet2](../images/internet2.jpg)
+![Internet1](images/internet1.png)
+![Internet2](images/internet2.jpg)
 
 ## 接入网
 * 广域网
@@ -53,7 +53,7 @@ a
     * WiFi
 
 ## 物理媒体
-![wlmt](../images/OIP.jpg)
+![wlmt](images/OIP.jpg)
 * 双绞铜线      ：最便宜且最常用、电话机、高速LAN主导性方案
 * 同轴电缆      ：电缆电视系统、共享媒体
 * 光纤          ：稳定安全、高成本光设备、海底光缆
@@ -109,7 +109,7 @@ a
 ### HTTP
 **TCP 80**
 * 请求报文格式  
-![http请求报文格式](../images/http.jpg)
+![http请求报文格式](images/http.jpg)
     * 方法：
         * `GET`
             > 请求URL定位的资源，URL后`?`结尾表示URL结尾与请求参数开始
@@ -133,7 +133,7 @@ a
         * `Reference`               ：由`URL`跳转而来
 
 * 响应报文格式  
-![http响应报文格式](../images/httpd.png)
+![http响应报文格式](images/httpd.png)
     * 方法：`GET` `POST` `HEAD` `PUT` `DELETE`
     * 状态码：
         * 200 OK                    ：表示客户端请求成功
@@ -334,7 +334,7 @@ a
 * 网络核心中的 **路由器** 根据路由表选择下一条地址，直到交付成功、丢包、TTL为0
 
 * 防火墙机制
-![图片来自网络](../images/netfilter.jpg)
+![图片来自网络](images/netfilter.jpg)
 
 * Linux路由表：用户可自定义1-252号路由表，内核维护如下4个路由表
 

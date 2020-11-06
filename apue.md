@@ -31,48 +31,48 @@
   - [进程组 PGID](#进程组-pgid)
 - [信号](#信号-1)
 - [线程](#线程)
-- [附](#附)
-  - [错误处理](#错误处理)
-  - [标准与限制](#标准与限制)
-  - [文件I/O](#文件io-1)
-  - [文件与目录](#文件与目录-1)
+- [标准与限制](#标准与限制)
+- [错误处理](#错误处理)
+- [用户信息](#用户信息)
+  - [passwd](#passwd)
+  - [shadow](#shadow)
+  - [group](#group)
+- [系统信息](#系统信息)
+  - [操作系统信息](#操作系统信息)
+  - [日期时间](#日期时间)
+  - [语系与字符集](#语系与字符集)
+- [日志系统](#日志系统)
+- [进程管理](#进程管理)
+  - [进程环境](#进程环境)
+  - [进程控制](#进程控制-1)
+  - [线程](#线程-1)
+  - [信号处理](#信号处理)
+  - [资源限制](#资源限制)
+- [虚拟文件系统](#虚拟文件系统)
+  - [文件系统结构](#文件系统结构)
+    - [硬链接](#硬链接)
     - [文件信息](#文件信息-1)
+  - [文件日期](#文件日期)
+  - [权限](#权限-1)
+  - [文件类型](#文件类型-1)
     - [目录](#目录)
     - [符号链接](#符号链接)
     - [设备文件](#设备文件)
-    - [硬链接](#硬链接)
-    - [权限](#权限-1)
-    - [所有者](#所有者)
-    - [文件日期](#文件日期)
-  - [标准I/O](#标准io)
-  - [系统数据文件和信息](#系统数据文件和信息)
-    - [passwd](#passwd)
-    - [shadow](#shadow)
-    - [group](#group)
-    - [hosts](#hosts)
-    - [protocols](#protocols)
-    - [services](#services)
-    - [uname](#uname)
-    - [时间](#时间)
-  - [资源限制](#资源限制)
-  - [进程环境与进程关系](#进程环境与进程关系)
-  - [进程控制](#进程控制-1)
-  - [信号](#信号-2)
-  - [线程](#线程-1)
-  - [日志](#日志)
-  - [高级I/O](#高级io)
-    - [记录锁](#记录锁)
-    - [I/O多路复用](#io多路复用)
-    - [分段I/O](#分段io)
-    - [内存映射](#内存映射)
+    - [普通文件](#普通文件)
     - [管道](#管道)
     - [套接字](#套接字)
     - [终端](#终端)
+  - [高级I/O](#高级io)
+    - [非阻塞I/O](#非阻塞io)
+    - [记录锁](#记录锁)
+    - [分段I/O](#分段io)
+    - [I/O多路复用](#io多路复用)
+    - [内存映射](#内存映射)
 
 <!-- vim-markdown-toc -->
 # UNIX基础知识
 ## UNIX体系结构
-![unix](../images/unixarch.png)
+![unix](images/unixarch.png)
 
 ## 登录
 &emsp;由login程序接收用户输入的“用户名”与“密码”，进行身份验证与授权。
@@ -111,11 +111,6 @@
 &emsp; **线程** ：一个进程内的线程共享进程的控制块信息与虚拟内存
 
 ## 出错处理
-&emsp; **errno** ：头文件`<errno.h>`中定义了左值`errno`及其相关常量（通常以`E`开头）。
-多线程环境中，每个线程都拥有专属的局部`errno`。
-两条重要规则，
-* 若未出错则其值不会被清除
-* 任何标准函数都不会将其置零
 
 &emsp; **返回值** ：系统调用出错时大多数系统函数返回`-1`
 
@@ -158,7 +153,7 @@ UNIX系统实现了许多常量对系统的行为进行可移植性的标准化�
 
 # 文件I/O
 ## 文件描述符
-![fd](../images/fd.jpg)
+![fd](images/fd.jpg)
 * 文件描述符（进程唯一）
     * 描述符标识
         > 即`FD_CLOEXEC`：调用exec关闭该描述符
@@ -193,14 +188,7 @@ UNIX系统实现了许多常量对系统的行为进行可移植性的标准化�
 ### 权限
 将权限加入考虑后，许多函数需要满足某些权限才能正常工作
 
-&emsp; **权限的判断顺序** ：
-1. 若`EUID==0`则直接授权读写（不包括执行）
-2. 若`EUID==OWNER`则进行适当权限判断，然后结束
-3. 若`EGID==GROUP`则进行适当权限判断，然后结束
-4. 若存在`附属GID==GROUP`则进行适当权限判断，然后结束
-5. 否则使用OTHER权限进行适当权限判断，然后结束
-
-&emsp; **权限的判断意义** ：
+&emsp; **权限的意义** ：
 * 对于普通文件：
     * 读：可以读取其block中的内容
     * 写：可以更改其block中的内容
@@ -212,14 +200,32 @@ UNIX系统实现了许多常量对系统的行为进行可移植性的标准化�
 * 对于符号链接：
     * 一般权限为`777`且无法更改
 
-&emsp; **文件的权限设置** ：
-* 每个进程有个umask标识表示权限掩码，想要设置被掩盖的权限位则需要先更改umask
-* 当非root进程写一个普通文件时，自动清除其SUID与SGID
-* 创建新目录时，继承父目录的SGID（根据实现确定）
+&emsp; **权限的判断** ：
+1. 若`EUID==0`则直接授权读写（不包括执行）
+2. 若`EUID==OWNER`则进行适当权限判断，然后结束
+3. 若`EGID==GROUP`则进行适当权限判断，然后结束
+4. 若存在`EUID的附属GID==GROUP`则进行适当权限判断，然后结束
+5. 否则使用OTHER权限进行适当权限判断，然后结束
 
-&emsp; **文件的所有者** ：
+&emsp; **Sticky Bit删除权限的判断**：
+* 文件的属主
+* 目录的属主
+* 超级用户
+
+&emsp; **文件的权限修改** ：
+* 每个进程有个umask标识表示权限掩码，除了chmod函数外，其他函数设置的权限皆受影响
+* 当非root进程写一个普通文件时，自动清除其SUID与SGID
+
+&emsp; **所有者的意义** ：
+* 绝大多数修改文件属性的操作只有文件的所有者才能进行
+
+&emsp; **新建文件的所有者** ：
 * ONWER为EUID
 * GROUP为EGID。但若父目录设置SGID，则GROUP为父目录的GROUP
+
+&emsp; **文件所有者的修改** ：
+* 普通用户只能修改文件UID为进程EUID，超级用户随意修改
+* 普通用户只能修改文件GID为进程EGID或附属GID之一，超级用户随意修改
 
 ## 文件系统
 &emsp; **硬盘文件系统结构** ：
@@ -353,16 +359,6 @@ login调用PAM来验证用户身份并授权，再为用户会话准备基础的
 * SIGNAL_HANDLE
     > 多线程中信号处理会占用一个线程的逻辑流
 
-对于SIGCONT：  
-处理停止信号（SIGTSTP、SIGSTOP、SIGTTIN、SIGTTOU）时，丢弃未决决的SIGCONT。
-反之亦然。
-
-安全处理信号：
-* `volatile sig_atomic_t`
-* 保存和恢复errno
-* 只调用异步安全函数
-* 阻塞所有信号
-* 多次处理不排队的信号
 
 # 线程
 同步原语：
@@ -377,311 +373,45 @@ login调用PAM来验证用户身份并授权，再为用户会话准备基础的
 
 除此之外，绝大多数阻塞函数只针对调用线程阻塞
 
-进程终止（所有线程终止）：
-* main函数 **return**
-    > 调用析构函数
-* 调用exit
-    > 不调用析构函数
-* 终止信号默认处理
-    > 不调用析构函数
 
-单个线程终止：
-* return
-* pthread_exit（由主线程调用时会阻塞直到最后一个线程终止）
-* pthread_cancle
-
-# 附
-## 错误处理
-<!-- entry begin: strerror perror -->
-```c
-#include <string.h>
-char* strerror(int errnum);                     // 返回errnum映射的字符串，未知errnum也会映射到提示字符
-
-#include <stdio.h>
-void perror(const char* msg);                   // 打印 "msg: " + strerror(errno)
-```
-<!-- entry end -->
-
-## 标准与限制
+# 标准与限制
+* 若未特殊说明，则出错时返回-1，标记为(NOE)表示无出错返回值
+* 若未特殊说明，则文件处理函数一般都会跟随符号链接
+* 若未特殊说明，则at后缀函数支持参数`flag=AT_SYMLINK_NOFOLLOW`；否则仅支持特殊说明的flag
+* 若未特殊说明，则at后缀函数支持参数`fd=AT_FDCWD`
+* 若未特殊说明，则返回数据指针的函数都可能指向local-static对象
 <!-- entry begin: sysconf pathconf fpathconf -->
 ```c
 #include <limits.h>
+/* 以_SC_开头的宏使用sysconf()，以_PC_开头的宏使用pathconf()或fpathconf()，否则可直接使用 */
+
 #include <unistd.h>
 long sysconf(int name);                         // 返回对应限制值
 long pathconf(const char* pathname, int name);  // 返回对应限制值
 long fpathconf(int fd, int name);               // 返回对应限制值
 ```
-* 若未特殊说明，则函数一般都会跟随符号链接
-* 若未特殊说明，则at后缀函数支持`flag=AT_SYMLINK_NOFOLLOW`；否则仅支持特殊说明的flag
-* 若未特殊说明，则at后缀函数都支持`fd=AT_FDCWD`
 <!-- entry end -->
 
-## 文件I/O
-<!-- entry begin: open creat fcntl close dup lseek read write truncate sync fd oflag whence -->
-**限制：**
-| 常量         | 限制说明                           |
-|--------------|------------------------------------|
-| _PC_OPEN_MAX | 打开文件描述符数量                 |
-| _PC_NAME_MAX | 文件名长度                         |
-| _PC_PATH_MAX | 路径名长度                         |
-| _PC_NO_TRUNC | 文件名或路径名超出限制是否直接截断 |
-
-**errno：**
-| 常量         | 说明                             |
-|--------------|----------------------------------|
-| ENAMETOOLONG | 文件名或路径名超出限制           |
-| ESPIPE       | 对pipe,FIFO,socket设置文件偏移量 |
-
+# 错误处理
+<!-- entry begin: strerror perror -->
+`errno`两条重要规则：
+* 若未出错则其值不会被清除
+* 任何标准函数都不会将其置零
 ```c
-#include <fcntl.h>
-int     open(const char* path, int oflag, .../* mode_t mode */);            // 返回打开的文件描述符
-int     openat(int fd, const char* path, int oflag, .../*mode_t mode */);   // 返回打开的文件描述符
-int     creat(const char* path, mode_t mode);                               // 返回打开的文件描述符。相当于`O_WRONLY|O_CREAT|O_TRUNC`
-int     fcntl(int fd, int cmd, .../* int arg */);                           // 返回待定
+#include <errno.h>
+thread_local int errno;                         // 标准只规定errno为线程独立的左值
 
-struct flock
-{
-    short   l_type;     // F_RDLCK, F_WRLCK, F_UNLCK
-    short   l_whence;   // SEEK_SET, SEEK_CUR, SEEK_END
-    off_t   l_start;
-    off_t   l_len;      // 0表示锁住当前字节直到EOF
-    pid_t   l_pid;      // 存储F_GETLK返回锁的拥有者PID
-};
+#include <string.h>
+char*   strerror(int errno);                    // 返回errno映射的消息字符串(NOE)
 
-#include <unistd.h>
-int     close(int fd);                                                      // 返回0
-int     dup(int fd);                                                        // 返回新文件描述符（最小未占用），清除FD_CLOEXEC
-int     dup2(int fd, int fd2);                                              // 返回新文件描述符（指定描述符），清除FD_CLOEXEC，合并close与dup为原子操作
-off_t   lseek(int fd, off_t offset, int whence);                            // 返回新的偏移量。偏移量超过尾部可能产生文件空洞
-ssize_t read(int fd, void* buf, size_t nbytes);                             // 返回读取的字节数，若遇EOF返回0
-ssize_t write(int fd, const void* buf, size_t nbytes);                      // 返回已写的字节数
-ssize_t pread(int fd, void* buf, size_t nbytes, off_t offset);              // 返回读取的字节数，若遇EOF返回0。合并lseek与read为原子操作且不更新文件偏移量
-ssize_t pwrite(int fd, const void* buf, size_t nbytes, off_t offset);       // 返回已写的字节数。合并lseek与write为原子操作且不更新文件偏移量
-int     truncate(const char* pathname, off_t length);                       // 返回0
-int     ftruncate(int fd, off_t length);                                    // 返回0
-void    sync(void);                                                         // 返回无。同步冲刷系统中所有文件块缓冲
-int     fsync(int fd);                                                      // 返回0。冲刷指定文件
-int     fdatasync(int fd);                                                  // 返回0。冲刷指定文件（仅数据）
-
-/*
- * ***** fd ******
- * STDIN_FILENO
- * STDOUT_FILENO
- * STDERR_FILENO
- *
- * ***** oflag ******
- * O_RDONLY     前4个为互斥位，且必须选一个
- * O_WRONLY
- * O_RDWR
- * O_EXEC
- * O_TRUNC      直接清空文件内容
- * O_APPEND     每次写时自动原子性调整文件偏移量到文件末尾，但不会恢复之前偏移量
- * O_CLOEXEC    置位文件描述符标识位FD_CLOEXEC
- * O_CREAT      若文件不存在则自动创建，需要指定权限位
- * O_EXCL       若同时指定了O_CREAT，则若文件存在则出错
- * O_NOFOLLOW   若为符号链接则出错
- * O_DIRECTORY  若不为目录则出错
- * O_SYNC       数据与属性同步写入
- * O_DSYNC      数据同步写入
- * O_NONBLOCK   非阻塞I/O，用于低速I/O与记录锁
- * O_NOCTTY     会话首进程打开第一个尚未与会话关联的终端时，只要未使用该标识，则将该会话与终端关联
- * O_TTY_INIT
- *
- * ***** cmd ******
- * F_DUPFD              返回新描述符。复制文件描述符，并清除FD_CLOEXEC
- * F_DUPFD_CLOEXEC      返回新描述符。复制文件描述符，并置位FD_CLOEXEC
- * F_GETFD              返回文件描述符标识（即FD_CLOEXEC）
- * F_SETFD              设置文件描述符标识（即FD_CLOEXEC）
- * F_GETFL              返回文件打开标识，前4个flag为互斥位而需要使用掩码O_ACCMODE
- * F_SETFL              设置文件打开标识，可以更改O_APPEND、O_NONBLOCK、O_SYNC、O_DSYNC
- t F_GETLK              检查记录锁是否可用（见struct flock）
- * F_SETLK              获取记录锁（非阻塞）
- * F_SETLKW             获取记录锁（阻塞）
- *
- * ***** whence ******
- * SEEK_SET     文件开始处
- * SEEK_CUR     当前位置
- * SEEK_END     文件结尾处
-*/
-```
-<!-- entry end -->
-
-## 文件与目录
-### 文件信息
-<!-- entry begin: stat ft -->
-```c
-#include <sys/stat.h>
-struct stat
-{
-    mode_t          st_mode;    // 文件类型及权限
-    ino_t           st_ino;     // i-node
-    dev_t           st_dev;     // 文件系统的设备号
-    dev_t           st_rdev;    // 特殊文件的设备号
-    nlink_t         st_nlink;   // 硬链接数
-    uid_t           st_uid;     // UID
-    gid_t           st_gid;     // GID
-    off_t           st_size;    // 字节长度（只对普通文件、目录、符号链接有效）
-    struct timespec st_atime;   // atime
-    struct timespec st_mtime;   // mtime
-    struct timespec st_ctime;   // ctime
-    blksize_t       st_nlksize; // 最优I/O块大小
-    blkcnt_t        st_blocks;  // 占用磁盘块数量（块大小为S_BLKSIZE）
-};
-
-int     stat(const char* restrict pathname, struct stat* restrict buf);                         // 返回0
-int     lstat(const char* restrict pathname, struct stat* restrict buf);                        // 返回0，不跟随符号链接
-int     fstat(int fd, struct stat* buf);                                                        // 返回0
-int     fstatat(int fd, const char* restrict pathname, struct stat* restrict buf, int flag);    // 返回0
-
-S_ISREG(st_mode);
-S_ISDIR(st_mode);
-S_ISLNK(st_mode);
-S_ISFIFO(st_mode);
-S_ISSOCK(st_mode);
-S_ISBLK(st_mode);
-S_ISCHR(st_mode);
-```
-<!-- entry end -->
-
-### 目录
-<!-- entry begin: 目录 mkdir rmdir chdir getcwd -->
-```c
-#include <sys/stat.h>
-int     mkdir(const char* pathname, mode_t mode);               // 返回0，不自动建立不存在的目录
-int     mkdirat(int fd, const char* pathname, mode_t mode);     // 返回0，不自动建立不存在的目录
-
-#include <unistd.h>
-int     rmdir(const char* pathname);                            // 返回0
-int     chdir(const char* pathname);                            // 返回0
-int     fchdir(int fd);                                         // 返回0
-char*   getcwd(char* buf, size_t size);                         // 返回工作目录的真实绝对路径。原理即通过`..`层层向上递归到根来获取。有进程打开的文件系统无法卸载
-int     chroot(const char* pathname);                           // 返回0。切换`/`所代指的路径（默认为系统`/`），只能由root调用，调用后该进程及其子进程则再无法恢复`/`了（因为隔离后根本无法指定原来的目录）
-```
-<!-- entry end -->
-
-### 符号链接
-<!-- entry begin: symlink readlink -->
-```c
-#include <unistd.h>
-int     symlink(const char* actualpath, const char* sympath);                                   // 返回0
-int     symlinkat(const char* actualpath,int fd, const char* sympath);                          // 返回0
-ssize_t readlink(const char* restrict pathname, char* restrict buf, size_t bufsize)             // 返回读取字节数
-ssize_t readlinkat(int fd, const char* restrict pathname, char* restrict buf, size_t bufsize)   // 返回读取字节数
-```
-<!-- entry end -->
-
-### 设备文件
-<!-- entry begin: major minor -->
-```c
-#include <sys/sysmacros.h>
-major(st_dev);
-minor(st_dev);
-major(st_rdev);
-minor(st_rdev);
-```
-<!-- entry end -->
-
-### 硬链接
-<!-- entry begin: link unlink remove rename  -->
-```c
-#include <unistd.h>
-int     link(const char* existingpath, const char* newpath);                                    // 返回0。若epath为符号链接则创建符号链接
-int     linkat(int efd, const char* existingpath, int nfd, const char* newpath, int flag);      // 返回0。若epath为符号链接则创建符号链接，flag可为AT_SYMLINK_FOLLOW表示强制创建硬链接
-int     unlink(const char* pathname);                                                           // 返回0。不跟随符号链接
-int     unlinkat(int fd, const char* pathname, int flag);                                       // 返回0。不跟随符号链接，flag可为AT_REMOVEDIR表示删除空目录
-int     remove(const char* pathname);                                                           // 返回0。不跟随符号链接
-int     rename(const char* oldname, const char* newname);                                       // 返回0。不跟随符号链接
-int     frenameat(int oldfd, const char* pathname, int newfd, const char* newname);             // 返回0。不跟随符号链接
-```
-<!-- entry end -->
-
-### 权限
-<!-- entry begin: access umask chmod -->
-```c
-#include <unistd.h>
-int     access(const char* pathname, int tmode);                                                // 返回0。按照实际的UID与GID进行权限判断
-int     faccessar(int fd, const char* pathname, int tmode, int flag);                           // 返回0。设置flag为AT_EACCESS则使用EUID与EGID进行权限判断
-
-#include <sys/stat.h>
-mode_t  umask(mode_t mode);                                                                     // 返回之前umask。进程唯一（非本用户通用）
-int     chmod(const char* pathname, mode_t mode);                                               // 返回0，无视umask
-int     fchmod(int fd, mode_t mode);                                                            // 返回0
-int     fchmodat(int fd, const char* pathname, mode_t mode, int flag);                          // 返回0
-
-/*
- * ***** tmode ******
- * F_OK
- * R_OK
- * W_OK
- * X_OK
- *
- * ***** mode ******
- * S_ISUID
- * S_ISGID
- * S_ISVTX
- * S_IRWXU
- *  S_IRUSR
- *  S_IWUSR
- *  S_IXUSR
- * S_IRWXG
- *  S_IRGRP
- *  S_IWGRP
- *  S_IXGRP
- * S_IRWXO
- *  S_IROTH
- *  S_IWOTH
- *  S_IXOTH
-*/
-```
-<!-- entry end -->
-
-### 所有者
-<!-- entry begin: chown -->
-```c
-#include <unistd.h>
-int chown(const char* pathname, uid_t owner, gid_t group);                      // 返回0
-int lchown(const char* pathname, uid_t owner, gid_t group);                     // 返回0。不跟随符号链接
-int fchown(int fd, uid_t owner, gid_t group);                                   // 返回0
-int fchownat(int fd, const char* pathname, uid_t owner, gid_t group, int flag); // 返回0
-```
-<!-- entry end -->
-
-### 文件日期
-<!-- entry begin: utimes futimens -->
-```c
-#include <sys/time.h>
-int utimes(const char* pathname, const struct timeval times[2]);                         // 返回0
-int futimens(int fd, const struct timespec times[2]);                                    // 返回0
-int utimensat(int fd, const char* pathname, const struct timespec times[2], int flag);   // 返回0
-
-/*
- * ***** times ******
- * struct timeval {time_t tv_sec; long tv_usec;};
- * struct timespec {time_t tv_sec; long tv_nsec;};
- * times[0]表示atime，times[1]表示mtime
- *
- * 若times空指针表示设置为当前时间
- * 若times非空指针，且任一`tv_nsec`为`UTIME_NOW`，则设置当前时间
- * 若times非空指针，且任一`tv_nsec`为`UTIME_OMIT`，则保持时间不变
- *
- * 设置为当前时间时，需要权限：或owner、或root、或具有写权限
- * 设置为任意时间时，需要权限：或owner、或root
-*/
-```
-<!-- entry end -->
-
-## 标准I/O
-<!-- entry begin: mkdtemp mkstemp -->
-```c
 #include <stdio.h>
-char* mkdtemp(char* template);      // 利用template做文件名模板，创建临时目录并返回目录名
-int   mkstemp(char* template);      // 利用template做文件名模板，创建临时文件并返回文件描述符
+void    perror(const char* msg);                // 打印 msg + ": " + strerror(errno)
 ```
 <!-- entry end -->
 
-## 系统数据文件和信息
-### passwd
-<!-- entry begin: passwd apue -->
+# 用户信息
+## passwd
+<!-- entry begin: passwd getpwuid getpwnam getpwent setpwent endpwent -->
 ```c
 #include <pwd.h>
 struct passwd
@@ -694,37 +424,43 @@ struct passwd
     char*   pw_dir;
     char*   pw_shell;
 };
-struct passwd*  getpwuid(uid_t uid);        // 根据uid返回对应pawwd
-struct passwd*  getpwnam(const char* name); // 根据username返回passwd
-void            setpwent(void);             // 打开/etc/passwd，并将条款指针移动到初始位置
-struct passwd*  getpwent(void);             // 返回当前指向的passwd(local-static)，自动后移指针
-void            endpwent(void);             // 关闭打开的/etc/passwd
+passwd* getpwuid(uid_t uid);        // 返回对应`passwd*`，若出错返回NULL
+passwd* getpwnam(const char* name); // 返回对应`passwd*`，若出错返回NULL
+passwd* getpwent(void);             // 返回当前条目对应`passwd*`。第一次调用自动打开数据文件；自动后移条目指针
+void    setpwent(void);             // 打开/etc/passwd，并将条目指针移动到初始位置
+void    endpwent(void);             // 关闭/etc/passwd
 ```
 <!-- entry end -->
-### shadow
-<!-- entry begin: shadow -->
+
+## shadow
+<!-- entry begin: shadow spwd getspnam getspent setspent endspent -->
 ```c
 #include <shadow.h>
 struct spwd
 {
-    char*   sp_namp;
-    char*   sp_pwdp;
-    int     sp_lstchg;
-    int     sp_min;
-    int     sp_max;
-    int     sp_warn;
-    int     sp_inact;
-    int     sp_expire;
-    unsigned int sp_flag;
+    char*           sp_namp;
+    char*           sp_pwdp;
+    int             sp_lstchg;
+    int             sp_min;
+    int             sp_max;
+    int             sp_warn;
+    int             sp_inact;
+    int             sp_expire;
+    unsigned int    sp_flag;
 };
-struct spwd*    getspnam(const char* name);
-struct spwd*    getspent(void);
-void            setspent(void);
-void            getspent(void);
+spwd*   getspnam(const char* name); // 返回对应`spwd*`，若出错返回NULL
+spwd*   getspent(void);             // 返回当前条目对应`spwd*`。第一次调用自动打开数据文件；自动后移条目指针 
+void    setspent(void);             // 打开/etc/shadow，并将条目指针移动到初始位置
+void    endspent(void);             // 关闭/etc/shadow
 ```
 <!-- entry end -->
-### group
-<!-- entry begin: group -->
+
+## group
+<!-- entry begin: group getgrgid getgrnam getgrent setgrent endgrent getgroups -->
+| 限制宏      | 说明           |
+|-------------|----------------|
+| NGROUPS_MAX | 附数组最大数量 |
+
 ```c
 #include <grp.h>
 struct group
@@ -734,392 +470,127 @@ struct group
     int     gr_gid;
     char**  gr_mem;
 };
-struct group*   getgrgid(gid_t gid);
-struct group*   getgrnam(const char* name);
-void            setgrent(void);
-struct group*   getgrent(void);
-void            endgrent(void);
-```
-<!-- entry end -->
+group*      getgrgid(gid_t gid);                        // 返回对应`group*`，若出错返回NULL
+group*      getgrnam(const char* name);                 // 返回对应`group*`，若出错返回NULL
+void        setgrent(void);                             // 返回当前条目对应`group*`。第一次调用自动打开数据文件；自动后移条目指针
+group*      getgrent(void);                             // 打开/etc/group，并将条目指针移动到初始位置
+void        endgrent(void);                             // 关闭/etc/group
 
-<!-- entry begin: 附数组 -->
-**限制** ：
-| 常量        | 说明             |
-|-------------|------------------|
-| NGROUPS_MAX | 附数组的最大数量 |
-```c
 #include <unistd.h>
-int getgroups(int bufsize, gid_t gidlist[]);            // 返回存入的组的数量，若bufsize==0则只返回总的gid数
+int         getgroups(int bufsize, gid_t gidlist[]);    // 返回存入的组的数量，若bufsize==0则只返回总的gid数
 ```
 <!-- entry end -->
 
-### hosts
-<!-- entry begin: hosts -->
-```c
-#include <netdb.h>
-struct hostnet
-{
-    int     h_addrtype;
-    char**  h_addr_list;
-    char**  h_aliases;
-    int     h_length;
-    char*   h_name;
-};
-```
-<!-- entry end -->
-
-### protocols
-<!-- entry begin: protocols -->
-```c
-#include <netdb.h>
-struct protoent
-{
-    char**  p_aliases;
-    char*   p_name;
-    int     p_proto;
-};
-```
-<!-- entry end -->
-
-### services
-<!-- entry begin: services -->
-```c
-#include <netdb.h>
-struct servent
-{
-    char**  s_aliases;
-    char*   s_name;
-    int     s_port;
-    char*   s_proto;
-};
-```
-<!-- entry end -->
-
-### uname
-**限制** ：
-| 常量          | 说明           |
+# 系统信息
+## 操作系统信息
+<!-- entry begin: uname gethostname -->
+| 限制宏        | 说明           |
 |---------------|----------------|
 | HOST_NAME_MAX | 主机名最大长度 |
-<!-- entry begin: uname -->
 ```c
 #include <sys/utsname.h>
 struct utsname
 {
     char sysname[];     // 系统内核
-    char nodename[];    // 网络主机名
+    char nodename[];    // 主机名称
     char release[];     // 内核版本
-    char version[];     // 当前版本详细信息
+    char version[];     // 发布时间
     char machine[];     // 机器架构
 }
-int uname(struct utsname* name);                        // 返回非负
+int uname(utsname* name);                   // 返回非负
+
 #include <unistd.h>
-int gethostname(char* name, int namelen);               // 返回0
+int gethostname(char* name, int namelen);   // 返回0
 ```
 <!-- entry end -->
-### 时间
-<!-- entry begin: time gmtime localtime strftime mktime clock_gettime -->
+
+## 日期时间
+<!-- entry begin: time gmtime localtime strftime strftime_l mktime tms times clock_gettime clock_settime clock_getres -->
+| 限制宏      | 说明           |
+|-------------|----------------|
+| _SC_CLK_TCK | 每秒时钟滴答数 |
 ```c
-// 日期时间
+/* 日期时间 */
 #include <time.h>
-time_t      time(time_t* calptr);                               // 返回时间值，若calptr非空则也会存储时间
-struct tm*  gmtime(const time_t* calptr);                       // 返回UTC的tm*
-struct tm*  localtime(const time_t* calptr);                    // 返回本地时区tm*
-size_t      strftime(char* restrict buf,                        // 返回字符数
-                    size_t maxsize,
-                    const char* restrict format,
-                    const struct tm* restrict tmptr);
-size_t      strftime_l(char* restrict buf,                      // 返回字符数
-                    size_t maxsize,
-                    const char* restrict format,
-                    const struct tm* restrict tmptr,
-                    locale_t locale);
-time_t      mktime(struct tm* tmptr);                           // 返回本地时区tm*对应time_t
-char*       strptime(const char* restrict buf,                  // 返回下次解析位置的指针
-                    const char* restrict format,
-                    struct tm* restrict tmptr);
+time_t  time(time_t* calptr);                                                                       // 返回时间值。calptr可为NULL
+tm*     gmtime(const time_t* calptr);                                                               // 返回UTC的`tm*`
+tm*     localtime(const time_t* calptr);                                                            // 返回本地时区的`tm*`
+size_t  strftime(char* buf, size_t maxsize, const char* format, const tm* tmptr);                   // 返回buf字符数
+size_t  strftime_l(char* buf, size_t maxsize, const char* format, const tm* tmptr, locale_t locale);// 返回buf字符数
+char*   strptime(const char* buf, const char* format, tm* tmptr);                                   // 返回下次解析位置的指针
+time_t  mktime(tm* tmptr);                                                                          // 返回本地时区的`tm*`对应time_t
 
-// 日期时间、单调时间、进程时间
+/* 单调时间、进程时间 */
 #include <sys/time.h>
-int clock_gettime(clockid_t clock_id, struct timespec* tsp);    // 返回0
-int clock_getres(clockid_t clock_id, struct timespec* tsp);     // 返回0
-int clock_settime(clockid_t clock_id, struct timespec* tsp);    // 返回0
-
-/*
- ****** clock_id ******
- * CLOCK_REALTIME           std::chrono::system_clock
- * CLOCK_MONOTONIC          std::chrono::steady_clock
- * CLOCK_PROCESS_CPUTIME_ID
- * CLOCK_THREAD_CPUTIME_ID
-*/
-
-// 单调时间、进程时间
 struct tms
 {
-    clock_t tms_utime;
-    clock_t tms_stime;
-    clock_t tms_cutime;
-    clock_t tms_cstime;
+    clock_t tms_utime;      // 用户CPU时间
+    clock_t tms_stime;      // 系统CPU时间
+    clock_t tms_cutime;     // 用户CPU时间（已终止子进程）
+    clock_t tms_cstime;     // 系统CPU时间（已终止子进程）
 };
-clock_t times(struct tms* buf);                                 // 返回值为wall-clock，clock_t / sysconf(_SC_CLK_TCK)
+clock_t times(tms* buf);    // 返回单调时间（除以每秒时钟滴答数即得秒数）。
+
+/* 日期时间、单调时间、进程时间、线程时间 */
+#include <sys/time.h>
+int     clock_gettime(clockid_t clock_id, timespec* tsp);    // 返回0
+int     clock_getres(clockid_t clock_id, timespec* tsp);     // 返回0
+int     clock_settime(clockid_t clock_id, timespec* tsp);    // 返回0
+```
+| clock_id                 | 说明                           |
+|--------------------------|--------------------------------|
+| CLOCK_REALTIME           | 系统日期时间计时器（系统时间） |
+| CLOCK_MONOTONIC          | 系统开机时间计时器（单调时间） |
+| CLOCK_PROCESS_CPUTIME_ID | 进程CPU时间                    |
+| CLOCK_THREAD_CPUTIME_ID  | 线程CPU时间                    |
+<!-- entry end -->
+
+<!-- entry begin: strftime format date -->
+| strftime format | 说明            | Thu Jan 19 21:24:52 EST 2012 |
+|-----------------|-----------------|------------------------------|
+| %C              | 年前两位        | 20                           |
+| %y              | 年后两位        | 12                           |
+| %Y              | 年              | 2012                         |
+| %b、%h          | 月名缩写        | Jan                          |
+| %B              | 月名            | January                      |
+| %m              | 月(01-12)       | 01                           |
+| %j              | 日(年)(001-366) | 019                          |
+| %d              | 日(月)(01-31)   | 19                           |
+| %e              | 日(月)( 1-31)   | 19                           |
+| %a              | 周名缩写        | Thu                          |
+| %A              | 周名            | Thursday                     |
+| %w              | 周几(0-6)       | 4                            |
+| %p              | AM/PM           | PM                           |
+| %I              | 时(00-12)       | 01                           |
+| %H              | 时(00-23)       | 21                           |
+| %M              | 分(00-59)       | 24                           |
+| %S              | 秒(00-60)       | 52                           |
+| %F              | 日期            | 2012-01-19                   |
+| %X              | 时间            | 21:24:52                     |
+| %r              | 时间            | 09:24:52 PM                  |
+| %Z              | 时区            | EST                          |
+| %%              | 转义`%`         |                              |
+| %t              | 转义`\t`        |                              |
+| %n              | 转义`\n`        |                              |
+<!-- entry end -->
+
+## 语系与字符集
+<!-- entry begin: setlocale -->
+```c
+#include <locale.h>
+char*   setlocale(int category, const char* locale);            // 返回locale字符串。category一般为LC_ALL；locale为NULL返回"C"；locale为""返回系统locale
 ```
 <!-- entry end -->
 
-## 资源限制
-<!-- entry begin: getrlimit -->
-```c
-#include <sys/resource.h>
-int     getrlimit(int resource, struct rlimit* rlptr);          // 返回0，出错返回非0
-int     setrlimit(int resource, const struct rlimit* rlptr);    // 返回0，出错返回非0
-struct rlimit
-{
-    rlimit_t rlim_cur;  // 当前限制。可调整范围`[0, rlim_max]`
-    rlimit_t rlim_max;  // 最大限制。可调整范围`[rlim_cur, RLIM_INFINITY]`，普通用户只能调小，超级用户才能调大
-}
-/*
- * ***** resource ******
- * RLIMIT_AS            进程虚拟内存最大长度
- * RLIMIT_MEMLOCK       调用mlock()能锁住的最大内存
- * RLIMIT_RSS           进程最大驻留内存长度
- * RLIMIT_DATA          进程数据段最大长度
- * RLIMIT_STACK         进程栈的最大值
- * RLIMIT_FSIZE         进程写入文件的最大长度
- * RLIMIT_CORE          进程core文件最大长度
- * RLIMIT_MSGQUEUE      进程POSIX消息队列最大长度
- * RLIMIT_SIGPENDING    进程可排队信号的最大数量
- * RLIMIT_NOFILE        进程同时打开文件最大数量
- * RLIMIT_CPU           进程CPU时间最大秒数
- * RLIMIT_NPROC         实际用户可拥有的最大进程数
-*/
-#include <unistd.h>
-int     nice(int incr);                             // 返回新友好值，incr范围0~(2*NZERO-1)，自动调节incr到范围内的值
-#include <sys/resource.h>
-int     getpriority(int which, id_t who);           // 返回新友好值，范围-NZERO~(NZERO-1)，若作用于多个进程，则返回优先级最高到（nice最小的）
-int     setpriority(int which, id_t who, int value);// Linux上，nice范围`[-20, 19]`，其中普通用户只能设置非负数，且只能调大
-/*
- ****** which ******
- * PRIO_PROCESS
- * PRIO_PGRP
- * PRIO_USER
- *
- ****** who ******
- * 0
- * PID
- * PGID
- * UID
-*/
-```
-<!-- entry end -->
-
-## 进程环境与进程关系
-<!-- entry begin: getenv setenv getpid -->
-```c
-#include <unistd.h>
-char**  environ;
-char*   getenv(const char* name);                                   // 返回value字符串，若出错返回NULL
-int     setenv(const char* name, const char* value, int rewrite);   // 返回0
-int     unsetenv(const char* name);                                 // 返回0
-int     clearenv(void);                                             // 返回0
-
-#include <unistd.h>
-pid_t   getpid(void);                   // 返回PID
-pid_t   getppid(void);                  // 返回PPID
-pid_t   getpgid(pid_t pid);             // 返回PGID。pid==0表示获取调用进程的PGID
-pid_t   getsid(pid_t pid);              // 返回SID（等价PID,PGID）。pid==0表示获取调用进程的SID
-pid_t   tcgetpgrp(int fd);              // 返回TPGID
-
-int     setpgid(pid_t pid, pid_t pgid); // 返回0。pid==0表示设置调用进程，pgid==0表示设置PGID为PID。只能设置调用进程及其子进程。
-int     setsid(void);                   // 返回SID。调用进程不能是进程组组长
-int     tcsetpgrp(int fd, pid_t pgid);  // 返回0。pgid必须属于同会话。若由后台进程组调用且其未忽略或阻塞SIGTTOU，则会发送SIGTTOU给该后台进程组
-#include <termios.h>
-pid_t   tcgetsid(int fd);               // 返回SID
-
-#include <unistd.h>
-char*   getlogin(void);                 // 返回登录名
-uid_t   getuid(void);                   // 返回UID
-uid_t   geteuid(void);                  // 返回EUID
-gid_t   getgid(void);                   // 返回GID
-gid_t   getegid(void);                  // 返回EGID
-
-
-int     setuid(uid_t uid);              // 超级权限：同时设置euid,uid,suid
-int     setgid(gid_t gid);              // 普通用户：只设置uid为euid,uid,suid之一
-int     seteuid(uid_t uid);
-int     setegid(gid_t gid);
-```
-<!-- entry end -->
-
-## 进程控制
-<!-- entry begin: fork exec wait -->
-```c
-#include <unistd.h>
-pid_t   fork(void);                                                     // 父进程返回子进程PID，子进程返回0
-
-int     execl(const char* pathname, const char* arg0, .../*(char*)0*/);
-int     execlp(const char* pathname, const char* arg0, .../*(char*)0*/);
-int     execle(const char* pathname, const char* arg0, .../*(char*)0, char*const envp[]*/);
-int     execv(const char* filename, char* const argv[]);
-int     execvp(const char* filename, char* const argv[]);
-int     execve(const char* filename, char* const argv[], char*const envp[]);
-int     fexecve(int fd, char* const argv[], char*const envp[]);
-
-#include <sys/wait.h>
-pid_t   wait(int* status);                                              // 返回子进程PID
-pid_t   waitpid(pid_t pid, int* status, int options);                   // 返回进程PID，出错返回0，其他情况返回对应options
-int     waitid(idtype_t idtype, id_t id, siginfo* infop, int options);
-/*
- ****** pid ******
- * >0   指定子进程
- * 0    同进程组中的子进程
- * -1   任一子进程
- * <-1  等待绝对值所指的进程组中的进程
- *
- ****** waitpid options ******
- * WNOHANG      子进程若非立即可用，则直接返回
- * WCONTINUED   任一子进程停止后已继续，但尚未报告状态
- * WUNTRACED    任一子进程处于停止状态，但尚未报告状态
- *
- ****** status处理宏 ******
- * WIFEXITED(status)        WEXITSTATUS(status)
- * WIFSIGNALED(status)      WTERMSIG(status)    WCOREDUMP(status)
- * WIFSTOPPED(status)       WSTOPSIG(status)
- * WIFCONTINUED(status)
- *
- ****** idtype ******
- * P_PID
- * P_PGID
- * P_ALL
- *
- ****** waitid option *******
- * WEXITED          前3个互斥且必须选一个
- * WSTOPPED
- * WCONTINUED
- * WNOHANG
- * WNOWAIT
-*/
-
-#include <unistd.h>
-void    _exit(int status);
-#include <stdlib.h>
-void    exit(int status);
-int     atexit(void (*func)(void));                 // 返回0，若出错返回非0。只在main return域exit有效，signal终止无效
-
-
-```
-<!-- entry end -->
-
-## 信号
-```c
-#include <bash/signames.h> // 该头文件依赖signal.h
-char*   signal_names[NSIG + 4];                         // 信号名称数组
-#include <string.h>
-char*   strsignal(int signo);                           // 返回解释该信号的字符串
-#include <signal.h>
-int     sigemptyset(sigset_t* set);                     // 返回0
-int     sigfillset(sigset_t* set);                      // 返回0
-int     sigaddset(sigset_t* set, int signo);            // 返回0
-int     sigdelset(sigset_t* set, int signo);            // 返回0
-int     sigismember(const sigset_t* set, int signo);    // 返回true:false
-int     kill(pid_t pid, int signo);                     // 返回0
-int     raise(int signo);                               // 返回0
-int     sigqueue(pid_t pid, int signo,
-                const union sigval value);              // 发射实时可排队信号SIGMIN~SIGMAX
-int     pthread_kill(pthread_t tid, int signo);         // 返回0，错误返回errno。signo为0用来测试线程是否存在
-
-int     sigpending(sigset_t* set);                      // 返回0
-int     sigprocmask(int how,
-                    const sigset_t *restrict set,
-                    sigset_t *restrict oldset);         // 返回0
-int     pthread_sigmask(int how,
-                        const sigset_t *restrict set,
-                        sigset_t *restrict oleset);     // 返回0，错误返回errno
-
-void    (*signal(int signo, void (*func)(int)))(int);   // 返回之前的Handler。处理时阻塞同类信号，处理后重启终端的系统调用，且不重置Handler
-int     sigaction(int signo,
-                const struct sigaction *restrict act,
-                struct sigaction *restrict oldact);     // 返回0
-struct sigaction
-{
-    void        (*sa_handler)(int signo);
-    sigset_t    sa_mask;
-    int         sa_flag;
-    void        (*sa_sigaction)(int signo, siginfo_t* info, void* context);
-}
-/*
- * ***** how ******
- * SIG_BLOCK
- * SIG_UNBLOCK
- * SIG_SETMASK
- *
- * ***** sa_flag ******
- * SA_SIGINFO       使用sa_sigaction代替sa_handler
- * SA_RESTART       自动重启终端的系统调用
- * SA_INTERRUPT     不自动重启打断的系统调用（默认重启）
- * SA_RESETHAND     自动重置信号处理        （默认不重置）
- * SA_NODEFER       不自动阻塞相同信号      （默认阻塞）
- * SA_NOCLDSTOP     若signo为SIGCHLD则设置只在子进程终止而非停止时发送该信号
- * SA_NOCLDWAIT     若signo为SIGCHLD则设置不创建僵尸进程，若调用进程随后调用wait则需等待所有子进程终止
- * SA_ONSTACK       若用sigaltstack(2)已声明一个替换栈，则此信号递送给替换栈上的进程
-*/
-
-int             sigwait(const sigset_t *restrict set,
-                        int *restrict signop);          // 返回0（阻塞线程）
-int             sigsuspend(const sigset_t* sigmask);    // 返回0（阻塞线程）
-#include <unistd.h>
-int             pause(void)                             // 返回-1且errno置为EINTR。（阻塞线程）只有执行信号处理返回时返回
-unsigned int    sleep(unsigned int seconds);            // 返回未休眠的秒数。（阻塞线程）超时或信号处理返回即返回
-unsigned int    alarm(unsigned int seconds);            // 返回闹钟剩余秒数
-#include <stdlib.h>
-void            abort(void)                             // 发送SIGABRT给调用进程，处理函数返回则直接终止
-int             system(const char* cmdstring);          // 返回shell命令行返回值（若shell的子进程被信号终止，则返回128+SIGNAL）。
-                                                        // 同步调用，且期间阻塞SIGINT, SIGQUIT, SIGCHLD
-```
-
-## 线程
-```c
-#include <pthread.h>
-int         pthread_equal(pthread_t tid1, pthread_t tid2);
-pthread_t   pthread_self(void); 恐龙
-int         pthread_create(pthread_t *restrict tidp,
-                    const pthread_attr_t *restrict attr,
-                    void* (*start_rtn)(void*),
-                    void* restrict arg);
-void        pthread_join(pthread_t tid, void** retv_ptr);
-void        pthread_exit(void* retv_ptr);
-int         pthread_cancle(pthread_t tid);
-void        pthread_cleanup_push(void (*rtn)(void*), void* arg);    // 调用：1. pthread_exit 2. pthread_cancle 3. pthread_cleanup_pop(!0)
-void        pthread_cleanup_pop(int execute);
-int         pthread_detach(pthread_t tid);
-int         pthread_attr_init(pthread_attr_t* attr);
-int         pthread_attr_destroy(pthread_attr_t* attr);
-int         pthread_attr_getdetachstate(const pthread_attr_t *,
-                    int* detachstate);
-int         pthread_attr_setdetachstate(pthread_attr_t *,
-                    int* detachstate);                              // PTHREAD_CREATE_DETACHED、PTHREAD_CREATE_JOINABLE
-int         pthread_setcancelstate(int state, int *oldstate);       // PTHREAD_CANCEL_ENABLE、PTHREAD_CANCEL_DISABLE
-int         pthread_setcanceltype(int type, int *oldtype);          // PTHREAD_CANCLE_ASYNCHRONOUS、PTHREAD_CANCEL_DEFERRED
-void        pthread_testcancel(void);                               // 手动产生cancel点
-
-int         pthread_mutex_init(pthread_mutex_t* restrict mutex,
-                    const pthread_mutexattr_t* restrict attr);
-int         pthread_mutex_destroy(pthread_mutex_t* mutex);
-int         pthread_mutex_lock(pthread_mutex_t* mutex);
-int         pthread_mutex_unlock(pthread_mutex_t* mutex);
-int         pthread_atfork(void (*prepare)(void),
-                    void (*parent)(void),
-                    void (*child)(void));
-```
-
-## 日志
+# 日志系统
 <!-- entry begin: openlog syslog closelog setlogmask -->
-* `/dev/log`
 ```c
 #include <syslog.h>
-void    openlog(const char* ident, int option, int facility);   // ident指定日志条目名称（一般为程序名称）
-void    syslog(int priority, const char* format, ...);          // priority为facility与level或运算组合
-void    closelog(void);
-int     setlogmask(int maskpri);                                // 只允许记录maskpri中设置的级别的日志，设置为0则函数无效
-LOGMASK(pri);                                                   // 将pri转换为maskpri
-
+void    openlog(const char* ident, int option, int facility);   // 打开日志文件/dev/log，并指定日志条目名为ident（一般为程序名称）
+void    syslog(int priority, const char* format, ...);          // priority为facility与level或运算组合，若openlog指定了facility则priority等同level
+void    closelog(void);                                         // 关闭日志文件
+int     setlogmask(int maskpri);                                // 返回之前maskpri。只允许记录maskpri中设置的级别的日志，特殊地设置为0则函数无效
+int     LOGMASK(int priority);                                  // 返回将pri转换的maskpri
 ```
 | option     | 说明                                    |
 |------------|-----------------------------------------|
@@ -1168,170 +639,592 @@ LOGMASK(pri);                                                   // 将pri转换�
 | LOG_EMERG   | 系统不可使用的情况 |
 <!-- entry end -->
 
-## 高级I/O
-### 记录锁
-* 记录锁即进程间读写同步锁，与PID关联
-* 关闭文件描述符时即会释放对应文件的记录锁，不管该文件描述符是否还有其他副本
-* 记录锁不会阻塞本进程获取锁，转而直接替换锁
-* 建议性锁需要调用记录锁接口才有用，强制性锁对所有进程强制限制读写（需要`mount -o mand`）
-
-### I/O多路复用
+# 进程管理
+## 进程环境
+<!-- entry begin: environ getenv setenv unsetenv clearenv getpid getppid getpgid getsid tcgetpgrp setpgid setsid tcsetpgrp tcgetsid getlogin getuid geteuid getgid getegid setuid seteuid setgid setegid -->
 ```c
-#include <sys/select.h>
-int select(                         // 返回准备好的描述符数量
-    int maxfdp1,                    // 等待文件描述符中的最大值 + 1
-    fd_set* readfds,                // 指定可读描述符集合，并在返回时存储准备好的描述符集合
-    fd_set* writefds,               // 指定可写描述符集合，并在返回时存储准备好的描述符集合
-    fd_set* exceptfds,              // 指定异常描述符集合，并在返回时存储准备好的描述符集合
-    struct timeval* tvptr           // tvptr==NULL表示无限期等待，tvptr->tv_sec==0&&tvptr->tv_usec==0表示不等待，否则等待指定时间。若提前被唤醒还将返回时存储剩余时间
-);
-int pselect(                        // 返回准备好的描述符数量
-    int maxfdp1,                    // 等待文件描述符中的最大值 + 1
-    fd_set* readfds,                // 指定可读描述符集合，并在返回时存储准备好的描述符集合
-    fd_set* writefds,               // 指定可写描述符集合，并在返回时存储准备好的描述符集合
-    fd_set* exceptfds,              // 指定异常描述符集合，并在返回时存储准备好的描述符集合
-    const struct timespec* tsptr,   // tvptr==NULL表示无限期等待，tvptr->tv_sec==0&&tvptr->tv_nsec==0表示不等待，否则等待指定时间
-    const sigset_t* sigmask         // 指定调用期间的信号屏蔽字（可为NULL）
-);
+#include <unistd.h>
+char**  environ;                                                    // 指向进程环境表的第一个字符串。环境表以NULL结尾；内核并不查看环境表的信息，而查看进程控制块
+char*   getenv(const char* name);                                   // 返回value字符串，若出错返回NULL
+int     setenv(const char* name, const char* value, int rewrite);   // 返回0
+int     unsetenv(const char* name);                                 // 返回0
+int     clearenv(void);                                             // 返回0
+
+#include <unistd.h>
+pid_t   getpid(void);                   // 返回PID
+pid_t   getppid(void);                  // 返回PPID
+pid_t   getpgid(pid_t pid);             // 返回PGID。pid==0表示获取调用进程的PGID
+pid_t   getsid(pid_t pid);              // 返回SID。pid==0表示获取调用进程的SID
+pid_t   tcgetpgrp(int fd);              // 返回TPGID
+int     setpgid(pid_t pid, pid_t pgid); // 返回0。pid==0表示设置调用进程；pgid==0表示设置PGID为PID；只能设置调用进程及其子进程。
+int     setsid(void);                   // 返回新SID。调用进程不能是进程组组长
+int     tcsetpgrp(int fd, pid_t pgid);  // 返回0。pgid必须属于同会话。若由后台进程组调用且其未忽略或阻塞SIGTTOU，则会发送SIGTTOU给该后台进程组
+
+#include <termios.h>
+pid_t   tcgetsid(int fd);               // 返回SID
+
+#include <unistd.h>
+char*   getlogin(void);                 // 返回登录名。原理是通过ttyname(STDIN_FILENO)后再与utmp日志对比
+uid_t   getuid(void);                   // 返回UID
+uid_t   geteuid(void);                  // 返回EUID
+gid_t   getgid(void);                   // 返回GID
+gid_t   getegid(void);                  // 返回EGID
+
+ncsearch-nohlsearch)/*
+ * 超级用户调用setuid()会更改UID、EUID、SUID，普通用户调用则只更改UID，且只能更改为UID、EUID、SUID之一
+ * 超级用户调用seteuid()只更改EUID；普通用户调用则也只更改EUID，且只能更改为UID、EUID、SUID之一
+ * setgid()与setegid()同理
+*/
+int     setuid(uid_t uid);              // 返回0
+int     setgid(gid_t gid);              // 返回0
+int     seteuid(uid_t uid);             // 返回0
+int     setegid(gid_t gid);             // 返回0
 ```
+<!-- entry end -->
 
-### 分段I/O
+## 进程控制
+<!-- entry begin: fork exec wait -->
 ```c
-#include <sys/uio.h>
-ssize_t readv(int fd, const struct iovec* iov, int iovcnt);
-ssize_t writev(int fd, const struct iovec* iov, int iovcnt);
+#include <unistd.h>
+pid_t   fork(void);                                                         // 若为父进程则返回子进程PID，若为子进程则返回0
+int     execl(const char* pathname, const char* arg0, ..., NULL);           // 若成功则不返回
+int     execlp(const char* pathname, const char* arg0, ..., NULL);          // 若成功则不返回
+int     execle(const char* pathname, const char* arg0, ..., NULL, envp[]);  // 若成功则不返回
+int     execv(const char* filename, char* const argv[]);                    // 若成功则不返回
+int     execvp(const char* filename, char* const argv[]);                   // 若成功则不返回
+int     execve(const char* filename, char* const argv[], char*const envp[]);// 若成功则不返回
+int     fexecve(int fd, char* const argv[], char*const envp[]);             // 若成功则不返回
+void    _exit(int status);                                                  // 以status作为main返回值退出进程。立即进入内核
 
-struct iovec
+#include <stdlib.h>
+void    exit(int status);                                                   // 以status作为main返回值退出进程
+int     atexit(void (*func)(void));                                         // 返回0，若出错返回非0。只在main返回与调用exit时有效，而由signal终止无效
+
+#include <sys/wait.h>   // 注意wait函数与SIGCHLD并无关联
+pid_t   wait(int* status);                                                  // 返回等待进程PID，若出错返回0或-1
+pid_t   waitpid(pid_t pid, int* status, int options);                       // 返回等待进程PID，若出错返回0或-1，其他情况返回对应options
+int     waitid(idtype_t idtype, id_t id, siginfo_t* infop, int options);    // 返回0
+
+bool    WIFEXITED(int status);          // 返回bool表示是否正常退出
+bool    WIFSIGNALED(int status);        // 返回bool表示是否被信号终止
+bool    WIFSTOPPED(int status);         // 返回bool表示是否为停止状态
+bool    WIFCONTINUED(int status);       // 返回bool表示是否停止后又继续状态
+int     WEXITSTATUS(int status);        // 返回退出码
+int     WTERMSIG(int status);           // 返回终止信号
+int     WSTOPSIG(int status);           // 返回停止信号
+int     WCOREDUMP(int status);          // 若产生core则返回非0
+```
+<!-- entry end -->
+
+<!-- entry begin: wait waitpid waitid -->
+| waitpid pid | 说明                                  |
+|-------------|---------------------------------------|
+| `pid > 0`   | 等待指定子进程                        |
+| `pid < -1`  | 等待PGID为pid绝对值的进程组中的子进程 |
+| `pid == 0`  | 等待同进程组中的子进程                |
+| `pid == -1` | 等待任一子进程                        |
+
+| waitpid options | 说明                                   |
+|-----------------|----------------------------------------|
+| WNOHANG         | 子进程状态若非立即可用，则直接返回     |
+| WUNTRACED       | 任一子进程处于停止状态，且尚未报告状态 |
+| WCONTINUED      | 任一子进程停止后已继续，且尚未报告状态 |
+
+| waitid idtype | 说明                   |
+|---------------|------------------------|
+| P_PID         | 指定id表示PID          |
+| P_PGID        | 指定id表示PGID         |
+| P_ALL         | 忽略id并等待任一子进程 |
+
+| waitid options | 说明                               |
+|----------------|------------------------------------|
+| WEXITED        | 等待进程正常退出或信号终止         |
+| WSTOPPED       | 等待进程停止                       |
+| WCONTINUED     | 等待进程停止后继续                 |
+| WNOHANG        | 子进程状态若非立即可用，则直接返回 |
+| WNOWAIT        | 不回收子进程退出状态               |
+<!-- entry end -->
+
+## 线程
+<!-- entry begin: pthread_exit pthread_cancel exit ateixt pthread_cleanup_push pthread_cleanup_pop -->
+进程终止：（导致所有线程终止）
+* main函数返回
+    > 调用析构函数，且调用atexit注册的函数
+* 调用exit()
+    > 不调用析构函数，但调用atexit注册的函数
+* 调用_exit()或quick_exit()
+    > 不调用析构函数，且不调用atexit注册的函数
+* 终止信号的默认处理
+    > 不调用析构函数，且不调用atexit注册的函数
+
+线程终止：（导致单个线程终止）
+* 线程函数返回
+    > 不调用pthread_cleanup_push()注册的函数
+* 调用pthread_exit()
+    > 调用pthread_cleanup_push()注册的函数
+* 调用pthread_cancle()
+    > 调用pthread_cleanup_push()注册的函数
+> 以非0实参调用pthread_cleanup_pop()时，也会调用pthread_cleanup_push()注册的函数
+<!-- entry end -->
+
+<!-- entry begin: pthread_equal pthread_self pthread_create pthread_eixt pthread_cleanup_push pthread_cleanup_pop pthread_join pthread_detach pthread_atfork -->
+```c
+#include <pthread.h>
+int         pthread_equal(pthread_t tid1, pthread_t tid2);                          // 返回0
+pthread_t   pthread_self(void);                                                     // 返回调用线程TID
+int         pthread_create(                                                         // 返回0，若出错返回errno。注意tidp的初始化是异步的
+    pthread_t* tidp,
+    const pthread_attr_t* attr,
+    void* (*start_rtn)(void*),
+    void* arg
+);
+void        pthread_exit(void* retv_ptr);                                           // 若由主线程调用，则会等待其他所有线程终止再退出
+int         pthread_cancle(pthread_t tid);                                          // 返回0，若出错返回errno
+void        pthread_cleanup_push(void (*rtn)(void*), void* arg);
+void        pthread_cleanup_pop(int execute);                                       // 若用非0实参调用则会调用弹出的函数
+void        pthread_join(pthread_t tid, void** retv_ptr);                           // 若线程被取消则返回retv_ptr指向PTHREAD_CANCELED
+int         pthread_detach(pthread_t tid);                                          // 卸离线程无需调用pthread_detach即自动释放资源
+
+int         pthread_attr_init(pthread_attr_t* attr);
+int         pthread_attr_destroy(pthread_attr_t* attr);
+int         pthread_attr_getdetachstate(const pthread_attr_t *, int* detachstate);
+int         pthread_attr_setdetachstate(pthread_attr_t *, int* detachstate);        // PTHREAD_CREATE_DETACHED、PTHREAD_CREATE_JOINABLE
+int         pthread_setcancelstate(int state, int *oldstate);                       // PTHREAD_CANCEL_ENABLE、PTHREAD_CANCEL_DISABLE
+int         pthread_setcanceltype(int type, int *oldtype);                          // PTHREAD_CANCLE_ASYNCHRONOUS、PTHREAD_CANCEL_DEFERRED
+void        pthread_testcancel(void);                                               // 手动产生cancel点
+
+/* 
+ * fork时继承父进程的内存，故也继承了互斥锁与条件量。
+ * 但是fork后子进程只有一个调用线程的副本，而父进程中其他线程并未fork。
+ * 若子进程继承而来的锁已被上锁，且fork的线程并未持有锁，则可能造成死锁。
+ * 所以需要调用pthread_atfork函数再fork时将锁释放。
+*/
+int         pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void));
+```
+<!-- entry end -->
+
+## 信号处理
+<!-- entry begin: signal_names strsignal sigemptyset sigfillset sigaddset sigdelset sigismember kill raise sigqueue pthread_kill sigqueue pthread_kill sigpending sigprocmask pthread_sigmask signal sigaction -->
+对于SIGCONT：
+* 处理停止信号（SIGTSTP、SIGSTOP、SIGTTIN、SIGTTOU）时，丢弃未决决的SIGCONT。反之亦然。
+* 但若发射信号为SIGCONT则可发射给同会话中任一进程而无视权限
+
+安全处理信号：
+* `volatile sig_atomic_t`设置标识即返回
+* 保存和恢复errno
+* 只调用异步安全函数
+* 阻塞所有信号
+* 多次处理不排队的信号
+```c
+#include <bash/signames.h>                                              // 该头文件依赖signal.h
+char*   signal_names[NSIG + 4];                                         // 信号名数组
+
+#include <string.h>
+char*   strsignal(int signo);                                           // 返回解释该信号的字符串
+
+#include <signal.h>
+void    (*signal(int signo, void (*func)(int)))(int);                   // 返回之前的Handler
+int     sigaction(int signo, const sigaction* act, sigaction* oldact);  // 返回0
+
+int     kill(pid_t pid, int signo);                                     // 返回0。普通用户只能发送给UID或EUID等于其UID或EUID的进程
+int     raise(int signo);                                               // 返回0
+int     sigqueue(pid_t pid, int signo, const union sigval value);       // 返回0
+int     pthread_kill(pthread_t tid, int signo);                         // 返回0，错误返回errno
+
+int     sigemptyset(sigset_t* set);                                     // 返回0
+int     sigfillset(sigset_t* set);                                      // 返回0
+int     sigaddset(sigset_t* set, int signo);                            // 返回0
+int     sigdelset(sigset_t* set, int signo);                            // 返回0
+int     sigismember(const sigset_t* set, int signo);                    // 若signo再set中则返回非0
+int     sigpending(sigset_t* set);                                      // 返回0
+int     sigprocmask(int how, const sigset_t* set, sigset_t* oldset);    // 返回0。how可以为SIG_BLOCK、SIG_UNBLOCK、SIG_SETMASK之一
+int     pthread_sigmask(int how, const sigset_t* set, sigset_t* oleset);// 返回0，错误返回errno
+
+/* 其他与信号有关的函数 */
+int             sigwait(const sigset_t* set, int* signop);              // 返回0
+int             sigsuspend(const sigset_t* sigmask);                    // 返回0
+
+#include <unistd.h>
+int             pause(void)                                             // 返回-1且errno置为EINTR。只有执行信号处理返回时返回
+unsigned int    sleep(unsigned int seconds);                            // 返回未休眠的秒数。超时或信号处理返回时返回
+unsigned int    alarm(unsigned int seconds);                            // 返回闹钟剩余秒数。覆盖之前注册的闹钟
+
+#include <stdlib.h>
+void            abort(void)                                             // 发送SIGABRT给调用进程，处理函数返回则直接终止
+int             system(const char* cmdstring);                          // 返回shell命令行返回值（若shell的子进程被信号终止，则返回128+SIGNAL）。
+                                                                        // 同步调用，且期间阻塞SIGINT, SIGQUIT, SIGCHLD
+```
+<!-- entry end -->
+
+<!-- entry begin: kill -->
+| kill pid    | 说明                                        |
+|-------------|---------------------------------------------|
+| `pid > 0`   | 发送给指定进程                              |
+| `pid < 0`   | 发送给PGID等于pid绝对值的进程组中的所有进程 |
+| `pid == 0`  | 发送给同进程组所有有权限发送的进程          |
+| `pid == -1` | 发送给所有有权限发送的进程                  |
+<!-- entry end -->
+
+<!-- entry begin: sigaction -->
+```c
+#include <signal.h>
+struct sigaction
 {
-    void* iov_base; // 缓冲区起始处
-    size_t iov_len; // 缓冲区长度
+    void        (*sa_handler)(int signo);
+    sigset_t    sa_mask;
+    int         sa_flag;
+    void        (*sa_sigaction)(int signo, siginfo_t* info, void* context);
+}
+struct siginfo_t
+{
+    int     si_signo;   // 信号值
+    int     si_errno;   // 错误码
+    int     si_code;    // 信号详细信息
+    pid_t   si_pid;     // 发射进程PID
+    uid_t   si_uid;     // 发射进程UID
+    void*   si_addr;    // 发生故障的地址
+    int     si_status;  // 退出码或信号值
+    sigval  si_value;   // 应用程序指定信息。union sigval{int sival_int; void* sival_ptr;};
 };
 ```
+| sigaction sa_flag | 说明                                                                               |
+|-------------------|------------------------------------------------------------------------------------|
+| SA_SIGINFO        | 使用sa_sigaction代替sa_handler                                                     |
+| SA_RESTART        | 自动重启中断的系统调用                                                             |
+| SA_INTERRUPT      | 不自动重启中断的系统调用（默认重启）                                               |
+| SA_RESETHAND      | 自动重置信号处理        （默认不重置）                                             |
+| SA_NODEFER        | 不自动阻塞相同信号      （默认阻塞）                                               |
+| SA_NOCLDSTOP      | 若signo为SIGCHLD则设置只在子进程终止而非停止时发送该信号                           |
+| SA_NOCLDWAIT      | 若signo为SIGCHLD则设置不创建僵尸进程，若调用进程随后调用wait则需等待所有子进程终止 |
+<!-- entry end -->
 
-### 内存映射
-mmap直接映射的内核I/O缓冲区(MAP_SHARED)，对其更改会由内核更具缓冲区的元信息冲刷回硬盘
+## 资源限制
+<!-- entry begin: getrlimit setrlimit nice getpriority setpriority -->
 ```c
-#include <sys/mman.h>
-void* mmap(         // 若成功返回映射内存起始地址，若出错返回MAP_FAILED
-    void* addr,     // 建议起始地址，一般为NULL
-    size_t len,     // 建议映射长度，向上取页的倍数，超出文件长度的内存用0填充
-    int prot,       // 见下表prot
-    int flag,       // 见下表mmap flag
-    int fd,         // 指定映射的文件描述符
-    off_t off       // 指定文件起始位置的偏移量，向上取页的倍数
-);
-int mprotect(       // 若成功返回0，若出错返回-1
-    void* addr,     // 指定页的起始地址
-    size_t len,     // 指定作用内存长度
-    int prot        // 见下表prot
-);
-int msync(          // 若成功返回0，若出错返回-1
-    void* addr,     // 指定页的起始地址
-    size_t len,     // 指定作用内存长度
-    int flag        // 见下标msync flag
-);
-int munmap(         // 若成功返回0，若出错返回-1
-    void* addr,     // 指定页的起始地址
-    size_t len      // 指定作用内存长度
-);
-
-#include <sys/shm.h>
-int shmget(                 // 若成功返回shmID，若出错返回-1
-    key_t key,              // 指定存在于用户态的与内核态ID关联的key（IPC_PRIVATE为特殊的key表示私有key）
-    size_t size,            // 指定请求共享段的长度，向上取页长倍数
-    int flag                // 见下表shmget flag
-);
-int shmctl(                 // 若成功返回shmID，若出错返回-1
-    int shmid,              // 指定shmID
-    int cmd,                // 见下表cmd
-    shmid_ds* buf           // 指定cmd可能需要的参数
-);
-void* shmat(                // 若成功返回共享段起始地址，若出错返回-1
-    int shmid,              // 指定shmID
-    const void* addr,       // 指定映射地址，一般为NULL
-    int flag                // 见下表shmat flag
-);
-int shmdt(                  // 若成功返回shmID，若出错返回-1
-    const void* addr        // 指定之前shmat返回的地址
-);
-
-struct ipc_perm
+#include <sys/resource.h>
+struct rlimit
 {
-    uid_t   uid;            // 拥有者的EUID
-    gid_t   gid;            // 拥有者的EGID
-    uid_t   cuid;           // 创建者的EUID
-    gid_t   cgid;           // 创建者的EGID
-    mode_t  mode;           // 读写权限
-    ...
+    rlimit_t rlim_cur;  // 当前限制。可调整范围`[0, rlim_max]`
+    rlimit_t rlim_max;  // 最大限制。可调整范围`[rlim_cur, RLIM_INFINITY]`，普通用户只能调小，超级用户才能调大
+};
+int     getrlimit(int resource, rlimit* rlptr);         // 返回0，出错返回非0
+int     setrlimit(int resource, const rlimit* rlptr);   // 返回0，出错返回非0
+
+/* Linux上，nice范围[-20, 19]，其中普通用户只能设置非负数且只能调大 */
+#include <unistd.h>
+int     nice(int incr);                                 // 返回新友好值。自动调节incr到范围内的值
+
+#include <sys/resource.h>
+int     getpriority(int which, id_t who);               // 返回友好值。若作用于多个进程，则返回优先级最高到（nice最小的）
+int     setpriority(int which, id_t who, int value);    // 返回0。
+```
+| rlimit resource   | 说明                            |
+|-------------------|---------------------------------|
+| RLIMIT_AS         | 进程虚拟内存最大长度            |
+| RLIMIT_MEMLOCK    | 进程调用mlock()能锁住的最大内存 |
+| RLIMIT_RSS        | 进程最大驻留内存长度            |
+| RLIMIT_DATA       | 进程数据段最大长度              |
+| RLIMIT_STACK      | 进程栈的最大值                  |
+| RLIMIT_FSIZE      | 进程写入文件的最大长度          |
+| RLIMIT_CORE       | 进程core文件最大长度            |
+| RLIMIT_MSGQUEUE   | 进程POSIX消息队列最大长度       |
+| RLIMIT_SIGPENDING | 进程可排队信号的最大数量        |
+| RLIMIT_NOFILE     | 进程同时打开文件最大数量        |
+| RLIMIT_CPU        | 进程CPU时间最大秒数             |
+| RLIMIT_NPROC      | 实际用户可拥有的最大进程数      |
+
+| setpriority which | 说明                          |
+|-------------------|-------------------------------|
+| PRIO_PROCESS      | 指定who为PID（0代表调用进程） |
+| PRIO_PGRP         | 指定who为PGID                 |
+| PRIO_USER         | 指定who为SID                  |
+<!-- entry end -->
+
+# 虚拟文件系统
+## 文件系统结构
+### 硬链接
+<!-- entry begin: link linkat unlink unlinkat remove rename frenameat -->
+```c
+#include <unistd.h>
+int link(const char* existingpath, const char* newpath);                                    // 返回0。若epath为符号链接则创建符号链接
+int linkat(int efd, const char* existingpath, int nfd, const char* newpath, int flag);      // 返回0。若epath为符号链接则创建符号链接；支持flag=AT_SYMLINK_FOLLOW表示强制创建硬链接
+int unlink(const char* pathname);                                                           // 返回0。不跟随符号链接
+int unlinkat(int fd, const char* pathname, int flag);                                       // 返回0。不跟随符号链接，支持flag=AT_REMOVEDIR表示删除空目录
+int remove(const char* pathname);                                                           // 返回0。不跟随符号链接
+int rename(const char* oldname, const char* newname);                                       // 返回0。不跟随符号链接
+int frenameat(int oldfd, const char* pathname, int newfd, const char* newname);             // 返回0。不跟随符号链接
+```
+<!-- entry end -->
+
+### 文件信息
+<!-- entry begin: stat lstat fstat fstatat ft -->
+```c
+#include <sys/stat.h>
+struct stat
+{
+    mode_t          st_mode;        // 文件类型及权限
+    ino_t           st_ino;         // inode
+    dev_t           st_dev;         // 文件系统的设备号
+    dev_t           st_rdev;        // 特殊文件的设备号
+    nlink_t         st_nlink;       // 硬链接数
+    uid_t           st_uid;         // UID
+    gid_t           st_gid;         // GID
+    off_t           st_size;        // 字节长度（只对普通文件、目录、符号链接有效）
+    timespec        st_atime;       // atime
+    timespec        st_mtime;       // mtime
+    timespec        st_ctime;       // ctime
+    blksize_t       st_nlksize;     // 最优I/O块大小
+    blkcnt_t        st_blocks;      // 占用磁盘块数量（块大小为S_BLKSIZE）
 };
 
-struct shmid_ds
+int     stat(const char* pathname, stat* buf);                          // 返回0
+int     lstat(const char* pathname, stat* buf);                         // 返回0。不跟随符号链接
+int     fstat(int fd, stat* buf);                                       // 返回0
+int     fstatat(int fd, const char* pathname, stat* buf, int flag);     // 返回0
+
+bool    S_ISREG(mode_t st_mode);
+bool    S_ISDIR(mode_t st_mode);
+bool    S_ISLNK(mode_t st_mode);
+bool    S_ISFIFO(mode_t st_mode);
+bool    S_ISSOCK(mode_t st_mode);
+bool    S_ISBLK(mode_t st_mode);
+bool    S_ISCHR(mode_t st_mode);
+```
+<!-- entry end -->
+
+## 文件日期
+<!-- entry begin: utimes futimens utimesat -->
+```c
+#include <sys/time.h>
+int utimes(const char* pathname, const struct timeval times[2]);                         // 返回0
+int futimens(int fd, const struct timespec times[2]);                                    // 返回0
+int utimensat(int fd, const char* pathname, const struct timespec times[2], int flag);   // 返回0
+
+struct timeval  { time_t tv_sec; long tv_usec; };
+struct timespec { time_t tv_sec; long tv_nsec; };
+```
+times[2]说明：
+* times[0]表示atime，times[1]表示mtime
+* 若times为空指针，则表示设置为当前时间。需要权限：写权限 | onwer | root
+* 若times非空指针，且任一`tv_nsec`为`UTIME_NOW`，则设置为当前时间。需要权限：写权限 | onwer | root
+* 若times非空指针，且任一`tv_nsec`为`UTIME_OMIT`，则保持时间不变。需要权限：无
+* 若times非空指针，且无一`tv_nsec`为`UTIME_OMIT`或`UTIME_NOW`，则设置为指定时间。需要权限：owner | root
+<!-- entry end -->
+
+## 权限
+<!-- entry begin: access faccessat umask chmod fchmod fchmodat chown lchown fchown fchowat -->
+```c
+#include <unistd.h>
+int     access(const char* pathname, int mode);                                     // 返回0。按照实际的UID与GID进行权限判断
+int     faccessat(int fd, const char* pathname, int tmode, int flag);               // 返回0。支持flag=AT_EACCESS表示用EUID与EGID进行权限判断
+
+#include <sys/stat.h>
+mode_t  umask(mode_t mode);                                                         // 返回之前umask。进程独立；不限制chmod函数
+int     chmod(const char* pathname, mode_t mode);                                   // 返回0
+int     fchmod(int fd, mode_t mode);                                                // 返回0
+int     fchmodat(int fd, const char* pathname, mode_t mode, int flag);              // 返回0
+
+#include <unistd.h>
+int     chown(const char* pathname, uid_t owner, gid_t group);                      // 返回0。owner或group为-1表示不修改
+int     lchown(const char* pathname, uid_t owner, gid_t group);                     // 返回0。不跟随符号链接
+int     fchown(int fd, uid_t owner, gid_t group);                                   // 返回0
+int     fchownat(int fd, const char* pathname, uid_t owner, gid_t group, int flag); // 返回0
+```
+<!-- entry end -->
+
+<!-- entry begin: access mode -->
+| access mode | 说明           |
+|-------------|----------------|
+| F_OK        | 文件是否存在   |
+| R_OK        | 文件是否可读   |
+| W_OK        | 文件是否可写   |
+| X_OK        | 文件是否可执行 |
+<!-- entry end -->
+
+<!-- entry begin: chmod mode -->
+| chmod mode | 说明 |
+|------------|------|
+| S_ISUID    | 4000 |
+| S_ISGID    | 2000 |
+| S_ISVTX    | 1000 |
+| S_IRWXU    | 0700 |
+| S_IRUSR    | 0600 |
+| S_IWUSR    | 0400 |
+| S_IXUSR    | 0100 |
+| S_IRWXG    | 0070 |
+| S_IRGRP    | 0060 |
+| S_IWGRP    | 0040 |
+| S_IXGRP    | 0010 |
+| S_IRWXO    | 0007 |
+| S_IROTH    | 0006 |
+| S_IWOTH    | 0004 |
+| S_IXOTH    | 0001 |
+<!-- entry end -->
+
+## 文件类型
+### 目录
+<!-- entry begin: mkdir mkdirat rmdir chdir fchdir getcwd chroot -->
+```c
+#include <stdio.h>
+char*   mkdtemp(char* template);                                // 返回临时目录名字符串，若出错则返回NULL
+
+#include <sys/stat.h>
+int     mkdir(const char* pathname, mode_t mode);               // 返回0。不自动建立不存在的目录
+int     mkdirat(int fd, const char* pathname, mode_t mode);     // 返回0。不自动建立不存在的目录
+
+#include <unistd.h>
+int     rmdir(const char* pathname);                            // 返回0
+int     chdir(const char* pathname);                            // 返回0
+int     fchdir(int fd);                                         // 返回0
+char*   getcwd(char* buf, size_t size);                         // 返回工作目录的真实绝对路径。原理即通过`..`层层向上递归到根来获取
+int     chroot(const char* pathname);                           // 返回0。切换RTD（默认为系统`/`），只能由root调用，调用后该进程及其子进程则再无法恢复`/`了（因为隔离后根本无法指定原来的目录）
+```
+<!-- entry end -->
+
+### 符号链接
+<!-- entry begin: symlink readlink -->
+```c
+#include <unistd.h>
+int     symlink(const char* actualpath, const char* sympath);                   // 返回0
+int     symlinkat(const char* actualpath,int fd, const char* sympath);          // 返回0
+ssize_t readlink(const char* pathname, char* buf, size_t bufsize);              // 返回读取字节数
+ssize_t readlinkat(int fd, const char* pathname, char* buf, size_t bufsize);    // 返回读取字节数
+```
+<!-- entry end -->
+
+### 设备文件
+<!-- entry begin: major minor -->
+```c
+#include <sys/sysmacros.h>
+unsigned int    major(dev_t st_dev);
+unsigned int    minor(dev_t st_dev);
+unsigned int    major(dev_t st_rdev);
+unsigned int    minor(dev_t st_rdev);
+```
+<!-- entry end -->
+### 普通文件
+<!-- entry begin: open openat creat fcntl close dup dup2 lseek read write pread pwrite truncate ftruncate sync fsync fdatasync -->
+| 限制宏       | 说明                                                    |
+|--------------|---------------------------------------------------------|
+| _PC_OPEN_MAX | 同时打开文件的最大数量，即文件描述符范围[0, OPEN_MAX-1] |
+| _PC_NAME_MAX | 文件名最大长度                                          |
+| _PC_PATH_MAX | 路径名最大长度                                          |
+| _PC_NO_TRUNC | 文件名或路径名超出限制是否直接截断而非出错              |
+
+```c
+#include <stdio.h>
+int     mkstemp(char* template);                                        // 返回临时文件的文件描述符
+int     fileno(FILE* file);                                             // 返回流相关的文件描述符(NOE)
+
+#include <fcntl.h>
+int     open(const char* path, int oflag, mode_t mode...);              // 返回文件描述符
+int     openat(int fd, const char* path, int oflag, mode_t mode);       // 返回文件描述符
+int     creat(const char* path, mode_t mode);                           // 相当于open(path, O_WRONLY|O_CREAT|O_TRUNC, mode)
+int     fcntl(int fd, int cmd, int arg...);                             // 返回值依赖cmd
+
+#include <unistd.h>
+int     close(int fd);                                                  // 返回0
+int     dup(int fd);                                                    // 返回新文件描述符（最小未占用）。清除FD_CLOEXEC
+int     dup2(int fd, int fd2);                                          // 返回新文件描述符（指定描述符）。清除FD_CLOEXEC；原子操作(close;dup)
+off_t   lseek(int fd, off_t offset, int whence);                        // 返回新偏移量。对管道、套接字调用会出错；偏移量可能为负值，故不应把负的返回值当出错
+ssize_t read(int fd, void* buf, size_t nbytes);                         // 返回读取的字节数，若遇EOF返回0
+ssize_t write(int fd, const void* buf, size_t nbytes);                  // 返回已写的字节数
+ssize_t pread(int fd, void* buf, size_t nbytes, off_t offset);          // 返回读取的字节数，若遇EOF返回0。原子操作(lseek;read)且不影响文件偏移量
+ssize_t pwrite(int fd, const void* buf, size_t nbytes, off_t offset);   // 返回已写的字节数。原子操作(lseek;write)且不影响文件偏移量
+int     truncate(const char* pathname, off_t length);                   // 返回0
+int     ftruncate(int fd, off_t length);                                // 返回0
+void    sync(void);                                                     // 同步冲刷系统中所有文件缓冲区块
+int     fsync(int fd);                                                  // 返回0。同步冲刷指定文件
+int     fdatasync(int fd);                                              // 返回0。同步冲刷指定文件的数据
+```
+<!-- entry end -->
+
+<!-- entry begin: open oflag -->
+| open flag   | 说明                                                                                  |
+|-------------|---------------------------------------------------------------------------------------|
+| O_RDONLY    | 只读模式                                                                              |
+| O_WRONLY    | 只写模式                                                                              |
+| O_RDWR      | 读写模式                                                                              |
+| O_EXEC      | 执行模式                                                                              |
+| O_TRUNC     | 直接清空文件内容                                                                      |
+| O_APPEND    | 每次写时自动原子性调整文件偏移量到文件末尾，但不会自动恢复之前偏移量                  |
+| O_CLOEXEC   | 置位文件描述符标识位FD_CLOEXEC                                                        |
+| O_CREAT     | 若文件不存在则自动创建，需要额外实参mode指定权限位                                    |
+| O_EXCL      | 若文件存在则出错。若同时指定O_CREAT且目标文件为符号连接则报错。原子操作(judge;create) |
+| O_NOFOLLOW  | 若为符号链接则出错                                                                    |
+| O_DIRECTORY | 若不为目录则出错                                                                      |
+| O_SYNC      | 数据与属性同步写入                                                                    |
+| O_DSYNC     | 数据同步写入                                                                          |
+| O_NONBLOCK  | 非阻塞I/O，用于低速I/O与记录锁                                                        |
+| O_NOCTTY    | 会话首进程打开第一个尚未与会话关联的终端时，只要未使用该标识，则将该会话与终端关联    |
+| O_TTY_INIT  | 若打开一个还未打开的终端设备，设置非标准termios参数值                                 |
+<!-- entry end -->
+
+<!-- entry begin: fcntl cmd flock -->
+| fcntl cmd       | 说明                                                                                          |
+|-----------------|-----------------------------------------------------------------------------------------------|
+| F_DUPFD         | 返回新描述符。指定arg为期望新描述符。复制文件描述符，并清除FD_CLOEXEC                         |
+| F_DUPFD_CLOEXEC | 返回新描述符。指定arg为期望新描述符。复制文件描述符，并置位FD_CLOEXEC                         |
+| F_GETFD         | 返回文件描述符标识                                                                            |
+| F_SETFD         | 返回0。指定arg为文件描述符标识。设置文件描述符标识                                            |
+| F_GETFL         | 返回文件打开标识。4个互斥的模式位需用掩码O_ACCMODE读取                                        |
+| F_SETFL         | 返回0。指定arg为文件打开标识。设置文件打开标识。可以更改O_APPEND、O_NONBLOCK、O_SYNC、O_DSYNC |
+| F_GETLK         | 若检查记录锁可用返回0，否则返回-1。指定arg为`flock*`锁                                        |
+| F_SETLK         | 返回0。获取记录锁（非阻塞）                                                                   |
+| F_SETLKW        | 返回0。获取记录锁（阻塞）                                                                     |
+```c
+#include <fcntl.h>
+struct flock
 {
-    ipc_perm    shm_perm;   // 见上结构
-    size_t      shm_segsz;  // 段长
-    pid_t       shm_lpid;   // 上次调用shmop()的PID
-    pid_t       shm_cpid;   // 创建者PID
-    shmatt_t    shm_nattch; // 该段的引用计数
-    time_t      shm_atime;  // 上次连接时间
-    time_t      shm_dtime;  // 上次卸离时间
-    time_t      shm_ctime;  // 上次改变时间
-    ...
+    short   l_type;     // F_RDLCK, F_WRLCK, F_UNLCK
+    short   l_whence;   // SEEK_SET, SEEK_CUR, SEEK_END
+    off_t   l_start;    // 锁的起始位置
+    off_t   l_len;      // 锁的字节长度。0表示锁住当前字节直到EOF
+    pid_t   l_pid;      // 存储F_GETLK返回锁的拥有者PID
 };
 ```
-| prot       | 说明     |
-|------------|----------|
-| PROT_NONE  | 不可访问 |
-| PROT_READ  | 可读     |
-| PROT_WRITE | 可写     |
-| PROT_EXEC  | 可执行   |
+<!-- entry end -->
 
-| mmap flag   | 说明                                                                    |
-|-------------|-------------------------------------------------------------------------|
-| MAP_FIXED   | 强制起始位置为指定的addr                                                |
-| MAP_SHARED  | 共享内存映射，写会影响内核缓冲区块                                      |
-| MAP_PRIVATE | 私有内存区块，写只影响进程缓冲区块（内核缓冲区刷新时也会刷新该缓冲区 ） |
-| MAP_ANON    | 映射匿名对象，内存全置零                                                |
-
-| msync flag | 说明     |
-|------------|----------|
-| MS_SYNC    | 同步冲刷 |
-| MS_ASYNC   | 异步冲刷 |
-
-| shmget flag | 说明              |
-|-------------|-------------------|
-| IPC_CREAT   | 若key不存在则创建 |
-| IPC_EXCL    | 若key已存在则出错 |
-| 0666        | 读写权限          |
-
-| shmat flag | 说明                                     |
-|------------|------------------------------------------|
-| SHM_RDONLY | 指定连接共享段为只读（默认读写）         |
-| SHM_RND    | 使指定的共享段的映射地址向下取SHMLBA倍数 |
+<!-- entry begin: lseek whence -->
+| whence   | 说明       |
+|----------|------------|
+| SEEK_SET | 文件开始处 |
+| SEEK_CUR | 当前位置   |
+| SEEK_END | 文件结尾处 |
+<!-- entry end -->
 
 ### 管道
+<!-- entry begin: pipe popen pclose -->
 | 限制         | 说明                                                 |
 |--------------|------------------------------------------------------|
 | _PC_PIPE_BUF | 内核管道缓冲队列的大小，即能原子性写入的最大字节长度 |
 ```c
+/* 注意：使用两个管道与协同进程交流时，使用标准I/O可能会因为全缓冲而导致死锁（主进程没写完就开始读） */
 #include <unistd.h>
-int pipe(                   // 若成功返回0，若出错返回-1
-    int fd[2]               // 返回一对管道的描述符，fd[0]读，fd[1]写
-);  // 注意：使用两个管道与协同进程交流时，使用标准I/O可能会因为全缓冲而导致死锁（主进程没写完就开始读）
+int     pipe(int fd[2]);                                // 返回0。返回的fd[0]用于读，fd[1]用于写
 
 #include <stdio.h>
-FILE* popen(                // 若成功返回文件流指针，若出错返回NULL
-    const char* cmdstring,  // 指定shell命令
-    const char* type        // 指定读写模式（"r"或"w"）
-);
-int pclose(                 // 若成功返回shell返回值，若出错返回-1
-    FILE* fp                // 指定关闭的文件流指针
-);  // 注意：pclose会调用waitpid给popen启动的子进程收尸，若用户在pclose之前调用wait则会出错
+FILE*   popen(const char* shellcmd, const char* type);  // 返回管道的标准流。type指定读写模式（"r"或"w"）
+int     pclose(FILE* fp);                               // 返回shell返回值。pclose会调用waitpid给popen启动的子进程收尸，若用户在pclose之前调用wait则会出错
 ```
+<!-- entry end -->
 
 ### 套接字
+<!-- entry begin: addrinfo getaddrinfo getnameinfo freeaddrinfo gai_strerrot -->
 ```c
 #include <sys/socket.h>
 #include <netdb.h>
+struct addrinfo
+{
+    int         ai_flags;           // 见下表addrinfo ai_flags
+    int         ai_familt;          // 指定为domain
+    int         ai_socktype;        // 指定为socktype
+    int         ai_protocol;        // 指定为protocol
+    socklen_t   ai_addrlen;         // 指定sockaddr结构长度
+    sockaddr*   ai_addr;            // 因历史缘故，未使用void* 取代sockaddr*
+    char*       ai_canonname;       // 规范主机名
+    addrinfo*   ai_next;            // 链表下个元素指针
+};
 int getaddrinfo(                    // 若成功返回0，若出错返回errno
     const char* host,               // 指定主机名
     const char* service,            // 指定服务名
@@ -1347,96 +1240,9 @@ int getnameinfo(                    // 若成功返回0，若出错返回非0
     socklen_t servlen,              // 指定服务名最大长度
     int flag                        // 见下表getnameinfo flag
 );
-void freeaddrinfo(
-    addrinfo* ai                    // 指定getaddrinfo返回的res用于销毁
-);
-const char* gai_strerrot(           // 返回出错信息字符串
-    int errno                       // 指定getaddrinfo返回的错误码
-);
-struct addrinfo
-{
-    int         ai_flags;           // 见下表addrinfo ai_flags
-    int         ai_familt;          // 指定为domain
-    int         ai_socktype;        // 指定为socktype
-    int         ai_protocol;        // 指定为protocol
-    socklen_t   ai_addrlen;         // 指定sockaddr结构长度
-    sockaddr*   ai_addr;            // 因历史缘故，未使用void* 取代sockaddr*
-    char*       ai_canonname;       // 规范主机名
-    addrinfo*   ai_next;            // 链表下个元素指针
-};
-
-int socket(                 // 若返回成功返回创建的套接字的描述符，若出错返回-1
-    int domain,             // 见下表domain
-    int socktype,           // 见下表socktype
-    int protocol            // 见下表protocol，一般指定为0而由系统自动选择
-);
-int bind(                   // 若成功返回0，若出错返回-1
-    int sockfd,             // 指定套接字的描述符用于绑定本地地址
-    const sockaddr* addr,   // 指定本地的地址
-    socklen_t len           // 指定addr长度
-);
-int listen(                 // 若成功返回0，若出错返回-1
-    int sockfd,             // 指定套接字描述符用于监听本地端口
-    int backlog             // 指定建议性的进程未完成连接的请求数（上限SOMAXCONN）
-);
-int accept(                 // 若成功返回该连接的套接字描述符，若出错返回-1
-    int sockfd,             // 指定套接字的描述符用于接受连接
-    sockaddr* addr,         // 返回连接对等方地址（可为NULL）
-    socklen_t* len          // 返回addr长度（可为NULL）
-);  // 注意：若sockfd处于非阻塞模式且当前无可用连接，则返回-1
-int connect(                // 若成功返回0，若出错返回-1
-    int sockfd,             // 指定套接字描述符用于连接
-    const sockaddr*,        // 指定连接的地址
-    socklen_t len           // 指定addr长度
-);  // 注意：为了可移植性，当connect失败时需要close(sockfd)然后重新创建
-ssize_t send(               // 若成功返回发送的字节数，若出错返回-1
-    int sockfd,             // 指定套接字描述符用于发送数据
-    const void* buf,        // 指定发送数据
-    size_t nbytes,          // 指定buf长度
-    int flags               // 见下表send flag
-);
-ssize_t sendto(             // 若成功返回发送的字节数，若出错返回-1
-    int sockfd,             // 指定套接字描述符用于发送数据
-    const void* buf,        // 指定发送数据
-    size_t nbytes,          // 指定buf长度
-    int flags,              // 见下表send flag
-    const sockaddr* addr,   // 指定发送地址（用于无连接）
-    socklen_t alen          // 指定addr长度
-);
-ssize_t recv(               // 若成功返回接收的字节数，若出错返回-1
-    int sockfd,             // 指定套接字描述符用于接收数据
-    void* buf,              // 指定接收缓冲区
-    size_t nbytes,          // 指定buf长度
-    int flags               // 见下表recv flag
-);
-ssize_t recvfrom(           // 若成功返回接收的字节数，若出错返回-1
-    int sockfd,             // 指定套接字描述符用于接收数据
-    void* buf,              // 指定接收缓冲区
-    size_t nbytes,          // 指定buf长度
-    int flags,              // 见下表recv flag
-    sockaddr* addr,         // 返回发送方地址（用于无连接）
-    socklen_t* alen         // 返回addr长度
-);
-int sockmark(               // 若下个读取字节为外带数据返回1，若不是则返回0，若出错返回-1
-    int sockfd              // 指定套接字描述符用于判断
-);  // 注意：下一个外带数据到来时会丢弃当前的
-int shutdown(               // 若成功返回0，若出错返回-1
-    int sockfd,             // 指定套接字的描述符用于断开连接
-    int how                 // 见下表how
-);
+void freeaddrinfo(addrinfo* ai);    // 指定ai为getaddrinfo返回的res用于销毁
+const char* gai_strerrot(int errno);// 返回出错信息字符串。指定errno为getaddrinfo返回的错误码
 ```
-套接字接口调用流程：
-| 函数           | 网络服务端 | 网络客户端 | UNIX域服务端 | UNIX域客户端 |
-|----------------|------------|------------|--------------|--------------|
-| socket         | 1          | 1          | 1            | 1            |
-| bind           | 1          | 1/0        | 1            | 0            |
-| listen         | 1          | 0          | 1            | 0            |
-| accept         | 1          | 0          | 1            | 0            |
-| connect        | 0          | 1          | 0            | 1            |
-| send           | 1          | 1          | 1            | 1            |
-| recv           | 1          | 1          | 1            | 1            |
-| shutdown/close | 1          | 1          | 1            | 1            |
-
 | addrinfo ai_flags | 说明                                           |
 |-------------------|------------------------------------------------|
 | AI_ADDRCONFIG     | 当存在IPv4地址时才返回IPv4，IPv6同理           |
@@ -1455,6 +1261,33 @@ int shutdown(               // 若成功返回0，若出错返回-1
 | NI_NUMERICSCOPE  | 返回IPv6冒分制的主机名而非域名           |
 | NI_NUMERICHOST   | 返回IPv4点分制的主机名而非域名           |
 | NI_NUMERICSERV   | 返回端口号而非服务名                     |
+<!-- entry end -->
+
+<!-- entry begin: socket bind listen accept connect send sendto recv recvfrom shutdown sockmark -->
+```
+int     socket(int domain, int socktype, int protocol);                                                     // 返回创建的套接字的描述符
+int     bind(int sockfd, const sockaddr* addr, socklen_t len);                                              // 返回0
+int     listen(int sockfd, int backlog);                                                                    // 返回0
+int     accept(int sockfd, sockaddr* addr, socklen_t* len);                                                 // 返回连接的套接字描述符
+int     connect(int sockfd, const sockaddr*, socklen_t len);                                                // 返回0。为了可移植性，当connect失败时需要close(sockfd)然后重新创建
+ssize_t send(int sockfd, const void* buf, size_t nbytes, int flags);                                        // 返回发送的字节数
+ssize_t sendto(int sockfd, const void* buf, size_t nbytes, int flags, const sockaddr* addr, socklen_t alen);// 若成功返回发送的字节数
+ssize_t recv(int sockfd, void* buf, size_t nbytes, int flags);                                              // 返回接收的字节数
+ssize_t recvfrom(int sockfd, void* buf, size_t nbytes, int flags, sockaddr* addr, socklen_t* alen);         // 返回接收的字节数
+int     shutdown(int sockfd, int how);                                                                      // 返回0。how可为SHUT_RD、SHUT_WR、SHUT_WR之一
+int     sockmark(int sockfd);       // 若下个读取字节为外带数据返回1，若不是则返回0，若出错返回-1。 注意下一个外带数据到来时会丢弃当前的
+```
+套接字接口调用流程：
+| 函数           | 网络服务端 | 网络客户端 | UNIX域服务端 | UNIX域客户端 |
+|----------------|------------|------------|--------------|--------------|
+| socket         | 1          | 1          | 1            | 1            |
+| bind           | 1          | 1/0        | 1            | 0            |
+| listen         | 1          | 0          | 1            | 0            |
+| accept         | 1          | 0          | 1            | 0            |
+| connect        | 0          | 1          | 0            | 1            |
+| send           | 1          | 1          | 1            | 1            |
+| recv           | 1          | 1          | 1            | 1            |
+| shutdown/close | 1          | 1          | 1            | 1            |
 
 | domain    | 说明         |
 |-----------|--------------|
@@ -1479,12 +1312,6 @@ int shutdown(               // 若成功返回0，若出错返回-1
 | IPPROTO_UDP  | UDP        |
 | IPPROTO_RAW  | 跳过传输层 |
 
-| how       | 说明           |
-|-----------|----------------|
-| SHUT_RD   | 关闭读通道     |
-| SHUT_WD   | 关闭写通道     |
-| SHUT_RDWR | 关闭读写两通道 |
-
 | send flag     | 说明                             |
 |---------------|----------------------------------|
 | MSG_CONFIRM   | 提供链路层反馈以保持地址映射有效 |
@@ -1504,17 +1331,12 @@ int shutdown(               // 若成功返回0，若出错返回-1
 | MSG_PEEK         | 返回数据包内容但不取走                                    |
 | MSG_TRUNC        | 即使数据包被截断页返回实际长度                            |
 | MSG_WAITALL      | 等到所有数据可用时（仅SOCK_STREAM）                       |
+<!-- entry end -->
 
 ### 终端
+<!-- entry begin: tcgetattr tcsetattr cfgetispeed cfgetospeed cfsetispeed cfsetospeed termios ctermid isatty ttyname winsize -->
 ```c
 #include <termios.h>
-int     tcgetattr(int fd, termios* termptr);                // 若成功返回0，若出错返回-1
-int     tcsetattr(int fd, int opt, const termios* termptr); // 若成功返回0，若出错返回-1
-speed_t cfgetispeed(const termios* termptr);                // 若成功返回0，若出错返回-1
-speed_t cfgetospeed(const termios* termptr);                // 若成功返回0，若出错返回-1
-int     cfsetispeed(termios* termptr, speed_t speed);       // 若成功返回0，若出错返回-1
-int     cfsetospeed(termios* termptr, speed_t speed);       // 若成功返回0，若出错返回-1
-
 struct termios
 {
     tcflag_t    c_iflag;    // 见下表c_iflag
@@ -1523,11 +1345,40 @@ struct termios
     tcflag_t    c_lflag;    // 见下表c_lflag
     cc_t        c_cc[NCCS]; // 见下表c_cc，利用下标将对应元素设置为_POSIX_VDISABLE可禁用该特殊字符
 };
+int     tcgetattr(int fd, termios* termptr);                // 返回0
+int     tcsetattr(int fd, int opt, const termios* termptr); // 返回0
+speed_t cfgetispeed(const termios* termptr);                // 返回0
+speed_t cfgetospeed(const termios* termptr);                // 返回0
+int     cfsetispeed(termios* termptr, speed_t speed);       // 返回0
+int     cfsetospeed(termios* termptr, speed_t speed);       // 返回0
+
+#include <stdio.h>
+char*   ctermid(char* buf);                                 // 若成功返回控制终端名字符串(/dev/tty)同时返回到buf[L_ctermid]中，若出错返回NULL
+
+#include <unistd.h>
+int     isatty(int fd);                                     // 若为终端设备返回1，否则返回0
+char*   ttyname(int fd);                                    // 若成功返回终端路径名字符串，若出错返回NULL
+
+struct winsize                                              // 获取winsize：ioctl(fd, TIOCGWINSZ, winsize*)
+{
+    unsigned short ws_row;
+    unsigned short ws_col;
+    unsigned short ws_xpixel;
+    unsigned short ws_ypixel;
+};
 ```
+<!-- entry end -->
+
+<!-- entry begin: tcsetattr termios stty -->
+| tcsetattr opt | 说明                         |
+|---------------|------------------------------|
+| TCSANOW       | 更改立即发生                 |
+| TCSADRAIN     | 发送所有输出后更改才发生     |
+| TCASFLUSH     | 同上，且丢弃未读取的输入数据 |
 
 | c_iflag | 说明                                                |
 |---------|-----------------------------------------------------|
-| BRKINT  | 冲刷输入输出队列，并发射SIGINT给前台进程组          |
+| BRKINT  | 清空输入输出队列，并发射SIGINT给前台进程组          |
 | IGNBRK  | 忽略BREAK条件                                       |
 | ICRNL   | 将输入的CR转换为NL                                  |
 | IGNCR   | 忽略CR                                              |
@@ -1551,13 +1402,13 @@ struct termios
 | FFDLY   | FF延迟屏蔽字(FF0, FF1)                |
 | CRDLY   | CR延迟屏蔽字(CR0, CR1, CR2, CR3)      |
 | NLDLY   | NL延迟屏蔽字(NL0, NL1)                |
+| OFILL   | 延迟使用填充符                        |
+| OFDEL   | 填充符为DEL而非NUL                    |
 | OCRNL   | 将输出的CR映射为NL                    |
 | ONLCR   | 将输出的NL映射为CR-NL                 |
 | ONLRET  | NL执行CR功能                          |
 | ONOCR   | 在0列不输出CR                         |
 | OLCUC   | 将输出的小写字符转换为大写            |
-| OFILL   | 延迟使用填充符                        |
-| OFDEL   | 填充符为DEL而非NUL                    |
 | OPOST   | 执行输出处理（解释c_oflag）           |
 
 | c_cflag | 说明                                       |
@@ -1616,57 +1467,204 @@ struct termios
 |-----------|:--------------------------------------------:|:-----------------------------------:|
 | TIME > 0  | 若未超时则读取[MIN, n]；若超时则读取[1, MIN] | 若未超时则读取[1, n]；若超时则读取0 |
 | TIME == 0 |                 读取[MIN, n]                 |              读取[0, n]             |
+<!-- entry end -->
 
-```c
-#include <stdio.h>
-char*   ctermid(char* buf);     // 若成功返回控制终端名字符串同时返回到buf[L_ctermid]中，若出错返回NULL
+<!-- entry begin: ansi color -->
+* 8/16/24 colors
+    > `${ID}`：见下表
+    * `\033[${ID}m`     (普通)
+    * `\033[${ID};1m`   (粗体，高亮)
+    * `\033[${ID};2m`   (低暗)
 
-#include <unistd.h>
-int     isatty(int fd);         // 若为终端设备返回1，否则返回0
-char*   ttyname(int fd);        // 若成功返回终端路径名字符串，若出错返回NULL
+|  color | foreground | background |
+|:------:|:----------:|:----------:|
+|  black |     30     |     40     |
+|   red  |     31     |     41     |
+|  green |     32     |     32     |
+| yellow |     33     |     33     |
+|  blue  |     34     |     34     |
+| purple |     35     |     35     |
+|  cyan  |     36     |     36     |
+|  white |     37     |     37     |
 
-#include <termios.h>
-#include <sys/ioctl.h>
-int ioctl(                      // 若成功返回0，若出错返回-1
-    int fd,                     // 指定终端描述符
-    int request,                // 指定为TIOCGWINSZ
-    ...                         // 指定为winsize*，返回终端窗口大小
-);
-struct winsize
-{
-    unsigned short ws_row;
-    unsigned short ws_col;
-    unsigned short ws_xpixel;
-    unsigned short ws_ypixel;
-};
-```
+* 256 color
+    > `${fg_bg}`：前景为`38`，背景为`48`  
+    > `${ID}`：0~255见<https://jonasjacek.github.io/colors/>
+    * `\033[${fg_bg};5;${ID}m`
 
-| opt       | 说明                         |
-|-----------|------------------------------|
-| TCSANOW   | 更改立即发生                 |
-| TCSADRAIN | 发送所有输出后更改才发生     |
-| TCASFLUSH | 同上，且丢弃未读取的输入数据 |
+* true color
+    > `${fg_bg}`：前景为`38`，背景为`48`  
+    > `${red|green|blue}`：见系统调色板
+    * `\033[${fg_bg};2;${red};${green};${blue}m`
+<!-- entry end -->
 
+<!-- entry begin: ansi escape -->
+* ansi_escape
+<!--  -->
+|        escape       |    meaning   |
+|:-------------------:|:------------:|
+|       `\e[0m`       |     复原     |
+|       `\e[1m`       |     加粗     |
+|       `\e[2m`       |     低暗     |
+|       `\e[3m`       |     斜体     |
+|       `\e[4m`       |    下划线    |
+|      `\e[4:3m`      |  下划波浪线  |
+|       `\e[5m`       |     闪烁     |
+|       `\e[7m`       |     反显     |
+|       `\e[8m`       |     消隐     |
+|       `\e[9m`       |    删除线    |
+|      `\e[?25l`      |   隐藏光标   |
+<!-- entry end -->
+
+* * * * * * * * * *
+
+<!-- entry begin: pty posix_openpt grantpt unlockpt ptsname openpty forkpty -->
+伪终端用途：
+* 协程通讯，协程的输入与输出针对终端会有特殊处理
+* 协程通讯，强制协程使用的标准流进程行缓冲（相对管道为全缓冲）
+* 终端模拟器
+* 远程终端
 ```c
 #include <stdlib.h>
 #include <fcntl.h>
-int     posix_openpt(int oflag);
-int     grantpt(int fd);
-int     unlockpt(int fd);
-char*   ptsname(int fd);
+int     posix_openpt(int oflag);    // 返回PTY主设备文件描述符。oflag支持O_RDWR与O_NOCTTY
+int     grantpt(int fd);            // 返回0。设置对应从设备适当的权限与属主
+int     unlockpt(int fd);           // 返回0。允许对应从设备被访问
+char*   ptsname(int fd);            // 返回对应从设备名称字符串
 
 #include <pty.h> // 需要链接参数`-lutil`
-int openpty(                // 若成功返回0，若出错返回-1
-    int* master,            // 返回主设备描述符
-    int* aslave,            // 返回从设备描述符
-    char* name,             // 返回从设备名称字符串
-    const termios* termp,   // 指定设置从设备终端属性
-    const winsize* winp     // 指定设置从设备窗口大小
-)
-pid_t forkpty(              // 若为父进程则返回子进程PID，若为子进程则返回0，若出错返回-1
-    int* master,            // 返回主设备描述符
-    char* name,             // 返回从设备名称字符串
-    const termios* termp,   // 指定设置从设备终端属性
-    const winsize* winp     // 指定设置从设备窗口大小
-)
+int     openpty(int* master, int* aslave, char* name, const termios* termp, const winsize* winp);   // 返回0
+pid_t   forkpty(int* master, char* name, const termios* termp, const winsize* winp);                // 若为父进程则返回子进程PID，若为子进程则返回0，若出错返回-1
 ```
+<!-- entry end -->
+
+## 高级I/O
+### 非阻塞I/O
+[见fcntl](#普通文件)
+* 对于硬盘文件无效，因为对硬盘的读写并非低速I/O
+* 对于管道、套接字、终端有效
+
+### 记录锁
+[见fcntl](#普通文件)
+* 记录锁即进程间读写同步锁，与PID关联
+* 关闭文件描述符时即会释放对应文件的记录锁，不管该文件描述符是否还有其他副本
+* 记录锁不会阻塞本进程获取锁，转而直接替换锁
+* 建议性锁需要调用记录锁接口才有用，强制性锁对所有进程强制限制读写（需要`mount -o mand`）
+
+### 分段I/O
+<!-- entry begin: readv writev iovec -->
+| 限制宏  | 说明                |
+|---------|---------------------|
+| IOV_MAX | iov参数最大元素个数 |
+```c
+#include <sys/uio.h>
+struct iovec
+{
+    void* iov_base; // 缓冲区起始处
+    size_t iov_len; // 缓冲区长度
+};
+ssize_t readv(int fd, const iovec* iov, int iovcnt);    // 返回已读字节数
+ssize_t writev(int fd, const iovec* iov, int iovcnt);   // 返回已写字节数
+```
+<!-- entry end -->
+
+### I/O多路复用
+<!-- entry begin: select pselect -->
+```c
+#include <sys/select.h>
+int select(                     // 返回准备好的描述符数量。会被信号中断
+    int maxfdp1,            // 等待文件描述符中的最大值 + 1
+    fd_set* readfds,        // 指定可读描述符集合，并在返回时存储准备好的描述符集合
+    fd_set* writefds,       // 指定可写描述符集合，并在返回时存储准备好的描述符集合
+    fd_set* exceptfds,      // 指定异常描述符集合，并在返回时存储准备好的描述符集合
+    timeval* tvptr          // tvptr==NULL表示无限期等待，tvptr->tv_sec==0&&tvptr->tv_usec==0表示不等待，否则等待指定时间。若提前被唤醒还将返回时存储剩余时间
+);
+int pselect(                    // 返回准备好的描述符数量
+    int maxfdp1,            // 等待文件描述符中的最大值 + 1
+    fd_set* readfds,        // 指定可读描述符集合，并在返回时存储准备好的描述符集合
+    fd_set* writefds,       // 指定可写描述符集合，并在返回时存储准备好的描述符集合
+    fd_set* exceptfds,      // 指定异常描述符集合，并在返回时存储准备好的描述符集合
+    const timespec* tsptr,  // tvptr==NULL表示无限期等待，tvptr->tv_sec==0&&tvptr->tv_nsec==0表示不等待，否则等待指定时间
+    const sigset_t* sigmask // 指定调用期间的信号屏蔽字（可为NULL）
+);
+```
+<!-- entry end -->
+
+### 内存映射
+<!-- entry begin: mmap mprotect msync munmap shmget shmctl shmat shmdt -->
+```c
+#include <sys/mman.h>
+void* mmap(         // 若成功返回映射内存起始地址，若出错返回MAP_FAILED。mmap直接映射的内核I/O缓冲区(MAP_SHARED)，对其更改会由内核更具缓冲区的元信息冲刷回硬盘
+    void* addr,     // 建议起始地址，一般为NULL
+    size_t len,     // 建议映射长度，向上取页的倍数，超出文件长度的内存用0填充
+    int prot,       // 见下表prot
+    int flag,       // 见下表mmap flag
+    int fd,         // 指定映射的文件描述符
+    off_t off       // 指定文件起始位置的偏移量，向上取页的倍数
+);
+int mprotect(void* addr, size_t len, int prot); // 返回0
+int msync(void* addr, size_t len, int flag);    // 返回0
+int munmap(void* addr, size_t len);             // 返回0
+
+#include <sys/shm.h>
+struct ipc_perm
+{
+    uid_t   uid;            // 拥有者的EUID
+    gid_t   gid;            // 拥有者的EGID
+    uid_t   cuid;           // 创建者的EUID
+    gid_t   cgid;           // 创建者的EGID
+    mode_t  mode;           // 读写权限
+    ...
+};
+struct shmid_ds
+{
+    ipc_perm    shm_perm;   // 见上结构
+    size_t      shm_segsz;  // 段长
+    pid_t       shm_lpid;   // 上次调用shmop()的PID
+    pid_t       shm_cpid;   // 创建者PID
+    shmatt_t    shm_nattch; // 该段的引用计数
+    time_t      shm_atime;  // 上次连接时间
+    time_t      shm_dtime;  // 上次卸离时间
+    time_t      shm_ctime;  // 上次改变时间
+    ...
+};
+int shmget(                 // 返回shmID
+    key_t key,          // 指定存在于用户态的与内核态ID关联的key（IPC_PRIVATE为特殊的key表示用于创建新键）
+    size_t size,        // 指定请求共享段的长度，向上取页长倍数
+    int flag            // 见下表shmget flag
+);
+int shmctl(                 // 返回0
+    int shmid,          // 指定shmID
+    int cmd,            // 指定为IPC_STAT、IPC_SET、IPC_RMID之一
+    shmid_ds* buf       // IPC_STAT返回shmid对应共享内存段信息指针；IPC_SET表示设置；IPC_RMID表示删除（无论引用计数是否仅为1）
+);
+void* shmat(int shmid, const void* addr, int flag); // 返回共享段起始地址
+int shmdt(const void* addr);                        // 返回0。引用计数减1
+
+```
+| prot       | 说明     |
+|------------|----------|
+| PROT_NONE  | 不可访问 |
+| PROT_READ  | 可读     |
+| PROT_WRITE | 可写     |
+| PROT_EXEC  | 可执行   |
+
+| mmap flag   | 说明                                                                    |
+|-------------|-------------------------------------------------------------------------|
+| MAP_FIXED   | 强制起始位置为指定的addr                                                |
+| MAP_SHARED  | 共享内存映射，写会影响内核缓冲区块                                      |
+| MAP_PRIVATE | 私有内存区块，写只影响进程缓冲区块（内核缓冲区刷新时也会刷新该缓冲区 ） |
+| MAP_ANON    | 映射匿名对象，内存全置零                                                |
+
+| shmget flag | 说明              |
+|-------------|-------------------|
+| IPC_CREAT   | 若key不存在则创建 |
+| IPC_EXCL    | 若key已存在则出错 |
+| 0666        | 读写权限          |
+
+| shmat flag | 说明                                     |
+|------------|------------------------------------------|
+| SHM_RDONLY | 指定连接共享段为只读（默认读写）         |
+| SHM_RND    | 使指定的共享段的映射地址向下取SHMLBA倍数 |
+<!-- entry end -->
+

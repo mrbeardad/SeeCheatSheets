@@ -317,7 +317,7 @@ alias dk='docker'
     * commit信息：
         * 作者、提交者、日期、校验、描述、父指针、"快照"
             > 父指针指向上次**commit**，可能有多个
-![图片来自网络](../images/git-branch.png)
+![图片来自网络](images/git-branch.png)
 
 * 工作流程
     * 贡献者

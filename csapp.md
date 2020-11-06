@@ -64,11 +64,11 @@
 * 整数表示
     * 无符型整数：无符型编码 **U**
 
-        ![unsigned](../images/csapp2.png)
+        ![unsigned](images/csapp2.png)
     * 有符型整数：补码编码 **T**
         > 注意补码正负范围不对称，|Tmin| = |Tmax| + 1
 
-        ![signed](../images/csapp3.png)
+        ![signed](images/csapp3.png)
 <!-- entry end -->
 
 ## 整数操作
@@ -82,28 +82,28 @@
 * 相互转换
     > 保持底层位模式不变，若长度不同，则先截断或扩展，再重新解释位模式
     * T => U：  
-        ![T=>U](../images/csapp6.png)
+        ![T=>U](images/csapp6.png)
     * U => T：  
-        ![U=>T](../images/csapp7.png)
+        ![U=>T](images/csapp7.png)
 * 加法运算
     > 完全相同的位级运算
     * **U**加法
         > 正溢出值回环到`0`直到`极值 - 1`
-        ![无符号加法](../images/csapp4.png)
+        ![无符号加法](images/csapp4.png)
     * **T**加法
         > 负溢出值回环到`正极值`直到`0`，正溢出值回环到`负极值`直到`-2`
-        ![有符号加法](../images/csapp5.png)
+        ![有符号加法](images/csapp5.png)
 * 乘法运算
     > 不完全相同的位级运算，但是截断后的结果相同
     * **U**乘法  
-        ![无符号乘法](../images/csapp8.png)
+        ![无符号乘法](images/csapp8.png)
     * **T**乘法  
-        ![有符号乘法](../images/csapp9.png)
+        ![有符号乘法](images/csapp9.png)
 * 求反运算
     * **T**求反  
-        ![无符号求反](../images/csapp11.png)
+        ![无符号求反](images/csapp11.png)
     * **U**求反  
-        ![有符号求反](../images/csapp10.png)
+        ![有符号求反](images/csapp10.png)
 * 常数乘除
     > 可以利用位移运算优化，一般由编译器做展开而不手动优化以致降低可读性
 * 溢出检测
@@ -128,8 +128,8 @@
 ## 浮点数
 <!-- entry begin: csapp ieee 浮点数 -->
 * IEEE浮点表示  
-![单精度与双精度](../images/csapp12.png)
-![阶码的不同](../images/csapp13.png)
+![单精度与双精度](images/csapp12.png)
+![阶码的不同](images/csapp13.png)
 * $浮点数=尾数\times2^{阶码}$
     > 类似二进制的科学计数法
 * 阶码
@@ -167,21 +167,21 @@
 * 数据类型
     > ATT格式要求指令尾缀加上数据类型
 
-    ![ds](../images/csapp14.png)
+    ![ds](images/csapp14.png)
 * <span id="register">寄存器</span>
     > 其中可由当前函数随意调用的通用寄存器共有9个
     * 被调用者保存寄存器：即该寄存器属于上级函数，当前函数(**被调用者**)试图占用该寄存器前，
         负责保存里面的值并在函数返回前恢复
     * 调用者寄保存存器：即该寄存器可以被当前函数(**调用者**)随意使用，但在调用其他函数前需要保存里面的值，
         因为对下级函数来说，该寄存器也可以随意调用而不会保存里面的值
-    ![reg](../images/csapp15.png)
+    ![reg](images/csapp15.png)
 * 操作数
     > 大多数指令有一个或多个操作数，用以指出该指令需要使用的源数据值，
     > 以及放置结果的目的位置(右操作数)。
     * 立即数
     * 寄存器
     * 内存引用  
-![op](../images/csapp16.png)
+![op](images/csapp16.png)
 
 ## 机器指令
 * 数据传送(mov)
@@ -192,21 +192,21 @@
     > call相当于push %rip; jump func  
     > 即将PC压栈后跳转到制定函数
 * 算术与逻辑操作  
-![op](../images/csapp17.png)
+![op](images/csapp17.png)
 * 特殊算术操作  
-![op](../images/csapp18.png)
+![op](images/csapp18.png)
 * 测试指令
     > 根据条件码进行测试操作  
     > CMP $S_{1}, S_{2}$ &emsp;基于 $S_{2}-S_{1}$  
     > TEST $S_{1}, S_{2}$&emsp;基于 $S_{1}\&S_{s}$
     * 常用条件码
-        ![j](../images/csapp20.png)
+        ![j](images/csapp20.png)
 * 跳转指令  
-    ![j](../images/csapp19.png)
+    ![j](images/csapp19.png)
 * 条件赋值
     > 条件表达式
 
-![op](../images/csapp21.png)
+![op](images/csapp21.png)
 >
 
 ## C语句的翻译
@@ -237,7 +237,7 @@
 * 数组的地址对齐即元素的对齐
 * 大多数的栈帧边界是16字节地址对齐
 
-<img align="right" src="../images/csapp22.png"></img>
+<img align="right" src="images/csapp22.png"></img>
 ## 运行时栈
 左图，从高地址向低地址生长
 * 参数构造
@@ -283,7 +283,7 @@
 >
 
 ## 现代处理器
-![CPU](../images/csapp23.png)
+![CPU](images/csapp23.png)
 * 超标量：一个周期多个操作，乱序执行
 * ICU结构：
     * 取指单元
@@ -346,7 +346,7 @@
 >
 
 # 硬件组成
-![典型系统的硬件组成](../images/csapp1.png)
+![典型系统的硬件组成](images/csapp1.png)
 * CPU
     * 执行来自主存中的指令
     * 通过I/O桥与主存、显卡、I/O总线相连
@@ -482,8 +482,8 @@ Windows下搜索路径次序：
 <!-- entry end -->
 
 ## 虚拟内存
-![mm](../images/csapp25.png)  
-<img align="right" height=600 width=300 src="../images/csapp24.png"></img>
+![mm](images/csapp25.png)  
+<img align="right" height=600 width=300 src="images/csapp24.png"></img>
 <!-- entry begin: csapp vm 虚拟内存 -->
 将进程使用的看似连续虚拟内存映射到主存和磁盘的各处
 
