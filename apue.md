@@ -1,36 +1,10 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
-- [UNIX基础知识](#unix基础知识)
+- [基础知识](#基础知识)
   - [UNIX体系结构](#unix体系结构)
-  - [登录](#登录)
-  - [文件和目录](#文件和目录)
-  - [输入和输出](#输入和输出)
-  - [程序与进程](#程序与进程)
-  - [出错处理](#出错处理)
-  - [用户标识](#用户标识)
-  - [信号](#信号)
-  - [时间值](#时间值)
-- [UNIX标准及实现](#unix标准及实现)
-  - [UNIX标准化](#unix标准化)
-  - [限制](#限制)
-- [文件I/O](#文件io)
-  - [文件描述符](#文件描述符)
-  - [标识的位运算技巧](#标识的位运算技巧)
-  - [不足值](#不足值)
-- [文件与目录](#文件与目录)
-  - [文件信息](#文件信息)
-    - [文件类型](#文件类型)
-    - [权限](#权限)
-  - [文件系统](#文件系统)
-- [进程控制](#进程控制)
-- [进程关系](#进程关系)
-  - [作业控制](#作业控制)
-  - [终端 TTY](#终端-tty)
-  - [会话 SID](#会话-sid)
-  - [进程组 PGID](#进程组-pgid)
-- [信号](#信号-1)
-- [线程](#线程)
+  - [位运算技巧](#位运算技巧)
+  - [阻塞](#阻塞)
 - [标准与限制](#标准与限制)
 - [错误处理](#错误处理)
 - [用户信息](#用户信息)
@@ -44,17 +18,17 @@
 - [日志系统](#日志系统)
 - [进程管理](#进程管理)
   - [进程环境](#进程环境)
-  - [进程控制](#进程控制-1)
-  - [线程](#线程-1)
+  - [进程控制](#进程控制)
+  - [线程管理](#线程管理)
   - [信号处理](#信号处理)
   - [资源限制](#资源限制)
 - [虚拟文件系统](#虚拟文件系统)
   - [文件系统结构](#文件系统结构)
     - [硬链接](#硬链接)
-    - [文件信息](#文件信息-1)
+    - [文件信息](#文件信息)
   - [文件日期](#文件日期)
-  - [权限](#权限-1)
-  - [文件类型](#文件类型-1)
+  - [权限](#权限)
+  - [文件类型](#文件类型)
     - [目录](#目录)
     - [符号链接](#符号链接)
     - [设备文件](#设备文件)
@@ -70,309 +44,25 @@
     - [内存映射](#内存映射)
 
 <!-- vim-markdown-toc -->
-# UNIX基础知识
+# 基础知识
+
 ## UNIX体系结构
 ![unix](images/unixarch.png)
 
-## 登录
-&emsp;由login程序接收用户输入的“用户名”与“密码”，进行身份验证与授权。
-然后根据`/etc/{passwd,shadow,group}`文件中的内容启动并设置shell。
-
-## 文件和目录
-&emsp; **文件系统** ：目录与文件的层次结构，起点称为“根(root)”。
-通过挂载技术，文件系统可映射到不同的物理设备上。
-
-&emsp; **文件名** ：每个文件的名字存在与其父目录的目录项中（目录项中还包含i-node）。
-`.`与`..`为特殊文件名，且文件名还不能包含`/`。
-
-&emsp; **路径名** ：文件名在不同目录下可具有相同的名字，需要用路径名唯一确定。
-以`/`开头的路径名为绝对路径，否则为相对路径（相对路径与文件名形似）
-
-&emsp; **工作目录** ：上述相对路径，相当于将当前的工作目录加在相对路径名前面形成绝对路径。
-
-## 输入和输出
-&emsp; **文件描述符** ：进程的信息之一，用来帮助进程标记一个文件。
-
-&emsp; **标准文件描述符** ：`stdin, stdout, stderr`一般继承自shell并连接到终端设备。
-
-&emsp; **终端输入** ：由内核驱动模块将键盘中的扫描码转换成字符再传送给程序。
-其中有特殊字符，
-* `NL`表示添加字符`\n`并冲刷输入内容；
-* `CTRL-D`表示冲刷输入内容，若内容为空则表示结束输入即触发`EOF`。
-
-## 程序与进程
-&emsp; **程序与进程** ：进程是正在运行中的程序实例。
-
-&emsp; **进程控制块** ：存储有进程的相关信息。
-与环境变量不同在于，后者可由进程随意更改，故内核只查看前者。
-
-&emsp; **进程控制** ：主要的函数调用有`fork, exec, wait、sleep、pause、exit`
-
-&emsp; **线程** ：一个进程内的线程共享进程的控制块信息与虚拟内存
-
-## 出错处理
-
-&emsp; **返回值** ：系统调用出错时大多数系统函数返回`-1`
-
-## 用户标识
-&emsp; **UID** ：一个UID可对应多个登录名（用户名），超级用户（root）的UID为0。
-
-&emsp; **GID** ：以组的形式来管理多个用户的权限
-
-&emsp; **附属GID** ：一个用户可加入多个组
-
-## 信号
-&emsp; **终端发送信号** ：
-* `CTRL-C`：`SIGINT 2`
-* `CTRL-\`：`SIGQUIT 3`
-* `CTRL-Z`：`SIGTSTP 20`
-
-&emsp; **信号处理** ：
-* 忽略
-* 默认
-* 捕获并处理
-
-## 时间值
-&emsp; **日历时间** ：记录从Epoch（1970-1-1 00:00:00）起至今的秒数。
-硬件中记录的可能是UTC时间，也可能是本地时间，通过系统调用可隐藏此细节。
-
-&emsp; **进程时间** ：
-* real  ：从进程启动到退出期间流逝的时间
-* sys   ：进程进入内核态执行指令所花费的CPU时间
-* user  ：进程在用户态中执行指令所花费的CPU时间
-
-# UNIX标准及实现
-## UNIX标准化
-`ISO C`、`IEEE POSIX`、`USU`标准规范了系统接口，通过C头文件的形式供程序调用
-
-## 限制
-UNIX系统实现了许多常量对系统的行为进行可移植性的标准化，包括：
-* 编译时限制
-* 与文件系统无关的运行时限制
-* 与文件系统有关的运行时限制
-
-# 文件I/O
-## 文件描述符
-![fd](images/fd.jpg)
-* 文件描述符（进程唯一）
-    * 描述符标识
-        > 即`FD_CLOEXEC`：调用exec关闭该描述符
-    * 文件表项指针
-* 文件表项（系统共享）
-    * 文件打开标识
-    * 文件偏移量
-        > 注意可能造成空洞，空洞可能不会占用实际磁盘块
-    * v节点表项指针
-* v节点表项
-    > 与文件缓存缓冲区块关联，以执行原子操作
-    * 文件系统相关i节点
-    * 文件系统无关i节点
-
-## 标识的位运算技巧
+## 位运算技巧
 * 取值：`flag & mask`
 * 置位：`flag | bit`
 * 清除：`flag & ~bit`
 
-## 不足值
-* EOF
-* 终端每行读取
-* socket
-* pipe,FIFO
-* 面向记录设备
+## 阻塞
+<!-- entry begin: 阻塞 -->
+有些文件并非立即可用，需要等待，对其读写的过程称为慢速I/O。
+期间调用**线程**（而非进程）会阻塞。
 
-# 文件与目录
-## 文件信息
-### 文件类型
-将文件类型加入考虑后，读写目录与符号链接需要专门处理的函数
+互斥锁机制（文件记录锁、线程同步锁）也会使线程阻塞
 
-### 权限
-将权限加入考虑后，许多函数需要满足某些权限才能正常工作
-
-&emsp; **权限的意义** ：
-* 对于普通文件：
-    * 读：可以读取其block中的内容
-    * 写：可以更改其block中的内容
-    * 执：可以使用exec函数加载并执行该（程序）文件
-* 对于目录：
-    * 读：可以读取其目录项（文件名与i-node）
-    * 写：可以添加、删除或修改其目录项
-    * 执：可以通过该目录作为相对路径访问其目录项所指向的文件
-* 对于符号链接：
-    * 一般权限为`777`且无法更改
-
-&emsp; **权限的判断** ：
-1. 若`EUID==0`则直接授权读写（不包括执行）
-2. 若`EUID==OWNER`则进行适当权限判断，然后结束
-3. 若`EGID==GROUP`则进行适当权限判断，然后结束
-4. 若存在`EUID的附属GID==GROUP`则进行适当权限判断，然后结束
-5. 否则使用OTHER权限进行适当权限判断，然后结束
-
-&emsp; **Sticky Bit删除权限的判断**：
-* 文件的属主
-* 目录的属主
-* 超级用户
-
-&emsp; **文件的权限修改** ：
-* 每个进程有个umask标识表示权限掩码，除了chmod函数外，其他函数设置的权限皆受影响
-* 当非root进程写一个普通文件时，自动清除其SUID与SGID
-
-&emsp; **所有者的意义** ：
-* 绝大多数修改文件属性的操作只有文件的所有者才能进行
-
-&emsp; **新建文件的所有者** ：
-* ONWER为EUID
-* GROUP为EGID。但若父目录设置SGID，则GROUP为父目录的GROUP
-
-&emsp; **文件所有者的修改** ：
-* 普通用户只能修改文件UID为进程EUID，超级用户随意修改
-* 普通用户只能修改文件GID为进程EGID或附属GID之一，超级用户随意修改
-
-## 文件系统
-&emsp; **硬盘文件系统结构** ：
-* 超级块：存储整个文件系统的信息
-* i-node：存储文件属性（包括block索引，不包括文件名）
-* block ：包含文件内容
-
-符号链接：文件内容为“路径名”的特殊文件。指向的文件可能不存在。
-
-硬链接：指向某文件的目录项。  
-当一文件的硬链接数为0且无进程正打开它，则文件判定为可删除。  
-若一文件的硬链接数为0但有进程正打开它，则文件对其他进程不可见，且待最后一个打开它的进程结束后，文件被判定为可删除。
-
-设备号：文件系统所在存储设备都由主、次设备号表示。
-
-文件长度：只针对普通文件、目录文件、符号链接有效。
-文件长度与文件占用的块大小可能并不一样（因为文件空洞与block指针），两者间的差别可判断文件是否空洞（整个块都为0则为空洞）
-
-# 进程控制
-进程的信息存储于进程控制块，环境变量可由用户更改而可能并非真实
-
-| 进程信息      | fork子进程继承信息 | exec保留信息                                   |
-|---------------|:------------------:|------------------------------------------------|
-| UID, GID      |          1         | 1                                              |
-| EUID, EGID    |          1         | 0 (依赖执行文件SUID与SGID)                     |
-| SUID, SGID    |          1         | 0 (依赖EUID与EGID)                             |
-| 附属GID       |          1         | 1                                              |
-| PID           |          0         | 1                                              |
-| PPID          |          0         | 1                                              |
-| PGID          |          1         | 1                                              |
-| SID           |          1         | 1                                              |
-| PWD           |          1         | 1                                              |
-| ROOTDIR       |          1         | 1                                              |
-| UMASK         |          1         | 1                                              |
-| FD            |          1         | 0 (依赖文件描述符FD_CLOEXEC)                   |
-| ENV           |          1         | 0 (依赖exec参数)                               |
-| VMEM          |          1         | 0                                              |
-| LIMITS        |          1         | 1                                              |
-| NICE          |          1         | 1                                              |
-| SIGNAL_HANDLE |          1         | 0 (设置了处理函数的信号恢复默认，其余设置不变) |
-| SIGNAL_MASK   |          1         | 1                                              |
-| SIGNAL_SET    |          0         | 1                                              |
-| ALARM         |          0         | 1                                              |
-| TIME          |          0         | 1                                              |
-| LOCK          |          0         | 1                                              |
-
-# 进程关系
-## 作业控制
-&emsp;在交互shell中，执行命令的进程会拥有自己的、独立的、不同与shell的PGID，
-而用管道连接的多个进程拥有相同的PGID。而每个进程组便是一个“作业”。  
-&emsp;作业分为前台与后台，前台进程组号(TPGID)由TTY保存，其余均为后台进程组。
-作业控制大都由终端驱动程序发送的信号构成。
-
-## 终端 TTY
-一个终端通常会与一个进程会话相关联，并能辨别其中的前台进程组。
-
-终端的作用：
-* 将键盘、屏幕、网络抽象成I/O缓冲队列供进程读写
-* 特殊字符处理与作业控制
-
-终端的模式：
-* 规范模式：将字符组装成行才进行I/O
-* 非规范模式：不将字符装配成行
-
-
-物理终端原理：  
-&emsp;键盘驱动程序将来自键盘的扫描码转换为字符，送给恰当的终端驱动程序。
-&emsp;终端驱动程序根据终端属性配置，将接收的字符处理后加入输入缓冲队列供用户程序读，
-并将输出缓冲队列与回显字符（若设置了回显的话）处理后送给屏幕打印驱动程序。（终端行规程）
-&emsp;屏幕打印驱动程序将接收的字符流根据ANSI规范渲染成图形。
-
-伪终端原理：  
-&emsp;服务程序打开伪终端主设备(`/dev/ptmx`)，产生从设备(`/dev/pts/0`)给客户进程做控制终端。
-&emsp;主从设备就像socket通讯一般工作，
-也就是说服务进程为伪终端提供原本由键盘驱动程序提供的输入字符流，
-而伪终端给服务进程返回原本传送给屏幕打印程序的字符流。
-
-
-## 会话 SID
-会话是进程组的集合，每个会话有一个会话首进程（调用setsid(3)），一个会话可以与一个终端进行关联。
-
-新建会话的作用：
-* 新建或切断与终端的联系，从而与原来的作业控制机制隔离（并不会自动关闭之前的终端文件描述符）
-
-会话首进程的作用：
-* 会话首进程调用`open()`打开第一个尚未关联会话的终端时，只要未指定`O_NOCTTY`则将本会话与该终端关联
-
-&emsp;那些不与终端联系，不属于用户会话的进程，即被称为Daemon（守护进程）。
-通过fork后退出父进程然后子进程调用setsid即可形成。
-若不像与用户会话脱离则不用退出父进程。
-但是注意，退出了父进程但又不调用setsid，则可能形成孤儿进程组。
-
-&emsp;Daemon：
-* fork后父进程exit，然后调用setsid。若防止Daemon取得终端，则再次fork并使父进程exit
-* 更改cwd到根目录，防止不能卸载文件系统
-* 关闭从父进程继承而来的文件描述符
-* 调用syslog报告日志
-
-&emsp;用户登录时，由init程序启动getty程序来连接终端。
-然后getty调用exec执行login提供用户登录界面，在执行login前会调用setsid建立会话。
-login调用PAM来验证用户身份并授权，再为用户会话准备基础的、安全的环境。
-然后再调用exec来执行shell（其argv[0]为"-sh"表示其为登录shell），shell加载配置以初始化环境。
-
-## 进程组 PGID
-进程组是进程的集合，每个进程组有一个组长进程（调用stdpgid(3)）
-
-进程组的作用：
-* 方便使用信号来管理整个进程组中的进程
-
-进程组组长：
-* 不能调用`setsid()`新建会话
-
-父进程：
-* 可为子进程调用`setpgid()`
-* 退出可形成孤儿进程：某进程的父进程终止后，该进程成为孤儿进程，由init进程收养，防止形成僵尸进程。  
-* 退出也可形成孤儿进程组：某进程组中的所有进程的父进程，没有一个是同会话中其他进程组的进程，表示该进程组与同会话中的其他进程组缺乏联系了。
-当孤儿进程组中有停止的进程时，内核向孤儿进程组发送信号`SIGHUP`与`SIGCONT`
-
-同一进程组：
-* fork出的子进程与父进程同组
-* shell中使用管道连接的多个进程也同属一个进程组（因为不会发生终端竞争）
-* 非交互模式执行shell脚本时，shell与命令进程同属一个进程组
-
-
-# 信号
-信号相关进程信息：
-* SIGNAL_SET
-    > 权限：只有发射UID或EUID匹配的进程（SIGCONT可发射给同一会话的所有进程）
-* SIGNAL_MASK
-    > 线程独立
-* SIGNAL_HANDLE
-    > 多线程中信号处理会占用一个线程的逻辑流
-
-
-# 线程
-同步原语：
-* 互斥量：读取-测试-上锁/阻塞
-* 条件量：解锁-阻塞
-
-线程独立数据主要有：
-* 栈
-* errno变量
-* 调度优先级
-* 信号屏蔽字
-
-除此之外，绝大多数阻塞函数只针对调用线程阻塞
-
+当等待某些异步事件发生时，如调用`sleep`、`pause`、`wait`、`sigsuspend`、`sigwait`也会主动进入阻塞状态（可打断睡眠状态S）
+<!-- entry end -->
 
 # 标准与限制
 * 若未特殊说明，则出错时返回-1，标记为(NOE)表示无出错返回值
@@ -380,6 +70,13 @@ login调用PAM来验证用户身份并授权，再为用户会话准备基础的
 * 若未特殊说明，则at后缀函数支持参数`flag=AT_SYMLINK_NOFOLLOW`；否则仅支持特殊说明的flag
 * 若未特殊说明，则at后缀函数支持参数`fd=AT_FDCWD`
 * 若未特殊说明，则返回数据指针的函数都可能指向local-static对象
+
+`ISO C`、`IEEE POSIX`、`USU`标准规范了系统接口，通过C头文件的形式供程序调用
+
+UNIX系统实现了许多常量对系统的行为进行可移植性的标准化，包括：
+* 编译时限制
+* 与文件系统无关的运行时限制
+* 与文件系统有关的运行时限制
 <!-- entry begin: sysconf pathconf fpathconf -->
 ```c
 #include <limits.h>
@@ -399,7 +96,7 @@ long fpathconf(int fd, int name);               // 返回对应限制值
 * 任何标准函数都不会将其置零
 ```c
 #include <errno.h>
-thread_local int errno;                         // 标准只规定errno为线程独立的左值
+thread_local int errno;                         // 标准只规定errno为 线程独立的左值
 
 #include <string.h>
 char*   strerror(int errno);                    // 返回errno映射的消息字符串(NOE)
@@ -537,6 +234,9 @@ int     clock_gettime(clockid_t clock_id, timespec* tsp);    // 返回0
 int     clock_getres(clockid_t clock_id, timespec* tsp);     // 返回0
 int     clock_settime(clockid_t clock_id, timespec* tsp);    // 返回0
 ```
+<!-- entry end -->
+
+<!-- entry begin: clock_gettime clock_settime clock_getres  -->
 | clock_id                 | 说明                           |
 |--------------------------|--------------------------------|
 | CLOCK_REALTIME           | 系统日期时间计时器（系统时间） |
@@ -641,7 +341,7 @@ int     LOGMASK(int priority);                                  // 返回将pri�
 
 # 进程管理
 ## 进程环境
-<!-- entry begin: environ getenv setenv unsetenv clearenv getpid getppid getpgid getsid tcgetpgrp setpgid setsid tcsetpgrp tcgetsid getlogin getuid geteuid getgid getegid setuid seteuid setgid setegid -->
+<!-- entry begin: environ getenv setenv unsetenv clearenv getpid getppid getpgid getsid tcgetpgrp setpgid setsid tcsetpgrp tcgetsid -->
 ```c
 #include <unistd.h>
 char**  environ;                                                    // 指向进程环境表的第一个字符串。环境表以NULL结尾；内核并不查看环境表的信息，而查看进程控制块
@@ -662,7 +362,10 @@ int     tcsetpgrp(int fd, pid_t pgid);  // 返回0。pgid必须属于同会话�
 
 #include <termios.h>
 pid_t   tcgetsid(int fd);               // 返回SID
-
+```
+<!-- entry end -->
+<!-- entry begin: getlogin getuid geteuid getgid getegid setuid seteuid setgid setegid  -->
+```c
 #include <unistd.h>
 char*   getlogin(void);                 // 返回登录名。原理是通过ttyname(STDIN_FILENO)后再与utmp日志对比
 uid_t   getuid(void);                   // 返回UID
@@ -670,7 +373,7 @@ uid_t   geteuid(void);                  // 返回EUID
 gid_t   getgid(void);                   // 返回GID
 gid_t   getegid(void);                  // 返回EGID
 
-ncsearch-nohlsearch)/*
+/*
  * 超级用户调用setuid()会更改UID、EUID、SUID，普通用户调用则只更改UID，且只能更改为UID、EUID、SUID之一
  * 超级用户调用seteuid()只更改EUID；普通用户调用则也只更改EUID，且只能更改为UID、EUID、SUID之一
  * setgid()与setegid()同理
@@ -683,7 +386,7 @@ int     setegid(gid_t gid);             // 返回0
 <!-- entry end -->
 
 ## 进程控制
-<!-- entry begin: fork exec wait -->
+<!-- entry begin: fork exec exit ateixt -->
 ```c
 #include <unistd.h>
 pid_t   fork(void);                                                         // 若为父进程则返回子进程PID，若为子进程则返回0
@@ -699,8 +402,17 @@ void    _exit(int status);                                                  // �
 #include <stdlib.h>
 void    exit(int status);                                                   // 以status作为main返回值退出进程
 int     atexit(void (*func)(void));                                         // 返回0，若出错返回非0。只在main返回与调用exit时有效，而由signal终止无效
-
-#include <sys/wait.h>   // 注意wait函数与SIGCHLD并无关联
+```
+<!-- entry end -->
+<!-- entry begin: wait waitpid waitid -->
+```
+#include <sys/wait.h>
+/*
+ * 注意wait函数与SIGCHLD并无关联。
+ * 当子进程终止或停止时发射SIGCHLD；
+ * 当子进程终止时wait()返回；
+ * 当子进程终止（停止、继续）时waitpid()返回
+*/
 pid_t   wait(int* status);                                                  // 返回等待进程PID，若出错返回0或-1
 pid_t   waitpid(pid_t pid, int* status, int options);                       // 返回等待进程PID，若出错返回0或-1，其他情况返回对应options
 int     waitid(idtype_t idtype, id_t id, siginfo_t* infop, int options);    // 返回0
@@ -716,7 +428,7 @@ int     WCOREDUMP(int status);          // 若产生core则返回非0
 ```
 <!-- entry end -->
 
-<!-- entry begin: wait waitpid waitid -->
+<!-- entry begin: waitpid -->
 | waitpid pid | 说明                                  |
 |-------------|---------------------------------------|
 | `pid > 0`   | 等待指定子进程                        |
@@ -729,7 +441,8 @@ int     WCOREDUMP(int status);          // 若产生core则返回非0
 | WNOHANG         | 子进程状态若非立即可用，则直接返回     |
 | WUNTRACED       | 任一子进程处于停止状态，且尚未报告状态 |
 | WCONTINUED      | 任一子进程停止后已继续，且尚未报告状态 |
-
+<!-- entry end -->
+<!-- entry begin: waitid -->
 | waitid idtype | 说明                   |
 |---------------|------------------------|
 | P_PID         | 指定id表示PID          |
@@ -745,7 +458,7 @@ int     WCOREDUMP(int status);          // 若产生core则返回非0
 | WNOWAIT        | 不回收子进程退出状态               |
 <!-- entry end -->
 
-## 线程
+## 线程管理
 <!-- entry begin: pthread_exit pthread_cancel exit ateixt pthread_cleanup_push pthread_cleanup_pop -->
 进程终止：（导致所有线程终止）
 * main函数返回
@@ -793,7 +506,11 @@ int         pthread_setcancelstate(int state, int *oldstate);                   
 int         pthread_setcanceltype(int type, int *oldtype);                          // PTHREAD_CANCLE_ASYNCHRONOUS、PTHREAD_CANCEL_DEFERRED
 void        pthread_testcancel(void);                                               // 手动产生cancel点
 
-/* 
+/*
+ * 同步原语：
+ * 互斥量：读取-测试-上锁/阻塞
+ * 条件量：解锁-阻塞
+ *
  * fork时继承父进程的内存，故也继承了互斥锁与条件量。
  * 但是fork后子进程只有一个调用线程的副本，而父进程中其他线程并未fork。
  * 若子进程继承而来的锁已被上锁，且fork的线程并未持有锁，则可能造成死锁。
@@ -805,10 +522,6 @@ int         pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*c
 
 ## 信号处理
 <!-- entry begin: signal_names strsignal sigemptyset sigfillset sigaddset sigdelset sigismember kill raise sigqueue pthread_kill sigqueue pthread_kill sigpending sigprocmask pthread_sigmask signal sigaction -->
-对于SIGCONT：
-* 处理停止信号（SIGTSTP、SIGSTOP、SIGTTIN、SIGTTOU）时，丢弃未决决的SIGCONT。反之亦然。
-* 但若发射信号为SIGCONT则可发射给同会话中任一进程而无视权限
-
 安全处理信号：
 * `volatile sig_atomic_t`设置标识即返回
 * 保存和恢复errno
@@ -912,7 +625,7 @@ int     setrlimit(int resource, const rlimit* rlptr);   // 返回0，出错返�
 
 /* Linux上，nice范围[-20, 19]，其中普通用户只能设置非负数且只能调大 */
 #include <unistd.h>
-int     nice(int incr);                                 // 返回新友好值。自动调节incr到范围内的值
+int     nice(int incr);                                 // 返回新友好值。自动调节incr到范围内的值。检测是否出错需清除errno并检测返回值是否为-1且errno非零
 
 #include <sys/resource.h>
 int     getpriority(int which, id_t who);               // 返回友好值。若作用于多个进程，则返回优先级最高到（nice最小的）
@@ -1110,7 +823,6 @@ unsigned int    minor(dev_t st_rdev);
 | _PC_NAME_MAX | 文件名最大长度                                          |
 | _PC_PATH_MAX | 路径名最大长度                                          |
 | _PC_NO_TRUNC | 文件名或路径名超出限制是否直接截断而非出错              |
-
 ```c
 #include <stdio.h>
 int     mkstemp(char* template);                                        // 返回临时文件的文件描述符
@@ -1277,6 +989,7 @@ ssize_t recvfrom(int sockfd, void* buf, size_t nbytes, int flags, sockaddr* addr
 int     shutdown(int sockfd, int how);                                                                      // 返回0。how可为SHUT_RD、SHUT_WR、SHUT_WR之一
 int     sockmark(int sockfd);       // 若下个读取字节为外带数据返回1，若不是则返回0，若出错返回-1。 注意下一个外带数据到来时会丢弃当前的
 ```
+<!-- entry end -->
 套接字接口调用流程：
 | 函数           | 网络服务端 | 网络客户端 | UNIX域服务端 | UNIX域客户端 |
 |----------------|------------|------------|--------------|--------------|
@@ -1289,20 +1002,23 @@ int     sockmark(int sockfd);       // 若下个读取字节为外带数据返�
 | recv           | 1          | 1          | 1            | 1            |
 | shutdown/close | 1          | 1          | 1            | 1            |
 
+<!-- entry begin: domain socket addrinfo -->
 | domain    | 说明         |
 |-----------|--------------|
 | AF_INET   | IPv4因特网域 |
 | AF_INET6  | IPv6因特网域 |
 | AF_UNIX   | UNIX域       |
 | AF_UNSPEC | 未指定       |
-
+<!-- entry end -->
+<!-- entry begin: socktype socket addrinfo -->
 | socktype       | 说明                                         |
 |----------------|----------------------------------------------|
 | SOCK_DGRAM     | 无连接的、不可靠的、固定长度的报文传递       |
 | SOCK_STREAM    | 面向连接的、可靠的、连续的流传递             |
 | SOCK_SEQPACKET | 面向连接的、可靠的、固定长度的报文传递       |
 | SOCK_RAW       | 跳过传输层而直接域网络层交互（需要超级权限） |
-
+<!-- entry end -->
+<!-- entry begin: protocol socket addrinfo -->
 | protocol     | 说明       |
 |--------------|------------|
 | IPPROTO_IP   | IPv4       |
@@ -1311,7 +1027,9 @@ int     sockmark(int sockfd);       // 若下个读取字节为外带数据返�
 | IPPROTO_TCP  | TCP        |
 | IPPROTO_UDP  | UDP        |
 | IPPROTO_RAW  | 跳过传输层 |
+<!-- entry end -->
 
+<!-- entry begin: socket send -->
 | send flag     | 说明                             |
 |---------------|----------------------------------|
 | MSG_CONFIRM   | 提供链路层反馈以保持地址映射有效 |
@@ -1321,7 +1039,8 @@ int     sockmark(int sockfd);       // 若下个读取字节为外带数据返�
 | MSG_OOB       | 若协议支持，发送外带数据         |
 | MSG_MORE      | 延迟发送数据包允许写更多数据     |
 | MSG_NOSIGNAL  | 写无连接的套接字不产生SIGPIPE    |
-
+<!-- entry end -->
+<!-- entry begin: socket recv -->
 | recv flag        | 说明                                                      |
 |------------------|-----------------------------------------------------------|
 | MSG_CMSG_CLOEXEC | 为UNIX域套接字上接收的描述符设置执行时关闭标识            |
@@ -1469,61 +1188,7 @@ struct winsize                                              // 获取winsize：i
 | TIME == 0 |                 读取[MIN, n]                 |              读取[0, n]             |
 <!-- entry end -->
 
-<!-- entry begin: ansi color -->
-* 8/16/24 colors
-    > `${ID}`：见下表
-    * `\033[${ID}m`     (普通)
-    * `\033[${ID};1m`   (粗体，高亮)
-    * `\033[${ID};2m`   (低暗)
-
-|  color | foreground | background |
-|:------:|:----------:|:----------:|
-|  black |     30     |     40     |
-|   red  |     31     |     41     |
-|  green |     32     |     32     |
-| yellow |     33     |     33     |
-|  blue  |     34     |     34     |
-| purple |     35     |     35     |
-|  cyan  |     36     |     36     |
-|  white |     37     |     37     |
-
-* 256 color
-    > `${fg_bg}`：前景为`38`，背景为`48`  
-    > `${ID}`：0~255见<https://jonasjacek.github.io/colors/>
-    * `\033[${fg_bg};5;${ID}m`
-
-* true color
-    > `${fg_bg}`：前景为`38`，背景为`48`  
-    > `${red|green|blue}`：见系统调色板
-    * `\033[${fg_bg};2;${red};${green};${blue}m`
-<!-- entry end -->
-
-<!-- entry begin: ansi escape -->
-* ansi_escape
-<!--  -->
-|        escape       |    meaning   |
-|:-------------------:|:------------:|
-|       `\e[0m`       |     复原     |
-|       `\e[1m`       |     加粗     |
-|       `\e[2m`       |     低暗     |
-|       `\e[3m`       |     斜体     |
-|       `\e[4m`       |    下划线    |
-|      `\e[4:3m`      |  下划波浪线  |
-|       `\e[5m`       |     闪烁     |
-|       `\e[7m`       |     反显     |
-|       `\e[8m`       |     消隐     |
-|       `\e[9m`       |    删除线    |
-|      `\e[?25l`      |   隐藏光标   |
-<!-- entry end -->
-
-* * * * * * * * * *
-
 <!-- entry begin: pty posix_openpt grantpt unlockpt ptsname openpty forkpty -->
-伪终端用途：
-* 协程通讯，协程的输入与输出针对终端会有特殊处理
-* 协程通讯，强制协程使用的标准流进程行缓冲（相对管道为全缓冲）
-* 终端模拟器
-* 远程终端
 ```c
 #include <stdlib.h>
 #include <fcntl.h>
@@ -1539,6 +1204,18 @@ pid_t   forkpty(int* master, char* name, const termios* termp, const winsize* wi
 <!-- entry end -->
 
 ## 高级I/O
+文件I/O的要点包括：
+* 读写一体的缓冲区块与读写区分的缓冲队列
+* 不同文件类型使用不同函数
+* 文件访问权限
+* [阻塞](#阻塞)
+* read不足值
+    * EOF
+    * 终端每行读取
+    * socket
+    * pipe,FIFO
+    * 面向记录设备
+
 ### 非阻塞I/O
 [见fcntl](#普通文件)
 * 对于硬盘文件无效，因为对硬盘的读写并非低速I/O
@@ -1587,11 +1264,16 @@ int pselect(                    // 返回准备好的描述符数量
     const timespec* tsptr,  // tvptr==NULL表示无限期等待，tvptr->tv_sec==0&&tvptr->tv_nsec==0表示不等待，否则等待指定时间
     const sigset_t* sigmask // 指定调用期间的信号屏蔽字（可为NULL）
 );
+
+int     FD_ZERO(fd_set* fds);
+int     FD_ISSET(int fd, fd_set* fds);
+void    FD_SET(int fd, fd_set* fds);
+void    FD_CLR(int fd, fd_set* fds);
 ```
 <!-- entry end -->
 
 ### 内存映射
-<!-- entry begin: mmap mprotect msync munmap shmget shmctl shmat shmdt -->
+<!-- entry begin: mmap mprotect msync munmap -->
 ```c
 #include <sys/mman.h>
 void* mmap(         // 若成功返回映射内存起始地址，若出错返回MAP_FAILED。mmap直接映射的内核I/O缓冲区(MAP_SHARED)，对其更改会由内核更具缓冲区的元信息冲刷回硬盘
@@ -1605,7 +1287,24 @@ void* mmap(         // 若成功返回映射内存起始地址，若出错返回
 int mprotect(void* addr, size_t len, int prot); // 返回0
 int msync(void* addr, size_t len, int flag);    // 返回0
 int munmap(void* addr, size_t len);             // 返回0
+```
+| prot       | 说明     |
+|------------|----------|
+| PROT_NONE  | 不可访问 |
+| PROT_READ  | 可读     |
+| PROT_WRITE | 可写     |
+| PROT_EXEC  | 可执行   |
 
+| mmap flag   | 说明                                                                    |
+|-------------|-------------------------------------------------------------------------|
+| MAP_FIXED   | 强制起始位置为指定的addr                                                |
+| MAP_SHARED  | 共享内存映射，写会影响内核缓冲区块                                      |
+| MAP_PRIVATE | 私有内存区块，写只影响进程缓冲区块（内核缓冲区刷新时也会刷新该缓冲区 ） |
+| MAP_ANON    | 映射匿名对象，内存全置零                                                |
+
+<!-- entry end -->
+<!-- entry begin: shmget shmctl shmat shmdt ipc_perm -->
+```c
 #include <sys/shm.h>
 struct ipc_perm
 {
@@ -1640,22 +1339,7 @@ int shmctl(                 // 返回0
 );
 void* shmat(int shmid, const void* addr, int flag); // 返回共享段起始地址
 int shmdt(const void* addr);                        // 返回0。引用计数减1
-
 ```
-| prot       | 说明     |
-|------------|----------|
-| PROT_NONE  | 不可访问 |
-| PROT_READ  | 可读     |
-| PROT_WRITE | 可写     |
-| PROT_EXEC  | 可执行   |
-
-| mmap flag   | 说明                                                                    |
-|-------------|-------------------------------------------------------------------------|
-| MAP_FIXED   | 强制起始位置为指定的addr                                                |
-| MAP_SHARED  | 共享内存映射，写会影响内核缓冲区块                                      |
-| MAP_PRIVATE | 私有内存区块，写只影响进程缓冲区块（内核缓冲区刷新时也会刷新该缓冲区 ） |
-| MAP_ANON    | 映射匿名对象，内存全置零                                                |
-
 | shmget flag | 说明              |
 |-------------|-------------------|
 | IPC_CREAT   | 若key不存在则创建 |

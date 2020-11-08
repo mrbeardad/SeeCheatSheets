@@ -4,14 +4,16 @@
 
 - [编译工具链](#编译工具链)
 - [调试](#调试)
-  - [GDB](#gdb)
-  - [CGDB](#cgdb)
-  - [LLDB](#lldb)
-- [SSH](#ssh)
-- [TMUX](#tmux)
-- [ZSH](#zsh)
+  - [gdb](#gdb)
+  - [cgdb](#cgdb)
+  - [lldb](#lldb)
+- [ssh](#ssh)
+- [tmux](#tmux)
+- [zsh](#zsh)
   - [Some Alias](#some-alias)
   - [Some Tools](#some-tools)
+- [包管理器](#包管理器)
+  - [pacman](#pacman)
 - [git](#git)
   - [git概念](#git概念)
   - [git命令](#git命令)
@@ -71,7 +73,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 ```
 <!-- entry end -->
 
-## GDB
+## gdb
 <!-- entry begin: gdb -->
 * gdb EXEC CORE PID
 
@@ -128,7 +130,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     * thread `<thread-num>`
 <!-- entry end -->
 
-## CGDB
+## cgdb
 <!-- entry begin: cgdb -->
 * cgdb
     * `i`：进入GDB模式
@@ -138,7 +140,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
     * `o`：打开文件
 <!-- entry end -->
 
-## LLDB
+## lldb
 <!-- entry begin: lldb -->
 ```
 * lldb `<exe>` [-c `<core>`] [-p `<pid>`]
@@ -176,7 +178,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 ```
 <!-- entry end -->
 
-# SSH
+# ssh
 <!-- entry begin: ssh -->
 * `ssh-keygen -t ecdsa -b 521  -C "注释"`
 * `ssh-keygen -t rsa   -b 4096 -C "注释"`
@@ -185,7 +187,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * `ssh -p Port User@Host`                   ：SSH连接主机
 <!-- entry end -->
 
-# TMUX
+# tmux
 <!-- entry begin: tmux -->
 * tmux
     * -S socketfile [attach]
@@ -226,7 +228,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
         * `f`       ：打开fzf
 <!-- entry end -->
 
-# ZSH
+# zsh
 ## Some Alias
 <!-- entry begin: alias -->
 ```sh
@@ -291,6 +293,47 @@ alias dk='docker'
     * `pp`          ：粘贴（冲突时自动更名）
     * `po`          ：粘贴时强制覆盖
     * `pl`          ：为复制的文件创建软链接
+<!-- entry end -->
+
+# 包管理器
+## pacman
+<!-- entry begin: pacman -->
+* pacman
+    * 更新数据库
+        * -Sy   ：更新软件包列表
+        * -Syy  ：强制更新软件包列表
+    * 查询软件包
+        * -Ss   ：模糊搜索远程数据库
+        * -Si   ：从远程数据库获取目的包的详细信息
+        * -Sl   ：列出目的仓库所有包
+        * -Qs   ：模糊搜索本地数据库
+        * -Qi   ：从本地数据库获取目的包的详细信息
+        * -Qc   ：查看目的包更新日志
+        * -Qg   ：查看软件包组中的包
+        * -Ql   ：查看目的包的文件安装路径
+        * -Qo   ：查询目的文件所属包
+        * -Qu   ：查询所有需要升级的包
+    * 安装软件包
+        * -S    ：远程下载并安装，若以安装则用本地包重装
+        * -Sw   ：只下载软件包
+        * -U    ：安装已下载的软件包
+        * -Su   ：更新软件包
+    * 删除软件包
+        > 缓存位于：/var/cache/pacman/pkg/
+        * -R    ：删除目的包
+        * -Rc   ：还包括依赖它的包
+        * -Rs   ：还包括只被它依赖的包
+        * -Rn   ：还包括其配置文件
+        * -Sc   ：清理未安装的软件包
+        * -Scc  ：清理所有软件包与数据库
+    * 从iso文件安装软件包
+        ```sh
+        mount -o ro,loop  /path/to/iso  /mnt/iso
+        echo '
+        [custom]     #添加在其他仓库之前
+        Server = file:///mnt/iso/arch/pkg' | sudo tee /etc/pacman.conf
+        pacman  -Sy
+        ```
 <!-- entry end -->
 
 # git
@@ -465,7 +508,6 @@ alias dk='docker'
 <!-- entry begin: git diff -->
 * git diff
     > 参数：
-    >
     >       [PATH]
     >       COMMIT [PATH]
     >       COMMIT COMMIT [PATH]
@@ -474,6 +516,15 @@ alias dk='docker'
     * gdt   ：`git difftool --tool=vimdiff`
     * gdts  ：`git difftool --tool=vimdiff --staged`
     * gdi   ：`git diff-index`
+<!-- entry end -->
+
+<!-- entry begin: diff patch -->
+```sh
+diff -Naur OLD NEW > patch
+patch -p`n`  < patch
+```
+> * new和old不要在同一目录下
+> * n为去掉的/个数
 <!-- entry end -->
 
 <!-- entry begin: git branch -->
@@ -605,7 +656,7 @@ alias dk='docker'
 <!-- entry begin: git filter-branch 彻底删除文件历史 -->
 * 彻底删除文件历史
 ```bash
-$ git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch path-to-your-remove-file' --prune-empty --tag-name-filter cat -- --all
+git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch path-to-your-remove-file' --prune-empty --tag-name-filter cat -- --all
 ```
 <!-- entry end -->
 

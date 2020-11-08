@@ -3,18 +3,28 @@
 
 - [BASH基础](#bash基础)
 - [特殊字符](#特殊字符)
-- [Test条件检测](#test条件检测)
-- [正则表达式](#正则表达式)
-  - [零宽断言](#零宽断言)
-  - [实体模式](#实体模式)
-  - [字符类](#字符类)
-  - [转义字符](#转义字符)
-  - [regex技巧](#regex技巧)
 - [变量](#变量)
-- [BASH脚本](#bash脚本)
+- [语句](#语句)
 - [常用命令](#常用命令)
+  - [文件信息](#文件信息)
+  - [文件日期](#文件日期)
+  - [目录文件](#目录文件)
+  - [符号链接](#符号链接)
+  - [硬链接](#硬链接)
+  - [文件搜索](#文件搜索)
+  - [文件I/O](#文件io)
+  - [流处理命令](#流处理命令)
+  - [编辑三剑客](#编辑三剑客)
+    - [grep](#grep)
+    - [awk](#awk)
+    - [sed](#sed)
+  - [其他命令](#其他命令)
+- [Test条件检测](#test条件检测)
 
 <!-- vim-markdown-toc -->
+
+系统可用shell见`/etc/shells`
+
 # BASH基础
 <!-- entry begin: bash set -->
 * bash：
@@ -26,8 +36,9 @@
     * -o pipefail   ：若管道命令其中有一个返回非零也立即停止（管道命令行的返回值为最后一个命令的返回值）
 <!-- entry end -->
 
-<!-- entry begin: bash shortcut bindkey -->
+<!-- entry begin: bash bindkey -->
 * shell常见快捷键
+    > 可通过内建命令bindkey更改
     * ^A：行首
     * ^E：行尾
     * ^U：删除前面字符
@@ -54,16 +65,16 @@
     * `[^ ]`    ：非序列中一个字符
     * `{ , }`   ：序列中的字符展开
     * `{ .. }`  ：序列中的字符展开
-    * `**`      ：递归目录（zsh）
+    * `**`      ：递归目录(zsh)
 <!-- entry end -->
 
-<!-- entry begin: parentheses brackets 括号 -->
+<!-- entry begin: 括号 -->
 * 括号
-    * `(cmd; cmd)`      ：子shell中执行，
-    * `{cmd; cmd}`      ：当前shell中执行
+    * `( cmd; cmd; )`   ：子shell中执行，
+    * `{ cmd; cmd; }`   ：当前shell中执行
     * `[ ]`             ：test命令别名（不推荐），最后一个参数必须为`]`
     * `[[ ]]`           ：bash关键字（推荐），支持`=~`匹配正则子串（括号内关闭通配符扩展），支持逻辑运算符
-    * `((expr, expr))`  ：C风格表达式
+    * `((expr, expr))`  ：C风格表达式。若最后一个表达式的结果为0则返回1，若为非0则返回0
 <!-- entry end -->
 
 <!-- entry begin: ~扩展 -->
@@ -81,7 +92,7 @@
         * `!!`      ：上第1条命令
         * `!#`      ：当前命令
     * 指定历史命令参数
-        * `命令:n`  ：命令即上述历史命令（其中`!!`可简写为`!`），n即为该命令第n个参数
+        * `!命令:n`  ：命令即上述历史命令（其中`!!`可简写为`!`），n即为该命令第n个参数
         * `!^`      ：上第1条命令的第1个参数
         * `!$`      ：上第1条命令的最后一个参数
         * `!:n`     ：上第1条命令的第n个参数
@@ -104,7 +115,7 @@
     * `$varname、${varname}`          ：扩展为变量的值
 <!-- entry end -->
 
-<!-- entry begin: 其他特殊符 逻辑符 连接符 -->
+<!-- entry begin: # | ! && || ; & 逻辑与执行 逻辑或执行 逻辑非执行 顺序执行 后台执行 -->
 * `#`           ：注释直到换行符
 * `空白符`      ：空格为参数分隔符，换行为执行命令行
 * `|`           ：管道连接符，**连接后的命令视作一条命令**
@@ -113,10 +124,10 @@
 * `||`          ：逻辑或执行，放在一条命令后
 * `;`           ：顺序执行，放在一条命令后
 * `&`           ：后台执行，放在一条命令后
-> 使用`(cmd; cmd)`与`{cmd; cmd}`将命令连接成一条命令
+> 使用`( cmd; cmd; )`与`{ cmd; cmd; }`将命令连接成一条命令
 <!-- entry end -->
 
-<!-- entry begin: 重定向 -->
+<!-- entry begin: IO重定向 I/O重定向  -->
 * I/O重定向
     > 重定向符号放在一条命令最后，或管道符之前
     * `[fd]<file`       ：重定向fd到file，fd默认为0
@@ -137,141 +148,6 @@
     * `\`   ：转义所有特殊字符
     * `" "` ：其中只保留`$扩展`、`!扩展`、`"`、`\`的功能
     * `' '` ：其中只保留 `'` 的功能
-<!-- entry end -->
-
-# Test条件检测
-<!-- entry begin: test operator -->
-* 逻辑运算符：
-    * `!`
-    * `&&`
-    * `||`
-
-* 字符串比较：
-    * `=~` `==` `!=` `<` `>`
-    * -n    ：不为空
-    * -z    ：为空
-
-* 算术比较
-    * -eq、-ne
-    * -gt、-ge
-    * -lt、-le
-
-* 文件判断
-    * -e    ：存在
-    * -s    ：存在且size不为0
-    * -N    ：修改时间新于读取时间
-    * -nt   ：file1比file2新（mtime）
-    * -ot   ：file1比file2旧（mtime）
-    * -ef   ：两文件为同一文件的硬连接
-
-* 文件类型
-    * -b    ：块文件
-    * -c    ：字符文件
-    * -d    ：目录
-    * -f    ：普通文件
-    * -L    ：符号链接
-    * -S    ：socket
-    * -p    ：pipe
-
-* 文件权限
-    * -r    ：可读
-    * -w    ：可写
-    * -x    ：可执行
-    * -u    ：SUID
-    * -g    ：SGID
-    * -k    ：SBIT
-    * -O    ：onwer为EUID
-    * -G    ：group为EGID
-<!-- entry end -->
-
-# 正则表达式
-<!-- entry begin: regex 正则 -->
-正则表达式的标准并不统一，此处为大多数标准都支持的，具体还得查看使用的正则引擎的文档  
-笔者使用的版本一般为：C++ regex库、Vim、POSIX扩展正则工具(如sed, awk, grep)  
-故以下后缀代表：
-- `+cpp`代表C++ regex库支持
-- `+vim`代表Vim支持（Vim默认的正则模式除了`.*^$`外的其它所有元字符需要添加`\`）
-- `+pos`代表POSIX扩展正则支持
-
-## 零宽断言
-| 符号            | 含义         | 备注           |
-|-----------------|--------------|----------------|
-| `^`             | 行首         | (+cpp+vim+pos) |
-| `$`             | 行尾         | (+cpp+vim+pos) |
-| `\b`            | 单词边界     | (+cpp+pos)     |
-| `\B`            | 非单词边界   | (+cpp+pos)     |
-| `\<`            | 单词左边界   | (+vim+pos)     |
-| `\>`            | 单词右边界   | (+vim+pos)     |
-| `(?=pattern)`   | 顺序预查     | (+cpp)         |
-| `(?!pattern)`   | 顺序否定预查 | (+cpp)         |
-| `(pattern)\@=`  | 顺序预查     | (+vim)         |
-| `(pattern)\@!`  | 顺序否定预查 | (+vim)         |
-| `(pattern)\@<=` | 逆序预查     | (+vim)         |
-| `(pattern)\@<!` | 逆序否定预查 | (+vim)         |
-
-## 实体模式
-| 符号          | 含义                                               | 备注           |
-|---------------|----------------------------------------------------|----------------|
-| `.`           | 匹配除`\n`外任意字符                               | (+cpp+vim+pos) |
-| `[...]`       | 匹配序列中的一个字符                               | (+cpp+vim+pos) |
-| `[ - ]`       | 匹配序列中的一个字符                               | (+cpp+vim+pos) |
-| `[^ ]`        | 匹配序列中未出现的一个字符                         | (+cpp+vim+pos) |
-| `*`           | 匹配前一个字符0 - ∞次                              | (+cpp+vim+pos) |
-| `*?`          | 懒惰匹配版`*`                                      | (+cpp)         |
-| `\{-}`        | 懒惰匹配版`*`                                      | (+vim)         |
-| `+`           | 匹配前一个字符1 - ∞次                              | (+cpp+vim+pos) |
-| `+?`          | 懒惰匹配版`+`                                      | (+cpp)         |
-| `?`           | 匹配前一个字符0或1次                               | (+cpp+vim+pos) |
-| `{n}`         | 匹配前一个字符n次                                  | (+cpp+vim+pos) |
-| `{n,m}`       | 匹配前一个字符n-m次                                | (+cpp+vim+pos) |
-| `{n,}`        | 匹配前一个字符至少n次                              | (+cpp+vim+pos) |
-| `...|...`     | 匹配左或右的模式，用`(...|...)`将其限制在局部      | (+cpp+vim+pos) |
-| `(...)`       | 匹配组，将括号内的模式视作一个单位                 | (+cpp+vim+pos) |
-| `(?:...)`     | 匹配组，但不支持反向引用                           | (+cpp)         |
-| `\%(...)`     | 匹配组，但不支持反向引用                           | (+vim)         |
-| `\1, ..., \N` | 反向引用，替换为第N个匹配组（按`(`出现的顺序编号） | (+cpp+vim+pos) |
-
-## 字符类
-| 字符类     | 内容                         |
-|------------|------------------------------|
-| [:alnum:]  | 字母＋数字                   |
-| [:alpha:]  | 字母                         |
-| [:upper:]  | 大写字母                     |
-| [:lower:]  | 小写字母                     |
-| [:digit:]  | 数字                         |
-| [:xdigit:] | 十六进制数字                 |
-| [:punct:]  | 符号                         |
-| [:blank:]  | ` `与`\t`                    |
-| [:space:]  | ` ` `\t` `\n` `\r` `\v` `\f` |
-| [:cntrl:]  | `\x00`-`\x1F` 与 `\x7F`      |
-| [:graph:]  | `[[:alnum:][:punct:]]`       |
-| [:print:]  | `[[:alnum:][:punct:] ]`      |
-
-## 转义字符
-| 转义字符                 | 含义                          | 备注                          |
-|--------------------------|-------------------------------|-------------------------------|
-| `\d` `\D`                | `[[:digit:]]、[^[:digit:]]`   | (+cpp+vim+pos)                |
-| `\s` `\S`                | `[[:space:]]、[^[:space:]]`   | (+cpp+vim+pos)                |
-| `\w` `\W`                | `[[:alnum:]_]、[^[:alnum:]_]` | (+cpp+vim+pos)，pos还包含中文 |
-| `\n` `\r` `\t` `\v` `\f` |                               | (+cpp+vim)                    |
-| `\0` `\xhh` `\uhhhh`     | null字符、ansi、unicode       | (+cpp)                        |
-| `\a` `\b` `\e`           | 警报、退格、escape            |                               |
-| `\x` `\X`                | `[[:xdigit:]]、[^[:xdigit:]]` | (+vim)                        |
-| `\l` `\L`                | `[[:lower:]]、[^[:lower:]]`   | (+vim)                        |
-| `\u` `\U`                | `[[:upper:]]、[^[:upper:]]`   | (+vim)                        |
-| `\a` `\A`                | `[[:alpha:]]、[^[:alpah:]]`   | (+vim)                        |
-
-## regex技巧
-* `[^y]x*[^y]`：企图避免在连续x前后马上接y（错误）。考虑匹配`yxxxy`时，`x*`匹配`x`，前一个`[^y]`匹配第一个`x`，后一个`[^y]`匹配第三个`x`，
-    因为`x*`的连续匹配提前结束，故应该这样写regex：`[^yx]x*[^yx]`
-
-* `[^x]*y`：企图避免在y前面出现x（错误）。因为`[^x]*`可以匹配nothing，即什么也不用匹配也算作匹配成功。
-    故应该这样写regex：`^[^x]*y`
-
-* `[^x]y`：企图避免在y前面相邻位置接x（错误）。因为未考虑y前面"没有字符"的情况。
-    故应该这样写regex：`([^x]|^)y`
-
-* 利用逆向思维，将**不应该在某位置出现什么**，转换为**应该在某位置出现什么**，注意**该位置**是否可以为空
 <!-- entry end -->
 
 # 变量
@@ -334,7 +210,7 @@
     * LINENO
 <!-- entry end -->
 
-# BASH脚本
+# 语句
 <!-- entry begin: function 函数 -->
 * 定义函数
 ```sh
@@ -444,4 +320,507 @@ esac
     * `-   signal1 signal2`    ：恢复默认信号处理行为
 <!-- entry end -->
 
+## 文件信息
+<!-- entry begin: stat -->
+* stat
+    * `默认`    ：显示文件详细信息
+    * -f        ：显示文件所处文件系统信息
+<!-- entry end -->
+
+<!-- entry begin: ls -->
+* ls
+    * -d        ：显示目录本身
+    * -i        ：显示inode
+    * -L        ：显示符号链接的目标
+    * -n        ：显示uid与gid
+    * -R        ：目录递归显示
+    * -s        ：显示文件占用block大小
+    * -S        ：按大小排序（降序）
+    * -t        ：按modify时间排序（降序）
+    * -Z        ：安全上下文
+<!-- entry end -->
+
+<!-- entry begin: du -->
+* du
+    * -sh       ：显示目标占用block大小
+<!-- entry end -->
+
+<!-- entry begin: file -->
+* file
+    * -i        ：文件的格式信息
+<!-- entry end -->
+
+## 文件日期
+<!-- entry begin: touch -->
+* touch
+    * `默认`    ：修改a/m/ctime
+    * -a        ：只改atime
+    * -m        ：只改mtime
+    * -d        ：指定touch的时间，date模式
+<!-- entry end -->
+
+## 目录文件
+<!-- entry begin: mkdir rmdir chdir pwd -->
+* mkdir
+    * -p        ：递归
+    * -m        ：设置权限
+
+* rmdir
+
+* chdir
+
+* pwd
+    * -P        ：显示真实路径而非软连接
+
+* chroot
+<!-- entry end -->
+
+## 符号链接
+<!-- entry begin: readlink ln -->
+* readlink
+* ln *SRC* *TAG*
+    * `默认`    ：硬连接
+    * -s        ：软连接
+    * -f        ：强制覆盖
+<!-- entry end -->
+
+## 硬链接
+<!-- entry begin: rm -->
+* rm
+    * -r        ：目录递归
+    * -v        ：详述
+    * -f        ：强制覆盖
+<!-- entry end -->
+
+<!-- entry begin: mv -->
+* mv *SRC*  *TAG*
+    * -v        ：详述
+    * -i        ：询问是否覆盖
+    * -u        ：只更新
+    * -f        ：强制覆盖
+    * -n        ：直接不覆盖
+<!-- entry end -->
+
+<!-- entry begin: cp -->
+* cp  *SRC*  *TAG*
+    * -a        ：尽可能复制所有信息
+    * -r        ：目录递归
+    * -v        ：详述
+    * -i        ：询问是否覆盖
+    * -u        ：只更新
+    * -f        ：强制覆盖
+    * -n        ：直接不覆盖
+<!-- entry end -->
+
+<!-- entry begin: mktemp -->
+* mktemp：创建并打印临时文件
+    * -d    ：创建临时目录而非普通文件
+<!-- entry end -->
+
+## 文件搜索
+<!-- entry begin: whereis -->
+* whereis       ：搜索可执行，头文件和帮助信息的位置，使用系统内建数据库
+<!-- entry end -->
+
+<!-- entry begin: locate updatedb -->
+* locate
+    * -i        ：忽略大小写
+    * -r        ：正则表达式（默认通配符）
+    * -c        ：显示匹配的文件数量
+    * -S        ：显示数据库信息
+* updatedb
+    > 更新locate命令需要的数据库  
+    > 配置  ：/etc/updatedb.conf  
+    > 数据库：/var/lib/mlocate/mlocate.db  
+<!-- entry end -->
+
+<!-- entry begin: find -->
+* find *DIR* *OPTS...*
+    * 打印：
+        * -print
+    * 目录深度
+        * -depth
+    * 正则名字：
+        * -regex
+        * -iregex
+    * 通配符名字：
+        * -name
+        * -iname
+    * 用户：
+        * -uid
+        * -gid
+        * -user
+        * -group
+        * -nouser
+    * 权限：
+        * -writable
+        * -readable
+        * -executable
+        * -perm
+            > `-`表示权限为指定范围的非空子集  
+            > `/`表示权限为指定范围的非空交集  
+            > `无前缀`表示精准权限
+    * 大小：
+        * -size
+            > `+`表示大于  
+            > `-`表示小于  
+            > 单位用c/k/M/G
+    * 时间：
+        * -[a|m|c]time *n*  ：指定`n*24 h`之前的文件，`+/-`表示更早/更晚
+        * -[a|m|c]min  *n*  ：指定`n min`之前的文件
+        * -[a|m|c]newer *file*
+    * 文件类型：
+        * -type [f|d|l|b|c|p|s]
+    * 其他信息：
+        * -links            ：硬连接数
+        * -inum             ：inode号
+    * 复合逻辑关系          ：-a、-o、-not
+    * 对搜索到的文件执行CMD ：-exec  *CMD*  {} \;
+<!-- entry end -->
+
+## 文件I/O
+<!-- entry begin: sync -->
+* sync
+<!-- entry end -->
+
+<!-- entry begin: echo -->
+* echo
+    * -n        ：不自动加入换行符（zsh会将无换行结尾的输出的尾部标记`反显的%`）
+    * -e        ：启用转义语义（zsh自动开启）
+<!-- entry end -->
+
+<!-- entry begin: split -->
+* split *FILE* *Preffix*
+    > 注：preffix最后最好加dot，大小单位可指定，默认byte
+    * -b        ：按大小分割
+    * -l        ：按行数分割
+<!-- entry end -->
+
+<!-- entry begin: iconv  FILE -->
+* iconv  FILE
+    * -f        ：原字符集
+    * -t        ：目标字符集
+    * -o        ：输出文件
+    * --list    ：列出可选字符集
+<!-- entry end -->
+<!-- entry begin: read -->
+* read VARNAME
+    * -p    ：提示符
+    * -t    ：限时
+    * -n    ：读取字符数
+    * -s    ：关闭回显
+<!-- entry end -->
+
+<!-- entry begin: cat -->
+* cat：打印每行
+    * -A        ：打印特殊空白符
+    * -n        ：显示行号
+    * -b        ：显示行号但空行不算行号
+* tac：翻转首尾
+* rev：每行翻转
+<!-- entry end -->
+
+<!-- entry begin: head -->
+* head
+    * -v        ：显示文件名
+    * -n        ：指定显示多少行
+<!-- entry end -->
+
+<!-- entry begin: tail -->
+* tail
+    * -v        ：显示文件名
+    * -n        ：指定显示多少行
+    * -f        ：监听
+<!-- entry end -->
+
+<!-- entry begin: xxd -->
+* xxd：以十六进制读取文件数据
+    * -l        ：指定读取字节数
+<!-- entry end -->
+
+## 流处理命令
+<!-- entry begin: col -->
+* col -x ：将tab替换为等宽space，该命令只从stdin读取
+<!-- entry end -->
+
+<!-- entry begin: wc -->
+* wc
+    * -l：行数
+    * -w：单词数
+    * -m：字符数
+<!-- entry end -->
+
+<!-- entry begin: xargs -->
+* xargs CMD
+    > 原理：将管道中的字符串的空白符符替换为空格后（若空白符前面有`\`则不被替换），作为CMD的参数
+    * -n  ：一次给予多少个参数
+    * -p  ：每个单词都提醒用户
+    * -e  ：直到遇到此单词停止
+    * -0  ：保留空白符不被替换
+<!-- entry end -->
+
+<!-- entry begin: tee -->
+* tee FILE
+    * -a：追加而非截断
+<!-- entry end -->
+
+<!-- entry begin: sort -->
+* sort
+    * -f    ：忽略大小写
+    * -b    ：忽略行前空白
+    * -M    ：月份名称排序
+    * -n    ：数值排序
+    * -r    ：降序
+    * -u    ：删除相同行
+    * -t    ：指定分隔符
+    * -k n,m：指定比较第n-m域
+        > field定义：blank开始到non-blank尾结束，从行首到分割符算1
+<!-- entry end -->
+
+<!-- entry begin: uniq -->
+* uniq
+    * -i：忽略大小写
+    * -c：计数
+    * -f：指定从哪个域开始比较（默认从1开始）
+<!-- entry end -->
+
+<!-- entry begin: join paste -->
+* join  -1 F1 FILE1 -2 F2 FILE2
+    > F1、F2：指定两文件比较的域  
+    > FILE1与FILE2其中之一可以为`-`，代表此文件从管道读取
+    * -t：指定分隔符
+    * -i：忽略大小写
+
+* paste FILE1  FILE2
+    * -t：指定分隔符
+<!-- entry end -->
+
+<!-- entry begin: cut -->
+* cut
+    * -d    ：指定分隔符
+    * -f    ：指定截取的域，可使用逗号与减号
+    * -c n-m：指定取出第n-m个字符
+<!-- entry end -->
+
+## 编辑三剑客
+### grep
+<!-- entry begin: grep -->
+* grep
+    * -E：扩展正则表达式
+    * -A：显示之后几行
+    * -B：显示之前几行
+    * -C：显示之前和之后几行
+    * -i：忽略大小写
+    * -n：显示行号
+    * -c：计数
+    * -v：显示不匹配的
+    * -q：静默模式
+<!-- entry end -->
+
+### awk
+<!-- entry begin: awk -->
+* awk '模式{语句;} 模式{语句;}' FILE
+    * 语句语法类似C语言，额外有语句`for ( var in map )`；
+    * 使用变量时无需前置声明，初值为空，参与运算时置0；
+    * 参与运算时map下标自动建立，故检查下标是否存在用in；
+    * 关系运算符要两边都是数字才进行数值比较，否则以字典序比较字符串；
+
+* 选项
+    * -F    ：分隔符，支持[]正则
+    * -f    ：读取脚本文件
+    * -v var=val
+
+* 模式：
+    * BEGIN
+    * END
+    * /pattern/
+    * !/pattern/
+    * /pattern1/&&/pattern2/
+    * /pattern1/||/pattern2/
+    * 表达式
+
+* 变量：C风格变量
+    * 定义：
+        * var=val
+        * map[key]=val
+    * 内置变量
+        * ARGC
+        * ARGV
+        * RS        ：行分隔符(默认`<CR>`)
+        * FS        ：字段分隔符(默认`<Space>`)
+        * ORS       ：输出的行分隔符(默认`<CR>`)
+        * OFS       ：输出的字段分隔符(默认`,`)
+        * NR        ：总行数
+        * FNR       ：在当前文件中的行数
+        * NF        ：字段数
+        * OFMT      ：数字输出格式(默认%.6g)
+        * IGNORECASE：为true则忽略大小写
+        * `$0`        ：整行内容
+        * `$N`        ：第N个字段
+
+* 运算符
+    * `+` `-` `*` `/` `%` `^`
+    * `>` `>=` `<` `<=` `==` `!=`
+    * `~`           ：子串匹配
+    * `~!`          ：子串不匹配
+    * `空格`        ：字符连接
+    * `in`          ：确认数组键值
+    * `|`           ：管道连接符
+    * `"cmd" |`     ：管道连接，读取`cmd`输出
+    * `| "cmd"`     ：管道连接，输出到`cmd`
+
+* 关键字
+    * 输出
+        > 注意：`>`与`>>`可在以上两个关键字最后作重定向，若需要关系运算，应该用圆括号包围
+        * `print var1,var2"str"`        ：标准输出，逗号替换为OFS，末尾自动添加换行符
+        * `printf "$1:%s\n",$1`         ：标准输出，类似C中的printf()函数
+        * `print或printf语句 | "cmd"`   ：管道输出
+        * `print或printf语句 > "file"`  ：文件输出（截断）
+        * `print或printf语句 >> "file"` ：文件输出（追加）
+    * 输入
+        * `"cmd" | getline var`         ：管道输入，若无`var`则直接赋值给`$0`
+        * `getline var < "file"`        ：文件输入，若无`var`则直接赋值给`$0`
+    * 其他
+        * `continue`
+        * `break`
+        * `next`                            ：读取下一行并回到脚本开始处重新执行
+        * `delete`                          ：删除map中的元素
+
+* 函数
+    * srand(); rand()
+        > 前者帮助后者用时间作种，后者返回随机值
+    * length(string); length(map)
+        > 检查字符串与数组的长度
+    * sub(/pattern/, "string", var); gsub(...)
+        > 将var中匹配的pattern替换为string，后者全部替换
+    * index(var, "string")
+        > string在var中出现的位置(1开始)，无则返回0
+    * substr(var, pos, length)
+        > 截取子串，从pos开始的length个字符(1开始)，无length则到结尾
+    * tolower(s); toupper(s)
+<!-- entry end -->
+
+### sed
+<!-- entry begin: sed -->
+* sed '模式{语句;}; 模式{语句;}' FILE
+* sed -e '模式 语句块' -e '模式 语句块' FILE
+    * a; i; c; r; w;操作只能单独存在，不能在块中，故它们只能用`-e`选项
+
+* 选项
+    > 选项要分开
+    * -n：仅显示处理结果，只有a i c r p操作才输出
+    * -r：支持扩展正则表达式
+    * -i：修改原文件
+    * -f：指定脚本文件
+
+* 模式
+    * /pattern/
+    * !/pattern/
+    * /pattern/I
+    * /pattern/,m
+    * n,m
+
+* 操作
+    * s/pattern/replace/g
+        * replace中&代表整个匹配到的字符串
+        * 替换标记：无g全部，Ng第N个
+    * a或i      ：行后或行前添加字符串
+    * c         ：会把所有匹配行转换成一个字符串
+    * d         ：删除匹配行
+    * r/w file  ：读取file到行后，写入匹配行到file
+    * n         ：跳转到下一行，执行后续操作
+    * =         ：行前打印行号
+    * q         ：退出
+    * N         ：读取下一行至模板块，形成多行组，并将行号改为新加行的行号
+    * P/D操作   ：分别用于多行组，打印与删除第一行
+    * h         ：拷贝模板块到缓冲区(模板块即当前处理的行)
+    * H         ：追加模板块到缓冲区
+    * g         ：获得内存缓冲区的内容替代当前行
+    * G         ：获得内存缓冲区的内容追加到当前行后
+<!-- entry end -->
+
+## 其他命令
+<!-- entry begin: bc -->
+* bc
+    * -l        ：可以使用数学库函数 s(sin x)，c(cos x)，a(arctan x)，l(ln x)，e(e^x)
+    * 特殊变量  ：scale，last，ibase，obase，支持^运算符求幂
+<!-- entry end -->
+
+<!-- entry begin: curl -->
+* curl
+    * -s        ：silent mode
+    * -S        ：打印错误消息，即使使用了`-s`
+    * -L        ：接受链接跳转
+    * -o        ：指定输出文件
+* curl -Lo File URL
+* curl -fsSL URL | bash
+* curl -fsSL URL | bash -s -- {-opt}
+* curl cheat.sh/`CMD`
+* curl cheat.sh/`LANG`/`SPECIFIC`
+    > [cheat.sh](https://github.com/chubin/cheat.sh)是github上一个nice的项目
+    * 空白用`+`代替
+    * `curl cheat.sh/~keyword`
+    * `curl cheat.sh/python/:list` 列出可选项
+<!-- entry end -->
+
+<!-- entry begin: sendEmail -->
+* sendEmail
+    * -s        ：SMTP服务器
+    * -f        ：发送者的邮箱
+    * -t        ：接收者的邮箱
+    * -cc       ：表示抄送发给谁
+    * -bcc      ：表示暗抄送给谁
+    * -xu       ：SMTP验证的用户名
+    * -xp       ：SMTP验证的密码
+    * -u        ：标题
+    * -m        ：内容
+    * -a        ：附件
+    * -o message-content-type=*html*/*text* ：邮件的格式
+    * -o message-charset=utf8               ：邮件的编码
+<!-- entry end -->
+
+# Test条件检测
+<!-- entry begin: test operator -->
+* 逻辑运算符：
+    * `!`
+    * `&&`
+    * `||`
+
+* 字符串比较：
+    * `=~` `==` `!=` `<` `>`
+    * -n    ：不为空
+    * -z    ：为空
+
+* 算术比较
+    * -eq、-ne
+    * -gt、-ge
+    * -lt、-le
+
+* 文件判断
+    * -e    ：存在
+    * -s    ：存在且size不为0
+    * -N    ：修改时间新于读取时间
+    * -nt   ：file1比file2新（mtime）
+    * -ot   ：file1比file2旧（mtime）
+    * -ef   ：两文件为同一文件的硬连接
+
+* 文件类型
+    * -b    ：块文件
+    * -c    ：字符文件
+    * -d    ：目录
+    * -f    ：普通文件
+    * -L    ：符号链接
+    * -S    ：socket
+    * -p    ：pipe
+
+* 文件权限
+    * -r    ：可读
+    * -w    ：可写
+    * -x    ：可执行
+    * -u    ：SUID
+    * -g    ：SGID
+    * -k    ：SBIT
+    * -O    ：onwer为EUID
+    * -G    ：group为EGID
+<!-- entry end -->
 

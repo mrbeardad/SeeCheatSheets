@@ -2,8 +2,7 @@
 <!-- vim-markdown-toc GFM -->
 
 - [安装](#安装)
-  - [运维技术](#运维技术)
-  - [数据库](#数据库)
+  - [技术](#技术)
   - [Linux](#linux)
   - [C++](#c)
   - [编程](#编程)
@@ -29,21 +28,17 @@ fi
 g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 ```
 
-## 运维技术
+## 技术
 * [Docker](docker.md)
-
-## 数据库
 * [MySQL](mysql.md)
 
 ## Linux
-* [Linux知识框架](arch.md)
-    > 讲述Linux的开机过程，以及整个系统的用户态与内核态架构
-* [Linux基础操作](linux.md)
-    > Linux的基础命令手册
+* [Linux知识框架](linux.md)
+    > 讲述Linux的开机过程，以及整个系统的内核态与用户态架构
 * [Linux系统接口](apue.md)
     > Linux的API，大部分都符合POSIX、XSI或USU规范
-* [Bash](bash.md)
-    > bash语法，以及正则表达式语法
+* [bash脚本](bash.md)
+    > bash语法与linux基础命令
 * [开发者工具](devtool.md)
     > 包含gcc、gdb、ssh、tmux、zsh、git、docker等工具使用
 * [Vim](vim.md)
@@ -66,6 +61,7 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
     > 代码的基本逻辑表达方式
 * [数据结构与算法](dsaa.md)
     > 基础数据结构与算法
+* [正则表达式](regex.md)
 
 ## 网络
 * [计算机网络](network.md)
@@ -74,7 +70,7 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
     > 整理了一些加密技术与区块链原理
 
 ## 底层
-* [计算机系统导论](csapp.md)
+* [计算机系统](csapp.md)
 
 ## 其它
 * [Markdown](markdown.md)

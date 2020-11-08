@@ -16,7 +16,7 @@
 <!-- vim-markdown-toc -->
 
 # Docker
-* 镜像：相当于一个Root文件系统
+* 镜像：相当于一个root文件系统
 
 * 容器：加载镜像创建的虚拟运行环境称为容器
 
@@ -25,7 +25,7 @@
 ## docker子命令
 ### 镜像
 #### 基础操作
-<!-- entry begin: docker image 镜像 -->
+<!-- entry begin: docker image -->
 > 所有`IMAGE`都可扩展为`REPO/IMAGE:TAG`
 * docker image
     * ls
@@ -33,11 +33,11 @@
     * history   IMAGE
     * tag       IMAGE   TAG_IMAGE
     * rm        IMAGE
-    * prune
+    * prune -fa
 <!-- entry end -->
 
 #### 远程仓库
-<!-- entry begin: docker pull push search 远程仓库 -->
+<!-- entry begin: docker login logout pull push search -->
 * docker login
 * docker logout
 * docker search    IMAGE
@@ -98,7 +98,7 @@ CMD         ["cmd", "args"] # 设置容器启动命令，以JSON-List形式写�
     * pause         CONT
     * unpause       CONT
     * wait          CONT
-    * kill          CONT
+    * kill [-sKILL] CONT
     * attach        CONT
     * exec [-it]    CONT
 
