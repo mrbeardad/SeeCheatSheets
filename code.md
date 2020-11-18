@@ -65,47 +65,46 @@
 就像鸡蛋问题，选择何种字节顺序没有技术上的理由，对此的争论沦为关乎信仰的冲突。
 
 # 整数
-无符型整数：无符型编码 **U**
+无符型整数：无符型编码 **U**  
+$向量\overrightarrow{x}=[x_{w-1},\space x_{w-2},\space ...,\space x_0]$
 $$
-对向量\overrightarrow{x}=[x_{w-1},\space x_{w-2},\space ...,\space x_0]\newline
 B2U_w(\overrightarrow{x})\doteq\sum^{w-1}_{i=0}x_i2^i
 $$
 
-有符型整数：补码编码 **T**
-$$
-对向量\overrightarrow{x}=[x_{w-1},\space x_{w-2},\space ...,\space x_0]\newline
-B2T_w(\overrightarrow{x})\doteq-x_{w-1}2^{w-1}+\sum^{w-2}_{i=0}x_i2^i
-$$
+有符型整数：补码编码 **T**  
+$向量\overrightarrow{x}=[x_{w-1},\space x_{w-2},\space ...,\space x_0]$
+$$B2T_w(\overrightarrow{x})\doteq-x_{w-1}2^{w-1}+\sum^{w-2}_{i=0}x_i2^i$$
 
 ## 转换操作
 **扩展**：扩展并不会改变原来的数值大小
 * 对**T**来说应该**符号扩展**
 $$
-[x_{w-1},\space x_{w-2},\space ...,\space x_0]\newline
+[x_{w-1},\space x_{w-2},\space ...,\space x_0]
 \to
-[x_{w-1},...,x_{w-1},x_{w-1},\space x_{w-2},\space ...,\space x_0]\newline
+[x_{w-1},...,x_{w-1},x_{w-1},\space x_{w-2},\space ...,\space x_0]
 $$
 * 对**U**来说应该**零扩展**
 $$
-[x_{w-1},\space x_{w-2},\space ...,\space x_0]\newline
+[x_{w-1},\space x_{w-2},\space ...,\space x_0]
 \to
-[0,...,0,x_{w-1},\space x_{w-2},\space ...,\space x_0]\newline
+[0,...,0,x_{w-1},\space x_{w-2},\space ...,\space x_0]
 $$
 
 **截断**：截断后值域改变从而导致数值可能变化，截断**T**甚至可能改变数值的正负
 $$
-[x_{w-1},\space x_{w-2},\space ...,\space x_0]\newline
+[x_{w-1},\space x_{w-2},\space ...,\space x_0]
 \to
-[x_{k-1},\space x_{k-2},\space ...,\space x_0]\newline
+[x_{k-1},\space x_{k-2},\space ...,\space x_0]
 $$
 
 **转换**：保持底层位模式不变。若长度不同，则先扩展或截断
 * T转换为U：  
 $$
 T2U_w(u)=
-\left\{
+\left\lbrace
 \begin{array}{l}
-x+2^w,&x\lt0 \\
+x+2^w,&x\lt0\\
+\newline
 x,&x\ge0
 \end{array}
 \right.
@@ -114,9 +113,10 @@ $$
 * U转换为T：  
 $$
 U2T_w(u)=
-\left\{
+\left\lbrace
 \begin{array}{l}
 u,&u\le Tmax_w \\
+\newline
 u-2^w,&u\gt Tmax_w
 \end{array}
 \right.
@@ -127,9 +127,10 @@ $$
 * **T**求逆元
 $$
 -^t_w x=
-\left\{
+\left\lbrace
 \begin{array}{l}
 Tmin_w,&x=Tmin_w\\
+\newline
 -x,&x\gt Tmin_w
 \end{array}
 \right.
@@ -138,9 +139,10 @@ $$
 * **U**求逆元
 $$
 -^u_w x=
-\left\{
+\left\lbrace
 \begin{array}{l}
 x,&x=0\\
+\newline
 2^w-x,&x\gt0
 \end{array}
 \right.
@@ -150,9 +152,10 @@ $$
 * **U**加法：溢出值回环到`0`直到`Umax - 1`
 $$
 x+^u_wy=
-\left\{
+\left\lbrace
 \begin{array}{l}
 x+y,&x+y<2^w&正常\\
+\newline
 x+y-2^w,&2^w\le x+y&溢出
 \end{array}
 \right.
@@ -160,10 +163,12 @@ $$
 * **T**加法：负溢出值回环到`Tmax`直到`0`，正溢出值回环到`Tmin`直到`-2`
 $$
 x+^t_wy=
-\left\{
+\left\lbrace
 \begin{array}{l}
 x+y+2^w,&x+y\lt-2^{w-1}&负溢出\\
+\newline
 x+y,&-2^{w-1}\le x+y\le2^{w-1}-1&正常\\
+\newline
 x+y-2^w,&2^{w-1}-1\lt x+y&正溢出
 \end{array}
 \right.
@@ -210,7 +215,7 @@ $$
 * 位异或`^`：0不变，1取反，同归零
     > `S ^ M` `A ^ B`
 
-![bool1](images/bool.jfif)
+![bool1](images/bool.jfif)  
 ![bool2](images/bool.gif)
 
 # 浮点数
