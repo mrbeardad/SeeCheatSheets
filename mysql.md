@@ -1,6 +1,6 @@
 **关系型数据库的典型实现主要被调整用于执行规模小而读写频繁，或者大批量极少写访问的事务。**
 
-<!-- entry begin: mysql init install -->
+<!-- entry begin: mysql initialize install -->
 **初始化mysql**
 * `mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
 > 或
@@ -234,7 +234,7 @@ SELECT <fd_name>或<call_func> [AS <fd_alias>], ... FROM <tbl_name> [<tbl_alias>
 ```
 <!-- entry end -->
 
-<!-- entry begin: group  -->
+<!-- entry begin: sql group -->
 * sql分组
 ```sql
 SELECT <fd_name>或<call_func> [AS <fd_alias>], ... FROM <tbl_name> [<tbl_alias>], ...

@@ -64,20 +64,20 @@
 ## .dockerignoe语法与.gitignore一样
 
 ## Dockerfile
-FROM        IMAGE:TAG       # 指定基础镜像
+FROM        IMAGE:TAG           # 指定基础镜像
 LABEL       maintainer="e@mail"
-ENV         PROJECT=/app    # 设置环境变量，环境变量也能在Dockerfile命令中使用
-WORKDIR     /app            # 指定工作目录
-SHELL       ["bash", "-u"]  # 指定构建命令使用的默认SHELL
-COPY        . /app          # 将当前目录下所有文件拷贝到镜像中的`/app`目录下
-RUN         cmd             # 在基础镜像的当前layer上执行该命令以更改镜像
-EXPOSE      port            # 暴露指定端口
-VOLUME      /path           # 指定挂载的VOLUME
-STOPSIGNAL  signal          # 指定时容器exit的signal
-ONBUILD     CMD cmd         # 指定当该镜像用作FROM时执行的命令
-HEALTHCHECK CMD cmd         # 周期性检测容器是否正常（cmd返回0）
-ENTRYPOINT  cmd             # 设置入口命令（使用相对/绝对项目路径），`docker run IMAGE`后的参数传给该命令，包括CMD指定的参数。该入口命令一般为脚本，记得使用exec执行真正命令以防止SIGTERM被bash捕获
-CMD         ["cmd", "args"] # 设置容器启动命令，以JSON-List形式写命令则默认调用exec而非通过shell执行
+ENV         PROJECT=/app        # 设置环境变量，环境变量也能在Dockerfile命令中使用
+WORKDIR     /app                # 指定工作目录
+SHELL       ["bash", "-u"]      # 指定构建命令使用的默认SHELL
+COPY        . /app              # 将当前目录下所有文件拷贝到镜像中的`/app`目录下
+RUN         cmd                 # 在基础镜像的当前layer上执行该命令以更改镜像
+EXPOSE      port                # 暴露指定端口
+VOLUME      /path               # 指定挂载的VOLUME
+STOPSIGNAL  signal              # 指定时容器exit的signal
+ONBUILD     CMD cmd             # 指定当该镜像用作FROM时执行的命令
+HEALTHCHECK CMD cmd             # 周期性检测容器是否正常（cmd返回0）
+ENTRYPOINT  cmd                 # 设置入口命令（使用相对/绝对项目路径），`docker run IMAGE`后的参数传给该命令，包括CMD指定的参数。该入口命令一般为脚本，记得使用exec执行真正命令以防止SIGTERM被bash捕获
+CMD         ["cmd", "args"]     # 设置容器启动命令，以JSON-List形式写命令则默认调用exec而非通过shell执行
 ```
 <!-- entry end -->
 
@@ -142,7 +142,6 @@ CMD         ["cmd", "args"] # 设置容器启动命令，以JSON-List形式写�
 
 <!-- entry begin: docker-compose -->
 * docker-compose
-
 ```yaml
 ## docker-compose.yml
 version: "3"    # 指定版本

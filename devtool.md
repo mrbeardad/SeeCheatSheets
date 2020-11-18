@@ -340,9 +340,9 @@ alias dk='docker'
 ## git概念
 * 管理目录
     > 注：不管git底层是如何实现的，我们需要知道git给我们的抽象模型是每次提交历史都是**全量备份**的，这一点很重要
-    * 工作区`W`相对暂存区`S`：untraced，deleted，rename，modified  
-    * 暂存区`S`相对仓库区`R`：traced，new，deleted，rename，modified  
-    * 仓库区`R`             ：各种对象  
+    * 工作区`W`相对暂存区`S`：untraced，deleted，modified，rename
+    * 暂存区`S`相对仓库区`R`：new，deleted，modified，rename
+    * 仓库区`R`
 
 * 分支模型
     * data对象：
@@ -351,15 +351,15 @@ alias dk='docker'
         > 注：其实git会在每次push时整理data对象，将一些小改动改为增量备份而非全量备份
     * tree对象：
         > 为每个commit管理“快照”，指向该commit所有的各个data对象
+    * commit信息：
+        * 作者、提交者、日期、校验、描述、父指针、"快照"
+            > 父指针指向上次**commit**，可能有多个
     * 分支指针：
         > 分支指针指向某个commit
         * HEAD          ：指向本地当前分支
         * BRANCH        ：指向本地已存在的分支
         * REMOTE/BRANCH ：指向远程仓库的分支
             > 远程分支只读，通过创建本地分支来跟踪并修改
-    * commit信息：
-        * 作者、提交者、日期、校验、描述、父指针、"快照"
-            > 父指针指向上次**commit**，可能有多个
 ![图片来自网络](images/git-branch.png)
 
 * 工作流程
@@ -422,8 +422,8 @@ alias dk='docker'
     * 提交时git会记录每个引用子模块的检出的HEAD，故需要手动更新子模块而非由git自动拉取上游更新
 <!-- entry end -->
 
-<!-- entry begin: .git -->
-* .git
+<!-- entry begin: .git/ -->
+* .git/
     * description   ：gitweb程序使用
     * config        ：仓库配置
     * objects       ：所有数据对象
@@ -488,7 +488,7 @@ alias dk='docker'
 <!-- entry end -->
 
 <!-- entry begin: git tag -->
-* git tag
+* git tag   [COMMIT]
     * gt        ：`git tag`
     * gtl与gtv  ：显示tag
     * 其他
@@ -508,6 +508,7 @@ alias dk='docker'
 <!-- entry begin: git diff -->
 * git diff
     > 参数：
+    >
     >       [PATH]
     >       COMMIT [PATH]
     >       COMMIT COMMIT [PATH]

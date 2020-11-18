@@ -40,16 +40,16 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [bash脚本](bash.md)
     > bash语法与linux基础命令
 * [开发者工具](devtool.md)
-    > 包含gcc、gdb、ssh、tmux、zsh、git、docker等工具使用
+    > 包含gcc、gdb、ssh、tmux、zsh、git、pacman等工具使用
 * [Vim](vim.md)
-    > [定制版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
+    > 这是[魔改版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 
 ## C++
 * [C++语法特性](cpp.md)
     > 一份语法清单，适合有基础的同学
 * [C++编码风格](cppstyle.md)
     > 对代码风格进行规范，拒绝选择困难症
-* [C++编程指导](cppguide.md)
+* [C++编程向导](cppguide.md)
     > 编写健壮、可移植、可扩展的C++代码，部分参考自Scott Meyers作品
 * [C++程序库](cppman.md)
     > C++标准库、Boost库、MySQL++、JSON
@@ -70,6 +70,7 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
     > 整理了一些加密技术与区块链原理
 
 ## 底层
+* [信息编码](code.md)
 * [计算机系统](csapp.md)
 
 ## 其它

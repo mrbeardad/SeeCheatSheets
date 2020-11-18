@@ -85,9 +85,9 @@
 | 分区表健壮性     | 无校验、 无备份                  | 有校验、有备份               |
 
 ### MBR
-> MBR章节大部分内容摘录自[鸟哥的Linux私房菜](http://linux.vbird.org/linux_basic/0130designlinux.php#partition_table)
+> MBR小节参考自[鸟哥的Linux私房菜](http://linux.vbird.org/linux_basic/0130designlinux.php#partition_table)
 
-[MBR结构](images/MBR.png)
+![MBR结构](images/MBR.png)
 
 **MBR区**  
 &emsp;LBA0中的前446字节，用于存放boot-loader
@@ -98,7 +98,7 @@
 扩展分区并非一个可使用的分区，它存在的目的即是容纳逻辑分区。
 
 ### GPT
-> GPT章节大部分信息摘录自[金步国作品集](http://www.jinbuguo.com/storage/gpt.html)
+> GPT小节参考自[金步国作品集](http://www.jinbuguo.com/storage/gpt.html)
 
 ![GPT表结构](images/GPT.jpg)
 > 注：LBA0表示0号扇区，即第一个512B的块
@@ -148,6 +148,8 @@ BIOS加载MBR头部的boot-loader，而后者便可以选择：
 * 加载其他boot-loader
 
 ### UEFI
+> UEFI小节参考自[知乎-老狼](https://zhuanlan.zhihu.com/p/25279889)
+
 &emsp;EFI系统分区（ESP），是一个FAT16或FAT32格式的物理分区，但是其分区标识是EF (十六进制) 而非常规的0E或0C；
 因此该分区在Windows操作系统下一般是不可见的。
 ESP是系统引导分区，供UEFI引导系统使用，支持EFI模式的电脑需要从ESP启动系统，EFI固件可从ESP加载EFI启动程序或者应用。
@@ -286,6 +288,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 <!-- entry end -->
 
 ## systemd
+> systemd小节参考自[金步国作品集](http://www.jinbuguo.com/systemd/systemd.index.html)与[鸟哥的Linux私房菜](http://linux.vbird.org/linux_basic/#part5)
 ### systemd启动流程
 1. 寻找并启动default.target，同时递归检查依赖，一般情况依赖如下
 
@@ -322,12 +325,14 @@ grub-mkconfig -o /boot/grub/grub.cfg
 5. graphical.target
 
 ### systemctl命令
-<!-- entry begin: systemctl systemd-analyze systemd-escape -->
+<!-- entry begin: systemctl systemd-analyze -->
 * systemctl
     * 开机管理
-        * enable|disable    ：可使用--now同时执行start/stop
+        * enable            ：加入开机启动，指定选项`--now`同时执行start
+        * disable           ：取消开机启动，指定选项`--now`同时执行stop
         * static            ：只能作为依赖被启动
-        * mask              ：禁止启动，unmask解禁
+        * mask              ：禁止启动（创建符号连接指向/dev/null）
+        * unmask            ：解除禁止启动
     * 手动控制
         * start
         * stop
@@ -372,10 +377,16 @@ grub-mkconfig -o /boot/grub/grub.cfg
     * /lib/systemd/system/
 
 * unit类型
-    * service       ：一般服务单元
-    * socket        ：监听socket以启动服务
-    * path          ：监听path以启动服务
-    * timer         ：定时器用于启动服务
+    * service       ：封装了一个被 systemd 监视与控制的进程
+    * socket        ：封装了一个用于进程间通信的套接字(socket)或管道(FIFO)， 以支持基于套接字的启动
+    * path          ：封装了一组由 systemd 监视的文件系统路径，以支持基于路径的启动
+    * timer         ：封装了一个由 systemd 管理的定时器， 以支持基于定时器的启动
+    * mount         ：封装了一个由 systemd 管理的文件系统挂载点
+    * automount     ：封装了一个由 systemd 管理的 文件系统自动挂载点
+    * swap          ：封装了一个由 systemd 管理的 swap设备或swap文件
+    * device        ：封装了一个位于 sysfs/udev(7) 中的设备
+    * slice         ：封装管理一组进程资源占用的控制组的 slice 单元。 此类单元是通过在 Linux cgroup(Control Group) 树中创建一个节点实现资源控制的
+    * scope         ：仅能以编程的方式通过 systemd D-Bus 接口创建。范围单元用于管理 一组外部创建的进程， 它自身并不派生(fork)任何进程
     * target        ：一系列unit的集合
         > 一般包括有：graphical，multi-user，basic，sysinit，rescue，emerge，shutdown，getty
 
@@ -387,6 +398,9 @@ grub-mkconfig -o /boot/grub/grub.cfg
     * 选项可重复设置，后面覆盖前面
     * 对于`foo@bar.service`会优先读取`foo@bar.service.d/`，再读`foo@.service.d/`
     * 对于`foo-bar.service`会优先读取`foo-.service`，再读`foo-bar.service`，且后者中的同名文件会覆盖前者
+
+注意：systemd的单元配置文件格式为ini，为了美观将注释（#后的文本）写在后面是不正确的，
+它会被当作变量内容，正确做法应该式#放在行首，其后直到换行符皆为注释
 
 #### Unit小节
 <!-- entry begin: [Unit] -->
@@ -423,8 +437,8 @@ DefaultInstance=        # 对于模板单元，设置默认实例，即直接启
 Type=
 # simple    表示当fork()返回时即算启动完成
 # exec      表示当exec()执行成功时才算是启动完成
-# oneshot   表示当执行完成并退出后才算完成，直接从activating到inactive，应该设置RemainAfterExit
 # forking   表示当父进程退出且至少有一个子进程才算完成，应该设置PIDFile=以跟踪主进程
+# oneshot   表示当执行完成并退出后才算完成，直接从activating到inactive，应该设置RemainAfterExit
 # notify    表示当返回状态信息后才算完成
 # dbus      表示当从D-Bus获得名称后算完成，需设置BusName选项
 # idle      表示当所有任务完成后才启动，最多延迟5秒
@@ -481,7 +495,7 @@ Unit=                   # 指定匹配unit，默认同名.service
 1. 启动getty.target创建终端，并打印提示`/etc/issue`
 2. 启动systemd-logind并连接到上述终端，然后打印提示`/etc/motd`
 3. 用户输入用户名与密码，systemd-logind调用PAM进行身份验证与授权。
-    > 相关文件：`/etc/login.defs`、`/etc/nologin.txt`、`/etc/nologin`
+    > 相关文件：/etc/pam.d/、/etc/login.defs、/etc/nologin.txt、/etc/nologin
 4. systemd-logind作为超级用户进程，需要为接下来用户shell初始化安全的、基础的进程环境
 5. systemd-logind调用exec加载shell，将`argv[0][0]`设置为`-`表示登录shell
 6. shell读取其配置文件
@@ -734,7 +748,7 @@ Linux提供两种系统时间方案：
 * hwclock -w    ：将系统时间写入硬件
 <!-- entry end -->
 
-<!-- entry begin: date -->
+<!-- entry begin: date cal -->
 * date
     * +timeformat           ：指定时间打印格式
     * -d timeformat         ：指定时间
@@ -757,6 +771,7 @@ Linux提供两种系统时间方案：
 ## 字体服务
 <!-- entry begin: fontconfig mkfontdir mkfontscale fc-cache fc-list -->
 * fc-list       ：字体缓存查看
+
 > 以下三条命令为字体安装三部曲
 * mkfontdir
 * mkfontscale
@@ -794,7 +809,7 @@ Linux提供两种系统时间方案：
 | 1    | alert         | 警报                                                                 |
 | 0    | emerg(panic)  | 疼痛等級，意指系統几乎要死机，通常大概只有硬件出问题导致内核无法运行 |
 
-* logger -p user.info
+* logger -p user.info MSG
 <!-- entry end -->
 
 <!-- entry begin: last lastlog lastb w journalctl -->
@@ -835,6 +850,7 @@ Linux提供两种系统时间方案：
 
 会话首进程的作用：
 * 会话首进程调用`open()`打开第一个尚未关联会话的终端时，只要未指定`O_NOCTTY`则将本会话与该终端关联
+* 终端挂断时终端驱动会发射信号SIGHUP给与该终端关联的会话的会话首进程（或直接发给会话中所有进程）
 
 <!-- entry begin: daemon -->
 &emsp;那些不与终端联系，不属于用户会话的进程，即被称为Daemon（守护进程）。
@@ -1048,8 +1064,7 @@ CPU切换控制流并搜索操作系统的异常处理表，然后控制权移�
     * PRI值是由内核动态调整的，用户不能直接修改，只能通过修改 NI 值来影响 PRI 值，间接地调整进程优先级
 * NI 值越小，进程的 PRI 就会降低，该进程就越优先被 CPU 处理
 * NI 范围是 -20~19。
-* 普通用户调整 NI 值的范围是 0~19，而且只能调整自己的进程。
-* 普通用户只能调高 NI 值，而不能降低
+* 普通用户调整 NI 值的范围是 0~19，只能调整自己的进程，只能调高 NI 值，而不能降低
 * 只有 root 用户才能设定进程 NI 值为负值，而且可以调整任何用户的进程
 
 **CPU使用时间**
@@ -1565,8 +1580,8 @@ Change: 2020-11-07 13:53:39.060000000 +0800
 <!-- entry begin: stty -->
 * stty
     * -a    ：查看标准输入连接的终端的所有设置，可通过重定向更改查看的终端
-    * -opt  ：关闭终端选项opt
-    * opt   ：开启终端选项opt
+    * -flag ：关闭终端标识flag
+    * flag  ：开启终端标识flag
 <!-- entry end -->
 
 更多终端信息见[Linux系统接口](https://github.com/mrbeardad/SeeCheatSheets/blob/master/apue.md#%E7%BB%88%E7%AB%AF)
@@ -1580,7 +1595,6 @@ Change: 2020-11-07 13:53:39.060000000 +0800
 | /etc/protocols   | 系统支持的网络协议 |
 | /etc/hosts       | 已知主机名         |
 | /etc/resolv.conf | DNS服务器          |
-
 
 ## 网络命令
 <!-- entry begin: ip -->

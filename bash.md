@@ -187,8 +187,7 @@
     * `${variable%%pattern}`      ： 如果变量尾部匹配 pattern，则删除最大匹配部分返回剩下的
     * `${variable/pattern/str}`   ： 将变量中第一个匹配 pattern 的替换成 str，并返回
     * `${variable//pattern/str}`  ： 将变量中所有匹配 pattern 的地方替换成 str 并返回
-    * `eval \$$var`               ： eval为关键字，整个表达式会替换成最终的`${$var}`（假设花括号中的变量会先被替换）
-    * `eval var1=\$$var2`         ： 将`eval \$$var2`的替换结果复制给`var1`
+    * `eval \$$var_cmd`           ： eval为关键字，执行其参数（名字魔法）
 <!-- entry end -->
 
 <!-- entry begin: export 环境变量 -->

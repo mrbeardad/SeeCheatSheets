@@ -157,11 +157,11 @@
 * 设计版本库：
 ```cpp
 // test.hpp 第一个版本
-namespace test::test {...}
+namespace std { /* ... */ }
 
 // test.hpp 第二个版本
-#include <test_v1.hpp> // test_v1.hpp即第一个版本的test.hpp，其中的`namespace test::test`改为了`namespace test::test::v1`
-namespace test::test {...}
+#include <test_v1.hpp> // test_v1.hpp即第一个版本的test.hpp，其中的`namespace test`改为了`namespace test::v1`
+namespace std { /* ... */}
 ```
 
 ## 全局变量
@@ -353,7 +353,7 @@ namespace test::test {...}
 * 友元成员函数  ：需要先提供类的前置定义
 * 友元模板：
     * 某一实例：需要前置声明模板，并显示指定模板参数<span id="mbyy"></span>
-        > `firend func<int>(Test<int> t);`  
+        > `friend func<int>(Test<int> t);`  
         > 注意，可声明全特化，但不可声明偏特化
 
     * 整个模板：若无前置声明，此处即为声明
