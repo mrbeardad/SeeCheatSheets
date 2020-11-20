@@ -28,6 +28,9 @@ fi
 g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 ```
 
+**注**：部分笔记插入了Tex公式，介于鄙人的懒惰，诸位就自己下个浏览器插件吧。
+[github-mathjax](https://github.com/orsharir/github-mathjax/issues/24#issuecomment-438140315 "下载ZIP解压后通过浏览器开发者模式安装")
+
 ## 技术
 * [Docker](docker.md)
 * [MySQL](mysql.md)
@@ -71,6 +74,12 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 
 ## 底层
 * [信息编码](code.md)
+    > 整数之无符码与补码，浮点数之IEEE 754标准，字符之Unicode与UTF-8
+* [机器代码](asm.md)
+    > x86-64汇编语言
+* [处理器设计](cpu.md)
+    > 逻辑电路与处理器设计
+
 * [计算机系统](csapp.md)
 
 ## 其它

@@ -24,18 +24,22 @@
 <!-- entry begin: gcc -->
 * gcc
     * 指定输出文件          ：-o
-    * 优化级别              ：-O0 -O1 -O2 -O3-Ofast -Os -Og
-    * 编译程度              ：-E（.i） -S（.s） -c（.o）
+    * 优化级别              ：-O0 -O1 -O2 -O3 -Ofast -Os -Og
+    * 使用AVX2指令          ：-mavx2
+    * 编译程度              ：-E  -S  -c
+        > cpp.i ccl.s as.o
     * 指定标准              ：-std=c11
-    * 定义宏                ：-Dmacros_define
-    * 指定inclide目录       ：-I
-    * 指定lib目录与lib      ：-L -lxxx（库名libxxx.a、libxxx.so）
-    * 指定机器              ：-m32 -m64
-    * 指定程序规模          ：-mcmodel=medium或large（数据段默认32位跳转）
+    * 宏开关                ：-Dmacro=defin -Umacro
+    * 指定头文件            ：-Idir
+    * 指定程序库            ：-Ldir  -lxxx（库名libxxx.a、libxxx.so）
+    * 指定字长              ：-m32 -m64
+    * 指定程序规模          ：-mcmodel=large
+        > 默认32位地址用于相对跳转，即代码段与数据段不能超过4GB
+    * 全静态链接            ：-static
     * 制作动态库            ：-shared -fpic
-    * 调用链接器            ：-ldl -rdynamic 
+    * 调用链接器            ：-ldl -rdynamic
     * 链接库打桩            ：-Wl,--wrap,func
-    * GPROF剖析             ：-pg（最好也加下述参数）
+    * GPROF剖析             ：-pg
     * 调试                  ：-Og -g3 -fno-inline
     * 开启C++标准库debug模式：-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
     * 报错                  ：-Werror -Wall -Wextra
@@ -55,8 +59,10 @@
 <!-- entry end -->
 
 <!-- entry begin: objdump readelf ldd strace pmap gprof -->
+* objdump
+    * -dx   ：仅执行区域
+    * -Dx   ：所有区域
 * readelf
-* objdump -dx
 * ldd -V
 * strace
 * pmap
@@ -75,59 +81,60 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 
 ## gdb
 <!-- entry begin: gdb -->
-* gdb EXEC CORE PID
+* gdb [EXEC] [CORE] [PID]
 
-* 断点：
-    * break     b   ：`func`，`linenum`，`if CONDITION` `* address`
-    * tbreak    tb  ：`func`，`linenum`
-    * condition     ：`break-id expr`
-    * watch     w   ：`expr`
-    * catch         ：`syscall|signal|exception`
-    * delete    d   ：`break-id`
-    * ignore        ：`break-id N`
-    * disable       ：`break-id`
-    * enable        ：`break-id`
-    * i b
-    * save b FILE
-    * source FILE
+**断点**
+* break     b   ：`func | linenum | *address`，`if CONDITION` 
+* tbreak    tb  ：`func | linenum`
+* condition     ：`break-id expr`
+* watch     w   ：`expr`
+* catch         ：`syscall | signal | exception`
+* enable        ：`break-id`
+* disable       ：`break-id`
+* ignore        ：`break-id N`
+* delete    d   ：`break-id`
+* i b
+* save b        ：`FILE`
+* source        ：`FILE`
 
-* 运行：
-    * set/show      ：`args|path|env`
-    * run       r   ：`shell-like-cmd`
-    * continue  c
-    * kill      k
-    * quit      q
+**运行**
+* set/show      ：`args | path | env`
+* run       r   ：`shell-like-cmd`
+* continue  c
+* kill      k
+* quit      q
 
-* 跟踪：
-    * step      s   ：`N`
-    * stepi     si  ：`N`
-    * next      n   ：`N`
-    * nexti     ni  ：`N`
-    * until     u   ：`line-num`
-    * return        ：`ret-val`
-    * finish    f
-    * backtrace bt
+**跟踪**
+* step      s   ：`N`
+* stepi     si  ：`N`
+* next      n   ：`N`
+* nexti     ni  ：`N`
+* until     u   ：`line-num`
+* return        ：`ret-val`
+* finish    f
+* backtrace bt
 
-* 打印：
-    * print     p   ：`val`，`expr`，`"%s",addr` `$reg`
-        > 注意：使用`$pc=address`调整执行位置时，注意栈帧是否合法
-    * x             ：`/12b` `/12c` `/12g` `adress`
-    * display       ：每次单步后打印变量
-    * whatis        ：`value`
-    * i locals
+**打印与篡改**
+* print     p   ：`/x | /t`，`val | expr | "%s",addr | $reg`
+    > 注意：使用`$pc=address`调整执行位置时，注意栈帧是否合法
+* x             ：`/12b | /12c | /12g`，`adress`
+* display       ：`expr`
+* whatis        ：`value`
+* i locals  v
 
-* 代码：
-    * layout    la  ：src|asm|reg|sp
-    * list      l   ：`lineno`，`funcname`
-    * update
-    * search        ：{regexpr}
-    * reverse-search：{regexp}
+**代码**
+* layout    la  ：src|asm|reg|sp
+* list      l   ：`lineno | funcname`
+* update
+* search        ：{regexpr}
+* reverse-search：{regexp}
 
-* 调试子进程：
-    * set follow-fork-mode child
-* 调试多线程：
+**调试子进程**
+* set follow-fork-mode child
+
+**调试多线程**
     * i thread
-    * thread `<thread-num>`
+    * thread    ：`thread-id`
 <!-- entry end -->
 
 ## cgdb
