@@ -29,7 +29,8 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 ```
 
 **注**：部分笔记插入了Tex公式，介于鄙人的懒惰，诸位就自己下个浏览器插件吧。
-[github-mathjax](https://github.com/orsharir/github-mathjax/issues/24#issuecomment-438140315 "下载ZIP解压后通过浏览器开发者模式安装")
+[github-mathjax](https://github.com/orsharir/github-mathjax/issues/24#issuecomment-438140315 "下载ZIP解压后通过浏览器开发者模式安装")  
+另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
 ## 技术
 * [Docker](docker.md)
@@ -65,6 +66,7 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [数据结构与算法](dsaa.md)
     > 基础数据结构与算法
 * [正则表达式](regex.md)
+    > 包含的正则语法版本有posix、vim、c++
 
 ## 网络
 * [计算机网络](network.md)
@@ -77,8 +79,9 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
     > 整数之无符码与补码，浮点数之IEEE 754标准，字符之Unicode与UTF-8
 * [机器代码](asm.md)
     > x86-64汇编语言
-* [处理器设计](cpu.md)
-    > 逻辑电路与处理器设计
+* [处理器](cpu.md)
+    > 逻辑电路与处理器设计，以及CPU高速缓存机制
+* [计算机组成](bus.md)
 
 * [计算机系统](csapp.md)
 

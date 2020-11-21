@@ -39,7 +39,7 @@
     * 制作动态库            ：-shared -fpic
     * 调用链接器            ：-ldl -rdynamic
     * 链接库打桩            ：-Wl,--wrap,func
-    * GPROF剖析             ：-pg
+    * GPROF剖析             ：-pg -Og -g3 -fno-inline
     * 调试                  ：-Og -g3 -fno-inline
     * 开启C++标准库debug模式：-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
     * 报错                  ：-Werror -Wall -Wextra
