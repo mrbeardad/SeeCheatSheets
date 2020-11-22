@@ -67,6 +67,7 @@
 * strace
 * pmap
 * size
+* nm
 * gprof
 <!-- entry end -->
 

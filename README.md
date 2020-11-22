@@ -54,7 +54,7 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [C++编码风格](cppstyle.md)
     > 对代码风格进行规范，拒绝选择困难症
 * [C++编程向导](cppguide.md)
-    > 编写健壮、可移植、可扩展的C++代码，部分参考自Scott Meyers作品
+    > 编写健壮、可移植、可扩展的C++代码
 * [C++程序库](cppman.md)
     > C++标准库、Boost库、MySQL++、JSON
 * [CMake构建系统](cmake.md)
@@ -70,7 +70,7 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 
 ## 网络
 * [计算机网络](network.md)
-    > 互联网整体架构与协议栈细节
+    > 自顶向下展示互联网架构
 * [比特币与区块链](bitcoin.md)
     > 整理了一些加密技术与区块链原理
 
@@ -82,6 +82,9 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [处理器](cpu.md)
     > 逻辑电路与处理器设计，以及CPU高速缓存机制
 * [计算机组成](bus.md)
+    > 主要是总线接口与存储技术，还有显卡与显示屏工作原理
+* [操作系统](os,md)
+    > 链接、异常控制流、虚拟内存
 
 * [计算机系统](csapp.md)
 
