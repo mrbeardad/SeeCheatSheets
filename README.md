@@ -86,8 +86,6 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [操作系统](os,md)
     > 链接、异常控制流、虚拟内存
 
-* [计算机系统](csapp.md)
-
 ## 其它
 * [Markdown](markdown.md)
 * [English](english.md)
