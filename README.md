@@ -29,7 +29,7 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 ```
 
 **注**：部分笔记插入了Tex公式，介于鄙人的懒惰，诸位就自己下个浏览器插件吧。
-[github-mathjax](https://github.com/orsharir/github-mathjax/issues/24#issuecomment-438140315 "下载ZIP解压后通过浏览器开发者模式安装")  
+[github-mathjax](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima/related)  
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
 ## 技术
@@ -37,16 +37,16 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [MySQL](mysql.md)
 
 ## Linux
-* [Linux知识框架](linux.md)
-    > 讲述Linux的开机过程，以及整个系统的内核态与用户态架构
-* [Linux系统接口](apue.md)
-    > Linux的API，大部分都符合POSIX、XSI或USU规范
-* [bash脚本](bash.md)
-    > bash语法与linux基础命令
+* [Linux体系框架](linux.md)
+    > Linux的开机流程，以及整个系统的内核态与用户态架构
+* [Unix系统接口](apue.md)
+    > 大部分都符合POSIX、XSI或USU规范
+* [Bash脚本](bash.md)
+    > bash语法、内置命令以及一些linux基础命令
 * [开发者工具](devtool.md)
     > 包含gcc、gdb、ssh、tmux、zsh、git、pacman等工具使用
 * [Vim](vim.md)
-    > 这是[魔改版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
+    > 此为[魔改版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 
 ## C++
 * [C++语法特性](cpp.md)
@@ -56,7 +56,7 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [C++编程向导](cppguide.md)
     > 编写健壮、可移植、可扩展的C++代码
 * [C++程序库](cppman.md)
-    > C++标准库、Boost库、MySQL++、JSON
+    > C++标准库以及某些第三方库
 * [CMake构建系统](cmake.md)
     > CMake系统构建工具语法
 
@@ -66,24 +66,26 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [数据结构与算法](dsaa.md)
     > 基础数据结构与算法
 * [正则表达式](regex.md)
-    > 包含的正则语法版本有posix、vim、c++
+    > 目前包含的正则语法版本有Grep、Vim、C++
 
 ## 网络
 * [计算机网络](network.md)
     > 自顶向下展示互联网架构
 * [比特币与区块链](bitcoin.md)
     > 整理了一些加密技术与区块链原理
+* [差错校验与加密技术](security.md)
+    > 这些技术在网络中有重要应用
 
 ## 底层
 * [信息编码](code.md)
     > 整数之无符码与补码，浮点数之IEEE 754标准，字符之Unicode与UTF-8
 * [机器代码](asm.md)
     > x86-64汇编语言
-* [处理器](cpu.md)
+* [处理器设计](cpu.md)
     > 逻辑电路与处理器设计，以及CPU高速缓存机制
 * [计算机组成](bus.md)
     > 主要是总线接口与存储技术，还有显卡与显示屏工作原理
-* [操作系统](os,md)
+* [操作系统](os.md)
     > 链接、异常控制流、虚拟内存
 
 ## 其它
