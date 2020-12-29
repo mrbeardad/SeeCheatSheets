@@ -48,10 +48,11 @@
   - [设计](#设计)
 - [泛型编程](#泛型编程)
   - [模板参数](#模板参数)
+  - [变参](#变参)
+  - [约束与概念](#约束与概念)
   - [函数模板](#函数模板)
   - [类模板](#类模板)
   - [变量模板](#变量模板)
-  - [变参](#变参)
   - [模板特例化](#模板特例化)
   - [其它](#其它)
   - [编译器类型推断](#编译器类型推断)
@@ -903,6 +904,52 @@ namespace std { /* ... */}
     * 类型与非类型都可以有默认模板参数
     * 自动实施于偏特化版本
 
+## 变参
+> `template <typename... Types, auto... VARS>`
+* `sizeof...()`获取参数包中参数数量
+
+<!-- need reread -->
+* 模板类型参数解包
+    * 类型修饰
+        > `(T&&... t)`与`(C<T...> t)`
+    * 基类列表 <span id="bcpu"></span>
+        > `template <typename... T> class Deriv: T...;`
+    * [using继承](#usingjc)
+        > `using T::operator()...;`
+* 函数参数解包（也适用于非类型参数）
+    * 函数调用
+        > 例如`func(arg1, args...);`与`func(forward<Type>(args)...)`
+        > 注意参数包可以为空
+    * 左右折叠表达式
+        * 一元折叠：`((cout << E << endl), ...)`
+            > 表示对E包中每个元素调用逗号左边表达式
+        * 二元右折叠：`(E OP ... OP init)`
+            > 表示`E1 OP (... OP (EN-1 OP (EN OP init)))`
+        * 二元左折叠：`(init OP ... OP E)`
+            > 表示意味着 `(((init OP E1) OP E2) OP ...) OP E2`
+
+## 约束与概念
+* 约束表达式
+    > `requires(形参列表(可选)) {要求序列;}`
+    * 简单约束：要求表达式能够通过编译
+        > `t.mem()`
+    * 类型约束：要求目标类型合法
+        > `typename T`
+    * 复合约束：表达式结果作为类型约束的最后一个参数
+        > `{表达式} noexcept -> 类型约束`
+    * 嵌套约束：相当于使用约束从句进行静态断言
+        > `requires()`
+
+* 约束从句
+    > `template <typename T> requires (std::integral<T> && sizeof(T) == 4)`
+
+* 概念的定义
+    > `template<typename T> concept Concept = 约束表达式`
+
+* 概念的使用
+    > `template<Concept T>`  
+    > `if ( std::same_as<int, float> )`
+
 ## 函数模板
 > `template <typename T> int test(vector<T> t);`
 * 自动推断模板参数：
@@ -955,31 +1002,6 @@ namespace std { /* ... */}
 * 根据模板参数(类型或非类型)来方便地生成变量
 * 可以用于[元编程技术](#元编程)来编译期获取值
 * 不能作为模板模板参数(一种非类型参数)
->
-
-## 变参
-> `template <typename... Types, auto... VARS>`
-* `sizeof...()`获取参数包中参数数量
-
-<!-- need reread -->
-* 模板类型参数解包
-    * 类型修饰
-        > `(T&&... t)`与`(C<T...> t)`
-    * 基类列表 <span id="bcpu"></span>
-        > `template <typename... T> class Deriv: T...;`
-    * [using继承](#usingjc)
-        > `using T::operator()...;`
-* 函数参数解包（也适用于非类型参数）
-    * 函数调用
-        > 例如`func(arg1, args...);`与`func(forward<Type>(args)...)`
-        > 注意参数包可以为空
-    * 左右折叠表达式
-        * 一元折叠：`((cout << E << endl), ...)`
-            > 表示对E包中每个元素调用逗号左边表达式
-        * 二元右折叠：`(E OP ... OP init)`
-            > 表示`E1 OP (... OP (EN-1 OP (EN OP init)))`
-        * 二元左折叠：`(init OP ... OP E)`
-            > 表示意味着 `(((init OP E1) OP E2) OP ...) OP E2`
 >
 
 ## 模板特例化

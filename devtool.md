@@ -27,7 +27,7 @@
     * 优化级别              ：-O0 -O1 -O2 -O3 -Ofast -Os -Og
     * 使用AVX2指令          ：-mavx2
     * 编译程度              ：-E  -S  -c
-        > cpp.i ccl.s as.o
+        > cpp.i、ccl.s、as.o
     * 指定标准              ：-std=c11
     * 宏开关                ：-Dmacro=defin -Umacro
     * 指定头文件            ：-Idir
@@ -41,8 +41,8 @@
     * 链接库打桩            ：-Wl,--wrap,func
     * GPROF剖析             ：-pg -Og -g3 -fno-inline
     * 调试                  ：-Og -g3 -fno-inline
-    * 开启C++标准库debug模式：-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
     * 报错                  ：-Werror -Wall -Wextra
+    * 开启C++标准库debug模式：-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
 <!-- entry end -->
 
 <!-- entry begin: ar 静态库 -->
@@ -117,7 +117,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 
 **打印与篡改**
 * print     p   ：`/x | /t`，`val | expr | "%s",addr | $reg`
-    > 注意：使用`$pc=address`调整执行位置时，注意栈帧是否合法
+    > 注意：使用`$rip=address`调整执行位置时，注意栈帧是否合法
 * x             ：`/12b | /12c | /12g`，`adress`
 * display       ：`expr`
 * whatis        ：`value`
@@ -220,6 +220,8 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
         * `Ctrl`+`o`：交换pane
         * `!`       ：新窗口打开该pane
     * window操作：
+        * `c`       ：创建新窗口
+        * `&`       ：删除当前窗口
         * `b`       ：上一个window
         * `n`       ：下一个window
     * session操作：
@@ -360,7 +362,7 @@ alias dk='docker'
     * tree对象：
         > 为每个commit管理“快照”，指向该commit所有的各个data对象
     * commit信息：
-        * 作者、提交者、日期、校验、描述、父指针、"快照"
+        * 作者、提交者、日期、校验、描述、父指针、"快照"抽象
             > 父指针指向上次**commit**，可能有多个
     * 分支指针：
         > 分支指针指向某个commit
@@ -414,7 +416,7 @@ alias dk='docker'
     * 支持通配符`**` `*` `?` `[]`
         > 注意不支持`{}`
     * 以`/`结尾强制指定为目录
-    * 以`/`开头表示禁止递归
+    * 以`/`开头表示禁止自动递归搜索
         > 递归只会针对单层路径，即`test/build`并不能表示忽略名为test的目录下的build文件，
         > 应该这样写`/**/test/build`
     * 以`!`开头则取消之前已被忽略的文件，若该文件的父目录已被忽略则无效  
@@ -461,7 +463,7 @@ alias dk='docker'
 
 <!-- entry begin: git rm -->
 * git rm PATH
-    > 删除工作区与暂存区中的文件（只需要暂存区中存在目标文件）
+    > 删除工作区与暂存区中的文件（只需要暂存区中存在目标文件）。
     * grm   ：`git rm`
 <!-- entry end -->
 
@@ -513,7 +515,7 @@ alias dk='docker'
     * glola     ：提交历史精简可视化
 <!-- entry end -->
 
-<!-- entry begin: git diff -->
+<!-- entry begin: git diff patch -->
 * git diff
     > 参数：
     >
@@ -525,9 +527,6 @@ alias dk='docker'
     * gdt   ：`git difftool --tool=vimdiff`
     * gdts  ：`git difftool --tool=vimdiff --staged`
     * gdi   ：`git diff-index`
-<!-- entry end -->
-
-<!-- entry begin: diff patch -->
 ```sh
 diff -Naur OLD NEW > patch
 patch -p`n`  < patch

@@ -42,6 +42,7 @@
     - [分段I/O](#分段io)
     - [I/O多路复用](#io多路复用)
     - [内存映射](#内存映射)
+    - [动态链接](#动态链接)
 
 <!-- vim-markdown-toc -->
 # 基础知识
@@ -55,13 +56,10 @@
 * 清除：`flag & ~bit`
 
 ## 阻塞
-<!-- entry begin: 阻塞 -->
-有些文件并非立即可用，需要等待，对其读写的过程称为慢速I/O。
-期间调用**线程**（而非进程）会阻塞。
-
-互斥锁机制（文件记录锁、线程同步锁）也会使线程阻塞
-
-当等待某些异步事件发生时，如调用`sleep`、`pause`、`wait`、`sigsuspend`、`sigwait`也会主动进入阻塞状态（可打断睡眠状态S）
+<!-- entry begin: 阻塞 block -->
+* 有些文件并非立即可用，需要等待，期间调用**线程**（而非进程）会阻塞。
+* 互斥锁机制（文件记录锁、线程同步锁）也会使线程阻塞
+* 当等待某些异步事件发生时，如调用`wait`、`sleep`、`pause`、`wait`、`sigsuspend`、`sigwait`也会主动进入阻塞状态（可打断睡眠状态S）
 <!-- entry end -->
 
 # 标准与限制
@@ -96,10 +94,10 @@ long fpathconf(int fd, int name);               // 返回对应限制值
 * 任何标准函数都不会将其置零
 ```c
 #include <errno.h>
-thread_local int errno;                         // 标准只规定errno为 线程独立的左值
+thread_local int errno;                         // 标准只规定errno为线程独立的左值，此处仅做示例
 
 #include <string.h>
-char*   strerror(int errno);                    // 返回errno映射的消息字符串(NOE)
+char*   strerror(int errno);                    // 返回errno映射的消息字符串(NOE)，无则返回报错字符串
 
 #include <stdio.h>
 void    perror(const char* msg);                // 打印 msg + ": " + strerror(errno)
@@ -209,7 +207,7 @@ int gethostname(char* name, int namelen);   // 返回0
 ```c
 /* 日期时间 */
 #include <time.h>
-time_t  time(time_t* calptr);                                                                       // 返回时间值。calptr可为NULL
+time_t  time(time_t* calptr);                                                                       // 返回时间值。calptr若不为NULL则也会返回时间值于此
 tm*     gmtime(const time_t* calptr);                                                               // 返回UTC的`tm*`
 tm*     localtime(const time_t* calptr);                                                            // 返回本地时区的`tm*`
 size_t  strftime(char* buf, size_t maxsize, const char* format, const tm* tmptr);                   // 返回buf字符数
@@ -217,7 +215,7 @@ size_t  strftime_l(char* buf, size_t maxsize, const char* format, const tm* tmpt
 char*   strptime(const char* buf, const char* format, tm* tmptr);                                   // 返回下次解析位置的指针
 time_t  mktime(tm* tmptr);                                                                          // 返回本地时区的`tm*`对应time_t
 
-/* 单调时间、进程时间 */
+/* 单调时间、细致进程时间 */
 #include <sys/time.h>
 struct tms
 {
@@ -228,8 +226,10 @@ struct tms
 };
 clock_t times(tms* buf);    // 返回单调时间（除以每秒时钟滴答数即得秒数）。
 
-/* 日期时间、单调时间、进程时间、线程时间 */
+/* 日期时间、单调时间、粗略进程时间、粗略线程时间 */
 #include <sys/time.h>
+struct timespec { time_t tv_sec; long tv_nsec; };
+
 int     clock_gettime(clockid_t clock_id, timespec* tsp);    // 返回0
 int     clock_getres(clockid_t clock_id, timespec* tsp);     // 返回0
 int     clock_settime(clockid_t clock_id, timespec* tsp);    // 返回0
@@ -356,6 +356,7 @@ pid_t   getppid(void);                  // 返回PPID
 pid_t   getpgid(pid_t pid);             // 返回PGID。pid==0表示获取调用进程的PGID
 pid_t   getsid(pid_t pid);              // 返回SID。pid==0表示获取调用进程的SID
 pid_t   tcgetpgrp(int fd);              // 返回TPGID
+
 int     setpgid(pid_t pid, pid_t pgid); // 返回0。pid==0表示设置调用进程；pgid==0表示设置PGID为PID；只能设置调用进程及其子进程。
 int     setsid(void);                   // 返回新SID。调用进程不能是进程组组长
 int     tcsetpgrp(int fd, pid_t pgid);  // 返回0。pgid必须属于同会话。若由后台进程组调用且其未忽略或阻塞SIGTTOU，则会发送SIGTTOU给该后台进程组
@@ -374,9 +375,8 @@ gid_t   getgid(void);                   // 返回GID
 gid_t   getegid(void);                  // 返回EGID
 
 /*
- * 超级用户调用setuid()会更改UID、EUID、SUID，普通用户调用则只更改UID，且只能更改为UID、EUID、SUID之一
- * 超级用户调用seteuid()只更改EUID；普通用户调用则也只更改EUID，且只能更改为UID、EUID、SUID之一
- * setgid()与setegid()同理
+ * 超级用户调用setuid()会更改UID、EUID、SUID，普通用户调用则只更改UID，且只能更改为UID、EUID、SUID之一。setgid()同理
+ * 超级用户调用seteuid()只更改EUID；普通用户调用则也只更改EUID，且只能更改为UID、EUID、SUID之一。setegid()同理
 */
 int     setuid(uid_t uid);              // 返回0
 int     setgid(gid_t gid);              // 返回0
@@ -405,7 +405,7 @@ int     atexit(void (*func)(void));                                         // �
 ```
 <!-- entry end -->
 <!-- entry begin: wait waitpid waitid -->
-```
+```c
 #include <sys/wait.h>
 /*
  * 注意wait函数与SIGCHLD并无关联。
@@ -495,13 +495,13 @@ void        pthread_exit(void* retv_ptr);                                       
 int         pthread_cancle(pthread_t tid);                                          // 返回0，若出错返回errno
 void        pthread_cleanup_push(void (*rtn)(void*), void* arg);
 void        pthread_cleanup_pop(int execute);                                       // 若用非0实参调用则会调用弹出的函数
-void        pthread_join(pthread_t tid, void** retv_ptr);                           // 若线程被取消则返回retv_ptr指向PTHREAD_CANCELED
+void        pthread_join(pthread_t tid, void** retv_ptr);                           // 若线程被取消则返回至retv_ptr并指向PTHREAD_CANCELED
 int         pthread_detach(pthread_t tid);                                          // 卸离线程无需调用pthread_detach即自动释放资源
 
 int         pthread_attr_init(pthread_attr_t* attr);
 int         pthread_attr_destroy(pthread_attr_t* attr);
-int         pthread_attr_getdetachstate(const pthread_attr_t *, int* detachstate);
-int         pthread_attr_setdetachstate(pthread_attr_t *, int* detachstate);        // PTHREAD_CREATE_DETACHED、PTHREAD_CREATE_JOINABLE
+int         pthread_attr_getdetachstate(const pthread_attr_t* attr, int* detachstate);
+int         pthread_attr_setdetachstate(pthread_attr_t* attr, int* detachstate);    // PTHREAD_CREATE_DETACHED、PTHREAD_CREATE_JOINABLE
 int         pthread_setcancelstate(int state, int *oldstate);                       // PTHREAD_CANCEL_ENABLE、PTHREAD_CANCEL_DISABLE
 int         pthread_setcanceltype(int type, int *oldtype);                          // PTHREAD_CANCLE_ASYNCHRONOUS、PTHREAD_CANCEL_DEFERRED
 void        pthread_testcancel(void);                                               // 手动产生cancel点
@@ -509,7 +509,7 @@ void        pthread_testcancel(void);                                           
 /*
  * 同步原语：
  * 互斥量：读取-测试-上锁/阻塞
- * 条件量：解锁-阻塞
+ * 条件量：解锁-唤醒-阻塞
  *
  * fork时继承父进程的内存，故也继承了互斥锁与条件量。
  * 但是fork后子进程只有一个调用线程的副本，而父进程中其他线程并未fork。
@@ -531,7 +531,6 @@ int         pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*c
 ```c
 #include <bash/signames.h>                                              // 该头文件依赖signal.h
 char*   signal_names[NSIG + 4];                                         // 信号名数组
-
 #include <string.h>
 char*   strsignal(int signo);                                           // 返回解释该信号的字符串
 
@@ -539,7 +538,7 @@ char*   strsignal(int signo);                                           // 返�
 void    (*signal(int signo, void (*func)(int)))(int);                   // 返回之前的Handler
 int     sigaction(int signo, const sigaction* act, sigaction* oldact);  // 返回0
 
-int     kill(pid_t pid, int signo);                                     // 返回0。普通用户只能发送给UID或EUID等于其UID或EUID的进程
+int     kill(pid_t pid, int signo);                                     // 返回0。普通用户一般只能发送给UID或EUID等于其UID或EUID的进程
 int     raise(int signo);                                               // 返回0
 int     sigqueue(pid_t pid, int signo, const union sigval value);       // 返回0
 int     pthread_kill(pthread_t tid, int signo);                         // 返回0，错误返回errno
@@ -628,7 +627,7 @@ int     setrlimit(int resource, const rlimit* rlptr);   // 返回0，出错返�
 int     nice(int incr);                                 // 返回新友好值。自动调节incr到范围内的值。检测是否出错需清除errno并检测返回值是否为-1且errno非零
 
 #include <sys/resource.h>
-int     getpriority(int which, id_t who);               // 返回友好值。若作用于多个进程，则返回优先级最高到（nice最小的）
+int     getpriority(int which, id_t who);               // 返回友好值。若作用于多个进程，则返回优先级最高的（nice最小的）
 int     setpriority(int which, id_t who, int value);    // 返回0。
 ```
 | rlimit resource   | 说明                            |
@@ -929,7 +928,7 @@ int     pclose(FILE* fp);                               // 返回shell返回值�
 struct addrinfo
 {
     int         ai_flags;           // 见下表addrinfo ai_flags
-    int         ai_familt;          // 指定为domain
+    int         ai_family;          // 指定为domain
     int         ai_socktype;        // 指定为socktype
     int         ai_protocol;        // 指定为protocol
     socklen_t   ai_addrlen;         // 指定sockaddr结构长度
@@ -976,7 +975,7 @@ const char* gai_strerrot(int errno);// 返回出错信息字符串。指定errno
 <!-- entry end -->
 
 <!-- entry begin: socket bind listen accept connect send sendto recv recvfrom shutdown sockmark -->
-```
+```c
 int     socket(int domain, int socktype, int protocol);                                                     // 返回创建的套接字的描述符
 int     bind(int sockfd, const sockaddr* addr, socklen_t len);                                              // 返回0
 int     listen(int sockfd, int backlog);                                                                    // 返回0
@@ -1269,7 +1268,28 @@ int     FD_ZERO(fd_set* fds);
 int     FD_ISSET(int fd, fd_set* fds);
 void    FD_SET(int fd, fd_set* fds);
 void    FD_CLR(int fd, fd_set* fds);
+
+#include <poll.h>
+struct pollfd {
+    int     fd;
+    short   events;     // 等待事件
+    short   revents;    // 返回事件
+}
+int poll(pollfd fdarray[], nfds_t nfds, int timeout);   // 返回准备好的描述符数量。若超时返回0。
 ```
+| poll事件   | events | revents | 解释                                 |
+|------------|--------|---------|--------------------------------------|
+| POLLIN     | 1      | 1       | 可以不阻塞地读高优先级数据以外的数据 |
+| POLLRDNORM | 1      | 1       | 可以不阻塞地读普通数据               |
+| POLLRDBAND | 1      | 1       | 可以不阻塞地读优先级的数据           |
+| POLLPRI    | 1      | 1       | 可以不阻塞地读高优先级的数据         |
+| POLLOUT    | 1      | 1       | 可以不阻塞地写普通数据               |
+| POLLWRNORM | 1      | 1       | 同POLLOUT                            |
+| POLLWRBAND | 1      | 1       | 可以不阻塞地读优先级数据             |
+| POLLERR    |        | 1       | 已出错                               |
+| POLLHUP    |        | 1       | 已挂断                               |
+| POLLNVAL   |        | 1       | 描述符没有引用一个打开文件           |
+
 <!-- entry end -->
 
 ### 内存映射
@@ -1352,3 +1372,17 @@ int shmdt(const void* addr);                        // 返回0。引用计数减
 | SHM_RND    | 使指定的共享段的映射地址向下取SHMLBA倍数 |
 <!-- entry end -->
 
+### 动态链接
+<!-- entry begin: dlopen dlsum dlclose dlerror -->
+```c
+#include <dlfcn.h>                                  // 链接参数-ldl
+void*   dlopen(const char* filename, int flag);     // 返回加载的动态库的句柄，若出错返回NULL
+void*   dlsym(void* handle, const char* symbol);    // 未找到目标符号则返回NULL。dlsym还会去handle的依赖库中搜索符号(BFS)
+int     dlclose(void* handle);                      // 成功返回0，出错返回非0
+char*   dlerror(void);                              // 返回上面三个函数出错信息，若无错则返回NULL
+```
+| dlopen flag | 解释                                        |
+|-------------|---------------------------------------------|
+| RTLD_LAZY   | 过程引用延迟绑定（变量引用仍立即解析）      |
+| RTLD_NOW    | 立即绑定（环境变量LD_BIND_NOW非空也是如此） |
+<!-- entry end -->

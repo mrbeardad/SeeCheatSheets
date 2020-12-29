@@ -57,13 +57,13 @@
 #endif
 ```
 
-* template与`<>`间隔空格，如`template <typename T>`
+* 尖括号`<>`只与右边间隔空格，如`template<typename T>`
 * 嵌套模板参数的右括号`>`间隔空格，如`vector<vector<int> >`
 * 模板参数包`...`与右边隔空格，如`<typename... T>`与`(T&&... args)`
 * 函数有关键字template、static、inline、constexpr应该分行写
 * 函数名与参数列表不间隔空格
     ```cpp
-        template <typename T>
+        template<typename T>
         inline int
         test_func(T& t);
     ```

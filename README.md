@@ -2,10 +2,10 @@
 <!-- vim-markdown-toc GFM -->
 
 - [安装](#安装)
-  - [技术](#技术)
-  - [Linux](#linux)
   - [C++](#c)
   - [编程](#编程)
+  - [技术](#技术)
+  - [Linux](#linux)
   - [网络](#网络)
   - [底层](#底层)
   - [其它](#其它)
@@ -32,22 +32,6 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima/related)  
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
-## 技术
-* [Docker](docker.md)
-* [MySQL](mysql.md)
-
-## Linux
-* [Linux体系框架](linux.md)
-    > Linux的开机流程，以及整个系统的内核态与用户态架构
-* [Unix系统接口](apue.md)
-    > 大部分都符合POSIX、XSI或USU规范
-* [Bash脚本](bash.md)
-    > bash语法、内置命令以及一些linux基础命令
-* [开发者工具](devtool.md)
-    > 包含gcc、gdb、ssh、tmux、zsh、git、pacman等工具使用
-* [Vim](vim.md)
-    > 此为[魔改版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
-
 ## C++
 * [C++语法特性](cpp.md)
     > 一份语法清单，适合有基础的同学
@@ -68,11 +52,27 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [正则表达式](regex.md)
     > 目前包含的正则语法版本有Grep、Vim、C++
 
+## 技术
+* [Docker](docker.md)
+* [MySQL](mysql.md)
+
+## Linux
+* [Linux体系架构](linux.md)
+    > Linux的开机流程，以及整个系统的内核态与用户态架构
+* [Unix系统接口](apue.md)
+    > 大部分都符合POSIX、XSI或USU规范
+* [Bash脚本](bash.md)
+    > bash语法、内置命令以及一些linux基础命令
+* [开发者工具](devtool.md)
+    > 包含gcc、gdb、ssh、tmux、zsh、git、pacman等工具使用
+* [Vim](vim.md)
+    > 此为[魔改版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
+
 ## 网络
 * [计算机网络](network.md)
     > 自顶向下展示互联网架构
 * [比特币与区块链](bitcoin.md)
-    > 整理了一些加密技术与区块链原理
+    > 理解大名顶顶的比特币
 * [差错校验与加密技术](security.md)
     > 这些技术在网络中有重要应用
 
