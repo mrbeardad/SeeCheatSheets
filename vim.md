@@ -47,6 +47,7 @@
   - [自动命令](#自动命令)
   - [键映射](#键映射)
   - [特殊字符](#特殊字符)
+  - [调试](#调试)
 - [简单的vimscript语法](#简单的vimscript语法)
   - [变量](#变量)
   - [语句](#语句)
@@ -630,6 +631,16 @@
 `<c-k>`{二合字符}  
 查看：:digraphs，ga，g8  
 
+
+## 调试
+```vim
+:profile start profile.log
+:profile func *
+:profile file *
+" At this point do slow actions
+:profile pause
+:noautocmd qall!
+```
 * * * * * * * * * *
 
 

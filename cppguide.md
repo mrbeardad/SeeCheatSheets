@@ -2,7 +2,7 @@
 <!-- vim-markdown-toc GFM -->
 
 - [设计经验](#设计经验)
-  - [一般性设计准则](#一般性设计准则)
+  - [预处理指令](#预处理指令)
   - [泛型编程](#泛型编程)
   - [面向对象](#面向对象)
     - [类的设计](#类的设计)
@@ -34,13 +34,13 @@
 <!-- vim-markdown-toc -->
 
 # 设计经验
-## 一般性设计准则
+## 预处理指令
 * 头文件保护宏
 * 条件编译
 
 ## 泛型编程
 * 减少代码膨胀
-    * 将与**模板参数无关**的代码从类模板与函数模板中抽离
+    * 将与**模板参数无关**的代码从模板中抽离
     * 与非类型数值模板参数有关的代码应该使用一份共享的相同的实现代码
     * 二进制表述相同的类型（指针）也应该使用一份共享的相同的实现代码
 
@@ -133,24 +133,23 @@
 <img align="center" height=600 src="images/cpp_args.png"></img>
 
 * 属性：
-    * 只在本源文件使用的函数定义在`unnamedspace`中
-    * 需要引用外部符号的函数声明为`extern`
-    * 值返回时使用`auto`推断类型
+    * 不打算导出的变量与函数定义于`unnamedspace`
+    * 需要引用外部变量与函数声明为`extern`
     * 不要忘记考虑限定成员函数的`this`
     * 只要函数不应该抛出异常，就应该限定为`noexcept`
-    * 不对外链接的符号全写在无名命名空间中
     * 莫滥用inline修饰函数（尤其是构造函数于析构函数），inline函数应符合：规模短小、流程直接、调用频繁
     * 利用`=delete技巧`来在调用函数时[拒绝某个类型转换](#const拒绝某个类型转换)
+    * 不鼓励在函数中使用auto推断实参类型与返回类型，这些特性应仅限于lambda中使用
 
 * 右值、转发与移动：
     * 需要创建形参副本时（包括return），针对右值引用形参使用move，对万能引用形参使用forward；并注意应该在最后使用对象时才进行操作
-    * 值返回时，若return返回函数局部变量且器类型与返回类型不符，则使用move
-    * 解决与万能引用相关的重载问题
+    * 值返回时，若return返回函数局部变量且其类型与返回类型不符，则使用move
+    * 解决与万能引用余其他模板的冲突问题
         * [标签分派](#标签分派)：利用`std::true_type`与`std::false_type`进行工具重载
         * [模板类型限制](#模板类型限制)：利用`std::enable_if_t<bool>`限制类型
 
 ## STL
-* 使用`.emplace*()`族的函数完全代替`.push*()`族的函数
+* 使用`.emplace`族的函数完全代替`.push`族的函数
 * 尽量使用`.operator()`
 * 尽量使用`.at()`代替`.operator[]()`
 * 注意流`stream`的状态
@@ -158,7 +157,8 @@
 ## 初始化
 * 初始化的形式
     * <u>具有类型精准的初始化器</u>时，使用`auto x = initializer`或`auto& x = initializer`或`auto* x = initializer`
-        > 若初始化器为函数返回值，拿不准是否应该使用`auto&`时，则直接用`auto&`并让编译器推断是否可行
+        > 若初始化器为函数返回值，拿不准是否应该使用`auto&`时，则直接用`auto&`并让编译器推断是否可行。  
+        > 若类型不精准而需要类型转换时，联用auto与cast
     * 调用容器的非`initializer_list`的构造函数时，使用`vector<int> v(10, 1)`
     * 调用容器的`initializer_list`的构造函数时，使用`vector<int> v{10, 1}`
     * 其它情况（该类无形参为initializer_list的构造函数）调用构造函数时，使用`string s{"string"}`
@@ -268,10 +268,10 @@
         {
         public:
             /* ... */
-            ~Person();
+            ~Handle();
         private:
             struct Impl;
-            unique_ptr<Impl> pImp_m;
+            unique_ptr<Impl> p2Imp_m;
         };
 
         // 实现源文件
@@ -293,55 +293,55 @@
     * Interface类：Interface类作为**接口**给用户使用，其本质是一个**抽象基类**，其中定义了用户接口（没有数据成员），
         并提供static成员函数来构造**实现类**（即派生类）并获取其指针或引用（具体来说是unique_ptr）。最后将该**static函数**与**实现类**（派生类）
         定义在*实现源文件*中
-        > 使用`unique_ptr`的目的是防止static函数返回的**指针**忘记被delete，而抽象基类是无法定义具体对象的，
+        > 使用unique_ptr的目的是防止static函数返回的**指针**忘记被delete，而抽象基类是无法定义具体对象的，
         > 包括其**引用**
         <details>
             <summary><b>例子</b></summary>
         
-        ```cpp
-        // 接口头文件
-        #include <string>
-        #include <memory>
+```cpp
+// 接口头文件
+#include <string>
+#include <memory>
 
-        struct Human
-        {
-            virtual ~Human() {  };
-            virtual const std::string& name() const =0;
-            virtual std::size_t id() const =0;
-            static std::unique_ptr<Human> make(const std::string& name = "", std::size_t id = 0);
-        };
+struct Human
+{
+    virtual ~Human() {  };
+    virtual const std::string& name() const =0;
+    virtual std::size_t id() const =0;
+    static std::unique_ptr<Human> make(const std::string& name = "", std::size_t id = 0);
+};
 
-        // 实现源文件
-        #include "human.hpp"
-        #include <memory>
-        #include <string>
+// 实现源文件
+#include "human.hpp"
+#include <memory>
+#include <string>
 
-        class HumanInte : public Human
-        {
-        public:
-            HumanInte(const std::string& name, std::size_t id):
-                name_m{name}, id_m{id} {  }
+class HumanInte : public Human
+{
+public:
+    HumanInte(const std::string& name, std::size_t id):
+        name_m{name}, id_m{id} {  }
 
-            const std::string& name() const override
-            {
-                return name_m;
-            }
+    const std::string& name() const override
+    {
+        return name_m;
+    }
 
-            std::size_t id() const override
-            {
-                return id_m;
-            }
+    std::size_t id() const override
+    {
+        return id_m;
+    }
 
-        private:
-            std::string name_m;
-            std::size_t id_m;
-        };
+private:
+    std::string name_m;
+    std::size_t id_m;
+};
 
-        std::unique_ptr<Human> Human::make(const std::string& name, std::size_t id)
-        {
-            return std::make_unique<HumanInte>(name, id);
-        }
-                        ```
+std::unique_ptr<Human> Human::make(const std::string& name, std::size_t id)
+{
+    return std::make_unique<HumanInte>(name, id);
+}
+```
         </details>
 
 ## reference-return

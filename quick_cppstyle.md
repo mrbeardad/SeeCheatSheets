@@ -1,8 +1,7 @@
-<!-- entry begin: cpp  一般 -->
+<!-- entry begin: cpp  预处理 -->
 # 预处理
 * 头
 * 条
-* 宏
 <!-- entry end -->
 
 <!-- entry begin: cpp  泛型 -->
@@ -71,16 +70,17 @@ GFM ? tempT&& :
         W ? T& -> T&& :
             cT& -> T&  -> T&&
 ```
-
-* 使用类/别名简化函数类型接口
-
 * 修饰
-    * unamedspace/extern
-    * auto
     * this
     * noexcept
-    * inline/constexpr
+    * unamedspace
+    * extern
+    * inline
+    * constexpr
+    * lambda auto
     * =delete
+
+* 使用类/别名提高接口可读性
 <!-- entry end -->
 
 <!-- entry begin: cpp  初始化 -->
@@ -89,7 +89,7 @@ GFM ? tempT&& :
     * NULL
     * 更改指向
 * 形式
-    * auto& =
+    * `auto& = cast<>()`
     * T     {}
     * T     ()
 * 延后立初
