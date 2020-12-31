@@ -86,7 +86,7 @@
             //statement
         }
     ```
-* 一元运算符只隔一边空格，二元两边空格，三元全隔，`*x` `x + y` `x < y ? x : y`
+* 一元运算符只隔一边空格，二元两边空格，三元全隔，`*x`、`x + y`、`x < y ? x : y`
 * 逗号与分号只与右边隔空格，`func(a, b, c)` `for ( init; condition; iterate )` `return 0;`
 * 除了条件运算符与range-based-for，其它地方的冒号只与右边隔空格
 * lambda函数体语句与控制流语句内容超过1句时应该分行

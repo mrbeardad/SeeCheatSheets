@@ -54,7 +54,9 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 
 ## 技术
 * [Docker](docker.md)
+    > 容器，用于组建微服务架构
 * [MySQL](mysql.md)
+    > 关系型数据库，存储于磁盘
 
 ## Linux
 * [Linux体系架构](linux.md)

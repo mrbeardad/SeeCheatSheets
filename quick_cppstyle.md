@@ -36,10 +36,10 @@
     * .clone()
 * operator
     * 单成
-    * 算复
+    * 算赋
     * 前后
     * this
-    * 双类同向
+    * 构造 > operator
     * bool 1
     * explicit
 <!-- entry end -->
@@ -92,7 +92,7 @@ GFM ? tempT&& :
     * `auto& = cast<>()`
     * T     {}
     * T     ()
-* 延后立初
+* 延后立初（集中）
 * 循环声明
 <!-- entry end -->
 
@@ -110,11 +110,11 @@ GFM ? tempT&& :
 <!-- entry begin: cpp  异常 -->
 # 异常
 * 限
-* 整数、浮点数
+* 整数(溢出、U负、-Tmin)、浮点数(舍入、有效、结合、比较)
 * 捕?
-    * 恢复
-    * 集中
-* 移
+    * 可恢复
+    * 集中捕获
+* 前移
 * cas, up, min
 <!-- entry end -->
 
