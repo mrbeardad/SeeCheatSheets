@@ -1,22 +1,21 @@
 <!-- entry begin: cpp  预处理 -->
 # 预处理
-* 头
-* 条
+* 头文件保护
+* 宏开关
 <!-- entry end -->
 
 <!-- entry begin: cpp  泛型 -->
 # 泛型编程
 * 抽离
-    * T无关
+    * T类型无关
     * 算数类型
     * 指针类型
 <!-- entry end -->
 
 <!-- entry begin: cpp  类设计 -->
 # 类的设计
-* 声定顺序
-* 取消友元
 * 类型在前
+* 取消友元
 * 数据
     * 顺序对齐
     * const &
@@ -25,21 +24,22 @@
 * 构造
     * default?
     * explicit
-    * no-call virtual
     * non-inline
+    * never call virtual
 * 析构
     * noexcept .destroy()
     * (pure) virutal definition
     * non-inline
+    * never call virtual
 * copy/move
-    * copy?move?
+    * copy? move?
     * .clone()
 * operator
     * 单成
     * 算赋
     * 前后
     * this
-    * 构造 > operator
+    * 构造转换 > operator转换
     * bool 1
     * explicit
 <!-- entry end -->

@@ -14,15 +14,16 @@
     - [static变量](#static变量)
     - [重载函数](#重载函数)
     - [可调用对象](#可调用对象)
-  - [表达式](#表达式)
-    - [列表初始化](#列表初始化)
-    - [类型转换](#类型转换)
-    - [左值与右值](#左值与右值)
-    - [运算符优先级](#运算符优先级)
-    - [求值顺序](#求值顺序)
-    - [结构化绑定](#结构化绑定)
-    - [Lambda表达式](#lambda表达式)
-    - [字面值](#字面值)
+    - [协程](#协程)
+    - [表达式](#表达式)
+      - [列表初始化](#列表初始化)
+      - [类型转换](#类型转换)
+      - [左值与右值](#左值与右值)
+      - [运算符优先级](#运算符优先级)
+      - [求值顺序](#求值顺序)
+      - [结构化绑定](#结构化绑定)
+      - [Lambda表达式](#lambda表达式)
+      - [字面值](#字面值)
   - [类](#类)
     - [声明与定义](#声明与定义)
     - [友元](#友元)
@@ -49,10 +50,10 @@
 - [泛型编程](#泛型编程)
   - [模板参数](#模板参数)
   - [变参](#变参)
-  - [约束与概念](#约束与概念)
   - [函数模板](#函数模板)
   - [类模板](#类模板)
   - [变量模板](#变量模板)
+  - [概念](#概念)
   - [模板特例化](#模板特例化)
   - [其它](#其它)
   - [编译器类型推断](#编译器类型推断)
@@ -372,7 +373,9 @@ namespace std { /* ... */}
 | temp const T& | 引用、左值、右值、泛型、只读     |
 | temp T&&      | 引用、左值、右值、泛型、转发     |
 
-## 表达式
+### 协程
+
+### 表达式
 * 初等表达式
     > 任何运算符的操作数都可以是其他的表达式或初等表达式
     * 字面量
@@ -395,7 +398,7 @@ namespace std { /* ... */}
     * 条件表达式（其第二、三操作数是弃值表达式）
     * 逗号表达式（其右操作数是弃值表达式）
 
-### 列表初始化
+#### 列表初始化
 <span id="initlist"></span>
 * 作用：
     * 用于调用构造函数（**initializer_list优先** ） `string s{"str"};`
@@ -405,7 +408,7 @@ namespace std { /* ... */}
     * 空的花括号可进行值初始化
     * 拒绝丢失精度的转换（窄化）
 
-### 类型转换
+#### 类型转换
 > 不鼓励使用旧式的C-style-cast，下面的新式转换更容易在文件中搜索，且更容易由编译期帮助检测
 * `static_cast<>()`&emsp;&emsp;&emsp; ：一般用于将`void*`转换为具体类型的指针等允许但非隐式的转换
 * `const_cast<>()`&emsp;&emsp;&emsp;&emsp;：用于取消底层const
@@ -418,18 +421,17 @@ namespace std { /* ... */}
 * `const char*`与`char const*`均为底层const；`char* const`才是顶层const
 * 默认的C-Style字符串类型为`const char*`，标准提供了一个特殊转换：可以将C-Style-String转换为`char*`
 
-### 左值与右值
+#### 左值与右值
 * 需要左值：赋值`=`、取地址`&`、自增减`--` `++`
 * 返回左值：赋值`=`、解引用`*`、箭头`->`、下标`[]`、前置自增减`++a`与`--a`
 * 可能返回左值：
     * 条件` ? : `，若`:`号两边都为左值才会返回左值
     * 成员`.`，若`.`左边的对象时左值才会返回左值
 
-### 运算符优先级
-* 运算符优先级
+#### 运算符优先级
 ![cpp](images/cppman.png)
 
-### 求值顺序
+#### 求值顺序
 * 有序：
     > 注意，逻辑与和逻辑或的实质就是分支，同样会有分支处罚
     * 逻辑与
@@ -447,13 +449,13 @@ namespace std { /* ... */}
     * `a >> b`
 * 在一句复合表达式中，若两个子表达式无父子关系，则它们的求值顺序未定
 
-### 结构化绑定
+#### 结构化绑定
 * t的所有public非静态数据成员必须为直接成员或相同基类的直接成员，不能绑定union
 * 值绑定：`auto [x, std::ignore, z] = t`
 * 引用绑定：`auto& [x, y, z] = t`
 * 移动绑定：`auto&& [x, y] = std::move(foo)`
 
-### Lambda表达式
+#### Lambda表达式
 * 形式：`[cap]<temp>(arg){sta}`
     > C++17支持constexpr修饰
 * 捕获列表：
@@ -474,7 +476,7 @@ namespace std { /* ... */}
     * 可以使用auto推断参数类型，且其返回类型默认就使用auto推断
     * `[](auto&& t) mutable {}`：修饰`mutable`可以在lambda中修改值捕获的对象（默认值捕获对象只读）
 
-### 字面值
+#### 字面值
 > 定义于：`inline namespace std::literals`
 * `chrono::duration`：
     * 后缀：h、min、s、ms、us、ns
@@ -604,7 +606,7 @@ namespace std { /* ... */}
 * 类型转换
     * `explicit operator bool()`
         > 在明确需要bool值的地方仍会隐式转换bool值
-    * `operator Type() { return Type{}; }`
+    * `explicit operator Type() { return Type{}; }`
         > 此形式一般在无法修改转换目标（即Type）的源码时才使用，即一般都使用第一种形式设计类型转换
     * 二义性问题：A转换为确定的类型B，应该调用哪个转换函数？
         > 本质上就是重载函数的匹配问题，但是注意类型转换是不具传递性的，即A转B，B转C，但A不能转C。
@@ -698,6 +700,7 @@ namespace std { /* ... */}
 
 ### 联合类
 ***C++17中用std::variant<TYPES...>可以完全取代手写 union***
+
 * 实质：用同一块内存存储几种不同类型中的一种，在某时刻存储的类型由用户保证
 * 不能是继承体系中的一员，故不能有虚函数
 * 匿名union：
@@ -725,8 +728,8 @@ namespace std { /* ... */}
     * 不能在块作用域中使用
 * using声明<span id="using声明"></span> ：
     > `using std::member1, std::member2;`
-    * 引入函数时不需要函数签名，故可引入完整的重载函数集
     * 将命名空间或类中的成员引入当前作用域而直接可见
+    * 引入函数时不需要函数签名，故可引入完整的重载函数集
 * using指示
     > `using namespace std;`
     * 将命名空间所有成员引入当前作用域，若发生名字冲突可以再使用`::`运算符解决(using声明不行)
@@ -980,26 +983,6 @@ namespace std { /* ... */}
         * 二元左折叠：`(init OP ... OP E)`
             > 表示意味着 `(((init OP E1) OP E2) OP ...) OP E2`
 
-## 约束与概念
-* 约束表达式
-    > `requires(形参列表(可选)) {要求序列;}`
-    * 简单约束：要求表达式能够通过编译
-        > `t.mem()`
-    * 类型约束：要求目标类型合法
-        > `typename T`
-    * 复合约束：表达式结果作为类型约束的最后一个参数
-        > `{简单约束的表达式} noexcept -> 类型约束`
-    * 嵌套约束：相当于使用约束从句进行静态断言
-        > `requires()`
-
-* 概念的定义
-    > `template<typename T> concept Concept = 约束表达式`
-
-* 概念的使用
-    * `template<Concept T>`
-    * `template <typename T> 函数/类/变量声明 requires (std::integral<T> && sizeof(T) == 4)`（约束从句）
-    * `if ( std::same_as<int, float> )`
-
 ## 函数模板
 > `template <typename T> int test(vector<T> t);`
 * 自动推断模板参数：具体规则见[auto推断](#autolxtd)
@@ -1013,13 +996,13 @@ namespace std { /* ... */}
 * 函数模板的偏序规则：用于判断重载的模板函数中哪个更特例化 <span id="px"></span>
     ```cpp
     template<typename T>
-    partial_order_func(T t); // #1
+    T partial_order_func(T t); // #1
 
     template<typename T>
-    partial_order_func(T* t); // #2
+    T partial_order_func(T* t); // #2
 
     template<typename T>
-    partial_order_func(const T* t); // #3
+    T partial_order_func(const T* t); // #3
     ```
     &emsp;规则就是：将模板参数`T`设为类型`X`，则`#1`就是`X`，`#2`是`X*`，`#3`是`const X*`。
     针对`#1`与`#2`，将后者的类型`X*`带入前者的模板，可以成功推断(忽略类型转换)出`T`为`X*`；
@@ -1053,12 +1036,39 @@ namespace std { /* ... */}
 * 不能作为模板模板参数(一种非类型参数)
 >
 
+<!-- need rereead -->
+## 概念
+* requires表达式
+    > `requires (可选的形参列表用于使用目标类型的对象，如t) {要求序列;}`
+    * 简单要求：要求表达式能够通过编译
+        > `t.mem()`
+    * 类型要求：要求目标类型合法
+        > `typename T`
+    * 复合要求：表达式结果作为类型约束的最后一个参数
+        > `{简单约束的表达式} (可选)noexcept -> 类型约束`
+    * 嵌套要求：相当于使用约束子句进行静态断言
+        > `requires子句`
+
+* requires子句：后随常量表达式（限制包括初等表达式、&&、||）
+    > requires (概念 && requires表达式 || 布尔常量)
+
+* 概念：一般定义为**requires表达式模板**
+    > `template<typename T> concept Concept = Boolean`
+
+* 概念的使用
+    * `template<Concept T>`
+        > T作Concept的第一个模板参数
+    * `template <typename T> requires (Concept<T> && sizeof(T) == 4)`
+        > requires子句需要初等表达式（括号内的表达式可强制算作初等表达式）与`&&`、`||`联用
+    * `if ( Concept<int> )`
+
 ## 模板特例化
 * 全特化：
     > `template<> Class<int, int*> {...};`
 
 * 偏特化：
-    > `template<typename T> Class<int, T*> {...};`
+    > `template<typename T> class Class<int, T*> {...};`  
+    > `tempalte<typename C, typename... Args> class Class<C(Args..)> {...}`
     * 只适用于类模板
     * 偏特化模板参数列表是原来的子集或特例化版本
 

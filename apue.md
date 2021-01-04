@@ -17,6 +17,7 @@
   - [语系与字符集](#语系与字符集)
 - [日志系统](#日志系统)
 - [进程管理](#进程管理)
+  - [选项参数](#选项参数)
   - [进程环境](#进程环境)
   - [进程控制](#进程控制)
   - [线程管理](#线程管理)
@@ -39,8 +40,9 @@
   - [高级I/O](#高级io)
     - [非阻塞I/O](#非阻塞io)
     - [记录锁](#记录锁)
-    - [分段I/O](#分段io)
     - [I/O多路复用](#io多路复用)
+    - [异步I/O](#异步io)
+    - [分段I/O](#分段io)
     - [内存映射](#内存映射)
     - [动态链接](#动态链接)
 
@@ -121,8 +123,8 @@ struct passwd
 };
 passwd* getpwuid(uid_t uid);        // 返回对应`passwd*`，若出错返回NULL
 passwd* getpwnam(const char* name); // 返回对应`passwd*`，若出错返回NULL
-passwd* getpwent(void);             // 返回当前条目对应`passwd*`。第一次调用自动打开数据文件；自动后移条目指针
 void    setpwent(void);             // 打开/etc/passwd，并将条目指针移动到初始位置
+passwd* getpwent(void);             // 返回当前条目对应`passwd*`。第一次调用自动打开数据文件；自动后移条目指针
 void    endpwent(void);             // 关闭/etc/passwd
 ```
 <!-- entry end -->
@@ -144,8 +146,8 @@ struct spwd
     unsigned int    sp_flag;
 };
 spwd*   getspnam(const char* name); // 返回对应`spwd*`，若出错返回NULL
-spwd*   getspent(void);             // 返回当前条目对应`spwd*`。第一次调用自动打开数据文件；自动后移条目指针 
 void    setspent(void);             // 打开/etc/shadow，并将条目指针移动到初始位置
+spwd*   getspent(void);             // 返回当前条目对应`spwd*`。第一次调用自动打开数据文件；自动后移条目指针 
 void    endspent(void);             // 关闭/etc/shadow
 ```
 <!-- entry end -->
@@ -340,6 +342,55 @@ int     LOGMASK(int priority);                                  // 返回将pri�
 <!-- entry end -->
 
 # 进程管理
+## 选项参数
+<!-- entry begin: getopt -->
+```c
+#include <unistd.h>
+int getopt(int argc, char* const argv[], const char* optstring);
+// 命令行参数，即`argv`字符串数组中的各个字符串的集合，每个字符串为一个命令行参数。有如下几种情况：
+// * 执行命令      ：即`argv[0]`
+// * 选项          ：即以`-`开头的命令行参数。选项分为三种类型，`-o`单选项、`-opt`多选项（`o`与`p`选项必须为无参选项）、`-tfile`选项`t`及其参数`file`
+// * 选项参数      ：若某选项必有或可能有参数，则跟在该选项后面的同一命令行参数的字符，或下个命令行参数即为该选项的参数，见上
+// * 命令参数      ：不属于上面三种情况的命令行参数，作为该命令本身的主要参数。**getopt会将所有命令参数保持顺序的移动到`argv`数组的尾部**。
+// 特殊的，`-`被视作命令参数，`--`之后的所有命令行参数被视作命令参数
+```
+* optstring
+    * `:o`      ：开头`:`表示开启silent-mode，默认为print-mode
+    * `o`       ：代表选项`o`没有参数  
+    * `o:`      ：代表选项`o`必有参数, 紧跟`-oarg`或间隔`-o arg`中的`arg`都被视为`-o`的参数  
+    * `o::`     ：代表选项`o`可选参数, 只识别紧跟`-oarg`
+* 全局变量
+    * `optarg`  ：类型为`char*`，指向当前选项的参数，无则为NULL
+    * `optind`  ：类型为`size_t`，作为下次调用getopt()将要处理的argv数组中元素的索引
+* print-mode
+    > getopts()函数自动打印错误消息
+    * 返回int表示当前选项字符
+        * `?`表示无效选项。无效选项即选项字符不在于`optstring`中或本该需要参数的选项却没有参数
+        * `-1`表示解析结束，剩余的都是命令参数
+* silent-mode
+    > 不自动打印错误消息
+        * `?`表示未知选项，该选项未在`optstring`中指定
+        * `:`表示错误选项，该选项必有参数却为提供参数（即该选项作为最后一个命令行参数）
+        * `-1`表示解析结束，剩余的都是命令参数
+<!-- entry end -->
+
+<!-- entry begin: getopt_long getopt_long_only -->
+```c
+#include <getopt.h>
+struct option {
+    const char* name;    // 选项名称
+    int has_arg;         // no_argrument|required_argrument|optional_argrument
+    int* flag;           // 等于NULL则函数返回val，否则匹配时*flag=val且函数返回0
+    int val;             // 指定匹配到该选项时返回的int值
+};  // longopts要求最后一个元素为NULL
+int getopt_long(argc, argv, optstring, const option longopts[], int* longopt_index);
+// 基本规则同getopt()，增加了对长选项的解析：
+// “长选项的紧跟”为`--option=arg`, 而且长选项若无歧义可不用完整输入
+int getopt_long_only(argc, argv, optstring, const option longopts[], int* longopt_index);
+// 规则同上, 但是`-opt`会优先解析为长选项, 不符合再为短
+```
+<!-- entry end -->
+
 ## 进程环境
 <!-- entry begin: environ getenv setenv unsetenv clearenv getpid getppid getpgid getsid tcgetpgrp setpgid setsid tcsetpgrp tcgetsid -->
 ```c
@@ -1197,7 +1248,7 @@ int     unlockpt(int fd);           // 返回0。允许对应从设备被访问
 char*   ptsname(int fd);            // 返回对应从设备名称字符串
 
 #include <pty.h> // 需要链接参数`-lutil`
-int     openpty(int* master, int* aslave, char* name, const termios* termp, const winsize* winp);   // 返回0
+int     openpty(int* master, int* slave, char* name, const termios* termp, const winsize* winp);    // 返回0
 pid_t   forkpty(int* master, char* name, const termios* termp, const winsize* winp);                // 若为父进程则返回子进程PID，若为子进程则返回0，若出错返回-1
 ```
 <!-- entry end -->
@@ -1226,23 +1277,6 @@ pid_t   forkpty(int* master, char* name, const termios* termp, const winsize* wi
 * 关闭文件描述符时即会释放对应文件的记录锁，不管该文件描述符是否还有其他副本
 * 记录锁不会阻塞本进程获取锁，转而直接替换锁
 * 建议性锁需要调用记录锁接口才有用，强制性锁对所有进程强制限制读写（需要`mount -o mand`）
-
-### 分段I/O
-<!-- entry begin: readv writev iovec -->
-| 限制宏  | 说明                |
-|---------|---------------------|
-| IOV_MAX | iov参数最大元素个数 |
-```c
-#include <sys/uio.h>
-struct iovec
-{
-    void* iov_base; // 缓冲区起始处
-    size_t iov_len; // 缓冲区长度
-};
-ssize_t readv(int fd, const iovec* iov, int iovcnt);    // 返回已读字节数
-ssize_t writev(int fd, const iovec* iov, int iovcnt);   // 返回已写字节数
-```
-<!-- entry end -->
 
 ### I/O多路复用
 <!-- entry begin: select pselect -->
@@ -1290,6 +1324,72 @@ int poll(pollfd fdarray[], nfds_t nfds, int timeout);   // 返回准备好的描
 | POLLHUP    |        | 1       | 已挂断                               |
 | POLLNVAL   |        | 1       | 描述符没有引用一个打开文件           |
 
+<!-- entry end -->
+
+### 异步I/O
+<!-- aiocb sigevent  aio_read aio_write aio_fsync aio_error aio_return aio_cancel aio_suspend aio_listio  -->
+| 限制               | 描述                                |
+|--------------------|-------------------------------------|
+| AIO_LISTIO_MAX     | 单个列表I/O调用中最大操作数         |
+| AIO_MAX            | 未完成的异步I/O操作的最大数目       |
+| AIO_PRIO_DELTA_MAX | 进程可减少的其异步I/O优先级的最大值 |
+```c
+#include <aio.h>
+struct aiocb {
+    int         aio_fildes;     // 文件描述符
+    off_t       aio_offset;     // 文件偏移量。若oflag设置了O_APPEND则忽略该字段
+    void*       aio_buf;        // 缓冲区在异步I/O完成前始终合法且不能不用
+    size_t      aio_nbytes;     // 读写长度
+    int         aio_reqprio;
+    sigevent    aio_sigevent;
+    int         aio_lio_opcode; // LIO_READ、LIO_WRITE、LIO_NOP
+};
+struct sigevent {
+    int             sigev_notify;   // SIGEV_NONE、SIGEV_SIGNAL、SIGEV_THREAD
+    int             sigev_signo;    // 指定异步I/O完成后的通知信号
+    union sigval    sigev_value;
+    void            (*sigev_notify_function)(union sigval);
+    pthread_attr_t* sigev_notify_attributes;
+};
+// SIGEV_NONE表示请求完成后不通知进程
+// SIGEV_SIGNAL表示请求完成后用sigev_signo指代的信号通知，并将sigev_value写入siginfo_t（若支持的话）
+// SIGEV_THREAD表示请求完成后在单独的detach线程中调用`sigev_notify_function(sigev_value)`（除非sigev_notify_attributes指定了另一个线程）
+int     aio_read(aiocb* aiocb);             // 返回0
+int     aio_write(aiocb* aiocb);            // 返回0
+int     aio_fsync(int op, aiocb* aiocb);    // 返回0。op为O_SYNC或O_DSYNC
+int     aio_error(const aiocb* aiocb);      // 返回0表示异步操作成功，-1表示aio_error调用失败，EINPROGRESS表示仍在等待，其他表示异步操作返回错误码
+ssize_t aio_return(const aiocb* aiocb);     // 返回前3个函数调用成功时的返回值。返回值后释放资源，每个异步操作只能调用一次
+int     aio_cancel(int fd, aiocb* aiocb);   // 返回值见下。若aiocb为NULL则取消所有fd相关的异步操作，否则目标由aiocb指定。
+int     aio_suspend(const aiocb* const list[], int nent, const timespec* timeout);  // 全部完成返回0，超时、信号打断返回-1。阻塞等待所有异步操作完成。
+int     aio_listio(int mode, aiocb* const list[], int nent, sigevent* sigev);       // 成功返回0。sigev为额外另加的sigev，在全部操作完成后调用，可为NULL
+```
+| aio_cancel return | 解释                     |
+|-------------------|--------------------------|
+| AIO_ALLDONE       | 所有操作均已在尝试前完成 |
+| AIO_CANCELED      | 所有操作均已取消         |
+| AIO_NOTCANCELED   | 至少有一个未被取消       |
+| -1                | aio_cancel调用失败       |
+
+| aio_listio mode | 解释     |
+|-----------------|----------|
+| AIO_WAIT        | 同步调用 |
+| AIO_NOWAIT      | 异步调用 |
+<!-- entry end -->
+### 分段I/O
+<!-- entry begin: readv writev iovec -->
+| 限制宏  | 说明                |
+|---------|---------------------|
+| IOV_MAX | iov参数最大元素个数 |
+```c
+#include <sys/uio.h>
+struct iovec
+{
+    void* iov_base; // 缓冲区起始处
+    size_t iov_len; // 缓冲区长度
+};
+ssize_t readv(int fd, const iovec* iov, int iovcnt);    // 返回已读字节数
+ssize_t writev(int fd, const iovec* iov, int iovcnt);   // 返回已写字节数
+```
 <!-- entry end -->
 
 ### 内存映射

@@ -38,7 +38,7 @@ g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
 * [C++编码风格](cppstyle.md)
     > 对代码风格进行规范，拒绝选择困难症
 * [C++编程向导](cppguide.md)
-    > 编写健壮、可移植、可扩展的C++代码
+    > 编写高效、健壮、可移植、可扩展的C++代码
 * [C++程序库](cppman.md)
     > C++标准库以及某些第三方库
 * [CMake构建系统](cmake.md)

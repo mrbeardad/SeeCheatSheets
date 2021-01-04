@@ -3,30 +3,46 @@
 <!-- vim-markdown-toc GFM -->
 
 - [C++标准库](#c标准库)
-  - [规范解释](#规范解释)
-  - [标准库异常](#标准库异常)
+  - [错误处理](#错误处理)
     - [异常体系结构](#异常体系结构)
-    - [异常成员](#异常成员)
-    - [异常构造参数](#异常构造参数)
-    - [异常挂起](#异常挂起)
-  - [C库](#c库)
-    - [调试处理](#调试处理)
-    - [CSTDLIB](#cstdlib)
-    - [字符处理](#字符处理)
-    - [选项处理](#选项处理)
-    - [数学库](#数学库)
-    - [SIMD](#simd)
-  - [通用工具](#通用工具)
-  - [STL](#stl)
-    - [STL容器](#stl容器)
+    - [异常对象使用](#异常对象使用)
+  - [内存管理](#内存管理)
+    - [〈new〉](#new)
+    - [〈memory〉](#memory)
+  - [工具库](#工具库)
+    - [〈cstdlib〉](#cstdlib)
+    - [〈functional〉](#functional)
+    - [〈chrono〉](#chrono)
+    - [〈initializer_list〉](#initializer_list)
+    - [〈utility〉](#utility)
+    - [〈tuple〉](#tuple)
+    - [〈any〉](#any)
+    - [〈variant〉](#variant)
+    - [〈optional〉](#optional)
+    - [〈bitset〉](#bitset)
+  - [数值库](#数值库)
+    - [〈limits〉](#limits)
+    - [〈ratio〉](#ratio)
+    - [〈cmath〉](#cmath)
+    - [〈numeric〉](#numeric)
+    - [〈random〉](#random)
+  - [字符处理](#字符处理)
+    - [〈cctype〉](#cctype)
+    - [〈cwctype〉](#cwctype)
+    - [〈string〉](#string)
+    - [〈string_view〉](#string_view)
+    - [〈format〉](#format)
+  - [容器库](#容器库)
+    - [构造](#构造)
+    - [赋值](#赋值)
+    - [访问](#访问)
+    - [插入](#插入)
     - [STL迭代器](#stl迭代器)
     - [STL算法](#stl算法)
       - [更易算法](#更易算法)
       - [非更易算法](#非更易算法)
-  - [其它容器](#其它容器)
   - [正则表达式](#正则表达式)
   - [流与格式化](#流与格式化)
-  - [随机数生成器](#随机数生成器)
   - [并发库](#并发库)
     - [线程启动](#线程启动)
     - [线程控制](#线程控制)
@@ -50,663 +66,941 @@
   - [异常](#异常)
   - [连接](#连接)
   - [SQL语句执行](#sql语句执行)
+    - [SIMD](#simd)
 
 <!-- vim-markdown-toc -->
-
+注：代码块中的示例为伪代码
 # C++标准库
-## 规范解释
-* 多态类型：指存在虚函数的类类型
-
-* 构造函数
-    * 就地构造          ：将参数传递给数据成员的构造函数
-    * 类聚合式构造      ：将参数copy/move到数据成员
-    * 逐块式构造        ：将参数中的每个tuple解包作为每个成员的实参列表
-    * 成员模板构造      ：接受该模板类的其他实例作为参数，并对数据成员进行类型转换
-
-* 访问：表示可以**读取**也可以**写入**
-
-* 一些形参列表很明显的函数便不再指出形参列表，如`.operator()`
-
-* 函数参数列表如`(x, y = 0)`，不一定表示y有默认实参，
-也可能表示有两个重载函数，第一个为`(x)`，第二个为`(x, y)`，只不过若第二个中y=0则与第一个函数作用一样（实现细节不一样）
-
-## 标准库异常
-<!-- entry begin: c++ cpp 标准库异常 -->
+## 错误处理
+<!-- entry begin: exception stdexcept 标准库异常 异常体系结构 -->
 ### 异常体系结构
 ```
-exception                 `<exception>`
-│
-├─── bad_cast             `<typeinfo>`      ：dynamic_cast<>()转换多态类型的引用失败（转换多态类型的指针失败则返回空指针）
-│   │
-│   └─── bad_any_cast     `<any>`           ：调用any_cast<>()转换any类型失败
-│
-├─── bad_variant_access   `<variant>`       ：读取get<>()转换variant类型失败
-├─── bad_typeid           `<typeinfo>`      ：typeid()接收解引用的多态类型的空指针（typeid()并不会真正执行括号内的表达式）
-├─── bad_weak_ptr         `<memory>`        ：由shared_ptr构造weak_ptr失败
-├─── bad_function_call    `<functional>`    ：调用无目标的function类
-├─── bad_alloc            `<new>`           ：内存申请失败
-├─── bad_array_new_length `<new>`           ：传给new的size不在有效范围
-│
-├─── logic_error          `<stdexcept>`
-│   │
-│   ├─── domain_error                       ：数学库, 传入值域错误
-│   ├─── invalid_argument                   ：bitset构造参数无效，string转数字时字符串无效
-│   ├─── length_error                       ：容器size超出限制
-│   ├─── out_of_range                       ：容器的无效索引
-│   └─── future_error     `<future>`        ：异步系统调用
-│
-└─── runtime_error        `<stdexcept>`
-    │
-    ├─── range_error                        ：wide string与byte string转换出错
-    ├─── overflow_error                     ：bitset转换为整型时溢出
-    ├─── underflow_error                    ：算术下溢
-    └─── system_error     `<system_error>`  ：系统调用出错
-        │
-        └─── ios::failure `<ios>`           ：stream出错
+exception                        <exception>
+├─── bad_typeid                  <typeinfo>      ：typeid()接受解引用的多态类型的空指针
+├─── bad_cast                    <typeinfo>      ：dynamic_cast<>()转换多态类型的引用失败
+│    └─── bad_any_cast           <any>           ：any_cast<>()转换any类型出错
+├─── bad_variant_access          <variant>       ：get<>()转换variant类型出错
+├─── bad_weak_ptr                <memory>        ：shared_ptr构造时接受失效的weak_ptr
+├─── bad_function_call           <functional>    ：function::operator()()调用时未包装目标
+├─── bad_alloc                   <new>           ：内存申请失败
+├─── bad_array_new_length        <new>           ：new表达式接受非法长度
+├─── logic_error                 <stdexcept>
+│    ├─── invalid_argument       <stdexcept>     ：bitset、stoi、stof
+│    ├─── domain_error           <stdexcept>     ：一般供第三方数学库使用
+│    ├─── length_error           <stdexcept>     ：basic_string、vector::reserve
+│    ├─── out_of_range           <stdexcept>     ：bitset、basic_string、stoi、stod、边界检查
+│    ├─── bad_optional_access    <optional>      ：optional::value
+│    └─── future_error           <future>        ：future、promise
+└─── runtime_error               <stdexcept>
+     ├─── range_error            <stdexcept>     ：wstring_convert::from_bytes、wstring_convert::to_bytes
+     ├─── overflow_error         <stdexcept>     ：bitset::to_ulong、bitset::to_ullong
+     ├─── underflow_error        <stdexcept>     ：一般供第三方数学库使用
+     ├─── regex_error            <regex>         ：正则表达式库。成员函数code()返回regex_constants::error_type
+     ├─── nonexistent_local_time <chrono>
+     ├─── ambiguous_local_time   <chrono>
+     ├─── format_error           <format>        ：格式化库中函数出错
+     └─── system_error           <system_error>  ：操作系统相关异常
+          ├─── filesystem_error  <filesystem>    ：文件系统库中函数失败。成员函数path1()与path2()
+          └─── ios_base::failure <ios>           ：输入输出库中函数失败（需手动设置）
 ```
 <!-- entry end -->
 
-<!-- entry begin: 异常成员 -->
-### 异常成员
-* .what() ：返回`const char*`
-    > 根部基类**exception**的虚函数  
-    > 异常类销毁后返回的C-string也不复存在
-* .code() ：返回`error_code`对象
-    > `error_code`与`error_condition`区别在于**可移植性**：  
-    > 前者由编译器定义(OS相关), 后者为默认标准
-    * error_code成员：
-        * .message()
-        * .category().name()
-        * .value()
-        * .default_error_condition().message()
-        * .default_error_condition().category().name()
-        * .default_error_condition().value()
-    * 比较：
-        > 重载了与**领域枚举值**的比较运算符
-        * errc::mem        ：`<cerrno>`
-        * io_errc::mem     ：`<ios>`
-        * future_errc::mem ：`<future>`
+<!-- entry begin: what code 异常挂起 异常构造 异常成员 -->
+### 异常对象使用
+```cpp
+// 构造异常对象
+logic_error(const string&);
+logic_error(const char*);
+runtime_error(const string&);
+runtime_error(const char*);
+system_error(error_code);
+system_error(error_code, const string&);
+system_error(error_code, const char*);
+error_code make_error_code(errc);
+
+// 异常成员函数
+/*
+ * 该函数为异常基类std::exception所声明的虚函数。
+ * 返回的字符串指针保证在异常对象销毁前，或在调用异常对象的非静态成员函数前合法
+*/
+C char*     what();
+/*
+ * 适用于system_error及其派生类，与future_error
+ * error_code是依赖平台的错误码，error_condition是可移植的错误码
+*/
+error_code& code();
+ec.clear()
+ec.message()
+ec.category().name()
+ec.value()
+ec.default_error_condition().message()
+ec.default_error_condition().category().name()
+ec.default_error_condition().value()
+#include <cerrno>
+ec <=> errc::MEM;
+#include <ios>
+ec <=> io_errc::MEM;
+#include <future>
+ec <=> future_errc::MEM;
+
+exception_ptr   current_exception()         // 挂起当前的异常
+void            rethrow_exception(exceptr)  // 重抛挂起的异常
+```
 <!-- entry end -->
 
-<!-- entry begin: 异常构造 -->
-### 异常构造参数
-* logic_error与runtime_error
-    * (const string&)
-    * (const char*)
-* system_error
-    > 标准库提供`make_error_code(errc)`构造error_code
-    * (error_code)
-    * (error_code, const string&)
-    * (error_code, const char*)
+## 内存管理
+<!-- entry begin: new delete get_new_handler set_new_handler -->
+### 〈new〉
+```cpp
+void*   operator new(size_t);
+void*   operator new(size_t, align_val_t);
+void*   operator new(size_t, user-def-args...);
+void*   operator new(size_t, align_val_t, user-def-args...);
+void*   operator new(size_t, nothrow_t);
+void*   operator new(size_t, align_val_t, nothrow_t);
+void*   operator new(size_t, void*);
+// new[]版本参数同上
+void    operator delete(void*);
+void    operator delete(void*, size_t);
+void    operator delete(void*, align_val_t);
+void    operator delete(void*, size_t, align_val_t);
+void    operator delete(void*, args...);
+void    operator delete(void*, nothrow_t);
+void    operator delete(void*, align_val_t, nothrow_t);
+void    operator delete(void*, void* place);
+// delete[]版本参数同上
+
+new_handler get_new_handler();
+new_handler set_new_handler(nh);
+```
 <!-- entry end -->
 
-<!-- entry begin: 异常挂起 -->
-### 异常挂起
-* current_exception()       ：返回`exception_ptr`对象
-* rethrow_exception(exceptr)：重新抛出`exception_ptr`对象
+<!-- entry begin: memory unique_ptr shared_ptr weak_ptr 智能指针 -->
+### 〈memory〉
+```cpp
+class unique_ptr<T, Deleter = default_delete<T> >
+{
+    // 构造函数：支持move，拒绝copy
+    unique_ptr(ptr);
+    unique_ptr(ptr, del);
+    // 修改器
+    pointer     release();
+    void        reset(ptr = nullptr);
+    // 观察器
+    pointer     get();
+    Deleter&    get_deleter();
+    // OP
+    operator bool
+    operator*
+    operator->
+    // 非成员函数
+    unique_ptr  make_unique<T>(args...);
+};
+
+class shared_ptr<T>
+{
+    // 构造函数
+    shared_ptr(ptr);
+    shared_ptr(ptr, del);
+    shared_ptr(wptr);
+    shared_ptr(uptr);
+    // 修改器
+    void        reset();
+    void        reset(ptr);
+    void        reset(ptr, del);
+    // 观察器
+    T*          get();
+    long        use_count();
+    bool        owner_before(sptr);
+    bool        owner_before(wptr);
+    // OP
+    operator*
+    operator->
+    // 非成员函数
+    shared_ptr  make_shared<T>(args...);
+    shared_ptr  static_pointer_cast<T>(sptr);
+    shared_ptr  const_pointer_cast<T>(sptr);
+    shared_ptr  reinterpret_pointer_cast<T>(sptr);
+    shared_ptr  dynamic_pointer_cast<T>(sptr);
+    shared_ptr  enable_shared_from_this<T>::shared_from_this();
+    weak_ptr    enable_shared_from_this<T>::weak_from_this();
+};
+
+class weak_ptr<T>
+{
+    // 构造函数
+    weak_ptr(sptr);
+    // 修改器
+    void        reset();
+    long        use_count();
+    bool        expired();
+    shared_ptr  lock();
+    bool        owner_before(sptr);
+    bool        owner_before(wptr);
+};
+```
 <!-- entry end -->
 
-## C库
-### 调试处理
-<!-- entry begin: 调试 cassert -->
-**`<casset>`**
-
-* assert(expr)                      ：运行时断言, false则执行
-    > #define NDEGUG  
-    > 可以取消**宏函数**assert()
-* static_assert(constexpr, message) ：编译期断言, 可以自定义打印消息
-    > #define NDEBUG  
-    > 并不会取消**关键字static_assert()**
-* 编译器预处理宏：
-    * `__func__`
-    * `__LINE__`
-    * `__FILE__`
-    * `__TIME__`
-    * `__DATE__`
-    * `_WIN32`
-    * `__linux`
-    * `__clang__`
-    * `__GUNC__`
-    * `_MSC_VER`
-<!-- entry end -->
-
-### CSTDLIB
+## 工具库
 <!-- entry begin: cstdlib -->
-**`<cstdlib>`**
-
-* EXIT_SUCCESS
-* EXIT_FAILURE
-* exit(status)
-* atexit(void (*func)())
-* quick_exit(status)
-* at_quick_exit(void (*func)())
-
-> `char**`指向的指针为解析字符的尾后指针
-* `strtol(char*, char**, base)`
-* `strtod(char*, char**, base)`
-* `atoi(char*)`
-* `atod(char*)`
-
-* getenv(var_name)
-* setenv(var_name, val, isoverwrite)
-* unsetenv(var_name)
-
-* system(sh_cmd)
+### 〈cstdlib〉
+```cpp
+// 进程控制
+void    abort();                                        // 异常终止进程，不进行清理
+void    exit(int exit_code);                            // 正常终止进程，进行清理
+void    quick_exit(int exit_code);                      // 正常终止进程，进行非完全清理
+void    _Exit(int exit_code);                           // 异常终止进程，不进行清理
+int     atexit(void(*func)());                          // 注册在调用exit()时被调用
+int     at_quick_exit(void(*func)());                   // 注册在调用quick_exit()时被调用
+int     system(const char* cmd);                        // 调用宿主环境命令处理器
+char*   getenv(const char* env_var);                    // 访问环境变量
+// 内存管理
+void*   malloc(size_t size);                            // 分配内存
+void*   aligned_alloc(size_t alignment, size_t size);   // 分配对齐的内存
+void*   calloc(size_t num, size_t size);                // 分配并清零内存
+void*   realloc(void* ptr, size_t new_size);            // 重新分配已分配内存
+void    free(void* ptr);                                // 释放已分配内存
+// 数值字符串转换
+double  atof(const char* str);
+int     atoi(const char* str);
+long    strtol(const char* str, char** str_end, int base);
+double  strtod(const char* str, char** str_end);
+```
 <!-- entry end -->
 
-### 字符处理
-<!-- entry begin: cctype -->
-**`<cctype>`**
+<!-- entry begin: functional hash function reference_wrapper ref cref -->
+### 〈functional〉
+```cpp
+struct hash<T>
+{
+    // 特化包括有：
+    // 整型、浮点型、指针、
+    // 智能指针、string族、string_view族、bitset、vector<bool>、
+    // error_code、error_condition、type_index、thread::id、optional、variant
+};
 
-> 见[正则表达式](https://github.com/mrbeardad/SeeCheatSheets/blob/master/bash.md#%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
-* `isalnum(c)`
-* `isalpha(c)`
-* `islower(c)`
-* `isupper(c)`
-* `isdigit(c)`
-* `isxdigit(c)`
-* `ispunct(c)`
-* `isblank(c)`
-* `isspace(c)`
-* `iscntrl(c)`
-* `isgraph(c)`
-* `isprint(c)`
-* `toupper(c)`
-* `tolower(c)`
+class function<F(Args...)>
+{
+    // 成员函数
+    operator()
+    operator bool
+};
+
+class reference_wrapper<T>
+{
+    // 成员函数
+    T& get();
+    // OP
+    operator()  // 调用存储的函数
+    operator T&
+};
+
+referece_wrapper<T>         ref(T& t);
+referece_wrapper<const T>   cref(T& t);
+```
 <!-- entry end -->
 
-### 选项处理
-<!-- entry begin: getopt -->
-**`<unitstd.h>`**
+<!-- entry begin: chrono 时间库 -->
+### 〈chrono〉
+```cpp
+class system_clock
+{
+    // 成员类型
+    rep
+    period
+    duration    = duration<rep, period>
+    time_point  = time_point<system_clock>
+    // 成员函数
+    S time_point    now();
+    S time_t        to_time_t(time_point);
+    S time_point    frome_time_t(time_t);
+};
 
-* `int getopt(int argc, char* const argv[], const char* optstring)`
-    > 命令行参数，即`argv`字符串数组中的各个字符串的集合，每个字符串为一个命令行参数。有如下几种情况：
-    > * 执行命令      ：即`argv[0]`
-    > * 选项          ：即以`-`开头的命令行参数。选项分为三种类型，`-o`单选项、`-opt`多选项（`o`与`p`选项必须为无参选项）、`-tfile`选项`t`及其参数`file`
-    > * 选项参数      ：若某选项必有或可能有参数，则跟在该选项后面的同一命令行参数的字符，或下个命令行参数即为该选项的参数，见上
-    > * 命令参数      ：不属于上面三种情况的命令行参数，作为该命令本身的主要参数。**getopt会将所有命令参数保持顺序的移动到`argv`数组的尾部**。
-    > 特殊的，`-`被视作命令参数，`--`之后的所有命令行参数被视作命令参数
-    * 参数argc与argv：
-        * 来自`int main(int argc, char* argv[])`
-    * 参数optstring：
-        * `:o`      ：开头`:`表示开启silent-mode，默认为print-mode
-        * `o`       ：代表选项`o`没有参数  
-        * `o:`      ：代表选项`o`必有参数, 紧跟`-oarg`或间隔`-o arg`中的`arg`都被视为`-o`的参数  
-        * `o::`     ：代表选项`o`可选参数, 只识别紧跟`-oarg`
-    * 全局变量：
-        * optarg    ：类型为`char*`，指向当前选项的参数，无则为NULL
-        * optind    ：类型为`size_t`，作为下次调用getopt()将要处理的argv数组中元素的索引
-    * print-mode
-        > getopts()函数自动打印错误消息
-        * 返回int表示当前选项字符
-            * `?`表示无效选项。无效选项即选项字符不在于`optstring`中或本该需要参数的选项却没有参数
-            * `-1`表示解析结束，剩余的都是命令参数
-    * silent-mode
-        > 不自动打印错误消息
-            * `?`表示未知选项，该选项未在`optstring`中指定
-            * `:`表示错误选项，该选项必有参数却为提供参数（即该选项作为最后一个命令行参数）
-            * `-1`表示解析结束，剩余的都是命令参数
-<!-- entry end -->
+class system_clock
+{
+    // 成员类型
+    rep
+    period
+    duration    = duration<rep, period>
+    time_point  = time_point<steady_clock>
+    // 成员函数
+    S time_point    now();
+};
 
-<!-- entry begin: getopt_long getopt_long_only -->
-**`<getopt.h>`**
+class duration<Rep, Period = ratio<1> >
+{
+    // 成员类型
+    rep
+    period
+    // 成员函数
+    rep             count();
+    S duration      zero();
+    S duration      min();
+    S duration      max();
+    // Operator
+    operator++
+    operator--
+    operator+
+    operator-
+    operator*
+    operator/
+    operator%
+    operator""h
+    operator""min
+    operator""s
+    operator""ms
+    operator""us
+    operator""ns
+    operator""d
+    operator""y
+    // 非成员函数
+    duration        duration_cast<D>(d);
+    duration        floor(d)
+    duration        ceil(d)
+    duration        round(d)
+    duration        abs(d)
+};
 
-* `int getopt_long(argc, argv, optstring, const struct option longopts[], int* longindex)`
-    > 基本规则同`getopt()`，增加了对长选项的解析：
-    > “长选项的紧跟”为`--option=arg`, 而且长选项若无歧义可不用完整输入
-    * 参数longopts：
-        > struct option的数组, 最后一个option必须全0以作为数组结束标志
-        ```c
-        struct option {
-            const char* name;    // 选项名称
-            int has_arg;         // no_argrument|required_argrument|optional_argrument
-            int* flag;           // 等于NULL则函数返回val，否则匹配时*flag=val且函数返回0
-            int val;             // 指定匹配到该选项时返回的int值
-        };
-        ```
-    * 参数longindex：
-        > 若不等于NULL，存储当前处理的长选项在`longopts`中的索引
-* `getopt_long_only(argc, argv, optstring, option*, int*)`
-    > 注：规则同上, 但是`-opt`会优先解析为长选项, 不符合再为短
-<!-- entry end -->
+// 类型别名
+std::chrono::nanoseconds
+std::chrono::microseconds
+std::chrono::milliseconds
+std::chrono::seconds
+std::chrono::minutes
+std::chrono::hours
+std::chrono::days
+std::chrono::weeks
+std::chrono::months
+std::chrono::years
 
-### 数学库
-<!-- entry begin: cmath 数学 -->
-**`<cmath>`**
-
-> 几乎所有函数的参数都对`float` `double` `long double` 和整数 有重载，故一般省略形参类型  
-> 若只能为浮点数（float或double）会指明`double`
-
-* 三角函数
-    * cos(T)
-    * sin(T)
-    * tan(T)
-    * acos(T)
-    * asin(T)
-    * atan(T)
-
-* 对数与幂
-    * log(N)                    ：`log_e(N)`
-    * log1p(N)                  ：`log_e(N + 1)`（计算更精准）
-    * log2(N)                   ：`log_2(N)`
-    * log10(N)                  ：`log_10(N)`
-<!--  -->
-    * exp(x)                    ：`e ^ x`
-    * expm1(x)                  ：`exp(x) - 1`（计算更精准）
-    * exp2(x)                   ：`2 ^ x`
-    * exp10(x)                  ：`10 ^ x`
-<!--  -->
-    * pow(x, y)                 ：`x ^ y`
-    * sqrt(double x)            ：`x的平方根`
-    * cbrt(double x)            ：`x的立方根`
-    * hypot(x, y, z = 0)        ：`sqrt(x * x, y * y, z * z)`
-
-* 浮点数取整
-    * ceil(double x)            ：向上取整
-    * floor(double d)           ：向下取整
-    * trunc(double x)           ：向零取整
-    * round(double x)           ：四舍五入
-
-* 其它
-    * frexp(double x, int* exp) ：将x分解为`x = n * 2 ^ exp，其中n ∈ [0.5, 1)`，exp存于exp并返回n
-    * ldexp(double x, int exp)  ：返回`x * 2 ^ exp`
-    * fmod(double x, double y)  ：返回浮点数的`x % y`
-    * modf(double x, int* n)    ：将x分解为整数与小数部分，整数存于n并返回小数
-<!--  -->
-    * abs(x)                    ：返回x的绝对值
-    * fdim(x, y)                ：如果x > y则返回x - y，否则返回0
-    * fma(x, y, z)              ：返回x * y + z
-    * div(x, y)                 ：返回`div_t`对象，`div_t::quot`为商，`div_t::rem`为余数（头文件`<cstdlib>`）
-<!--  -->
-    * gcd(x, y)                 ：返回最大公因数（头文件`<numeric>`）
-    * lcm(x, y)                 ：返回最小公倍数（头文件`<numeric>`）
-<!-- entry end -->
-
-### SIMD
-<!-- entry begin: simd immintrin.h -->
-**`<immintrin.h>`**
-
-> C++17中SIMD指令可以通过给STL算法执行策略而应用到程序中
-* 需要利用`alignas(32)`对齐数组
-* 向量寄存器抽象类型：
-    * `__m256`
-    * `__m256d`
-    * `__m256i`
-* 加载到向量寄存器：
-    ```c
-    _mm256_load_ps( float* )
-    _mm256_load_pd( double* )
-    _mm256_load_epi256( __m256i* )
-    ```
-* SIMD运算：
-    ```c
-    _mm256_OP_ps( __m256, __m256 )
-    _mm256_OP_pd( __m256d, __m256d )
-    _mm256_OP_epi32( __m256i, __m256i )
-    _mm256_OP_epi64( __m256i, __m256i )
-    ```
-* 存储回内存：
-    ```c
-    _mm256_store_ps( float* , __m256)
-    _mm256_store_pd( double* , __m256d )
-    _mm256_store_epi256( int* , __m256i )
-    ```
-<!-- entry end -->
-
-## 通用工具
-<!-- entry begin: integer_sequence utility -->
-* integer_sequence：`<utility>`
-    > 与initializer_list的区别在于，integer_sequence可以用于编译期计算
-    * 构造
-        * `integer_sequence<typename T, T... INTS>{}`
-        * `index_sequence<size_t... INTS>`
-        > 以下构造1 ~ N-1的T类型的整数序列
-        * `make_integer_sequence<typename T, T N>{}`
-        * `make_index_sequence<size_t N>{}`
-    * 读取
-        * ::size()      ：获取整数个数
-        * (INTS OP ...) ：模板函数接收后，利用折叠表达式处理模板参数包INTS
+class time_point<Clock, Duration = Clock::duration>
+{
+    // 成员类型
+    rep
+    period
+    duration
+    clock
+    // 成员函数
+    duration        time_since_epoch();
+    S duration      min();
+    S duration      max();
+    // Operator
+    operator+
+    operator-
+    // 非成员函数
+    time_point      time_point_cast<TP>(tp);
+    time_point      floor(tp);
+    time_point      ceil(tp);
+    time_point      round(tp);
+};
+```
 <!-- entry end -->
 
 <!-- entry begin: initializer_list -->
-* initializer_list：`<initializer_list>`
-    > 语言支持库
-    * 构造：
-        * 聚合初始化
-        * 直接由初始列转换
-    * 作用：
-        * 设计形参为`initializer_list`的构造函数，来抢占初始列模拟聚合初始化
-        * 设计形参有`initializer_list`的函数，用来模拟变参函数，但只支持同类型数据变参
-        * 当作容器来使用
+### 〈initializer_list〉
+```cpp
+class initializer_list<T>
+{
+    // 构造函数
+    initializer_list(); // 语言特性支持的列表初始化的默认类型
+    // 成员函数
+    size_t      size();
+    const T*    begin();
+    const T*    end();
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: pair utility -->
-* pair：`<utility>`
-    * 构造
-        * 类聚合式构造    ：支持移动语义
-        * 逐块式构造      ：参数(std::piecewise_constructor, make_tuple(args1), make_tuple(args2))
-        * 成员模板构造
-    * 访问
-        * .first
-        * .second
-    * 比较：
-        > 字典比较
+<!-- entry begin: utility integer_sequence pair -->
+### 〈utility〉
+```cpp
+struct integer_sequence<T, T... INTS>
+{
+    // 成员函数
+    static size_t size();
+    // 辅助模板
+    index_sequence<INTS>        = integer_sequence<size_t, INTS>
+    make_integer_sequence<T, N> = integer_sequence<T, 0..N-1>
+    make_index_sequence<N>      = integer_sequence<size_t, 0..N-1>
+};
+
+class pair<T1, T2>
+{
+    // 成员对象
+    T1 first;
+    T2 second;
+    // 构造函数
+    pair();                             // 默认构造
+    pair(x, y);                         // 类聚合式构造
+    pair(pair<U1, U2>);                 // 成员模板构造
+    pair(                               // 逐块式构造
+        std::piecewise_construct,
+        tuple<Args1...> first_args,
+        tuple<Args2...> second_args
+    );
+    // 非成员函数
+    pair    make_pair(x, y);            // 被C++17结构化绑定取代
+    T&      get<size_t>(p);
+    T&      get<T>(p);
+    // 辅助类
+    tuple_size<pair>::value
+    tuple_element<size_t, pair>::type
+};
+```
 <!-- entry end -->
 
 <!-- entry begin: tuple -->
-* tuple：`<tuple>`
-    * 构造
-        * 类聚合式构造    ：支持移动语义
-        * 成员模板构造
-        * 支持由pair赋值
-    * 访问
-        * `get<T>(t)` 与 `get<N>(t)`
-            > 返回引用
-    * 读取
-        * `tuple_size<TupleType>::value`
-        * `tuple_element<N, TupleType>::type`
-        * `tuple_cat(tuple1, tuple2, ...)`
-    * 比较：
-        > 字典比较
+### 〈tuple〉
+```cpp
+class tuple<Types...>
+{
+    // 构造函数
+    tuple();                            // 默认构造
+    tuple(args...);                     // 类聚合式构造
+    tuple(tuple<UTypes...>);            // 成员模板构造
+    tuple(p);                           // pair转换构造
+    // 非成员函数
+    tuple   make_tuple(args...);        // 被C++17结构化绑定取代
+    tuple&  tie(args...);               // std::ignore作占位符。被C++17结构化绑定取代
+    tuple   tuple_cat(tuples...);
+    T&      get<size_t>(t);
+    T&      get<T>(t);
+    // 辅助类
+    tuple_size<tuple>::value
+    tuple_element<size_t, tuple>::type
+};
+```
 <!-- entry end -->
 
 <!-- entry begin: any -->
-* any：`<any>`
-    * 构造：
-        * 默认构造      ：构造为nullptr
-        * 就地构造      ：参数`(std::in_place_type<Type>, args...)`
-        * 类聚合式构造  ：支持移动语义
-    * 访问：
-        * `any_cast<T&>(any)`
-    * 读取：
-        * `.has_value()`
-        * `.type().name()`
-            > 利用关键字type_id()比较
-    * 修改：
-        * `.operator=()`
-        * `.emplace<T>()`
-        * `.reset()`
+### 〈any〉
+```cpp
+class any
+{
+    // 构造函数
+    any();                          // 默认构造。空对象
+    any(value);                     // 类聚合式构造
+    any(                            // 就地构造
+        std::in_place_type<Type>,
+        args...
+    );
+    any(
+        std::in_place_type<Type>,
+        il, args...
+    );
+    // 修改器
+    T&      emplace<T>(args...);
+    T&      emplace<T>(il, args...);
+    void    reset();
+    // 观察器
+    bool    has_value();
+    type_info&  type();
+    // 非成员函数
+    T       any_cast<T>(any&);
+    T*      any_cast<T>(any*);
+};
+```
 <!-- entry end -->
 
 <!-- entry begin: variant -->
-* variant：`<variant>`
-    * 构造：
-        * 默认构造      ：默认构造第一个类型
-            > std::monostate类作占位符避免无默认构造函数
-        * 类聚合式构造  ：支持移动语义
-            > 匹配最佳的类型，但注意char*匹配数值类型比匹配string更佳
-        * 就地构造：
-            * 参数`(std::in_place_type<Type>, args...)`
-            * 参数`(std::in_place_index<Type>, args...)`
-    * 访问：
-        > get<>错误匹配类型会抛出异常，get_if<>错误匹配类型返回空指针
-        * `get<T>(vrt)`
-        * `get<N>(vrt)`
-        * `get_if<T>(vrt*)`
-        * `get_if<N>(vrt*)`
-        * `visit(func, vrt)`
-            > func为能接受vrt所有模板参数类型的可调用类型（模板或重载）
-    * 读取：
-        * `.index()`
-    * 修改：
-        * `.operator=()`
-        * `.emplace<T>()`
-        * `.emplace<N>()`
-    * 比较：
-        > 字典序
+### 〈variant〉
+```cpp
+class variant<Types...>
+{
+    // 构造函数
+    variant();                  // 默认构造第一个类型。可用std::monostate作占位符类型
+    variant(t);                 // 匹配构造最佳类型
+    variant(                    // 就地构造
+        std::in_place_type<T>,  // 也可为std::in_place_index<size_t>
+        args...
+    );
+    variant(
+        std::in_place_type<T>,
+        il, args...
+    );
+    // 修改器
+    T&      emplace<T>(args...);
+    T&      emplace<T>(il, args...);
+    T&      emplace<size_t>(args...);
+    T&      emplace<size_t>(il, args...);
+    // 观察器
+    size_t  index();
+    bool    valueless_by_exception();   // 发生异常时，index()返回std::variant_npos
+    // 非成员函数
+    T&      get<size_t>(vrt);           // 转换失败抛出std::bad_variant_access
+    T&      get<T>(vrt);
+    T*      get_if<size_t>(vrt);        // 转换失败返回空指针
+    T*      get_if<T>(vrt);
+    R       visit(visitor, vrt);        // visitor内部可利用if constexpr
+    // 辅助类
+    variant_size<variant>::value
+    variant_alternative<size_t, variant>::type
+};
+```
 <!-- entry end -->
 
 <!-- entry begin: optional -->
-* optional：`<optional>`
-    * 构造：
-        * 默认构造      ：构造为std::nullopt
-        * 类聚合式构造  ：支持移动构造
-        * 就地构造      ：参数(std::in_place, args...)
-    * 访问
-        * .operator*()
-        * .operator->()
-    * 读取
-        * .value()            ：nullopt则抛出异常
-        * .value_or(type_val) ：nullopt则返回type_val
-        * .operator bool()
+### 〈optional〉
+```cpp
+#include <optional>
+
+class optional<T>
+{
+    // 构造函数
+    optional();                             // 默认构造为std::nullopt
+    optional(val);                          // 类聚合式构造
+    optional(std::in_place, args...);       // 就地构造
+    optional(std::in_place, il, args...);
+    // 修改器
+    T&      emplace(args...);
+    T&      emplace(il, args...);
+    void    reset();
+    // 观察器
+    operator->
+    operator*
+    C T&    value();                        // 若为std::nullopt则抛出std::bad_optional_access
+    T       value_or(def_val);
+    bool    has_value();
+    // OP
+    operator bool
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: shaerd_ptr memory -->
-* shared_ptr：`<memory>`
-    * 构造：
-        * 拷贝构造          ：更新引用计数
-        * `shared_ptr<T>(unique_ptr)`
-        * `shared_ptr<T>(new_ptr, deleter)`
-        * `make_shared<T>()`
-            > 对象内存与引用计数器一次分配  
-            > 同时避免new表达式与用shared_ptr管理new获取的指针这两步之间发生异常，而导致内存泄漏（make_unique同）
-    * 访问管理数据：
-        * .operator*()
-        * .operator->()
-        * .get()
-    * 读取：
-        * .use_count()
-    * 修改：
-        * .reset()
-        * .reset(ptr)
-        * .reset(ptr, del)
-    * 类型转换：
-        * `static_pointer_cast<>(sp)`
-        * `dynamic_pointer_cast<>(sp)`
-        * `const_pointer_cast<>(sp)`
-        * .operator bool()
-    * 比较：
-        > 比较存储的指针
-    * 支持成员函数返回this的唯一的shaerd_ptr
-        1. 继承`std::enable_shared_from_this<T>`
-        2. 返回`shared_from_this()`
-    * 错误问题：
-        * 循环依赖
-        * 多组指向
+<!-- entry begin: bitset -->
+### 〈bitset〉
+```cpp
+class bitset<size_t>
+{
+    // 构造函数
+    bitset();
+    bitset(ulong);
+    bitset(str, pos = 0, nbits = npos, zero = '0', one = '1');
+    bitset(Cstr, nbits = npos, zero = '0', one = '1');
+    // 元素访问
+    bool        test(pos);
+    bool        all();
+    bool        any();
+    bool        none();
+    size_t      count();
+    size_t      size();
+    // 修改器
+    bitset&     set();
+    bitset&     set(pos, boolean = true);
+    bitset&     reset();
+    bitset&     reset(pos);
+    bitset&     flip();
+    bitset&     flip(pos);
+    // 转换
+    string          to_string(zero = '0', one = '1');
+    unsigned long   to_ulong(); // 存储时低位在“左”，显示时低位在“右”（小端）
+    // OP
+    operator[]                  // 可能返回reference，支持operator=、operator~、operator bool
+    operator&
+    operator|
+    operator^
+    operator~
+    operator<<
+    operator>>
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: weak_ptr memory -->
-* weak_ptr：`<memory>`
-    * 构造：
-        * `weak_ptr<T>(shared_ptr)`
-    * 访问管理数据
-        * .lock()
-            > 返回shared_ptr
-    * 读取
-        * .expired()
-            > 返回是否为空
+## 数值库
+<!-- entry begin: limits 数值极限 -->
+### 〈limits〉
+```cpp
+class numeric_limits<T>
+{
+    // 常用静态成员常量
+    S radix             // 给定类型的表示所用的基或整数底
+    S digits            // 能无更改地表示的 radix 位数
+    S digits10          // 能无更改地表示的十进制位数
+    S max_digits10      // 区别所有此类型值所需的十进制位数
+    S max_exponent10    // 10 的该数次幂是合法有限浮点值的最大整数
+    S min_exponent10    // 10 的该数次幂是合法正规浮点值的最小负数
+    // 常用静态成员函数
+    S lowest()          // 最低有限值
+    S min()             // 最小有限值。浮点数为最小正数
+    S max()             // 最大有限值
+    S epsilon()         // 返回 1.0 与给定类型的下个可表示值的差
+    S round_error()     // 返回给定浮点类型的最大舍入误差
+    S infinity()        // 返回给定类型的正无穷大值
+    S quiet_NaN()       // 返回给定浮点类型的安静 NaN 值
+    S signaling_NaN()   // 返回给定浮点类型的发信的 NaN
+    S denorm_min()      // 返回给定浮点类型的最小正非正规值
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: unique_ptr memory -->
-* unique_ptr：`<memory>`
-    * 构造：
-        * `unique_ptr<T, Del>(new_ptr, del)`
-            > del默认为delete表达式
-        * `make_unique<>()`
-        * 支持move, 拒绝copy
-    * 访问管理数据：
-        * .operator*()
-        * .operator->()
-        * .get()
-    * 修改：
-        * .reset()
-        * .reset(ptr)
+<!-- entry begin: ratio 分数 -->
+### 〈ratio〉
+```cpp
+class ratio<Num, Den = 1>
+{
+    // 成员对象
+    S intmax_t num;
+    S intmax_t den;
+    // 成员类型
+    pico
+    nano
+    micro
+    centi
+    deci
+    deca
+    hecto
+    kilo
+    mega
+    giga
+    tera
+    peta
+    // 辅助类
+    ratio_add           <r1, r2>::type
+    ratio_subtract      <r1, r2>::type
+    ratio_multiply      <r1, r2>::type
+    ratio_divide        <r1, r2>::type
+    ratio_equal         <r1, r2>::value
+    ratio_not_equal     <r1, r2>::value
+    ratio_less          <r1, r2>::value
+    ratio_less_equal    <r1, r2>::value
+    ratio_greater       <r1, r2>::value
+    ratio_greater_equal <r1, r2>::value
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: numeric_limits limits -->
-* numeric_limits：`<limits>`
-    * ::lowest()        ：负数最小值
-    * ::min()           ：正数最小值
-    * ::max()           ：最大值
-    * ::digits          ：二进制数字位数
-    * ::digits10        ：能保证准确表示的十进制数字位数
-    * ::max_digits10    ：能表示的最大的十进制数字位数
-    * ::max_exponent10  ：浮点数最大正指数
-    * ::min_exponent10  ：浮点数最小负指数
-    * ::infinity()      ：正无穷
-    * ::quiet_NaN()     ：NAN
+<!-- entry begin: cmath 数学库 -->
+### 〈cmath〉
+```cpp
+// 基本运算
+f   abs(f);             // 求绝对值
+f   fmod(x, y);         // 求 x/y（向零取整）的余数
+f   remainder(x, y);    // 求 x/y（四舍五入）的余数
+f   fma(x, y, z);       // 求 x*y+z
+f   fmax(x, y);         // 求 x,y 中较大者（忽略NAN）
+f   fmin(x, y);         // 求 x,y 中较小者（忽略NAN）
+f   dim(x, y);          // 求 max(0,x-y)
+fl  nanf(Cstr);         // Cstr设置NAN的尾数
+db  nan(Cstr);
+ld  nanl(Cstr);
+// 线性插值
+f   lerp(a, b, t);      // 求 a+t(b-a)
+// 指数函数
+f   log(x);             // 求 ln(x)
+f   log1p(x);           // 求 ln(1+x)
+f   log2(x);            // 求 log₂(x)
+f   log10(x);           // 求 log₁₀(x)
+f   exp(x);             // 求 eˣ
+f   expm1(x);           // 求 eˣ-1
+f   exp2(x);            // 求 2ˣ
+// 幂函数
+f   pow(x, y);          // 求 xʸ
+f   sqrt(x);            // 求 √x
+f   cbrt(x);            // 求 ³√x
+f   hypot(x);           // 求 √(x²+y²)
+// 三角函数
+f   sin(x);             // 求 sin(x)
+f   cos(x);             // 求 cos(x)
+f   tan(x);             // 求 tan(x)
+f   asin(x);            // 求 arcsin(x) 在[-π/2, π/2]
+f   acos(x);            // 求 arccos(x) 在[0, π]
+f   atan(x);            // 求 arctan(x) 在[-π/2, π/2]
+f   atan2(y, x);        // 求 arctan(y/x)在[-π, π]
+// 误差与伽马函数
+f   erf(arg);           // 误差函数
+f   erfc(arg);          // 补误差函数
+f   tgamma(arg);        // gamma函数
+f   lgamma(arg);        // gamma函数的自然对数
+// 浮点取整
+f   ceil(f);            // 向上取整
+f   floor(f);           // 向下取整
+f   trunc(f);           // 向零取整
+i   round(f);           // 四舍五入
+// 浮点操作
+f   frexp(f, iptr);     // 将 f 分解为 n * 2ᵉˣᵖ，n ∈ [0.5, 1)。exp存于iptr并返回n
+f   ldexp(f, i);        // 求 f * 2ᵉˣᵖ
+f   modf(f, iptr);      // 将 f 分解为整数与小数。整数存于iptr并返回小数
+f   scalbn(x, exp);     // 求 x * 2ᵉˣᵖ
+i   ilogb(f);           // 求 log₂|f|
+f   logb(f);            // 求 log₂|f|
+f   nextafter(from, to);// 求 from 趋向 to 的下个可表示的浮点值
+f   copysign(x, y);     // 求 x 的模与 y 的符号组成的浮点值
+```
 <!-- entry end -->
 
-<!-- entry begin: type_traits -->
-* `<type_traits>`
-    > 元编程可以利用该库进行模板类型限制
-    * 类型判断式
-    * 类型关系检验
-    * 类型修饰符
-    * 类型计算
-    * 使用：
-        * ::value   ：返回std::true_type或std::false_type
-        * ::type    ：返回修饰后的类型
+<!-- entry begin: numeric 数值库 算法 -->
+### 〈numeric〉
+```cpp
+void    iota(b, e, v);                                      // e = v++
+T       accumulate(b, e, init, bOp = plus);                 // bOp(e)
+T       reduce(b, e, init = 0, bOp = plus);                 // bOp(e)。支持policy(默认无序)
+T       transform_reduce(b1, e1, init, bOp, uOp);           // bOp(uOp(e))
+T       transform_reduce(b1, e1, b2, init,                  // bOp1(bOp2(e1, e2))
+    bOp1 = plus, bOp2 = muiltiplies);
+T       inner_product(b1, e1, b2, init, bOp1, bOp2);        // bOp1(bOp2(e1, e2))。支持policy(默认无序)
+destE   adjacent_difference(b, e, destB, bOp = reduce);     // dE = e - em1
+destE   partial_sum(b, e, destB, bOp = plus);               // dE = bOp(e)
+destE   inclusive_scan(b, e, destB, bOp = plus);            // dE = bOp(e)
+destE   exclusive_scan(b, e, destB, bOp = plus);            // dE = bOp(*p2e--)
+destE   transform_inclusive_scan(b, e, destB, bOp = plus);  // dE = bOp(uOp(e))
+destE   transform_exclusive_scan(b, e, destB, bOp = plus);  // dE = bOp(uOp(em1))
+T       gcd(m, n);                                          // 求最大公因数
+T       lcm(m, n);                                          // 求最小公倍数
+T       midpoint(a, b);                                     // 求中间值
+```
 <!-- entry end -->
 
-<!-- entry begin: reference_wrapper functional -->
-* reference_wrapper：`<functional>`
-    * 构造：
-        * ref(obj)
-        * cref(obj)
-    * 转换：提供到目标引用的转换`from & to`
-    * 访问
-        * .get()    ：返回目标引用，如此才能调用其成员函数
+<!-- entry begin: random 随机数 随即引擎 随机分布 -->
+### 〈random〉
+```cpp
+// 常用引擎：成员函数seed(val)作种
+minstd_rand
+mt19937_64
+ranlux48
+knuth_b
+default_random_engine
+// 常用分布：重载操作operator()(engine)返回符合分布的随机数
+uniform_int_distribution(min=0, max=INTMAX) // min-max的均匀整数分布
+uniform_real_distribution(min=0, max=1.0)   // min-max的均匀实数分布
+bernoulli_distribution(p=0.5)               // 0-1分布，返回bool
+binomial_distribution(n=1, p=0.5)           // 二项分布
+normal_distribution(u=0, o=1)               // 正态分布
+```
 <!-- entry end -->
 
-<!-- entry begin: hash functional -->
-* hash：`<functional>`
-    > 预定义：整型、浮点型、指针、智能指针、string、bitset<>、vector<bool>
+## 字符处理
+<!-- entry begin: cctype -->
+### 〈cctype〉
+```cpp
+bool isalnum(c);
+bool isalpha(c);
+bool islower(c);
+bool isupper(c);
+bool isdigit(c);
+bool isxdigit(c);
+bool ispunct(c);
+bool isblank(c);
+bool isspace(c);
+bool iscntrl(c);
+bool isgraph(c);
+bool isprint(c);
+int  toupper(c);
+int  tolower(c);
+```
 <!-- entry end -->
 
-<!-- entry begin: ratio -->
-* ratio：`<ratio>`
-    * 构造：预定义ratio类型
-    * 读取：
-        > 模板非类型参数作分子与分母
-        * ::num    ：分子
-        * ::den    ：分母
-    * 运算：
-        > 编译期运算、比较、化简、报错
-        * 算术运算：ratio_OP<ratio1, ratio2>::type
-        * 关系运算：ratio_OP<ratio1, ratio2>::value
+<!-- entry begin: cwctype -->
+### 〈cwctype〉
+```cpp
+bool iswalnum(c);
+bool iswalpha(c);
+bool iswlower(c);
+bool iswupper(c);
+bool iswdigit(c);
+bool iswxdigit(c);
+bool iswpunct(c);
+bool iswblank(c);
+bool iswspace(c);
+bool iswcntrl(c);
+bool iswgraph(c);
+bool iswprint(c);
+int  towupper(c);
+int  towlower(c);
+```
 <!-- entry end -->
 
-<!-- entry begin: chrono ctime get_time put_time -->
-* 时间库：`<chrono>`
-    * Clock
-        * 构造：
-            * 预定义system_clock、steady_clock等
-        * 读取：
-            * ::now()
-            * ::duration
-            * ::time_point
-            * system_clock还提供
-                * ::from_time_t()
-                * ::to_time_t()
-    * duration
-        * 构造：
-            * time_point相减
-            * 字面值构造
-        * 读取：
-            * .count()
-            * ::rep     ：整数的类型
-            * ::period  ：分数的类型
-        * 算术运算：会隐式转换为更高精度
-        * 类型转换：转为粗精度直接截断数值
-            * `duration_cast<>()`
-    * time_point
-        > 由Clock提供Epoch，
-        > duration可相对为负值
-        * 构造：
-            * 默认构造为epoch
-            * Clock::now()获取
-            * time_point与duration运算
-        * 算术运算、关系运算、类型转换
-
-* `<ctime>`
-    * time(time_t*)                         ：获取当前时间并存储到time_t*指向的位置
-    * localtime(time_t*); gmtime(time_t*)   ：传入上述的time_t*，返回`tm*`
-
-* `<iomanip>`
-    > `fmt`格式见linux中date命令的格式
-    * get_time(tm*, fmt)
-    * put_time(tm*, fmt)
+<!-- entry begin: string -->
+### 〈string〉
+```cpp
+class string
+{
+/*
+ * 目标：(str, pos = 0, len = npos) (cstr, len = auto) (char) (n, char)
+ * 此处不包括STL接口
+*/
+    // 构造函数
+    string(目标)
+    // 修改
+    string& assign(目标)
+    string& append(目标)
+    string& operator=(str) (cstr) (char)
+    string& operator+(str) (cstr) (char)
+    string& operator+=(str) (cstr) (char)
+    string& insert(pos, 目标)               // 目标除开(char)
+    string& replace(pos, len, 目标)
+    // 查找
+    bool    starts_with(str) (cstr) (char)
+    bool    end_with(str) (cstr) (char)
+    bool    contains(str) (cstr) (char)
+    size_t  find(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
+    size_t  rfind(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
+    size_t  find_first_of(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
+    size_t  find_first_not_of(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
+    size_t  find_last_of(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
+    size_t  find_last_not_of(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
+    // 转换
+    C T*    data();
+    C T*    c_str();
+    string  to_string(v);
+    wstring to_string(v);
+    int     stoi(str, size_t* = nullptr, base = 10);
+    double  stod(str, size_t* = nullptr, base = 10);
+    // 比较
+    int     compare(pos, len, 目标);        // 目标除开(char) (n, char)
+    // 复制
+    size_t  copy(dest, len, pos = 0);
+    // 子串
+    string  substr(pos = 0, len = npos);
+    // 容量
+    bool    empty();
+    size_t  size();
+    size_t  length();
+    void    resize(count, char = '\0');
+    size_t  capacity();
+    void    shrink_to_fit();
+    void    reserve(new_cap = 0);       // new_cap小于capacity()则无效
+};
+```
 <!-- entry end -->
 
-## STL
-* STL组件
-    * 容器：序列、关联、无序
-        * 异常发生：容器reallocate, 元素的copy与move等
-        * 异常处理：容器保证reallocate异常安全；对于元素增删时产生的异常, 随机访问容器无法恢复, 节点式容器保证安全
-    * 迭代器：输出、输入、单向、双向、随机
-    * 泛型算法：搜索比较、更替复制、涂写删除
-* 解释：
-    * a : array
-    * s : string
-    * v : vector
-    * d : deque
-    * l : list
-    * fl: forward-list
-    * A : Assoicated
-    * U : Unordered
-    * M : all-kinds-of-Map
-* STL算法
-    * 为了简化，将重载函数的形参当作同一函数的默认实参来处理
-    * op1表示接收一个实参的操作数，op2接收两个
-    * b表示begin，e表示end
-    * partB表示是和b是同一个容器的且非end的迭代器
-    * destB表示是作为算法的输出区间
+<!-- entry begin: string_view -->
+### 〈string_view〉
+```cpp
+class string_view
+{
+    // 构造函数
+    string_view(str);
+    string_view(cstr, len = auto);
+    string_view(beg, end);
+    // 修改
+    void    remove_prefix(n);
+    void    remove_suffix(n);
+    // 转换
+    // 查找
+    // 比较
+    // 复制
+    // 子串
+    // 容量
+};
+```
 <!-- entry end -->
 
-### STL容器
-<!-- entry begin: container construct 容器构造 -->
-* 容器构造：
-    * 默认               ：ALL-a
-    * (initializer-list) ：ALL-a
-    * (beg, end)         ：ALL-a
-    * (num)              ：v, d, l, fl
-    * (num, value)       ：s, v, d, l, fl
-    * 聚合初始化         ：a
-    * 拷贝               ：ALL
-    * 移动               ：ALL
-    > array为聚合类  
-    > 前三条对于A与U都可加额外参数(..., cmpPred)与(..., bnum, hasher, eqPred)
+<!-- entry begin: format 格式化 -->
+### 〈format〉
+> `"{arg_id:填充与对齐 符号 # 0 宽度 精度 L 类型}"`
+* arg_id
+    > 要么全部默认按顺序，要么全部手动指定
+* 填充与对齐
+    > 填充与对齐只能一同出现，无填充则默认为空格
+    * `<`：左对齐（非整数与非浮点数默认左对齐）
+    * `>`：右对齐（整数与浮点数默认右对齐）
+    * `^`：居中
+* 符号
+    * `+`：显示正负号
+    * `-`：显示负号（默认）
+    * ` `：非负数前导空格
+* #
+    * 对整数，showbase
+    * 对浮点数，showpoint
+* 0
+    * 对整数与浮点数，用0填充前导空白，若与对齐符号一同使用则失效
+* 宽度与精度
+    * 宽度：`{:6}`
+    * 精度：`{:.6}`
+    * 宽度与精度：`{:6.6}`
+* L
+    * 对整数：插入合适数位分隔符
+    * 对浮点数：插入合适数位分隔符与底分隔符
+    * 对bool：boolalpha
+* 类型
+    * `c`字符
+    * `s`字符串
+    * 整数：
+        * `b`与`B`：二进制
+        * `o`：八进制
+        * `x`与`X`：十六进制
+    * 浮点数：
+        * `a`与`A`：十六进制
+        * `e`与`E`：科学计数法
+        * `f`与`F`：定点表示法
+        * `g`与`G`：智能表示
 <!-- entry end -->
 
-<!-- entry begin: container assign 容器赋值 -->
-* 容器赋值：
-    * .operator=()                ：ALL
-    * .fill(v)                    ：a
-    * .assign(initializer_list)   ：ALL-a-A-U
-    * .assign(beg, end)           ：ALL-a-A-U
-    * .assign(num, value)         ：ALL-a-A-U
+## 容器库
+* a : array
+* s : string
+* v : vector
+* d : deque
+* l : list
+* A : Assoicated
+* U : Unordered
+* M : all-kinds-of-Map
+
+### 构造
+<!-- entry begin: 容器构造 -->
+```cpp
+// array为聚合类，支持聚合初始化
+// 前三条对于A与U都可加额外参数(..., cmpPred)与(..., bnum, hasher, eqPred)
+Container()                     // ALL-a
+Container(il)                   // ALL-a
+Container(beg, end)             // ALL-a
+Container(num)                  // ALL-a-s-A-U
+Container(num, val)             // ALL-a-A-U
+Container(copy)                 // ALL
+Container(move)                 // ALL
+```
+<!-- entry end -->
+
+<!-- entry begin: 容器赋值 -->
+### 赋值
+```cpp
+C&      operator=()             // ALL
+C&      assign(il)              // ALL-a-A-U
+C&      assign(beg, end)        // ALL-a-A-U
+C&      assign(num, val)        // ALL-a-A-U
+void    fill(v)                 // a
+```
 <!-- entry end -->
 
 <!-- entry begin: container assess 容器访问 -->
-* 容器访问：
-    * .at(idx)                                ：a, s, v, d
-    * .at(key)                                ：Map
-    * .operator[](idx)                        ：a, s, v, d
-    * .operator[](key)                        ：Map(自动创建key)
-    * .front()                                ：a, v, d, l, fl
-    * .back()                                 ：a, v, d, l
-    * .data()                                 ：a, s, v
-    * .begin(), .cbegin(), .end(), cend()     ：ALL
-    * .rbegin(), .crbegin(), .rend(), crend() ：ALL-U-fl
+### 访问
+```cpp
+T&      at(idx)                 // ALL-L-A-U
+T&      at(key)                 // M
+T&      operator[] (idx)        // ALL-L-A-U
+T&      operator[] (key)        // M
+T&      front()                 // ALL-A-U
+T&      back()                  // ALL-A-U
+T*      data()                  // a, s, v
+itr     begin()                 // ALL
+itr     cbegin()                // ALL
+itr     end()                   // ALL
+itr     cend()                  // ALL
+itr     rbegin()                // ALL
+itr     crbegin()               // ALL
+itr     rend()                  // ALL
+itr     crend()                 // ALL
+```
 <!-- entry end -->
 
-<!-- entry begin: container insert emplace push 元素插入 -->
-* 元素插入：
-    * .insert(pos, value)            ：ALL
-    * .insert(pos, initializer-list) ：s, v, d, l
-    * .insert(pos, beg, end)         ：s, v, d, l
-    * .insert(pos, num, val)         ：s, v, d, l
-    * .insert(value)                 ：A, U(非multi返回pair<iter, bool>)
-    * .insert(initializer-list)      ：A, U
-    * .insert(beg, end)              ：A, U
-    * .emplace(pos, args...)         ：v, d, l
-    * .emplace(args...)              ：A, U(非multi返回pair<iter, bool>)
-    * .emplace_hint(pos, args...)    ：A, U
-    * .emplace_back(v)               ：v, d, l
-    * .emplace_front(v)              ：d, l, fl
-    * .push_back(v)                  ：s, v, d, l
-    * .push_front(v)                 ：d, l, fl
+<!-- entry begin: 元素插入 -->
+### 插入
+```cpp
+pos+ins insert(pos, val)        // ALL-a
+pos+ins insert(pos, il)         // ALL-a-A-U
+pos+ins insert(pos, beg, end)   // ALL-a-A-U
+pos+ins insert(pos, num, val)   // ALL-a-A-U
+emplace(pos, args...)           // v, d, l
+emplace_back(v)                 // v, d, l
+emplace_front(v)                // d, l, fl
+push_back(v)                    // s, v, d, l
+push_front(v)                   // d, l, fl
+insert(val)                     // A, U(非multi返回pair<iter, bool>)
+insert(il)                      // A, U
+insert(beg, end)                // A, U
+emplace(args...)                // A, U(非multi返回pair<iter, bool>)
+emplace_hint(pos, args...)      // A, U
+```
 <!-- entry end -->
 
 <!-- entry begin: erase pop clear 元素删除 -->
@@ -843,6 +1137,16 @@ exception                 `<exception>`
     * 显式指定模板实参为reference
     * 利用for_each()算法的返回值
 * 执行策略：做第一个参数
+    ```txt
+    -------------------------------------------------------------------------
+    |   Type                  |     Vectorization     |     Parallelization |
+    |------------------------------------------------------------------------
+    | Sequenced               |           X           |           X         | 
+    | Unsequenced             |           V           |           X         |
+    | Parallel                |           X           |           V         |
+    | Parallel & unsequenced  |           V           |           V         |
+    -------------------------------------------------------------------------
+    ```
     * std::execution::seq        ：顺序执行（默认）
     * std::execution::par        ：多线程并行
     * std::execution::unseq      ：使用SIMD
@@ -925,11 +1229,11 @@ exception                 `<exception>`
 <!-- entry begin: 最值比较算法 非更易 -->
 * 最值比较
     * max(x, y)
-    * max(initializer_list)
+    * max(il)
     * min(x, y)
-    * min(initializer_list)
+    * min(il)
     * minmax(x, y)                          ：返回`pair<min, max>`
-    * minmax(initializer_list)              ：返回`pair<min, max>`
+    * minmax(il)              ：返回`pair<min, max>`
     * clamp(x, min, max)                    ：返回三者中的第二大者
     * min_element(b, e, op2=lower_to)       ：返回第一个最小值
     * max_element(b, e, op2=lower_to)       ：返回第一个最大值
@@ -997,71 +1301,8 @@ exception                 `<exception>`
     * adjacent_difference(b, e, destB, op2=reduce)                      ：a1, a2-a1, a3-a2,
 <!-- entry end -->
 
-## 其它容器
-
-<!-- entry begin: bitset -->
-* bitset：`<bitset>`
-    * 方便访问指定位
-    * 构造：() (ulong) (string) (cstring)
-    * 操作：
-        * .any()
-        * .all()
-        * .none()
-        * .count()
-        * .size()
-        * .set()
-        * .set(pos, v=true)
-        * .reset()
-        * .reset(pos)
-        * .flip()
-        * .flip(pos)
-        * .operator[](idx).flip()
-    * 转换：
-        * .to_ulong()
-        * .to_ullong()
-        * .to_string(zero, one)
-<!-- entry end -->
-
-<!-- entry begin: string -->
-* string：`<string>`
-    > 范围：(i, l)、(b, e)  
-    > 目标：(s)、(s, i)、(s, i, l)、(c)、(c, l)、(char)、(n, char)
-    * 修改
-        * string() .assign() .append()      ：目标
-        * operator= operator+ operator+=    ：(s)、(c)、(char)
-        * .insert()                         ：pos + 目标（除了(char)）
-        * .replace()                        ：范围+ 目标
-    * 搜索
-        > 参数：(s) (s,i) (c) (c,i) (c,i,l) (char) (char,i)
-        * .find()
-        * .rfind()
-        * .find_first_of()
-        * .find_first_not_of()
-        * .find_last_of()
-        * .find_last_not_of()
-    * 比较
-        * .compare()                        ：范围+目标（除了(char)、(n, char)）
-        * `.operator<=>()`                  ：(s)、(c)
-    * 转换
-        * stoi() stol() stoul() stof() stod()：(str, size_t*=nullptr, base=10)
-        * to_string(val)
-    * 其它
-        * .substr()                         ：范围
-        * .copy(c, length, idx)             ：不包含`\0`
-        * getline(istrm, string)
-<!-- entry end -->
-
-<!-- entry begin: string_view -->
-* string_view：`<string_view>`
-    > 原理：只是string或C-string的引用, 没有数据的拥有权, 只含有元数据  
-    > 目的：高效的提供string接口的拷贝操作, 尤其.substr(), 当需要const string时改用string_view  
-    > 注意：所有拷贝共享一个底层数据, 所以.substr().data()会导致错误（因为'\0'只在最后才有）
-    * 构造：(string) (string_view) (cstring) (cstring, len)
-    * 额外提供：.remove_prefix()和.remove_suffix()缩减视图范围
-<!-- entry end -->
-
-## 正则表达式
 <!-- entry begin: cpp regex -->
+## 正则表达式
 正则表达式：`<regex>`
 * regex_constants
     * ::icase
@@ -1109,7 +1350,7 @@ exception                 `<exception>`
 <!-- entry end -->
 
 ## 流与格式化
-<!-- entry begin: iostream 状态 异常 -->
+<!-- entry begin: iostream -->
 * iostream：`<iostream>`
 
 * 状态与异常
@@ -1325,65 +1566,6 @@ ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字�
      */
 
     ```
-<!-- entry end -->
-
-<!-- entry begin: format 格式化 -->
-* 格式化：`<format>`
-    > `"{arg_id:填充与对齐 符号 # 0 宽度 精度 L 类型}"`  
-    > 转义`{{`  
-    > qrg_id默认按参数顺序
-    * 填充与对齐
-        > 对齐符号前可选添加填充符
-        * `<`left，非整数与非浮点数默认左对齐
-        * `>`right，整数与浮点数默认右对齐
-        * `^`center，居中
-    * 符号
-        * `+`showpos
-        * `<space>`非负数前导空格
-    * #
-        * 对整数，showbase
-        * 对浮点数，showpoint
-    * 0
-        * 对整数与浮点数，用0填充前导空白，若与对齐符号一同使用则失效
-    * 宽度与精度
-        * 宽度：`{:6}`
-        * 精度：`{:.6}`
-        * 宽度与精度：`{:6.6}`
-    * L
-    > 本地化
-        * 对整数：插入合适数位分隔符
-        * 对浮点数：插入合适数位分隔符与底分隔符
-        * 对bool：boolalpha
-    * 类型
-    > 类型再编译期便已知，故无其它需要则无需指出
-        * `c`字符
-        * `s`字符串
-        * 整数：
-            * `b`与`B`：二进制
-            * `o`：八进制
-            * `x`与`X`：十六进制
-        * 浮点数：
-            * `a`与`A`：十六进制
-            * `e`与`E`：科学计数法
-            * `f`与`F`：定点表示法
-            * `g`与`G`：智能表示
-<!-- entry end -->
-
-<!-- entry begin: random 随机数 -->
-## 随机数生成器
-**`<random>`**
-
-* 引擎：
-    * default_random_engine
-        * .seed()
-        * .seed(result_type)
-* 分布：
-    > 使用：先构造分布对象，再用引擎作参数调用其.operator()(re)
-    * uniform_int_distribution di(min=0, max=INTMAX)    ：min-max的均匀整数分布
-    * uniform_real_distribution dr(min=0, max=1.0)      ：min-max的均匀实数分布
-    * bernoulli_distribution db(p=0.5)                  ：0-1分布，返回bool
-    * binomial_distribution dbi(n=1, p=0.5)             ：二项分布
-    * normal_distribution dn(u=0, o=1)                  ：正态分布
 <!-- entry end -->
 
 ## 并发库
@@ -1867,8 +2049,8 @@ int main()
         * bool  : bool
         * number: INT, FLOAT
         * string: string
-        * list  : `initializer_list<non-pair>`, Seq, Set
-        * object: `initializer_list<pair>`, Map
+        * list  : `il<non-pair>`, Seq, Set
+        * object: `il<pair>`, Map
     * 支持STL容器接口
         > 将容器元素类型想象为`std::any`
         * Seq类接口创建List
@@ -2008,3 +2190,33 @@ STA 可以将 C++数据类型转换为 SQL 类型字符串
 
 <!-- entry end -->
 
+<!-- entry begin: simd immintrin.h -->
+### SIMD
+```c
+#include <immintrin.h>
+```
+* 需要利用`alignas(32)`对齐数组
+* 向量寄存器抽象类型：
+    * `__m256`
+    * `__m256d`
+    * `__m256i`
+* 加载到向量寄存器：
+    ```c
+    _mm256_load_ps( float* )
+    _mm256_load_pd( double* )
+    _mm256_load_epi256( __m256i* )
+    ```
+* SIMD运算：
+    ```c
+    _mm256_OP_ps( __m256, __m256 )
+    _mm256_OP_pd( __m256d, __m256d )
+    _mm256_OP_epi32( __m256i, __m256i )
+    _mm256_OP_epi64( __m256i, __m256i )
+    ```
+* 存储回内存：
+    ```c
+    _mm256_store_ps( float* , __m256)
+    _mm256_store_pd( double* , __m256d )
+    _mm256_store_epi256( int* , __m256i )
+    ```
+<!-- entry end -->
