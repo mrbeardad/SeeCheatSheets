@@ -37,12 +37,37 @@
     - [赋值](#赋值)
     - [访问](#访问)
     - [插入](#插入)
-    - [STL迭代器](#stl迭代器)
-    - [STL算法](#stl算法)
-      - [更易算法](#更易算法)
-      - [非更易算法](#非更易算法)
-  - [正则表达式](#正则表达式)
-  - [流与格式化](#流与格式化)
+    - [删除](#删除)
+    - [容量](#容量)
+    - [关联与无序容器](#关联与无序容器)
+    - [无序容器](#无序容器)
+    - [链表容器](#链表容器)
+  - [迭代器库](#迭代器库)
+    - [辅助函数](#辅助函数)
+    - [流迭代器](#流迭代器)
+    - [反向迭代器](#反向迭代器)
+    - [移动迭代器](#移动迭代器)
+    - [插入迭代器](#插入迭代器)
+  - [算法库](#算法库)
+    - [执行策略](#执行策略)
+    - [非更易算法](#非更易算法)
+    - [更易算法](#更易算法)
+    - [搜索算法](#搜索算法)
+    - [划分算法](#划分算法)
+    - [变序算法](#变序算法)
+    - [集合算法](#集合算法)
+    - [极值算法](#极值算法)
+  - [正则表达式库](#正则表达式库)
+  - [输入输出库](#输入输出库)
+    - [总览](#总览)
+    - [基础操作](#基础操作)
+    - [非格式输入输出](#非格式输入输出)
+    - [预定义操作](#预定义操作)
+    - [操作符](#操作符)
+    - [文件流](#文件流)
+    - [字符流](#字符流)
+    - [流缓冲区](#流缓冲区)
+    - [本地环境](#本地环境)
   - [并发库](#并发库)
     - [线程启动](#线程启动)
     - [线程控制](#线程控制)
@@ -56,7 +81,8 @@
     - [权限](#权限)
     - [类](#类)
     - [函数](#函数)
-- [BOOST](#boost)
+- [BOOST库](#boost库)
+  - [字符编码转换](#字符编码转换)
   - [序列化](#序列化)
 - [nlohmann-json](#nlohmann-json)
   - [序列化](#序列化-1)
@@ -66,7 +92,6 @@
   - [异常](#异常)
   - [连接](#连接)
   - [SQL语句执行](#sql语句执行)
-    - [SIMD](#simd)
 
 <!-- vim-markdown-toc -->
 注：代码块中的示例为伪代码
@@ -962,7 +987,7 @@ void    fill(v)                 // a
 ```
 <!-- entry end -->
 
-<!-- entry begin: container assess 容器访问 -->
+<!-- entry begin: 容器访问 -->
 ### 访问
 ```cpp
 T&      at(idx)                 // ALL-L-A-U
@@ -971,7 +996,7 @@ T&      operator[] (idx)        // ALL-L-A-U
 T&      operator[] (key)        // M
 T&      front()                 // ALL-A-U
 T&      back()                  // ALL-A-U
-T*      data()                  // a, s, v
+T*      data()                  // a+s+v
 itr     begin()                 // ALL
 itr     cbegin()                // ALL
 itr     end()                   // ALL
@@ -983,589 +1008,759 @@ itr     crend()                 // ALL
 ```
 <!-- entry end -->
 
-<!-- entry begin: 元素插入 -->
+<!-- entry begin: 容器元素插入 -->
 ### 插入
 ```cpp
-pos+ins insert(pos, val)        // ALL-a
-pos+ins insert(pos, il)         // ALL-a-A-U
-pos+ins insert(pos, beg, end)   // ALL-a-A-U
-pos+ins insert(pos, num, val)   // ALL-a-A-U
-emplace(pos, args...)           // v, d, l
-emplace_back(v)                 // v, d, l
-emplace_front(v)                // d, l, fl
-push_back(v)                    // s, v, d, l
-push_front(v)                   // d, l, fl
-insert(val)                     // A, U(非multi返回pair<iter, bool>)
-insert(il)                      // A, U
-insert(beg, end)                // A, U
-emplace(args...)                // A, U(非multi返回pair<iter, bool>)
-emplace_hint(pos, args...)      // A, U
+1st_ins insert(pos, val)        // ALL-a
+1st_ins insert(pos, il)         // s+v+d+l
+1st_ins insert(pos, beg, end)   // s+v+d+l
+1st_ins insert(pos, num, val)   // s+v+d+l
+T&      emplace(pos, args...)   // v+d+l
+T&      emplace_back(v)         // v+d+l
+T&      emplace_front(v)        // d+l
+void    push_back(v)            // s+v+d+l
+void    push_front(v)           // d+l
+
+ins     insert(hint, val)       // ALL-a
+ins     insert(val)             // A+U（非multi返回pair<ins, bool>）
+void    insert(il)              // A+U
+void    insert(beg, end)        // A+U
+ins     emplace(args...)        // A+U（非multi返回pair<ins, bool>）
+ins     emplace_hint(pos,args..)// A+U
 ```
 <!-- entry end -->
 
-<!-- entry begin: erase pop clear 元素删除 -->
-* 元素删除：
-    * .erase(v)          ：A, U(返回删除个数)
-    * .erase(pos)        ：ALL-fl
-    * .erase(beg, end)   ：ALL-fl
-    * .pop_back()        ：s, v, d, l
-    * .pop_front()       ：d, l, fl
-    * .clear()           ：ALL
+<!-- entry begin: 容器元素删除 -->
+### 删除
+```cpp
+void    clear()                 // ALL
+ers_num erase(v)                // A+U
+ers+1   erase(pos)              // ALL
+ers+1   erase(beg, end)         // ALL
+void    pop_back()              // ALL-a-A-U
+void    pop_front()             // d+l
+```
 <!-- entry end -->
 
-<!-- entry begin: container size 容器大小 -->
-* 容器大小：
-    * .empty()                   ：ALL
-    * .size()                    ：ALL-fl
-    * .max_size()                ：ALL
-    * .resize(num)               ：s, v, d, l, fl
-    * .resize(num, v)            ：s, v, d, l, fl
-    * .capacity()                ：s, v
-    * .reserve(num)              ：s, v, U(v不能缩小)
-    * .shrink_to_fit()           ：s, v, d
+### 容量
+<!-- entry begin: 容器容量 -->
+```cpp
+bool    empty()                 // ALL
+size_t  size()                  // ALL
+void    resize(num)             // ALL-a-A-U
+void    resize(num, v)          // ALL-a-A-U
+size_t  capacity()              // s+v
+void    reserve(num)            // s+v+U（只能扩大）
+void    shrink_to_fit()         // s+v+d
+size_t  max_size()              // ALL
+```
 <!-- entry end -->
 
-<!-- entry begin: 容器比较 -->
-* 容器比较：
-    * 相等比较：U
-    * 非相等比较：ALL-U
+<!-- entry begin: U A 无序 关联 -->
+### 关联与无序容器
+```cpp
+pos     lower_bound(k)          // A
+pos     upper_bound(k)          // A
+p<b,e>  equal_range(k)          // A
+bool    contains(k)             // A+U
+size_t  count(k)                // A+U
+pos     find(k)                 // A+U
+void    merge(C)                // A+U
+void    merge(multiC)           // A+U
+node_h  extract(pos)            // A+U
+node_h  extract(key)            // A+U
+class node_h<>
+{
+    bool empty();
+    T&   value();
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: U A 无序 关联 A特有 -->
-* U与A特有：
-    * .count(v)         ：A, U
-    * .find(v)          ：A, U
-    * .lower_bound(v)   ：A
-    * .upper_bound(v)   ：A
-    * .equal_range(v)   ：A
-    * .merge(C )        ：A, U
-    * .extract(iter)    ：A, U
-    * .extract(key)     ：A, U
-        > .extract()的作用是直接获取元素handle
+<!-- entry begin: U 无序 -->
+### 无序容器
+```cpp
+size_t  max_bucket_count()
+size_t  bucket_count()
+bidx    bucket(key)
+size_t  bucket_size(bidx)
+itr     begin(bidx)
+itr     cbegin(bidx)
+itr     end(bidx)
+itr     cend(bidx)
+npb     load_factor()
+float   max_load_factor()
+float   max_load_factor(float)
+void    rehash(bnum)
+void    reserve(num)
+```
 <!-- entry end -->
 
-<!-- entry begin: U 无序 U特有 -->
-* U特有：bucket接口
-    * .bucket_count()
-    * .max_bucket_count()
-    * .load_factor()
-    * .max_load_factor()
-    * .max_load_factor(float)
-    * .rehash(bnum)
-    * .bucket(val)
-    * .bucket_size(bucktidx)
-    * .begin(bidx)
-    * .cbegin(bidx)
-    * .end(bidx)
-    * .cend(bidx)
+<!-- entry begin: l 链表 -->
+### 链表容器
+```cpp
+ers_num remove(v)
+ers_num remove_if(uOp)
+void    sort(cmp = less)
+void    unique(cmp = less)
+void    merge(srcL, cmp = less)             // 需要先排序
+void    splice(pos, srcL, srcPos)
+void    splice(pos, srcL, srcBeg, srcEnd)
+void    reverse()
+```
 <!-- entry end -->
 
-<!-- entry begin: l特有 list -->
-* l与fl特有
-    * .remove(v)
-    * .remove_if(op)
-    * .sort()
-    * .sort(op)
-    * .unique()
-    * .unique(op)
-    * .splice(pos, sourceList, sourcePos)
-    * .splice(pos, sourceList, sourceBeg, sourceEnd)
-    * .merge(source)
-    * .merge(source, cmpPred)
-    * .reverse()
+## 迭代器库
+
+<!-- entry begin: 迭代器辅助函数 -->
+### 辅助函数
+```cpp
+#include <iterator>
+itr     next(itr, n = 1)
+itr     prev(itr, n = 1)
+itr     distance(itr1, itr2)
+void    iter_swap(itr1, itr2)
+```
 <!-- entry end -->
 
-### STL迭代器
-<!-- entry begin: 迭代器辅助函数 iterator -->
-* 迭代器辅助函数： `<iterator>`
-    * next(iter, n=1)
-    * prev(iter, n=1)
-    * distance(iter1, iter2)
-    * iter_swap(iter1, iter2)
+<!-- entry begin: 流迭代器 -->
+### 流迭代器
+```cpp
+class istream_iterator<T, CharT = char>
+{
+    // 构造函数
+    istream_iterator()      // 默认构造尾后迭代器
+    istream_iterator(istrm)
+};
+
+class ostream_iterator<T, CharT = char>
+{
+    // 构造函数
+    ostream_iterator(ostrm, const CharT* delim = "")
+};
+
+// 流缓冲区迭代器会自动冲刷缓冲区
+
+class istreambuf_iterator<CharT>
+{
+    // 构造函数
+    istreambuf_iterator()       // 默认构造为尾后迭代器
+    istreambuf_iterator(istrm)
+    istreambuf_iterator(ibuf_ptr)
+};
+
+class ostreambuf_iterator<CharT>
+{
+    // 构造函数
+    ostreambuf_iterator(ostrm)
+    ostreambuf_iterator(obuf_ptr)
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: reverse iterator 反向迭代器 -->
-* 反向迭代器
-    * 获取：容器的成员函数
-        * .rbegin()
-        * .rend()
-        * .crbegin()
-        * .crend()
-    * .base()：反向迭代器的成员，转换为正常迭代器(+1)
+<!-- entry begin: 反向迭代器 -->
+### 反向迭代器
+```cpp
+class reverse_iterator<Iter>
+{
+    // 构造
+    // 通过构造函数构造
+    reverse_iterator()
+    reverse_iterator(itr)
+    // 通过辅助函数构造
+    ritr make_reverse_iterator(itr)
+    // 通过各容器的成员函数构造
+    ritr rbegin()
+    ritr crbegin()
+    ritr rend()
+    ritr crend()
+
+    // 成员函数
+    itr  base()
+}
+```
 <!-- entry end -->
 
-<!-- entry begin: stream iterator 流迭代器 -->
-* 流迭代器
-    * 获取：类模板构造
-        * `istream_iterator<T>(istream)`              ：默认构造为end
-        * `ostream_iterator<T>(ostream, delim="")`    ：`delim`为C-Style-String
-    > 注： 只是通过I/O操作符实现, 而非底层I/O, 迭代器保存上次读取的值
+<!-- entry begin: 移动迭代器 -->
+### 移动迭代器
+```cpp
+class move_iterator<Iter>
+{
+    // 构造
+    // 通过构造函数构造
+    move_iterator()
+    move_iterator(itr)
+    // 通过辅助函数构造
+    mitr make_move_iterator(itr)
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: streambuf iterator 缓冲区迭代器 -->
-* 流缓冲区迭代器
-    * 获取：类模板构造
-        * `istreambuf_iteratot<char>`
-            * ()    ：默认构造为end
-            * (istrm)
-            * (ibuf_ptr)
-        * `ostreambuf_iteratot<char>`
-            * (ostrm)
-            * (obuf_ptr)
+<!-- entry begin: 插入迭代器 -->
+### 插入迭代器
+```cpp
+class insert_iterator<Container>
+{
+    // 构造
+    // 通过构造函数构造
+    insert_iterator()
+    insert_iterator(Cont, itr)
+    // 通过辅助函数构造
+    iitr    inserter(Cont, pos)
+};
+class front_insert_iterator<Container>
+{
+    // 构造
+    // 通过构造函数构造
+    front_insert_iterator()
+    front_insert_iterator(Cont)
+    // 通过辅助函数构造
+    fiitr   front_inserter(Cont)
+};
+class back_insert_iterator<Container>
+{
+    // 构造
+    // 通过构造函数构造
+    back_insert_iterator()
+    back_insert_iterator(Cont)
+    // 通过辅助函数构造
+    biitr   back_inserter(Cont)
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: move iterator 移动迭代器 -->
-* 移动迭代器
-    * 获取：泛型函数获取
-        * make_move_iterator(iter)
-    * 作算法源区间, 需要保证元素只能处理一次
+## 算法库
+<!-- entry begin: execution policy -->
+### 执行策略
+```cpp
+#include <execution>
+// 执行策略常量
+std::execution::seq;
+std::execution::par;
+std::execution::unseq;
+std::execution::par_unseq;
+```
+```txt
+┌──────────────────────┬───────────────┬─────────────────┐
+│        Policy        │ Vectorization │ Parallelization │
+├──────────────────────┼───────────────┼─────────────────┤
+│ sequenced            │      X        │         X       │
+├──────────────────────┼───────────────┼─────────────────┤
+│ unsequenced          │      V        │         X       │
+├──────────────────────┼───────────────┼─────────────────┤
+│ parallel             │      X        │         V       │
+├──────────────────────┼───────────────┼─────────────────┤
+│ parallel_unsequenced │      V        │         V       │
+└──────────────────────┴───────────────┴─────────────────┘
+```
 <!-- entry end -->
 
-<!-- entry begin: insert iterator 插入迭代器 -->
-* 插入迭代器
-    * 获取：通过泛型函数
-        * back_inserter(C)
-        * front_inserter(C)
-        * inserter(C, pos)
+<!-- entry begin: 非更易算法 -->
+### 非更易算法
+```cpp
+uOp     for_each(b, e, uOp)                     // 返回uOp(已改动过的)拷贝
+uOp     for_each_n(b, n, uOp)
+size_t  count(b, e, v)
+size_t  count_if(b, e, uOp)
+bool    all_of(b, e, uOp)
+bool    any_of(b, e, uOp)
+bool    none_of(b, e, uOp)
+p<i,ci> mismatch(b, e, cmpB, bOp=equal_to)      // 返回pair存储两个区间第一个不同点的迭代器
+```
 <!-- entry end -->
 
-### STL算法
-* 泛型算法：`<algorithm>, <numeric>, <execution>`
-* 默认by value传递pred, 算法并不保证在类内保存状态的pred能正确运作(重新构造pred可能导致重置状态)
-* 获取谓词状态：
-    * 谓词指向外部状态
-    * 显式指定模板实参为reference
-    * 利用for_each()算法的返回值
-* 执行策略：做第一个参数
-    ```txt
-    -------------------------------------------------------------------------
-    |   Type                  |     Vectorization     |     Parallelization |
-    |------------------------------------------------------------------------
-    | Sequenced               |           X           |           X         | 
-    | Unsequenced             |           V           |           X         |
-    | Parallel                |           X           |           V         |
-    | Parallel & unsequenced  |           V           |           V         |
-    -------------------------------------------------------------------------
-    ```
-    * std::execution::seq        ：顺序执行（默认）
-    * std::execution::par        ：多线程并行
-    * std::execution::unseq      ：使用SIMD
-    * std::execution::par_unseq  ：并行或SIMD
-* 规范：
-    * b, e代表源区间的begin与end
-    * op1, op2代表单参函数与双参函数
-
-#### 更易算法
 <!-- entry begin: 更易算法 -->
-* 更易算法：
-    > 存在destB的算法返回dest区间的尾后迭代器
-    * move(b, e, destB)                         ：支持子区间左移
-    * move_backward(b, e, destE)                ：支持子区间右移
-    * copy(b, e, destB)                         ：支持子区间左移
-    * copy_backward(b, e, destE)                ：支持子区间右移
-    * copy_if(b, e, destB, op1)
-    * copy_n(b, n, destB)
+### 更易算法
+```cpp
+destE   move(b, e, destB)                       // 支持子区间左移
+destE   move_backward(b, e, destE)              // 支持子区间右移
+destE   copy(b, e, destB)                       // 支持子区间左移
+destE   copy_backward(b, e, destE)              // 支持子区间右移
+destE   copy_if(b, e, destB, uOp)
+destE   copy_n(b, N, destB)
 
-    > 删除算法只是将需要删除的元素移到容器后面，若无destB则返回删除后新区间的尾后迭代器
-    * remove(b, e, v)
-    * remove_if(b, e, op1)
-    * remove_copy(b, e, destB, v)
-    * remove_copy_if(b, e, destB, op1)
-    > unique算法删除相邻重复元素，应该先排序
-    * unique(b, e, op2=equal_to)
-    * unique_copy(b, e, destB, op2=equal_to)
+// 删除算法将被删除元素后面的元素前移，并未更改容器大小
+newE    remove(b, e, v)
+newE    remove_if(b, e, uOp)
+destE   remove_copy(b, e, destB, v)
+destE   remove_copy_if(b, e, destB, uOp)
+newE    unique(b, e, bOp=equal_to)              // 需要先排序
+destE   unique_copy(b, e, destB, bOp=equal_to)  // 需要先排序
+newE    shift_left(b, e, cnt)                   // 不回绕
+newE    shift_right(b, e, cnt)                  // 不回饶
 
-    * replace(b, e, oldV, newV)                 ：返回void
-    * replace_if(b, e, op1, newV)               ：返回void
-    * replace_copy(b, e, destB, oldV, newV)
-    * replace_copy_if(b, e, destB, op1, newV)
-    * transform(b, e, destB, op1)               ：用`[b, e)`区间的元素调用op1()，并将返回结果写入destB
-    * transform(b1, e1, b2, destB, op2)         ：用`[b1, e1)`与`[b2, e2)`的元素调用将op2()，并将返回结果写入destB
-    * fill(b, e, v)                             ：返回void
-    * fill_n(b, n, v)                           ：返回void
-    * generate(b, e, op0)                       ：返回void
-    * generate_n(b, n, op0)                     ：返回void
-    * swap(x, y)                                ：返回void
-    * swap_ranges(b, e, destB)
+void    replace(b, e, oldV, newV)
+void    replace_if(b, e, uOp, newV)
+destE   replace_copy(b, e, destB, oldV, newV)
+destE   replace_copy_if(b, e, destB, uOp, newV)
+
+void    fill(b, e, v)
+void    fill_n(b, N, v)
+void    generate(b, e, generator)
+void    generate_n(b, N, generator)
+destE   transform(b, e, destB, uOp)
+destE   transform(b1, e1, b2, destB, bOp)
+
+void    swap(x, y)
+destE   swap_ranges(b, e, destB)
+```
+<!-- entry end -->
+
+<!-- entry begin: 搜索算法 -->
+### 搜索算法
+```cpp
+// 搜索单个元素
+tagItr  find(b, e, v)
+tagItr  find_if(b, e, uOp)
+tagItr  find_if_not(b, e, uOp)
+
+// 搜索子区间
+tagItr  search(b, e, seqB, seqE, bOp=equal_to)
+tagItr  search_n(b, e, N, v, bOp=equal_to)              // bOp(elem, v)
+tagItr  find_end(b, e, seqB, seqE, bOp=equal_to)
+tagItr  adjacent_find(b, e, bOp=equal_to)               // 搜索一对连续相等的元素
+
+// 搜索目标范围中的元素
+tagItr  find_first_of(b, e, seqB, seqE, bOp=equal_to)
+
+// 二分搜索，需要先排序
+tagItr  binary_search(b, e, v, bOp=lower_to)
+tagItr  lower_bound(b, e, v, bOp=lower_to)
+tagItr  upper_bound(b, e, v, bOp=lower_to)
+p<b,e>  equal_range(b, e, v, bOp=lower_to)
+```
+<!-- entry end -->
+
+<!-- entry begin: 划分算法 -->
+### 划分算法
+```cpp
+bool    is_partitioned(b, e, uOp)
+m       partition(b, e, uOp)                                // 返回划分的前半部分的尾后迭代器
+m       stable_partition(b, e, uOp)                         // 返回划分的前半部分的尾后迭代器
+p<t,f>  partition_copy(b, e, destTrueB, destFalseB, uOp)    // 返回pair分别保存两个目标区间的尾后迭代器
+m       partition_point(b, e, uOp)                          // 返回满足uOp()为true的区间的尾后迭代器
+```
 <!-- entry end -->
 
 <!-- entry begin: 变序算法 -->
-* 变序算法
-    > 存在destB的算法返回dest区间的尾后迭代器，
-    > 存在partB或partE的算法返回part
-    * sort(b, e, op2=lower_to)                      ：返回void
-    * stable_sort(b, e, op2=lower_to)               ：返回void
-    * partition_sort(b, partE, e, op=lower_to)      ：返回void
-    * partition_sort_copy(b, partE, e, op2=lower_to)
-    * nth_element(b, nth, e, op2=lower_to)          ：返回void
-    * make_heap(b, e, op2=lower_to)                 ：返回void
-    * push_heap(b, e, op2=lower_to)                 ：返回void
-    * pop_heap(b, e, op2=lower_to)                  ：返回void
-    * sort_heap(b, e, op2=lower_to)                 ：返回void
-    * next_permutation(b, e, op=lower_to)           ：当元素为完全升序时返回false
-    * prev_permutation(b, e, op=lower_to)           ：当元素为完全降序时返回false
-    * reverse(b, e)                                 ：返回void
-    * reverse_copy(b, e, destB)
-    * rotate(b, partB, e)                           ：返回原本的begin现在的位置
-    * rotate_copy(b, partB, e, destB)
-    * shuffle(b, e, randomEngine)                   ：返回void
-    * sample(b, e, destB, cnt, randomEngine)        ：随机取cnt个值到destB
-    * shift_left(b, e, cnt)                         ：返回左移后区间的尾后迭代器
-    * shift_right(b, e, cnt)                        ：返回右移后区间的尾后迭代器
-    * partition(b, e, op1)                          ：返回划分的前半部分的尾后迭代器
-    * stable_partition(b, e, op1)                   ：返回划分的前半部分的尾后迭代器
-    * partition_copy(b, e, destTrueB, destFalseB, op1)
-<!-- entry end -->
+### 变序算法
+```cpp
+bool    is_sorted(b, e, bOp=lower_to)
+sortE   is_sorted_until(b, e, bOp=lower_to)                 // 返回已排序区间的尾后迭代器
+void    sort(b, e, bOp=lower_to)
+void    stable_sort(b, e, bOp=lower_to)
+void    partial_sort(b, m, e, bOp=lower_to)
+copyE   partial_sort_copy(b, e, destB, destE, bOp=lower_to) // 若dest范围不够则取排序后的前面的元素
+void    nth_element(b, m, e, bOp=lower_to)                  // 按m所指的元素作分界进行两边划分
 
-#### 非更易算法
-<!-- entry begin: 非更易算法 -->
-* 非更易算法
-    * for_each(b, e, op1)                   ：返回op1(已改动过的)拷贝
-    * for_each_n(b, n, op1)
-    * count(b, e, v)
-    * count_if(b, e, op1)
-<!-- entry end -->
+bool    is_heap(b, e, bOp = lower_to)
+sortE   is_heap_until(b, e, bOp = lower_to)                 // 返回已堆排序区间的尾后迭代器
+void    make_heap(b, e, bOp=lower_to)
+void    push_heap(b, e, bOp=lower_to)
+void    pop_heap(b, e, bOp=lower_to)
+void    sort_heap(b, e, bOp=lower_to)
 
-<!-- entry begin: 最值比较算法 非更易 -->
-* 最值比较
-    * max(x, y)
-    * max(il)
-    * min(x, y)
-    * min(il)
-    * minmax(x, y)                          ：返回`pair<min, max>`
-    * minmax(il)              ：返回`pair<min, max>`
-    * clamp(x, min, max)                    ：返回三者中的第二大者
-    * min_element(b, e, op2=lower_to)       ：返回第一个最小值
-    * max_element(b, e, op2=lower_to)       ：返回第一个最大值
-    * minmax_element(b, e, op2=lower_to)    ：返回第一个最小值和最后一个最大值
-<!-- entry end -->
+bool    equal(b, e, cmpB, bOp = equal_to)
+bool    lexicographical_compare(b1, e1, b2, e2, op=lower_to)// 比较两区间字典序
+bool    is_permutation(b1, e1, b2, bOp=equal_to)            // 检测两个区间的所有元素是否为同一个集合，即不考虑顺序
+bool    next_permutation(b, e, op=lower_to)                 // 当元素为完全升序时返回false
+bool    prev_permutation(b, e, op=lower_to)                 // 当元素为完全降序时返回false
 
-<!-- entry begin: 搜索算法 非更易 -->
-* 搜索算法：返回搜索结果的第一个位置
-    > 搜索单个元素
-    * find(b, e, v)
-    * find_if(b, e, op1)
-    * find_if_not(b, e, op1)
-    > 以下四个为二分搜索，需要先排序
-    * binary_search(b, e, v, op2=lower_to)
-    * lower_bound(b, e, v, op2=lower_to)
-    * upper_bound(b, e, v, op2=lower_to)
-    * equal_range(b, e, v, op2=lower_to)
+void    reverse(b, e)
+destE   reverse_copy(b, e, destB)
+b+e-m   rotate(b, m, e)                                     // 返回原本的begin现在的位置
+destE   rotate_copy(b, m, e, destB)
 
-    > 搜索子区间
-    * search(b, e, searchB, searchE, op2=equal_to)
-    * search_n(b, e, n, v, op2=equal_to)                    ：op2(elem, v)
-    * find_end(b, e, searchB, searchE, op2=equal_to)
-    * adjacent_find(b, e, op2=equal_to)                     ：搜索一对连续相等的元素, 返回第一个位置
-
-    > 搜索目标范围中的元素
-    * find_first_of(b, e, searchB, searchE, op2=equal_to)   ：搜索
-<!-- entry end -->
-
-<!-- entry begin: 区间检验算法 -->
-* 区间检验与比较：一般返回boolean
-    * equal(b, e, cmpB, op2 = equal_to)
-    * mismatch(b, e, cmpB, op2 = equal_to)                  ：查找第一个不相同的元素, 返回pair存储两个区间的不同点的迭代器
-    * lexicographical_compare(b1, e1, b2, e2, op = lower_to)：比较两区间字典序
-    * is_sorted(b, e, op2 = lower_to)
-    * is_sorted_until(b, e, op2 = lower_to)                 ：返回已排序区间的尾后迭代器
-    * is_heap(b, e, op2 = lower_to)
-    * is_heap_until(b, e, op2 = lower_to)                   ：返回已堆排序区间的尾后迭代器
-    * is_partitioned(b, e, op1)
-    * partition_point(b, e, op1)                            ：返回满足op1()为true的区间的尾后迭代器
-    * includes(b1, e1, b2, e2, op2 = equal_to)              ：区间`[b2, e2)`是否为区间`[b1, e1)`的**子序列**
-    * is_permutation(b1, e1, b2, op2 = equal_to)            ：检测两个区间的所有元素是否为同一个集合，即不考虑顺序
-    * all_of(b, e, op1)
-    * any_of(b, e, op1)
-    * none_of(b, e, op1)
+void    shuffle(b, e, randomEngine)
+destE   sample(b, e, destB, cnt, randomEngine)              // 随机取cnt个值到destB
+```
 <!-- entry end -->
 
 <!-- entry begin: 集合算法 -->
-* 集合算法
-    > 需要先排序
-    * merge(b1, e1, b2, e2, destB, op2=lower_to)
-    * inplace_merge(b1, partB, e2 ,op=lower_to)                         ：将同一个集合中的两部分合并, 两部分都有序
-    * set_union(b1, e1, b2, e2, destB, op2=lower_to)                    ：并集
-    * set_intersection(b1, e1, b2, e2, destB, op2=lower_to)             ：交集
-    * set_difference(b1, e1, b2, e2, destB, op2=lower_to)               ：前一个集合去交集
-    * set_symmetric_difference(b1, e1, b2, e2, destB, op2=lower_to)     ：并集去交集
+### 集合算法
+```cpp
+// 集合算法均需提前排序
+destE   merge(b1, e1, b2, e2, destB, bOp=lower_to)
+void    inplace_merge(b, m, e, bOp=lower_to)                            // 将同一个集合中的两部分合并，两部分都有序
+bool    includes(b1, e1, b2, e2, bOp=equal_to)                          // 区间`[b2, e2)`是否为区间`[b1, e1)`的**子序列**
+destE   set_union(b1, e1, b2, e2, destB, bOp=lower_to)                  // 并集
+destE   set_intersection(b1, e1, b2, e2, destB, bOp=lower_to)           // 交集
+destE   set_symmetric_difference(b1, e1, b2, e2, destB, bOp=lower_to)   // 并集去交集
+destE   set_difference(b1, e1, b2, e2, destB, bOp=lower_to)             // 前一个集合去交集
+```
+<!-- entry begin: 极值算法 -->
+### 极值算法
+```cpp
+T       max(x, y)
+T       max(il)
+T       min(x, y)
+T       min(il)
+pair    minmax(x, y)                        // 返回`pair<min, max>`
+pair    minmax(il)                          // 返回`pair<min, max>`
+T       clamp(x, min, max)                  // 返回三者中的第二大者
+T       min_element(b, e, bOp=lower_to)     // 返回第一个最小值
+T       max_element(b, e, bOp=lower_to)     // 返回第一个最大值
+T       minmax_element(b, e, bOp=lower_to)  // 返回第一个最小值和最后一个最大值
+```
 <!-- entry end -->
 
-<!-- entry begin: numeric 数值算法 -->
-* 数值算法：`<numeric>`
-    * iota(b, e, v)                                                     ：依序赋值 V, ++V, ++++V, ...
-    * accumulate(b, e, initV, op2=plus)                                 ：求和
-    * reduce(b, e, initV=0, op2=plus)                                   ：允许使用执行策略的求和
-    * inner_product(b1, e1, b2, e2, initV, op2=plus, op2 = multiply)    ：内积
-    * partial_sum(b, e, destB, op2=plus)                                ：a1, a1+a2, a1+a2+a3,
-    * adjacent_difference(b, e, destB, op2=reduce)                      ：a1, a2-a1, a3-a2,
+<!-- entry begin: cpp regex 正则表达式 -->
+## 正则表达式库
+```cpp
+#include <regex>
+
+namespace std::regex_contants
+{
+    // 即sflag，用于构造regex。默认为ECMAScript
+    icase;              // 忽略大小写
+    nosubs;             // 标记子表达式（(pat)）无效。同时影响regex::mark_contants()
+    optimize;           // 提示优化匹配速度。同时可能增大构造开销
+    collate;            // 形如 "[a-b]" 的字符范围将对本地环境敏感
+    ECMAScript;         // C++改进版的ECMAScript正则文法
+    // 即mflag，用于模式匹配。默认match_default
+    match_not_bol       // 行首（^pat）无效
+    match_not_eol       // 行尾（pat$）无效
+    match_not_bow       // 行首（\bpat）无效
+    match_not_eow       // 行尾（pat\b）无效
+    match_not_null      // 不匹配空字符序列
+    match_any           // 若多于一个匹配可行，则任何匹配都是可接受的结果
+    match_continuous    // 仅匹配始于 first 的子串
+    match_prev_avail    // --first 是合法的迭代位置。设置时导致 match_not_bol 和 match_not_bow 被忽略
+    // 即rflag，用于模式替换。默认format_default
+    format_default      // 使用ECMAScript规则进行模式替换
+    format_sed          // 使用sed规则进行模式替换
+    format_no_copy      // 不输出/返回不匹配的字符
+    format_first_only   // 只替换收个匹配
+}
+
+class basic_regex<CharT>    // regex wregex
+{
+    // 构造函数
+    basic_regex()
+    basic_regex(cstr, sflag)
+    basic_regex(cstr, len, sflag)
+    basic_regex(str, sflag)
+    basic_regex(b, e, sflag)
+    basic_regex(il, sflag)
+    // 成员函数
+    unsigned    mark_count()        // 标记的子表达式数目
+    flag        flags()
+    locale      getloc()
+    locale      imbue()             // 返回之前locale
+};
+
+class match_results<BidirIt>    // cmatch wcmatch smatch wsmatch
+{
+    // 状态
+    bool        ready();
+    // 容量
+    bool        empty();
+    size_t      size();
+    size_t      max_size();
+    // 访问
+    sub_match   prefix();           // 返回当前匹配表达式相对整个目标的前缀的sub_match
+    sub_match   suffix();           // 返回当前匹配表达式相对整个目标的后缀的sub_match
+    sub_match   operator[](n);      // 返回第n个子表达式的sub_match
+    itr         begin();
+    itr         cbegin();
+    itr         end();
+    itr         cend();
+    String      str(n = 0);         // 返回第n个子表达式的字符串。n=0表示整个表达式
+    size_t      length(n = 0);      // 返回第n个子表达式的长度。n=0表示整个表达式
+    size_t      position(n = 0);    // 返回第n个子表达式的首字符在目标字符串的位置。n=0表示整个表达式
+    // 格式化替换
+    outItr      format(outItr, fmtStr, rflag);
+    outItr      format(outItr, fmrB, fmtE, rflag);
+    string      format(fmtStr, rflag);
+    string      format(fmrB, fmtE, rflag);
+};
+
+class sub_match<BidirIt>    // csub_match wcsub_match ssub_match wssub_match
+{
+    // 观察器
+    BidirIt     first;      // 子表达式开始
+    BidirIt     second;     // 子表达式尾后
+    String      str();
+    operator    String();
+};
+
+class regex_iterator<BidirIt>   // cregex_iterator wcregex_iterator sregex_iterator wsregex_iterator
+{
+    // 构造函数
+    regex_iterator();                           // 默认构造为尾后迭代器
+    regex_iterator(b, e, regex, mflag);         // 迭代器在每个匹配区间停留，每次从上次末尾开始匹配（不重合）
+
+    match_results    operator*()                // 返回match_results
+};
+
+class regex_token_iterator<BidirIt> // cregex_token_iterator wcregex_token_iteratorsregex_token_iterator wsregex_token_iterator
+{
+    // 构造函数
+    regex_token_iterator();                     // 默认构造为尾后迭代器
+    regex_token_iterator(b, e, regex, il, mflag);// il指定关注的regex中的子表达式，0表示全部，-1表示模式取反
+
+    sub_match       operator*()                 // 返回sub_match
+};
+
+bool    regex_match(str, [match&,] regex, mflag);
+bool    regex_match(b, e, [match&,] regex, mflag);
+
+bool    regex_search(str, [match&,] regex, mflag);
+bool    regex_search(b, e, [match&,] regex, mflag);
+
+outItr  regex_replace(outItr, str, regex, fmt, rflag);  // 利用fmt替换掉每个匹配的regex
+outItr  regex_replace(outItr, b, e, regex, fmt, rflag);
+string  regex_replace(str, regex, fmt, rflag);
+string  regex_replace(b, e, regex, fmt, rflag);
+// 替换格式化语法：
+// $&       替换为regex中整个表达式的匹配
+// $0       替换为regex中整个表达式的匹配
+// $1, ...  替换为regex中第1个子表达式的匹配
+// $'       替换为后缀
+// $`       替换为前缀
+// $$       转义$
+```
 <!-- entry end -->
 
-<!-- entry begin: cpp regex -->
-## 正则表达式
-正则表达式：`<regex>`
-* regex_constants
-    * ::icase
-* regex
-    * (str, flag)
-    * (c, flag)
-    * (c, l, flag)
-    * (b, e, flag)
-* regex_match((str|b, e), [matchRet,] regex, flag)
-* regex_search((str|b, e), [matchRet,] regex, flag)
-* regex_replace((str|b, e), regex, repl, flag)
-    * 替换语法：
-    ```
-    $0
-    $1, $2, $3, ...
-    $&：全部
-    $'：后缀
-    $`：前缀
-    $$：转义$
-    ```
-* sregex_iterator
-    > 自增自减移动模式匹配到的子串  
-    > 解引用得到smatch
-    * 构造：(b, e, regex)，默认初始化为end
-* sregex_token_iterator
-    > 保留不匹配的子字符串
-    * (b, e, r, -1)
+## 输入输出库
+### 总览
+```cpp
+#include <iosfwd>       // 输入输出库中所有类的前置声明
+#include <streambuf>    // std::basic_streambuf 类模板
+#include <ios>          // std::ios_base类、 std::basic_ios类模板与数个typedef
+#include <istream>      // std::basic_istream 、std::basic_iostream 类模板与数个 typedef
+#include <ostream>      // std::basic_ostream 类模板与数个 typedef
+#include <iostream>     // 数个标准流全局对象。构造需要开销，若不使用则无需引入该头文件
+#include <fstream>      // std::basic_fstream 、 std::basic_ifstream 、 std::basic_ofstream 类模板及数个 typedef
+#include <sstream>      // std::basic_stringstream 、 std::basic_istringstream 、 std::basic_ostringstream 类模板与数个 typedef
+#include <syncstream>   // std::basic_osyncstream 、 std::basic_syncbuf 及 typedef
+#include <iomanip>      // 格式化输入与输出的辅助函数
+#include <cstdio>       // C 风格输入输出函数
 
-* smatch
-    > 存放ssub_match的容器  
-    > 0索引存放整个模式匹配到的子串
-    * .begin() .cbegin() .end() .cend()
-    * .size()
-    * .empty()
-    * .operator[]
-    * .prefix()
-    * .suffix()
-    * .length(n)
-    * .position(n)  ：返回difference_type数字
-    * .str(n)
-    * .format(dest, fmt, flag)
-    * .format(fmt, flag)
-* ssub_match： 指向表达式匹配到的子表达式
-    * .operator string()
-<!-- entry end -->
+std::ios_base           // (定义了一些标志位)
+streambuf               // (系统I/O并缓存数据, 提供位置信息)
+locale                  // (包含facet将I/O进行进行本地格式化)
+stream                  // (封装上述两者, 提供状态、格式化信息)
+centry                  // (帮助stream每次I/O预处理与后处理)
+操作符                  // (提供调整stream的便捷方法)
+```
 
-## 流与格式化
 <!-- entry begin: iostream -->
-* iostream：`<iostream>`
+### 基础操作
+```cpp
+class basic_ios<CharT>
+{
+    bool    good()              // 是否一切正常进行I/O操作
+    bool    eof()               // 是否到达文件末尾
+    bool    fail()              // 是否发生可恢复错误
+    bool    bad()               // 是否发生不可恢复错误
+    iostate rdstate()           // 读取状态码
+    void    setstate(state)     // 置位状态码
+    void    clear(state=goodbit)// 清空并设置状态码
 
-* 状态与异常
-    * .good()
-    * .eof()
-    * .fail()
-    * .bad()
-    * .rdstate()
-    * .clear()
-    * .clear(state)
-    * .setstate(state)
-    * .excptions(flags) ：设定触发异常的flag
-    * .exceptions()     ：返回触发异常的flag, 无则返回ios::goodbit
-<!-- entry end -->
+    iostate exceptions()        // 返回触发异常的flag，无则返回ios::goodbit
+    void    excptions(flag)     // 设定触发异常的flag
 
-<!-- entry begin: 底层IO -->
-* 底层I/O：
-    * .get()
-    * .get(char*)
-    * .get(char*, count, delim='\n')     ：读取 count - 1 个字符, 并自动添加'\0'在末尾
-    * .getline(char*, count, delim='\n') ：其他同上, 但读取包括delim
-    * .read(char*, count)                ：count代表指定读取的字符
-    * .readsome(char*, count)            ：返回读取字符数, 只从缓冲区中读取, 而不陷入系统调用
-    * .gcount()                          ：返回上次读取字符数
-    * .ignore(count=1)
-    * .ignore(count, delim)
-    * .peek()                            ：返回下个字符, 但不移动iterator
-    * .unget()                           ：把上次读取的字符放回（回移iterator）
-    * .putback(char)                     ：放回指定字符
-    * .put(char)
-    * .write(char*, count)
-    * .flush()
-<!-- entry end -->
+    ostrm*  tie()               // 返回当前关联的流的指针，无则返回nullptr
+    ostrm*  tie(ostrm*)         // 关联目标流，返回之前关联流。关联后，任何在*this上的I/O之前，冲刷关联目标
 
-<!-- entry begin: 随机访问 -->
-* 随机访问：
-    * .tellg()              .tellp()
-    * .seekg(pos)           .seekp(pos)
-    * .seekg(offset, rpos)  .seekp(offset, rpos)
-        > rpos可以是 ios::beg、ios::end、ios::cur
-<!-- entry end -->
+    buf*    rdbuf()             // 返回当前流底层的缓冲区对象指针
+    buf*    rdbuf(buf*)         // 设置新的缓冲区并清空状态
+    strm&   copyfmt(strm&)      // 复制本地环境、格式化标志、tie()关联目标等信息到本地
 
-<!-- entry begin: IO运算符 -->
-* 预定义I/O运算符：
-```
-    * 整型：  
-        [0-7]*  
-        [0-9]*
-        (0x|0X)?[0-9a-fA-F]*
-    * 浮点型：  
-        ([0-9]+\.?[0-9]*|\.[0-9]+)(e[+-]?[0-9]+)
-    * 其他：bool, char, char*, void*, string, streambuf*, bitset, complex
+    locale  getloc()
+    locale  imbue(locale)
+    char    narrow(CharT, def)  // 将CharT转换为char并返回，若失败则返回def
+    CharT   widen(char)         // 将char转换为CharT
+};
+bool ios::sync_with_stdio(bool sync = true) // 是否开启多线程同步，以及与C缓冲区的互操
 ```
 <!-- entry end -->
 
-<!-- entry begin: 关联 stream -->
-* 关联stream：
-    * 以.tie()和.tie(ostream&)关联, 在I/O该stream时冲刷关联的ostream
-    * 以.rdbuf()和.rdbuf(streambuf*)关联, 对同一缓冲区建立多个stream对象
-    * 以.copyfmt()传递所有格式信息
+### 非格式输入输出
+<!-- entry begin: 底层IO 底层I/O -->
+```cpp
+class basic_iostream<CharT>
+{
+    int     get()
+    strm&   get(char&)
+    strm&   get(char*, count, delim='\n')       // 读取 count - 1 个字符, 并自动添加'\0'在末尾。不包括'\n'
+    strm&   get(ostrmbuf&, delim='\n')
+    strm&   getline(char*, count, delim='\n')   // 其他同上, 但读取包括delim
+    strm&   read(char*, count)                  // count代表指定读取的字符
+    size    readsome(char*, count)              // 返回读取字符数, 只从缓冲区中读取已有字符，而不陷入系统调用
+    size    gcount()                            // 返回上次无格式读取字符数
+    strm&   ignore(count=1, delim=eof)
+    int     peek()                              // 返回下个字符, 但不移动iterator
+    strm&   unget()                             // 撤销上次读取的字符（回移iterator）
+    strm&   putback(char)                       // 将指定字符置入流中
+    strm&   sync()
+
+    stm&    put(char)
+    strm&   write(char*, count)
+    strm&   flush()
+
+    pos     tellp()
+    pos     tellg()
+    strm&   seekp(pos)
+    strm&   seekg(pos)
+    strm&   seekp(offset, dir)
+    strm&   seekg(offset, dir)
+    // dir包括beg、end、cur
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: iostream性能 -->
-* 关于性能
-    * ios::sync_with_stdio(false)：关闭C-stream同步与多线程同步机制
-    * cin.tie(nullptr)           ：关闭cin与cout的关联
-<!-- entry end -->
+### 预定义操作
+```txt
+整数：
+     八进制：[0-7]+
+     十进制：[0-9]+
+     十六进制：(0x|0X)?[0-9a-fA-F]+
 
-<!-- entry begin: iostream 国际化 -->
-* 国际化
-    * .imbue(locale)
-    * .getloc()
-    * .widen(char)
-    * .narrow(c, default)
-<!-- entry end -->
+浮点型： ([0-9]+\.?[0-9]*|\.[0-9]+)(e[+-]?[0-9]+)
+
+其他：bool, char, char*, void*, string, streambuf*, bitset, complex
+```
 
 <!-- entry begin: iomanip -->
-* 操作符：`<iomanip>`
-    > 后面加`!`代表默认
-    > IStream
-    * ws                            ：立刻丢弃前导空白
-    * noskipws | skipws!            ：是否需要输入时忽略前导空白
-    > OStream
-    * endl                          ：输出`\n`并刷新缓冲区
-    * flush                         ：刷新缓冲区
-    * ends                          ：输出`\0`
-    * nounitbuf | unitbuf           ：是否每次都刷新缓冲区
-    * setfill(char)                 ：用char填充setw()制造的空白，默认空格
-    * left                          ：使用setw()后输出左对齐
-    * right!                        ：使用setw()后输出右对齐
-    * internal                      ：正负号靠左，数值靠右（无`no`版本）
-    * noboolalpha! | boolalpha      ：是否字符化输出boolean，如`true`和`false`
-    * noshowpos!   | showpos        ：是否正数输出正号
-    * nouppercase! | uppercase      ：是否对数值输出中的字母强制大写或强制小写
-    * noshowpoint! | showpoint      ：是否小数部分为零的浮点数也打印小数部分
-    * noshowbase!  | showbase       ：是否对二/八/十六/进制的数字输出进制前缀
-    * setprecision(v)               ：设置输出浮点数的精度
-        > 使用以下两个操作符后, 精度的语义由“所有数字位数”变为“小数位数”
-        * fixed                     ：强制用定点表示法输出浮点数
-        * scientific                ：强制用科学计数法输出浮点数
-    > IOStream
-    * oct | dec! | hex              ：设置输入或输出数值时的进制
-    * setw(n)                       ：设定下次输出的栏宽，或输入的字符限制最多n-1个
-<!-- entry end -->
-
-<!-- entry begin: quoted iomanip -->
-* quoted：`<iomanip>`
-    > 将字符串引用转义  
-    > 输出(`<<`)时quoted()的参数作为引用转义的输入对象  
-    > 输入(`>>`)时quoted()的参数作为引用转义的输出对象
-    * 签名：  
-    `quoted(char* s, delim='"', escape='\\')`  
-    `quoted(string& s, delim='"', escape='\\')`  
-
+### 操作符
 ```cpp
-string in{"hello \"world\""}, out;
-stringstream ss;
-ss << quoted(in);   // 输出时进行引用。ss.str() == "\"hello \\\"world\\\""，即输出"hello \"world\""
-ss >> quoted(out);  // 输入是取消引用。将ss中被引用包围后的字符还原，即out输出为hello "world"
+#include <iomanip>  // 操作符的原型为 strm& iomanip(strm&);
+// 输入
+ws                  // 立刻丢弃前导空白
+noskipws            // 不忽略前导空白
+skipws              // 忽略前导空白（默认）
+// 输出
+endl                // 输出`\n`并刷新缓冲区
+ends                // 输出`\0`
+flush               // 刷新缓冲区
+nounitbuf           // 无需每次输出刷新缓冲区（默认）
+unitbuf             // 每次输出都刷新缓冲区（cerr默认）
+setfill(char)       // 用char填充setw制造的空白，默认空格
+right               // 使用setw()后输出右对齐（默认）
+left                // 使用setw()后输出左对齐
+internal            // 正负号靠左，数值靠右
+noboolalpha         // 布尔值输出0/1（默认）
+boolalpha           // 布尔值输出true/false，与locale相关
+noshowpos           // 正数无需正号（默认）
+showpos             // 正数输出正号
+nouppercase         // 数字输出中的字母小写
+uppercase           // 数字输出中的字母大写
+noshowpoint         // 小数部分为零的浮点数不用打印完整小数部分（默认）
+showpoint           // 小数部分为零的浮点数也要打印完整小数部分
+noshowbase          // 不用输出进制前缀（默认）
+showbase            // 要输出进制前缀
+setprecision(v)     // 设置输出浮点数的精度。使用fixed或scientific后精度的语义由“所有数字位数”变为“小数位数”
+fixed               // 强制用定点表示法输出浮点数，并打印完整小数位数
+scientific          // 强制用科学计数法输出浮点数，并打印完整小数位数
+defaultfloat        // 恢复默认，即混合使用定点计数与科学计数
+// 输入输出
+dec                 // 十进制（默认）
+oct                 // 八进制
+hex                 // 十六进制
+setw(n)             // 设定下次输出的栏宽，或下次输入的字符限制最多n-1个
+```
+<!-- entry end -->
+<!-- entry begin: quoted iomanip -->
+```cpp
+#include <iomanip>
+// 输出时，将str用delim引用起来，并用escape转义其中包含的delim
+std::cout << std::quoted(str, delim='"', escape='\\');
+// 输入时，将str两边的delim引用取消，并反转义其中用escape转义的delim
+std::cin  >> std::quoted(str, delim='"', escape='\\');
 ```
 <!-- entry end -->
 
+### 文件流
 <!-- entry begin: fstream -->
-* fstream：`<fstream>`
-    * 构造：
-        * (filename, flag=)
-    * 成员：
-        * .open(filename, flag=)
-        * .is_open()
-        * .close()
-    * flags：`ios_base::`
-        > 若未指出**文件必须存在**，则表示**不存在则自动创建**
-        * in            ：只读              （文件必须存在）
-        > out           ：清空然后涂写      （有必要才创建）
-        * out|trunc     ：清空然后涂写      （有必要才创建）
-        * out|app       ：追加              （有必要才创建）
-        > app           ：追加              （有必要才创建）
-        * in|out        ：读写，初始位置为0 （文件必须存在）
-        * in|out|trunc  ：清空然后读/写     （有必要才创建）
-        * in|out|app    ：读写，追加        （有必要才创建）
-        > in|app        ：读写，追加        （有必要才创建）
-        * binary        ：不要将`\r\n`替换为`\n`
+```cpp
+#include <fstream>
+// 类
+fstream
+ifstream
+ofstream
+wfstream
+wifstream
+wofstream
+
+// 构造
+basic_fstream(filename, oflag)
+in              // 只读              （文件必须存在）
+// out          // 清空然后涂写      （有必要则创建）
+out|trunc       // 清空然后涂写      （有必要则创建）
+out|app         // 追加              （有必要则创建）
+// app          // 追加              （有必要则创建）
+in|out          // 读写，初始位置为0 （文件必须存在）
+in|out|trunc    // 清空然后读/写     （有必要则创建）
+in|out|app      // 读写，追加        （有必要则创建）
+// in|app       // 读写，追加        （有必要则创建）
+binary          // 不将`\r\n`替换为`\n`
+
+// 特有成员函数
+bool    is_open()
+void    open()
+void    close()
+```
 <!-- entry end -->
 
 <!-- entry begin: sstream stringstream -->
-* stringstream：`<sstream>`
-    * 构造：(string)
-    * 成员：
-        * .str()
-        * .str(string)
+### 字符流
+```cpp
+#include <sstream>
+// 类
+stringstream
+istringstream
+ostringstream
+wstringstream
+wistringstream
+wostringstream
+// 构造
+stringstream(str)
+// 特有成员函数
+string_view view()
+string      str()
+string      str(str)
+```
 <!-- entry end -->
 
 <!-- entry begin: streambuf -->
-* streambuf：`<streambuf>`
-    * 销毁问题：basic_i/ostream析构时不会销毁, 其他stream析构时只是不销毁.rdbuf()得到的
-    * 高效非格式化I/O：
-        * streambuf_iterator    ：不通过stream对象直接I/O缓冲区（自动更新缓冲区块）
-        * `streambuf*`          ：利用stream.rdbuf()获取后直接调用I/O运算符与另一个流缓冲区对接, 注意输入时需要std::noskipws
-    * 通过文件描述符改造：`__gnu_cxx::stdio_filebuf<char> buf{fd, std::ios_base::in}; std::istream istrm{buf};`
-        > `fd = fileno(FILE* file);`
+### 流缓冲区
+```cpp
+#include <streambuf>
+// 通过文件描述符构造
+#include <stdio>
+auto fd = fileno(FILE* file);
+__gnu_cxx::stdio_filebuf<char> buf{fd, std::ios_base::in};
+std::istream istrm{buf};
+
+// 析构函数
+// basic_iostream族类析构时不会销毁streambuf
+// 其他流类析构时只不析构由rdbuf(buf*)得到的缓冲区
+
+// 高效非格式化输入输出
+// 利用streambuf_iterator避开构造sentry进行非格式化I/O
+// 利用streambuf*预定义的输入输出操作进行直接I/O
+```
 <!-- entry end -->
 
 <!-- entry begin: locale -->
-* locale：`<locale>`
-    * locale：封装了多个facet用于多方面信息本地化
-    * facet：数值、货币、时间、编码
-    * locale的构造：
-        * 默认："C"
-        * 系统：""
-        * 自定义：`zh_CN.UTF-8[@modifier]`
-    * 提供
-        * .name()
-        * ::global(locale)
-<!-- entry end -->
-
-<!-- entry begin: iofwd stream库 -->
-* Stream库总览：`<iofwd>`
-* 组件：
-    * streambuf(系统I/O并缓存数据, 提供位置信息)
-    * locale(包含facet将I/O进行进行本地格式化)
-    * stream(封装上述两者, 提供状态、格式化信息)
-    * centry(帮助stream每次I/O预处理与后处理)
-    * 操作符(提供调整stream的便捷方法)
-    * std::ios(定义了一些标志位)
-<!-- entry end -->
-
-<!-- entry begin: 字符转换 字符处理 -->
-* 字符转换与处理：
-    > `<codecvt>`   ：字符编码转换器
-    > `<locale>`    ：转换宽字符需要此头文件
-    例：
-    * 转换stream_buffer
-    ```cpp
-    wbuffer_convert<codecvt_utf8<wchar_t> > utf8_to_wchar_t(cin.rdbuf())
-    wistream get_wstring_from_multibytes_stream(&utf8_to_wchar_t)
-    get_wstring_from_multibytes_stream >> wstring;
-
-    wbuffer_convert<codecvt_utf8<wchar_t> > wchar_t_to_utf8(cout.rdbuf())
-    wostream put_wstring_to_multibytes_stream(&wchar_t_to_utf8)
-    put_wstring_to_multibytes_stream << wstring; // 注意结束时必须冲刷该缓冲区，不然会有字符留在里面未输出
-    // 注意cout与put_wstring_to_multibytes_stream的缓冲区并不一样，
-    ```
-    * 转换string
-    ```cpp
-    wstring_convert<codecvt_utf8<wchar_t>> convertor
-    convertor.to_bytes(wstring&)
-    convertor.from_bytes(string)
-    /* 参数：
-     * (char byte);
-     * (const char* ptr);
-     * (const byte_string& str);
-     * (const char* first, const char* last);
-     */
-
-    ```
+### 本地环境
+```cpp
+#include <locale>
+class locale
+{
+    // 构造函数
+    locale()                // 默认构造为std::locale::classic。或为最近一次调用std::locale::global的参数locale
+    locale(name)            // 指定语系与字符集。空字符串则设置为当前系统环境
+    locale(loc, name, cate) // 复制loc，其中cate所指定的类别修正为与name相同
+    // 成员函数
+    string  name()          // 若无名则为"*"
+    locale  combine()       // 构造 locale 对象，结果为 *this 的副本，除了 Facet 类型平面复制自 other 
+  S locale  global(loc)     // 设置全局默认locale
+  S locale  classic(loc)    // 返回"C"本地环境
+};
+```
 <!-- entry end -->
 
 ## 并发库
@@ -1975,7 +2170,24 @@ namespace
 * temp_directory_path() ：获取临时目录
 <!-- entry end -->
 
-# BOOST
+# BOOST库
+## 字符编码转换
+```cpp
+#include <boost/locale.hpp> // -lboost_locale
+using namespace boost::locale::conv;
+// from端的utf编码由Str的类型推知，to端编码由to_charset指出且只能为char类型
+std::string                 from_utf(b, e, to_charset);
+std::string                 from_utf(Str, to_charset);
+// from端的编码由from_charset指出且类型为char ，to端的utf编码有CharT显示指出且同时也指定了类型
+std::basic_string<CharT>    to_utf(b, e, from_charset);
+std::basic_string<CharT>    to_utf(str, from_charset);
+// from端的utf编码由Str的类型推知，to端的utf编码由CharT显示指定
+std::basic_string<CharT>    utf8_to_utf(b, e);
+std::basic_string<CharT>    utf8_to_utf(Str);
+//
+std::string                 between(b, e, to_charset, from_charset);
+std::string                 between(str, to_charset, from_charset);
+```
 ## 序列化
 <!-- entry begin: serialization boost 序列化 -->
 ```cpp
@@ -2188,35 +2400,4 @@ String 可以将 SQL 类型字符串转换为 C++ 数据类型
 STA 可以将 C++数据类型转换为 SQL 类型字符串  
 两种字符串都使用了Copy-on-Write机制
 
-<!-- entry end -->
-
-<!-- entry begin: simd immintrin.h -->
-### SIMD
-```c
-#include <immintrin.h>
-```
-* 需要利用`alignas(32)`对齐数组
-* 向量寄存器抽象类型：
-    * `__m256`
-    * `__m256d`
-    * `__m256i`
-* 加载到向量寄存器：
-    ```c
-    _mm256_load_ps( float* )
-    _mm256_load_pd( double* )
-    _mm256_load_epi256( __m256i* )
-    ```
-* SIMD运算：
-    ```c
-    _mm256_OP_ps( __m256, __m256 )
-    _mm256_OP_pd( __m256d, __m256d )
-    _mm256_OP_epi32( __m256i, __m256i )
-    _mm256_OP_epi64( __m256i, __m256i )
-    ```
-* 存储回内存：
-    ```c
-    _mm256_store_ps( float* , __m256)
-    _mm256_store_pd( double* , __m256d )
-    _mm256_store_epi256( int* , __m256i )
-    ```
 <!-- entry end -->
