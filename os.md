@@ -247,7 +247,7 @@ gcc -Wl,--wrap,original -o a.out 需要更改链接的目标文件.o 我们编�
 > [转载自CSDN](https://blog.csdn.net/fan_hai_ping/article/details/6763733)
 
 Linux下搜索动态库路径的次序：
-1. ELF可执行文件中动态段中DT_RPATH所指定的路径（-WI,-rpath=./）；
+1. ELF可执行文件中动态段中DT_RPATH所指定的路径（-Wl,-rpath=./）；
 2. 环境变量LD_LIBRARY_PATH指定的动态库搜索路径；
 3. 配置文件/etc/ld.so.cache中指定的动态库搜索路径；
 4. 默认的动态库搜索路径/lib与/usr/lib。

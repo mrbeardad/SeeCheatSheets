@@ -38,9 +38,10 @@
     * 全静态链接            ：-static
     * 制作动态库            ：-shared -fpic
     * 调用链接器            ：-ldl -rdynamic
+    * 动态库搜索            ：-Wl,--rpath=PATH
     * 链接库打桩            ：-Wl,--wrap,func
-    * GPROF剖析             ：-pg -Og -g3 -fno-inline
-    * 调试                  ：-Og -g3 -fno-inline
+    * GPROF剖析             ：-pg -g3   -fno-inline
+    * 调试                  ：-g3 -ggdb -fno-inline
     * 报错                  ：-Werror -Wall -Wextra
     * 开启C++标准库debug模式：-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
 <!-- entry end -->

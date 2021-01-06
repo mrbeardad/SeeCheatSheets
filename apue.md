@@ -516,8 +516,6 @@ int     WCOREDUMP(int status);          // 若产生core则返回非0
     > 调用析构函数，且调用atexit注册的函数
 * 调用exit()
     > 不调用析构函数，但调用atexit注册的函数
-* 调用_exit()或quick_exit()
-    > 不调用析构函数，且不调用atexit注册的函数
 * 终止信号的默认处理
     > 不调用析构函数，且不调用atexit注册的函数
 

@@ -7,31 +7,24 @@
     - [异常体系结构](#异常体系结构)
     - [异常对象使用](#异常对象使用)
   - [内存管理](#内存管理)
-    - [〈new〉](#new)
-    - [〈memory〉](#memory)
+    - [new与delete操作符](#new与delete操作符)
+    - [智能指针](#智能指针)
   - [工具库](#工具库)
-    - [〈cstdlib〉](#cstdlib)
-    - [〈functional〉](#functional)
-    - [〈chrono〉](#chrono)
-    - [〈initializer_list〉](#initializer_list)
-    - [〈utility〉](#utility)
-    - [〈tuple〉](#tuple)
-    - [〈any〉](#any)
-    - [〈variant〉](#variant)
-    - [〈optional〉](#optional)
-    - [〈bitset〉](#bitset)
+    - [系统工具](#系统工具)
+    - [语言工具](#语言工具)
+    - [时间库](#时间库)
+    - [对象载体](#对象载体)
   - [数值库](#数值库)
-    - [〈limits〉](#limits)
-    - [〈ratio〉](#ratio)
-    - [〈cmath〉](#cmath)
-    - [〈numeric〉](#numeric)
-    - [〈random〉](#random)
+    - [数值极限](#数值极限)
+    - [静态期分数](#静态期分数)
+    - [数学库](#数学库)
+    - [数值算法](#数值算法)
+    - [随机数](#随机数)
   - [字符处理](#字符处理)
-    - [〈cctype〉](#cctype)
-    - [〈cwctype〉](#cwctype)
-    - [〈string〉](#string)
-    - [〈string_view〉](#string_view)
-    - [〈format〉](#format)
+    - [字符分类](#字符分类)
+    - [字符串](#字符串)
+    - [字符串视图](#字符串视图)
+    - [格式化](#格式化)
   - [容器库](#容器库)
     - [构造](#构造)
     - [赋值](#赋值)
@@ -59,7 +52,7 @@
     - [极值算法](#极值算法)
   - [正则表达式库](#正则表达式库)
   - [输入输出库](#输入输出库)
-    - [总览](#总览)
+    - [组件总览](#组件总览)
     - [基础操作](#基础操作)
     - [非格式输入输出](#非格式输入输出)
     - [预定义操作](#预定义操作)
@@ -68,19 +61,14 @@
     - [字符流](#字符流)
     - [流缓冲区](#流缓冲区)
     - [本地环境](#本地环境)
-  - [并发库](#并发库)
+  - [线程支持库](#线程支持库)
     - [线程启动](#线程启动)
-    - [线程控制](#线程控制)
     - [线程同步](#线程同步)
-    - [并发实例](#并发实例)
-  - [文件系统](#文件系统)
-    - [文件信息](#文件信息)
-    - [目录](#目录)
-    - [符号链接](#符号链接)
-    - [硬链接](#硬链接)
-    - [权限](#权限)
-    - [类](#类)
-    - [函数](#函数)
+    - [原子操作库](#原子操作库)
+  - [文件系统库](#文件系统库)
+    - [路径与文件表示](#路径与文件表示)
+    - [文件属性](#文件属性)
+    - [文件操作](#文件操作)
 - [BOOST库](#boost库)
   - [字符编码转换](#字符编码转换)
   - [序列化](#序列化)
@@ -130,44 +118,52 @@ exception                        <exception>
 ```
 <!-- entry end -->
 
-<!-- entry begin: what code 异常挂起 异常构造 异常成员 -->
+<!-- entry begin: logic_error runtime_error system_error error_code what code current_exception rethrow_exception 异常构造 异常成员 异常挂起 -->
 ### 异常对象使用
 ```cpp
-// 构造异常对象
-logic_error(const string&);
-logic_error(const char*);
-runtime_error(const string&);
-runtime_error(const char*);
-system_error(error_code);
-system_error(error_code, const string&);
-system_error(error_code, const char*);
+// 异常构造
+class Logic_error {
+    logic_error(const string&);
+    logic_error(const char*);
+};
+class Runtime_error {
+    runtime_error(const string&);
+    runtime_error(const char*);
+};
+class System_error {
+    system_error(error_code);
+    system_error(error_code, const string&);
+    system_error(error_code, const char*);
+};
 error_code make_error_code(errc);
 
-// 异常成员函数
-/*
- * 该函数为异常基类std::exception所声明的虚函数。
- * 返回的字符串指针保证在异常对象销毁前，或在调用异常对象的非静态成员函数前合法
-*/
-C char*     what();
-/*
- * 适用于system_error及其派生类，与future_error
- * error_code是依赖平台的错误码，error_condition是可移植的错误码
-*/
-error_code& code();
-ec.clear()
-ec.message()
-ec.category().name()
-ec.value()
-ec.default_error_condition().message()
-ec.default_error_condition().category().name()
-ec.default_error_condition().value()
-#include <cerrno>
-ec <=> errc::MEM;
-#include <ios>
-ec <=> io_errc::MEM;
-#include <future>
-ec <=> future_errc::MEM;
+// 异常成员
+class Exception {
+    C char*     what();     // 返回的字符串指针保证在异常对象销毁前，或在调用异常对象的非静态成员函数前合法
 
+    error_code& code();     // 适用于system_error及其派生类，与future_error
+};
+
+class error_code {
+    void        clear()
+    string      message()
+    err_cat&    category()  // 返回std::error_category有成员函数`const char* name()`与`string message()`
+    int         value()     // 在相同的category下才具有可比性
+
+    // error_code是依赖平台的错误码，error_condition是可移植的错误码
+    err_con     default_error_condition()   // 返回std::error_condition同样有上述四个成员函数
+
+    // 重载了与错误码的比较
+    operator<=>
+};
+#include <cerrno>
+enum class errc;
+#include <ios>
+enum class io_errc;
+#include <future>
+enum class future_errc;
+
+// 异常挂起
 exception_ptr   current_exception()         // 挂起当前的异常
 void            rethrow_exception(exceptr)  // 重抛挂起的异常
 ```
@@ -175,8 +171,9 @@ void            rethrow_exception(exceptr)  // 重抛挂起的异常
 
 ## 内存管理
 <!-- entry begin: new delete get_new_handler set_new_handler -->
-### 〈new〉
+### new与delete操作符
 ```cpp
+#include <new>
 void*   operator new(size_t);
 void*   operator new(size_t, align_val_t);
 void*   operator new(size_t, user-def-args...);
@@ -200,30 +197,31 @@ new_handler set_new_handler(nh);
 ```
 <!-- entry end -->
 
-<!-- entry begin: memory unique_ptr shared_ptr weak_ptr 智能指针 -->
-### 〈memory〉
+### 智能指针
+<!-- entry begin: memory unique_ptr 智能指针 -->
 ```cpp
-class unique_ptr<T, Deleter = default_delete<T> >
-{
+#include <memory>
+class unique_ptr<T, Deleter=default_delete<T> > {
     // 构造函数：支持move，拒绝copy
     unique_ptr(ptr);
     unique_ptr(ptr, del);
     // 修改器
     pointer     release();
-    void        reset(ptr = nullptr);
+    void        reset(ptr=nullptr);
     // 观察器
     pointer     get();
     Deleter&    get_deleter();
-    // OP
+    // Operator
     operator bool
     operator*
     operator->
-    // 非成员函数
-    unique_ptr  make_unique<T>(args...);
 };
-
-class shared_ptr<T>
-{
+unique_ptr  make_unique<T>(args...);
+```
+<!-- entry begin:  -->
+<!-- entry begin: memory shared_ptr 智能指针 -->
+```cpp
+class shared_ptr<T> {
     // 构造函数
     shared_ptr(ptr);
     shared_ptr(ptr, del);
@@ -238,21 +236,22 @@ class shared_ptr<T>
     long        use_count();
     bool        owner_before(sptr);
     bool        owner_before(wptr);
-    // OP
+    // Operator
     operator*
     operator->
-    // 非成员函数
-    shared_ptr  make_shared<T>(args...);
-    shared_ptr  static_pointer_cast<T>(sptr);
-    shared_ptr  const_pointer_cast<T>(sptr);
-    shared_ptr  reinterpret_pointer_cast<T>(sptr);
-    shared_ptr  dynamic_pointer_cast<T>(sptr);
-    shared_ptr  enable_shared_from_this<T>::shared_from_this();
-    weak_ptr    enable_shared_from_this<T>::weak_from_this();
 };
-
-class weak_ptr<T>
-{
+shared_ptr  make_shared<T>(args...);
+shared_ptr  static_pointer_cast<T>(sptr);
+shared_ptr  const_pointer_cast<T>(sptr);
+shared_ptr  dynamic_pointer_cast<T>(sptr);
+shared_ptr  reinterpret_pointer_cast<T>(sptr);
+shared_ptr  enable_shared_from_this<T>::shared_from_this();
+weak_ptr    enable_shared_from_this<T>::weak_from_this();
+```
+<!-- entry end -->
+<!-- entry begin: memory weak_ptr 智能指针 -->
+```cpp
+class weak_ptr<T> {
     // 构造函数
     weak_ptr(sptr);
     // 修改器
@@ -267,16 +266,18 @@ class weak_ptr<T>
 <!-- entry end -->
 
 ## 工具库
-<!-- entry begin: cstdlib -->
-### 〈cstdlib〉
+<!-- entry begin: cstdlib atof atoi strtol strtod -->
+### 系统工具
 ```cpp
-// 进程控制
-void    abort();                                        // 异常终止进程，不进行清理
+#include <cstdlib>
+// 进程终止
 void    exit(int exit_code);                            // 正常终止进程，进行清理
 void    quick_exit(int exit_code);                      // 正常终止进程，进行非完全清理
-void    _Exit(int exit_code);                           // 异常终止进程，不进行清理
+void    _Exit(int exit_code);                           // 正常终止进程，不进行清理
+void    abort();                                        // 异常终止进程，不进行清理
 int     atexit(void(*func)());                          // 注册在调用exit()时被调用
 int     at_quick_exit(void(*func)());                   // 注册在调用quick_exit()时被调用
+// 系统环境
 int     system(const char* cmd);                        // 调用宿主环境命令处理器
 char*   getenv(const char* env_var);                    // 访问环境变量
 // 内存管理
@@ -293,75 +294,66 @@ double  strtod(const char* str, char** str_end);
 ```
 <!-- entry end -->
 
-<!-- entry begin: functional hash function reference_wrapper ref cref -->
-### 〈functional〉
+<!-- entry begin: functional hash function reference_wrapper ref cref invoke -->
+### 语言工具
 ```cpp
-struct hash<T>
-{
+#include <functional>
+struct hash<T> {
     // 特化包括有：
     // 整型、浮点型、指针、
     // 智能指针、string族、string_view族、bitset、vector<bool>、
     // error_code、error_condition、type_index、thread::id、optional、variant
 };
-
-class function<F(Args...)>
-{
+class function<F(Args...)> {
     // 成员函数
     operator()
     operator bool
 };
-
-class reference_wrapper<T>
-{
+class reference_wrapper<T> {
     // 成员函数
     T& get();
-    // OP
+    // Operator
     operator()  // 调用存储的函数
     operator T&
 };
-
 referece_wrapper<T>         ref(T& t);
 referece_wrapper<const T>   cref(T& t);
+
+Result  invoke(Func, args...);
+// 对于成员函数指针，INVOKE(f, t1, t2, ..., tN) 等价于 (t1.*f)(t2, ..., tN)
+// 对于成员数据指针，INVOKE(f, t1)              等价于 t1.*f
+// 上述两者均对referece_wrapper有特化，将t1变为t1.get()
 ```
 <!-- entry end -->
 
 <!-- entry begin: chrono 时间库 -->
-### 〈chrono〉
+### 时间库
 ```cpp
-class system_clock
-{
+#include <chrono>
+using namespace chrono;
+
+class Clock {   // 预定义有 system_clock 与 steady_clock 等
     // 成员类型
-    rep
-    period
-    duration    = duration<rep, period>
-    time_point  = time_point<system_clock>
+    typename    rep
+    typename    period
+    typename    duration    = duration<rep, period>
+    typename    time_point  = time_point<Clock>
     // 成员函数
-    S time_point    now();
-    S time_t        to_time_t(time_point);
-    S time_point    frome_time_t(time_t);
+  S time_point  now();
+  S time_t      to_time_t(time_point);
+  S time_point  frome_time_t(time_t);
 };
 
-class system_clock
-{
+// 预定义有 nanoseconds microseconds milliseconds seconds minutes hours days weeks months years
+class duration<Rep, Period=ratio<1> > {
     // 成员类型
-    rep
-    period
-    duration    = duration<rep, period>
-    time_point  = time_point<steady_clock>
+    typename    rep
+    typename    period
     // 成员函数
-    S time_point    now();
-};
-
-class duration<Rep, Period = ratio<1> >
-{
-    // 成员类型
-    rep
-    period
-    // 成员函数
-    rep             count();
-    S duration      zero();
-    S duration      min();
-    S duration      max();
+    rep         count();
+  S duration    zero();
+  S duration    min();
+  S duration    max();
     // Operator
     operator++
     operator--
@@ -378,54 +370,39 @@ class duration<Rep, Period = ratio<1> >
     operator""ns
     operator""d
     operator""y
-    // 非成员函数
-    duration        duration_cast<D>(d);
-    duration        floor(d)
-    duration        ceil(d)
-    duration        round(d)
-    duration        abs(d)
 };
+duration        duration_cast<D>(d);
+duration        floor(d)
+duration        ceil(d)
+duration        round(d)
+duration        abs(d)
 
-// 类型别名
-std::chrono::nanoseconds
-std::chrono::microseconds
-std::chrono::milliseconds
-std::chrono::seconds
-std::chrono::minutes
-std::chrono::hours
-std::chrono::days
-std::chrono::weeks
-std::chrono::months
-std::chrono::years
-
-class time_point<Clock, Duration = Clock::duration>
-{
+class time_point<Clock, Duration = Clock::duration> {
     // 成员类型
     rep
     period
     duration
     clock
     // 成员函数
-    duration        time_since_epoch();
-    S duration      min();
-    S duration      max();
+    duration    time_since_epoch();
+  S duration    min();
+  S duration    max();
     // Operator
     operator+
     operator-
-    // 非成员函数
-    time_point      time_point_cast<TP>(tp);
-    time_point      floor(tp);
-    time_point      ceil(tp);
-    time_point      round(tp);
 };
+time_point      time_point_cast<TP>(tp);
+time_point      floor(tp);
+time_point      ceil(tp);
+time_point      round(tp);
 ```
 <!-- entry end -->
 
+### 对象载体
 <!-- entry begin: initializer_list -->
-### 〈initializer_list〉
 ```cpp
-class initializer_list<T>
-{
+#include <initializer_list>
+class initializer_list<T> {
     // 构造函数
     initializer_list(); // 语言特性支持的列表初始化的默认类型
     // 成员函数
@@ -436,11 +413,10 @@ class initializer_list<T>
 ```
 <!-- entry end -->
 
-<!-- entry begin: utility integer_sequence pair -->
-### 〈utility〉
+<!-- entry begin: utility integer_sequence -->
 ```cpp
-struct integer_sequence<T, T... INTS>
-{
+#include <utility>
+struct integer_sequence<T, T... INTS> {
     // 成员函数
     static size_t size();
     // 辅助模板
@@ -448,9 +424,12 @@ struct integer_sequence<T, T... INTS>
     make_integer_sequence<T, N> = integer_sequence<T, 0..N-1>
     make_index_sequence<N>      = integer_sequence<size_t, 0..N-1>
 };
-
-class pair<T1, T2>
-{
+```
+<!-- entry end -->
+<!-- entry begin: utility pair -->
+```cpp
+#include <utility>
+class pair<T1, T2> {
     // 成员对象
     T1 first;
     T2 second;
@@ -463,86 +442,65 @@ class pair<T1, T2>
         tuple<Args1...> first_args,
         tuple<Args2...> second_args
     );
-    // 非成员函数
-    pair    make_pair(x, y);            // 被C++17结构化绑定取代
-    T&      get<size_t>(p);
-    T&      get<T>(p);
-    // 辅助类
-    tuple_size<pair>::value
-    tuple_element<size_t, pair>::type
 };
+pair    make_pair(x, y);            // 被C++17结构化绑定取代
+T&      get<size_t>(p);
+T&      get<T>(p);
+size    tuple_size<pair>::value
+typename tuple_element<size_t, pair>::type
 ```
 <!-- entry end -->
-
-<!-- entry begin: tuple -->
-### 〈tuple〉
+<!-- entry begin: utility tuple -->
 ```cpp
-class tuple<Types...>
-{
+#include <tuple>
+class tuple<Types...> {
     // 构造函数
     tuple();                            // 默认构造
     tuple(args...);                     // 类聚合式构造
     tuple(tuple<UTypes...>);            // 成员模板构造
     tuple(p);                           // pair转换构造
-    // 非成员函数
-    tuple   make_tuple(args...);        // 被C++17结构化绑定取代
-    tuple&  tie(args...);               // std::ignore作占位符。被C++17结构化绑定取代
-    tuple   tuple_cat(tuples...);
-    T&      get<size_t>(t);
-    T&      get<T>(t);
-    // 辅助类
-    tuple_size<tuple>::value
-    tuple_element<size_t, tuple>::type
 };
+tuple   make_tuple(args...);        // 被C++17结构化绑定取代
+tuple&  tie(args...);               // std::ignore作占位符。被C++17结构化绑定取代
+tuple   tuple_cat(tuples...);
+T&      get<size_t>(t);
+T&      get<T>(t);
+size    tuple_size<tuple>::value
+typename tuple_element<size_t, tuple>::type
 ```
 <!-- entry end -->
 
 <!-- entry begin: any -->
-### 〈any〉
 ```cpp
-class any
-{
+#include <any>
+class any {
     // 构造函数
     any();                          // 默认构造。空对象
     any(value);                     // 类聚合式构造
-    any(                            // 就地构造
-        std::in_place_type<Type>,
-        args...
-    );
-    any(
-        std::in_place_type<Type>,
-        il, args...
-    );
+    any(in_place, args... );        // 就地构造
+    any(in_place, il, args...)      // in_place包括 std::in_place_type<T>
     // 修改器
     T&      emplace<T>(args...);
     T&      emplace<T>(il, args...);
     void    reset();
     // 观察器
     bool    has_value();
-    type_info&  type();
-    // 非成员函数
-    T       any_cast<T>(any&);
-    T*      any_cast<T>(any*);
+    typei&  type();                 // 返回 std::type_info 有成员函数 `const char* name()`
 };
+T       any_cast<T>(any&);
+T*      any_cast<T>(any*);
 ```
 <!-- entry end -->
 
 <!-- entry begin: variant -->
-### 〈variant〉
 ```cpp
-class variant<Types...>
-{
+#include <variant>
+class variant<Types...> {
     // 构造函数
     variant();                  // 默认构造第一个类型。可用std::monostate作占位符类型
     variant(t);                 // 匹配构造最佳类型
-    variant(                    // 就地构造
-        std::in_place_type<T>,  // 也可为std::in_place_index<size_t>
-        args...
-    );
-    variant(
-        std::in_place_type<T>,
-        il, args...
-    );
+    variant(in_place, args...); // 就地构造
+    variant(in_place, il, args...); // in_place包括 std::in_place_index<T> 与 std::in_place_index<T>
     // 修改器
     T&      emplace<T>(args...);
     T&      emplace<T>(il, args...);
@@ -551,31 +509,26 @@ class variant<Types...>
     // 观察器
     size_t  index();
     bool    valueless_by_exception();   // 发生异常时，index()返回std::variant_npos
-    // 非成员函数
-    T&      get<size_t>(vrt);           // 转换失败抛出std::bad_variant_access
-    T&      get<T>(vrt);
-    T*      get_if<size_t>(vrt);        // 转换失败返回空指针
-    T*      get_if<T>(vrt);
-    R       visit(visitor, vrt);        // visitor内部可利用if constexpr
-    // 辅助类
-    variant_size<variant>::value
-    variant_alternative<size_t, variant>::type
 };
+T&      get<size_t>(vrt);               // 转换失败抛出std::bad_variant_access
+T&      get<T>(vrt);
+T*      get_if<size_t>(vrt);            // 转换失败返回空指针
+T*      get_if<T>(vrt);
+R       visit(visitor, vrt);            // visitor内部可利用if constexpr
+size    variant_size<variant>::value
+typename variant_alternative<size_t, variant>::type
 ```
 <!-- entry end -->
 
 <!-- entry begin: optional -->
-### 〈optional〉
 ```cpp
 #include <optional>
-
-class optional<T>
-{
+class optional<T> {
     // 构造函数
-    optional();                             // 默认构造为std::nullopt
-    optional(val);                          // 类聚合式构造
-    optional(std::in_place, args...);       // 就地构造
-    optional(std::in_place, il, args...);
+    optional();                         // 默认构造为std::nullopt
+    optional(val);                      // 类聚合式构造
+    optional(in_place, args...);        // 就地构造
+    optional(in_place, il, args...);    // in_place包括std::in_place
     // 修改器
     T&      emplace(args...);
     T&      emplace(il, args...);
@@ -586,22 +539,21 @@ class optional<T>
     C T&    value();                        // 若为std::nullopt则抛出std::bad_optional_access
     T       value_or(def_val);
     bool    has_value();
-    // OP
+    // Operator
     operator bool
 };
 ```
 <!-- entry end -->
 
 <!-- entry begin: bitset -->
-### 〈bitset〉
 ```cpp
-class bitset<size_t>
-{
+#include <bitset>
+class bitset<size_t> {  // std::vector<bool>特化可做动态版bitset
     // 构造函数
     bitset();
     bitset(ulong);
-    bitset(str, pos = 0, nbits = npos, zero = '0', one = '1');
-    bitset(Cstr, nbits = npos, zero = '0', one = '1');
+    bitset(str, pos=0, nbits=npos, zero='0', one='1');
+    bitset(Cstr, nbits=npos, zero='0', one='1');
     // 元素访问
     bool        test(pos);
     bool        all();
@@ -611,15 +563,15 @@ class bitset<size_t>
     size_t      size();
     // 修改器
     bitset&     set();
-    bitset&     set(pos, boolean = true);
+    bitset&     set(pos, boolean=true);
     bitset&     reset();
     bitset&     reset(pos);
     bitset&     flip();
     bitset&     flip(pos);
     // 转换
-    string          to_string(zero = '0', one = '1');
-    unsigned long   to_ulong(); // 存储时低位在“左”，显示时低位在“右”（小端）
-    // OP
+    string      to_string(zero='0', one='1');
+    u_long      to_ulong();     // 存储时低位在“左”，显示时低位在“右”（小端）
+    // Operator
     operator[]                  // 可能返回reference，支持operator=、operator~、operator bool
     operator&
     operator|
@@ -633,52 +585,41 @@ class bitset<size_t>
 
 ## 数值库
 <!-- entry begin: limits 数值极限 -->
-### 〈limits〉
+### 数值极限
 ```cpp
-class numeric_limits<T>
-{
+#include <limits>
+class numeric_limits<T> {
     // 常用静态成员常量
-    S radix             // 给定类型的表示所用的基或整数底
-    S digits            // 能无更改地表示的 radix 位数
-    S digits10          // 能无更改地表示的十进制位数
-    S max_digits10      // 区别所有此类型值所需的十进制位数
-    S max_exponent10    // 10 的该数次幂是合法有限浮点值的最大整数
-    S min_exponent10    // 10 的该数次幂是合法正规浮点值的最小负数
-    // 常用静态成员函数
-    S lowest()          // 最低有限值
-    S min()             // 最小有限值。浮点数为最小正数
-    S max()             // 最大有限值
-    S epsilon()         // 返回 1.0 与给定类型的下个可表示值的差
-    S round_error()     // 返回给定浮点类型的最大舍入误差
-    S infinity()        // 返回给定类型的正无穷大值
-    S quiet_NaN()       // 返回给定浮点类型的安静 NaN 值
-    S signaling_NaN()   // 返回给定浮点类型的发信的 NaN
-    S denorm_min()      // 返回给定浮点类型的最小正非正规值
+  S radix             // 给定类型的表示所用的基或整数底
+  S digits            // 能无更改地表示的 radix 位数
+  S digits10          // 能无更改地表示的十进制位数
+  S max_digits10      // 区别所有此类型值所需的十进制位数
+  S max_exponent10    // 10 的该数次幂是合法有限浮点值的最大整数
+  S min_exponent10    // 10 的该数次幂是合法正规浮点值的最小负数
+  // 常用静态成员函数
+  S lowest()          // 最低有限值
+  S min()             // 最小有限值。浮点数为最小正数
+  S max()             // 最大有限值
+  S epsilon()         // 返回 1.0 与给定类型的下个可表示值的差
+  S round_error()     // 返回给定浮点类型的最大舍入误差
+  S infinity()        // 返回给定类型的正无穷大值
+  S quiet_NaN()       // 返回给定浮点类型的安静 NaN 值
+  S signaling_NaN()   // 返回给定浮点类型的发信的 NaN
+  S denorm_min()      // 返回给定浮点类型的最小正非正规值
 };
 ```
 <!-- entry end -->
 
 <!-- entry begin: ratio 分数 -->
-### 〈ratio〉
+### 静态期分数
 ```cpp
-class ratio<Num, Den = 1>
-{
+#include <ratio>
+// 预定义有 pico nano micro centi deci deca hecto kilo mega giga tera peta exa
+class ratio<Num, Den=1> {
     // 成员对象
-    S intmax_t num;
-    S intmax_t den;
+  S intmax_t num;
+  S intmax_t den;
     // 成员类型
-    pico
-    nano
-    micro
-    centi
-    deci
-    deca
-    hecto
-    kilo
-    mega
-    giga
-    tera
-    peta
     // 辅助类
     ratio_add           <r1, r2>::type
     ratio_subtract      <r1, r2>::type
@@ -695,8 +636,9 @@ class ratio<Num, Den = 1>
 <!-- entry end -->
 
 <!-- entry begin: cmath 数学库 -->
-### 〈cmath〉
+### 数学库
 ```cpp
+#include <cmath>
 // 基本运算
 f   abs(f);             // 求绝对值
 f   fmod(x, y);         // 求 x/y（向零取整）的余数
@@ -753,22 +695,23 @@ f   copysign(x, y);     // 求 x 的模与 y 的符号组成的浮点值
 ```
 <!-- entry end -->
 
-<!-- entry begin: numeric 数值库 算法 -->
-### 〈numeric〉
+<!-- entry begin: midpoint lcm gcd transform_exclusive_scan transform_inclusive_scan exclusive_scan inclusive_scan partial_sum adjacent_difference inner_product transform_reduce transform_reduce reduce accumulate iota numeric 数值算法 -->
+### 数值算法
 ```cpp
-void    iota(b, e, v);                                      // e = v++
-T       accumulate(b, e, init, bOp = plus);                 // bOp(e)
-T       reduce(b, e, init = 0, bOp = plus);                 // bOp(e)。支持policy(默认无序)
+#include <numeric>
+void    iota(b, e, v);                                      // e=v++
+T       accumulate(b, e, init, bOp=plus);                   // bOp(e)
+T       reduce(b, e, init=0, bOp=plus);                     // bOp(e)。支持policy(默认无序)
 T       transform_reduce(b1, e1, init, bOp, uOp);           // bOp(uOp(e))
 T       transform_reduce(b1, e1, b2, init,                  // bOp1(bOp2(e1, e2))
-    bOp1 = plus, bOp2 = muiltiplies);
+                        bOp1=plus, bOp2=muiltiplies);
 T       inner_product(b1, e1, b2, init, bOp1, bOp2);        // bOp1(bOp2(e1, e2))。支持policy(默认无序)
-destE   adjacent_difference(b, e, destB, bOp = reduce);     // dE = e - em1
-destE   partial_sum(b, e, destB, bOp = plus);               // dE = bOp(e)
-destE   inclusive_scan(b, e, destB, bOp = plus);            // dE = bOp(e)
-destE   exclusive_scan(b, e, destB, bOp = plus);            // dE = bOp(*p2e--)
-destE   transform_inclusive_scan(b, e, destB, bOp = plus);  // dE = bOp(uOp(e))
-destE   transform_exclusive_scan(b, e, destB, bOp = plus);  // dE = bOp(uOp(em1))
+destE   adjacent_difference(b, e, destB, bOp=reduce);       // destEle=e - em1
+destE   partial_sum(b, e, destB, bOp=plus);                 // destEle=bOp(e)
+destE   inclusive_scan(b, e, destB, bOp=plus);              // destEle=bOp(e)
+destE   exclusive_scan(b, e, destB, bOp=plus);              // destEle=bOp(*p2e--)
+destE   transform_inclusive_scan(b, e, destB, bOp=plus);    // destEle=bOp(uOp(e))
+destE   transform_exclusive_scan(b, e, destB, bOp=plus);    // destEle=bOp(uOp(em1))
 T       gcd(m, n);                                          // 求最大公因数
 T       lcm(m, n);                                          // 求最小公倍数
 T       midpoint(a, b);                                     // 求中间值
@@ -776,27 +719,29 @@ T       midpoint(a, b);                                     // 求中间值
 <!-- entry end -->
 
 <!-- entry begin: random 随机数 随即引擎 随机分布 -->
-### 〈random〉
+### 随机数
 ```cpp
-// 常用引擎：成员函数seed(val)作种
-minstd_rand
-mt19937_64
-ranlux48
-knuth_b
-default_random_engine
-// 常用分布：重载操作operator()(engine)返回符合分布的随机数
-uniform_int_distribution(min=0, max=INTMAX) // min-max的均匀整数分布
-uniform_real_distribution(min=0, max=1.0)   // min-max的均匀实数分布
-bernoulli_distribution(p=0.5)               // 0-1分布，返回bool
-binomial_distribution(n=1, p=0.5)           // 二项分布
-normal_distribution(u=0, o=1)               // 正态分布
+#include <random>
+// 常用引擎：有成员函数`void seed(val)`作种
+typename    minstd_rand             // 快
+typename    mt19937_64              // 广
+typename    ranlux48
+typename    knuth_b
+typename    default_random_engine
+// 常用分布：有重载操作符`random operator()(engine)`返回符合分布的随机数
+typename    uniform_int_distribution(min=0, max=INTMAX) // min-max的均匀整数分布
+typename    uniform_real_distribution(min=0, max=1.0)   // min-max的均匀实数分布
+typename    bernoulli_distribution(p=0.5)               // 0-1分布，返回bool
+typename    binomial_distribution(n=1, p=0.5)           // 二项分布
+typename    normal_distribution(u=0, o=1)               // 正态分布
 ```
 <!-- entry end -->
 
 ## 字符处理
 <!-- entry begin: cctype -->
-### 〈cctype〉
+### 字符分类
 ```cpp
+#include <cctype>
 bool isalnum(c);
 bool isalpha(c);
 bool islower(c);
@@ -811,107 +756,87 @@ bool isgraph(c);
 bool isprint(c);
 int  toupper(c);
 int  tolower(c);
-```
-<!-- entry end -->
 
-<!-- entry begin: cwctype -->
-### 〈cwctype〉
-```cpp
-bool iswalnum(c);
-bool iswalpha(c);
-bool iswlower(c);
-bool iswupper(c);
-bool iswdigit(c);
-bool iswxdigit(c);
-bool iswpunct(c);
-bool iswblank(c);
-bool iswspace(c);
-bool iswcntrl(c);
-bool iswgraph(c);
-bool iswprint(c);
-int  towupper(c);
-int  towlower(c);
+#include <cwctype>
+// 形如 bool iswalnum() 等等
 ```
 <!-- entry end -->
 
 <!-- entry begin: string -->
-### 〈string〉
+### 字符串
 ```cpp
-class string
-{
-/*
- * 目标：(str, pos = 0, len = npos) (cstr, len = auto) (char) (n, char)
- * 此处不包括STL接口
-*/
+#include <string>
+class String {
+    // 目标：(str, pos = 0, len = npos) (cstr, len = auto) (char) (n, char)
     // 构造函数
     string(目标)
     // 修改
-    string& assign(目标)
-    string& append(目标)
-    string& operator=(str) (cstr) (char)
-    string& operator+(str) (cstr) (char)
-    string& operator+=(str) (cstr) (char)
-    string& insert(pos, 目标)               // 目标除开(char)
-    string& replace(pos, len, 目标)
+    string& assign      (目标)
+    string& append      (目标)
+    string& operator=   (str) (cstr) (char)
+    string& operator+   (str) (cstr) (char)
+    string& operator+=  (str) (cstr) (char)
+    string& insert      (pos, 目标)         // 目标除开(char)
+    string& replace     (pos, len, 目标)
     // 查找
-    bool    starts_with(str) (cstr) (char)
-    bool    end_with(str) (cstr) (char)
-    bool    contains(str) (cstr) (char)
-    size_t  find(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
-    size_t  rfind(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
-    size_t  find_first_of(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
-    size_t  find_first_not_of(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
-    size_t  find_last_of(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
-    size_t  find_last_not_of(str, pos = 0) (cstr, pos = 0, len = auto) (char, pos = 0)
-    // 转换
-    C T*    data();
-    C T*    c_str();
-    string  to_string(v);
-    wstring to_string(v);
-    int     stoi(str, size_t* = nullptr, base = 10);
-    double  stod(str, size_t* = nullptr, base = 10);
+    bool    starts_with (str) (cstr) (char)
+    bool    end_with    (str) (cstr) (char)
+    bool    contains    (str) (cstr) (char)
+    size_t  find             (str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
+    size_t  rfind            (str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
+    size_t  find_first_of    (str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
+    size_t  find_first_not_of(str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
+    size_t  find_last_of     (str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
+    size_t  find_last_not_of (str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
     // 比较
     int     compare(pos, len, 目标);        // 目标除开(char) (n, char)
     // 复制
-    size_t  copy(dest, len, pos = 0);
+    size_t  copy(dest, len, pos=0);
     // 子串
-    string  substr(pos = 0, len = npos);
+    string  substr(pos=0, len=npos);
     // 容量
     bool    empty();
     size_t  size();
     size_t  length();
-    void    resize(count, char = '\0');
+    void    resize(count, char='\0');
     size_t  capacity();
     void    shrink_to_fit();
     void    reserve(new_cap = 0);       // new_cap小于capacity()则无效
+    // 转换
+    C T*    data();
+    C T*    c_str();
 };
+string  to_string(v);
+wstring to_string(v);
+int     stoi(str, size_t*=nullptr, base=10);
+double  stod(str, size_t*=nullptr, base=10);
 ```
 <!-- entry end -->
 
 <!-- entry begin: string_view -->
-### 〈string_view〉
+### 字符串视图
 ```cpp
-class string_view
-{
+#include <string_view>
+class String_view {
     // 构造函数
     string_view(str);
-    string_view(cstr, len = auto);
+    string_view(cstr, len=auto);
     string_view(beg, end);
     // 修改
     void    remove_prefix(n);
     void    remove_suffix(n);
-    // 转换
     // 查找
     // 比较
     // 复制
-    // 子串
+    // 子串（大幅降低开销）
     // 容量
+    // 转换
 };
 ```
 <!-- entry end -->
 
 <!-- entry begin: format 格式化 -->
-### 〈format〉
+### 格式化
 > `"{arg_id:填充与对齐 符号 # 0 宽度 精度 L 类型}"`
 * arg_id
     > 要么全部默认按顺序，要么全部手动指定
@@ -1049,7 +974,7 @@ bool    empty()                 // ALL
 size_t  size()                  // ALL
 void    resize(num)             // ALL-a-A-U
 void    resize(num, v)          // ALL-a-A-U
-size_t  capacity()              // s+v
+size_t  capacity()              // s+v  （clear()一般不减小capacity）
 void    reserve(num)            // s+v+U（只能扩大）
 void    shrink_to_fit()         // s+v+d
 size_t  max_size()              // ALL
@@ -1092,7 +1017,7 @@ npb     load_factor()
 float   max_load_factor()
 float   max_load_factor(float)
 void    rehash(bnum)
-void    reserve(num)
+void    reserve(bnum)
 ```
 <!-- entry end -->
 
@@ -1123,34 +1048,28 @@ void    iter_swap(itr1, itr2)
 ```
 <!-- entry end -->
 
-<!-- entry begin: 流迭代器 -->
+<!-- entry begin: 流迭代器 istream_iterator ostream_iterator istreambuf_iterator ostreambuf_iterator -->
 ### 流迭代器
 ```cpp
-class istream_iterator<T, CharT = char>
-{
+#include <iterator>
+class istream_iterator<T, CharT = char> {
     // 构造函数
     istream_iterator()      // 默认构造尾后迭代器
     istream_iterator(istrm)
 };
-
-class ostream_iterator<T, CharT = char>
-{
+class ostream_iterator<T, CharT = char> {
     // 构造函数
     ostream_iterator(ostrm, const CharT* delim = "")
 };
 
 // 流缓冲区迭代器会自动冲刷缓冲区
-
-class istreambuf_iterator<CharT>
-{
+class istreambuf_iterator<CharT> {
     // 构造函数
     istreambuf_iterator()       // 默认构造为尾后迭代器
     istreambuf_iterator(istrm)
     istreambuf_iterator(ibuf_ptr)
 };
-
-class ostreambuf_iterator<CharT>
-{
+class ostreambuf_iterator<CharT> {
     // 构造函数
     ostreambuf_iterator(ostrm)
     ostreambuf_iterator(obuf_ptr)
@@ -1158,74 +1077,61 @@ class ostreambuf_iterator<CharT>
 ```
 <!-- entry end -->
 
-<!-- entry begin: 反向迭代器 -->
+<!-- entry begin: 反向迭代器 reverse_iterator -->
 ### 反向迭代器
 ```cpp
-class reverse_iterator<Iter>
-{
-    // 构造
-    // 通过构造函数构造
+#include <iterator>
+class reverse_iterator<Iter> {
+    // 构造函数
     reverse_iterator()
     reverse_iterator(itr)
-    // 通过辅助函数构造
-    ritr make_reverse_iterator(itr)
-    // 通过各容器的成员函数构造
-    ritr rbegin()
-    ritr crbegin()
-    ritr rend()
-    ritr crend()
-
     // 成员函数
     itr  base()
-}
+};
+ritr make_reverse_iterator(itr)
+ritr rbegin()
+ritr crbegin()
+ritr rend()
+ritr crend()
 ```
 <!-- entry end -->
 
-<!-- entry begin: 移动迭代器 -->
+<!-- entry begin: 移动迭代器 move_iterator -->
 ### 移动迭代器
 ```cpp
-class move_iterator<Iter>
-{
-    // 构造
-    // 通过构造函数构造
+#include <iterator>
+class move_iterator<Iter> {
+    // 构造函数
     move_iterator()
     move_iterator(itr)
-    // 通过辅助函数构造
-    mitr make_move_iterator(itr)
 };
+mitr make_move_iterator(itr)
 ```
 <!-- entry end -->
 
-<!-- entry begin: 插入迭代器 -->
+<!-- entry begin: 插入迭代器 insert_iterator front_insert_iterator back_insert_iterator -->
 ### 插入迭代器
 ```cpp
-class insert_iterator<Container>
-{
-    // 构造
-    // 通过构造函数构造
+#include <iterator>
+class insert_iterator<Container> {
+    // 构造函数
     insert_iterator()
     insert_iterator(Cont, itr)
-    // 通过辅助函数构造
-    iitr    inserter(Cont, pos)
 };
-class front_insert_iterator<Container>
-{
-    // 构造
-    // 通过构造函数构造
+iitr    inserter(Cont, pos)
+class front_insert_iterator<Container> {
+    // 构造函数
     front_insert_iterator()
     front_insert_iterator(Cont)
-    // 通过辅助函数构造
-    fiitr   front_inserter(Cont)
 };
+fiitr   front_inserter(Cont)
 class back_insert_iterator<Container>
 {
-    // 构造
-    // 通过构造函数构造
+    // 构造函数
     back_insert_iterator()
     back_insert_iterator(Cont)
-    // 通过辅助函数构造
-    biitr   back_inserter(Cont)
 };
+biitr   back_inserter(Cont)
 ```
 <!-- entry end -->
 
@@ -1235,12 +1141,12 @@ class back_insert_iterator<Container>
 ```cpp
 #include <execution>
 // 执行策略常量
-std::execution::seq;
-std::execution::par;
-std::execution::unseq;
-std::execution::par_unseq;
+exe_policy std::execution::seq;
+exe_policy std::execution::par;
+exe_policy std::execution::unseq;
+exe_policy std::execution::par_unseq;
 ```
-```txt
+```
 ┌──────────────────────┬───────────────┬─────────────────┐
 │        Policy        │ Vectorization │ Parallelization │
 ├──────────────────────┼───────────────┼─────────────────┤
@@ -1255,7 +1161,7 @@ std::execution::par_unseq;
 ```
 <!-- entry end -->
 
-<!-- entry begin: 非更易算法 -->
+<!-- entry begin: mismatch none_of any_of all_of count_if count for_each_n for_each 非更易算法 -->
 ### 非更易算法
 ```cpp
 uOp     for_each(b, e, uOp)                     // 返回uOp(已改动过的)拷贝
@@ -1269,7 +1175,7 @@ p<i,ci> mismatch(b, e, cmpB, bOp=equal_to)      // 返回pair存储两个区间�
 ```
 <!-- entry end -->
 
-<!-- entry begin: 更易算法 -->
+<!-- entry begin: swap_ranges swap transform transform generate_n generate fill_n fill replace_copy_if replace_copy replace_if replace shift_right shift_left unique_copy unique remove_copy_if remove_copy remove_if remove copy_n copy_if copy_backward copy move_backward move 更易算法 -->
 ### 更易算法
 ```cpp
 destE   move(b, e, destB)                       // 支持子区间左移
@@ -1306,7 +1212,7 @@ destE   swap_ranges(b, e, destB)
 ```
 <!-- entry end -->
 
-<!-- entry begin: 搜索算法 -->
+<!-- entry begin: equal_range upper_bound lower_bound binary_search find_first_of adjacent_find find_end search_n search find_if_not find_if find 搜索算法 -->
 ### 搜索算法
 ```cpp
 // 搜索单个元素
@@ -1331,7 +1237,7 @@ p<b,e>  equal_range(b, e, v, bOp=lower_to)
 ```
 <!-- entry end -->
 
-<!-- entry begin: 划分算法 -->
+<!-- entry begin: partition_point partition_copy stable_partition partition is_partitioned 划分算法 -->
 ### 划分算法
 ```cpp
 bool    is_partitioned(b, e, uOp)
@@ -1342,7 +1248,7 @@ m       partition_point(b, e, uOp)                          // 返回满足uOp()
 ```
 <!-- entry end -->
 
-<!-- entry begin: 变序算法 -->
+<!-- entry begin: sample shuffle rotate_copy rotate reverse_copy reverse prev_permutation next_permutation is_permutation lexicographical_compare equal sort_heap pop_heap push_heap make_heap is_heap_until is_heap nth_element partial_sort_copy partial_sort stable_sort sort is_sorted_until is_sorted 变序算法 -->
 ### 变序算法
 ```cpp
 bool    is_sorted(b, e, bOp=lower_to)
@@ -1376,7 +1282,7 @@ destE   sample(b, e, destB, cnt, randomEngine)              // 随机取cnt个�
 ```
 <!-- entry end -->
 
-<!-- entry begin: 集合算法 -->
+<!-- entry begin: minmax_element max_element min_element clamp minmax minmax min min max max set_difference set_symmetric_difference set_intersection set_union includes inplace_merge merge 集合算法 -->
 ### 集合算法
 ```cpp
 // 集合算法均需提前排序
@@ -1404,13 +1310,11 @@ T       minmax_element(b, e, bOp=lower_to)  // 返回第一个最小值和最后
 ```
 <!-- entry end -->
 
-<!-- entry begin: cpp regex 正则表达式 -->
 ## 正则表达式库
+<!-- entry begin: cpp regex regex_contants regex_flag 正则表达式 -->
 ```cpp
 #include <regex>
-
-namespace std::regex_contants
-{
+namespace std::regex_contants {
     // 即sflag，用于构造regex。默认为ECMAScript
     icase;              // 忽略大小写
     nosubs;             // 标记子表达式（(pat)）无效。同时影响regex::mark_contants()
@@ -1432,9 +1336,11 @@ namespace std::regex_contants
     format_no_copy      // 不输出/返回不匹配的字符
     format_first_only   // 只替换收个匹配
 }
-
-class basic_regex<CharT>    // regex wregex
-{
+```
+<!-- entry end -->
+<!-- entry begin: regex wregex basic_regex -->
+```cpp
+class basic_regex<CharT> {  // regex wregex 
     // 构造函数
     basic_regex()
     basic_regex(cstr, sflag)
@@ -1448,9 +1354,11 @@ class basic_regex<CharT>    // regex wregex
     locale      getloc()
     locale      imbue()             // 返回之前locale
 };
-
-class match_results<BidirIt>    // cmatch wcmatch smatch wsmatch
-{
+```
+<!-- entry end -->
+<!-- entry begin: regex match_results cmatch wcmatch smatch wsmatch csub_match wcsub_match ssub_match wssub_match regex_iterator regex_token_iterator -->
+```cpp
+class match_results<BidirIt> {  // cmatch wcmatch smatch wsmatch
     // 状态
     bool        ready();
     // 容量
@@ -1474,43 +1382,40 @@ class match_results<BidirIt>    // cmatch wcmatch smatch wsmatch
     string      format(fmtStr, rflag);
     string      format(fmrB, fmtE, rflag);
 };
-
-class sub_match<BidirIt>    // csub_match wcsub_match ssub_match wssub_match
-{
+class sub_match<BidirIt> {  // csub_match wcsub_match ssub_match wssub_match
     // 观察器
     BidirIt     first;      // 子表达式开始
     BidirIt     second;     // 子表达式尾后
     String      str();
     operator    String();
 };
-
-class regex_iterator<BidirIt>   // cregex_iterator wcregex_iterator sregex_iterator wsregex_iterator
-{
+class regex_iterator<BidirIt> { // cregex_iterator wcregex_iterator sregex_iterator wsregex_iterator
     // 构造函数
     regex_iterator();                           // 默认构造为尾后迭代器
     regex_iterator(b, e, regex, mflag);         // 迭代器在每个匹配区间停留，每次从上次末尾开始匹配（不重合）
 
     match_results    operator*()                // 返回match_results
 };
-
-class regex_token_iterator<BidirIt> // cregex_token_iterator wcregex_token_iteratorsregex_token_iterator wsregex_token_iterator
-{
+class regex_token_iterator<BidirIt> {   // cregex_token_iterator wcregex_token_iteratorsregex_token_iterator wsregex_token_iterator
     // 构造函数
     regex_token_iterator();                     // 默认构造为尾后迭代器
     regex_token_iterator(b, e, regex, il, mflag);// il指定关注的regex中的子表达式，0表示全部，-1表示模式取反
 
     sub_match       operator*()                 // 返回sub_match
 };
-
-bool    regex_match(str, [match&,] regex, mflag);
+```
+<!-- entry end -->
+<!-- entry begin: regex regex_match regex_search regex_replace -->
+```cpp
+bool    regex_match(str,  [match&,] regex, mflag);
 bool    regex_match(b, e, [match&,] regex, mflag);
 
-bool    regex_search(str, [match&,] regex, mflag);
+bool    regex_search(str,  [match&,] regex, mflag);
 bool    regex_search(b, e, [match&,] regex, mflag);
 
-outItr  regex_replace(outItr, str, regex, fmt, rflag);  // 利用fmt替换掉每个匹配的regex
+outItr  regex_replace(outItr, str,  regex, fmt, rflag);  // 利用fmt替换掉每个匹配的regex
 outItr  regex_replace(outItr, b, e, regex, fmt, rflag);
-string  regex_replace(str, regex, fmt, rflag);
+string  regex_replace(str,  regex, fmt, rflag);
 string  regex_replace(b, e, regex, fmt, rflag);
 // 替换格式化语法：
 // $&       替换为regex中整个表达式的匹配
@@ -1523,7 +1428,8 @@ string  regex_replace(b, e, regex, fmt, rflag);
 <!-- entry end -->
 
 ## 输入输出库
-### 总览
+### 组件总览
+<!-- entry begin: iostream iosfwd 组件总览 -->
 ```cpp
 #include <iosfwd>       // 输入输出库中所有类的前置声明
 #include <streambuf>    // std::basic_streambuf 类模板
@@ -1544,8 +1450,9 @@ stream                  // (封装上述两者, 提供状态、格式化信息)
 centry                  // (帮助stream每次I/O预处理与后处理)
 操作符                  // (提供调整stream的便捷方法)
 ```
+<!-- entry end -->
 
-<!-- entry begin: iostream -->
+<!-- entry begin: iostream basic_ios sync_with_stdio 基础操作 -->
 ### 基础操作
 ```cpp
 class basic_ios<CharT>
@@ -1578,7 +1485,7 @@ bool ios::sync_with_stdio(bool sync = true) // 是否开启多线程同步，以
 <!-- entry end -->
 
 ### 非格式输入输出
-<!-- entry begin: 底层IO 底层I/O -->
+<!-- entry begin: 非格式输入输出 非格式化IO 非格式化I/O 底层IO 底层I/O -->
 ```cpp
 class basic_iostream<CharT>
 {
@@ -1606,11 +1513,12 @@ class basic_iostream<CharT>
     strm&   seekg(pos)
     strm&   seekp(offset, dir)
     strm&   seekg(offset, dir)
-    // dir包括beg、end、cur
+    // dir包括std::ios_base::{beg, end, cur}
 };
 ```
 <!-- entry end -->
 
+<!-- entry begin: iostream 预定义 -->
 ### 预定义操作
 ```txt
 整数：
@@ -1622,6 +1530,7 @@ class basic_iostream<CharT>
 
 其他：bool, char, char*, void*, string, streambuf*, bitset, complex
 ```
+<!-- entry end -->
 
 <!-- entry begin: iomanip -->
 ### 操作符
@@ -1672,35 +1581,30 @@ std::cin  >> std::quoted(str, delim='"', escape='\\');
 ```
 <!-- entry end -->
 
-### 文件流
 <!-- entry begin: fstream -->
+### 文件流
 ```cpp
 #include <fstream>
-// 类
-fstream
-ifstream
-ofstream
-wfstream
-wifstream
-wofstream
-
-// 构造
-basic_fstream(filename, oflag)
-in              // 只读              （文件必须存在）
-// out          // 清空然后涂写      （有必要则创建）
-out|trunc       // 清空然后涂写      （有必要则创建）
-out|app         // 追加              （有必要则创建）
-// app          // 追加              （有必要则创建）
-in|out          // 读写，初始位置为0 （文件必须存在）
-in|out|trunc    // 清空然后读/写     （有必要则创建）
-in|out|app      // 读写，追加        （有必要则创建）
-// in|app       // 读写，追加        （有必要则创建）
-binary          // 不将`\r\n`替换为`\n`
-
-// 特有成员函数
-bool    is_open()
-void    open()
-void    close()
+class basic_iofstream { // 预定义有 fstream ifstream ofstream wfstream wifstream wofstream
+    // 构造函数
+    basic_iofstream(filename, oflag)
+    /*
+     * in              // 只读              （文件必须存在）
+     **** out          // 清空然后涂写      （有必要则创建）
+     * out|trunc       // 清空然后涂写      （有必要则创建）
+     * out|app         // 追加              （有必要则创建）
+     **** app          // 追加              （有必要则创建）
+     * in|out          // 读写，初始位置为0 （文件必须存在）
+     * in|out|trunc    // 清空然后读/写     （有必要则创建）
+     * in|out|app      // 读写，追加        （有必要则创建）
+     **** in|app       // 读写，追加        （有必要则创建）
+     * binary          // 不将`\r\n`替换为`\n`
+    */
+    // 特有成员函数
+    bool    is_open()
+    void    open()
+    void    close()
+};
 ```
 <!-- entry end -->
 
@@ -1708,19 +1612,14 @@ void    close()
 ### 字符流
 ```cpp
 #include <sstream>
-// 类
-stringstream
-istringstream
-ostringstream
-wstringstream
-wistringstream
-wostringstream
-// 构造
-stringstream(str)
-// 特有成员函数
-string_view view()
-string      str()
-string      str(str)
+class iostringstream {  // 预定义有stringstream istringstream ostringstream wstringstream wistringstream wostringstream
+    // 构造函数
+    stringstream(str)
+    // 特有成员函数
+    string_view view()
+    string      str()       // 返回缓冲区的字符，与是否已被读取无关
+    string      str(str)
+};
 ```
 <!-- entry end -->
 
@@ -1728,19 +1627,21 @@ string      str(str)
 ### 流缓冲区
 ```cpp
 #include <streambuf>
-// 通过文件描述符构造
-#include <stdio>
-auto fd = fileno(FILE* file);
-__gnu_cxx::stdio_filebuf<char> buf{fd, std::ios_base::in};
-std::istream istrm{buf};
-
-// 析构函数
+// 析构时
 // basic_iostream族类析构时不会销毁streambuf
 // 其他流类析构时只不析构由rdbuf(buf*)得到的缓冲区
 
 // 高效非格式化输入输出
 // 利用streambuf_iterator避开构造sentry进行非格式化I/O
 // 利用streambuf*预定义的输入输出操作进行直接I/O
+
+// 利用streambuf来通过文件描述符构造
+#include <ext/stdio_filebuf.h>
+std::iostream make_strm_by_fd(int fd) {
+    auto fd = fileno(fd);
+    __gnu_cxx::stdio_filebuf<char> buf{fd, std::ios_base::in};
+    std::istream istrm{&buf};
+}
 ```
 <!-- entry end -->
 
@@ -1748,8 +1649,7 @@ std::istream istrm{buf};
 ### 本地环境
 ```cpp
 #include <locale>
-class locale
-{
+class locale {
     // 构造函数
     locale()                // 默认构造为std::locale::classic。或为最近一次调用std::locale::global的参数locale
     locale(name)            // 指定语系与字符集。空字符串则设置为当前系统环境
@@ -1763,414 +1663,362 @@ class locale
 ```
 <!-- entry end -->
 
-## 并发库
+## 线程支持库
 ### 线程启动
-<!-- entry begin: async -->
-> 头文件：`<future>`  
-> 命名空间：`std::`
-* `async(Func, Args...)`                        ：优先异步调用，不可行则延迟发射
-* `async(std::launch::async, Func, Args...)`    ：异步调用，失败则抛出异常
-* `async(std::launch::deferred, Func, Args...)` ：延迟发射
-
-注释：
-* 以下情况调用线程会阻塞直到对应`future`所对应的线程退出：
-      * 最后一个`future`副本销毁
-      * 对`future`调用`wait()`或`get()`
-<!-- entry end -->
-
-* * * * * * * * * *
-
-<!-- entry begin: future shared_future -->
-> 头文件：`<future>`  
-> 命名空间：`std::`
-* `future<ResultType>`
-* `shared_future<ResultType>`
-特种成员：
-* `~future()`                   ：析构时令状态失效
-* Move                          ：支持move操作，拒绝copy操作。
-* `future()`                    ：构造为无效状态
-
-成员函数：
-* `.shared()`                   ：返回`shared_future`继承状态，并令本对象状态失效
-* `.valid()`                    ：返回bool表示状态是否有效
-* `.get()`                      ：返回对应线程返回值
-* `.wait()`                     ：等待对应线程结束
-* `.wait_for(duration)`         ：等待对应线程结束
-* `.wait_until(time_point)`     ：等待对应线程结束
-
-注释：
-* `get()`可获取future的状态（线程的返回值或抛出的异常），只能获取一次然后失效
-* `wait_for`与`wait_until`可能返回以下值
-    * `std::future_status::deferred`：线程使用延迟发射策略且仍未启动
-    * `std::future_status::timeout` ：等待超时
-    * `std::future_status::ready`   ：线程已结束
-* `shared_future`相对于`future`的区别：
-    * 相对`future`，提供了特种成员copy，并取消了成员函数`.shared()`
-    * `get()`可多次获取future的状态而不令其失效
-<!-- entry end -->
-
-### 线程控制
-<!-- entry begin: this_thread thread -->
-> 头文件：`<thread>`  
-> 命名空间：`std::`
-* `thread`
-特种成员：
-* Move                          ：将原对象设为nonjoinable
-* `thread(Func, Args...)`       ：构造并启动线程
-成员函数：
-* `.joinable()`                 ：返回bool表示该线程是否joinable
-* `.join()`                     ：阻塞直至线程结束并将该对象设为nonjoinable。注意销毁一个joinable的`thread`对象时会调用`terminate()`
-* `.detach()`                   ：卸离线程
-* `.get_id()`                   ：返回TID（真TID）
-
-> 命名空间：`std::this_thread::`
-* `get_id()`                    ：返回TID（假TID）
-* `sleep_for(duration)`         ：休眠
-* `sleep_until(time_point)`     ：休眠
-* `yield()`                     ：建议该线程立即被调度
-<!-- entry end -->
-
-### 线程同步
-<!-- entry begin: mutex 互斥锁 -->
-> 头文件：`<mutex>`  
-> 命名空间：`std::`
-* `mutex`                               ：支持前3个操作
-* `timed_mutex`                         ：支持前5个操作
-* `recursive_mutex`                     ：支持多次上锁与解锁
-* `recursive_timed_mutex`               ：支持多次上锁与解锁，且支持前5个操作
-* `shared_mutex`                        ：支持除后2个之外的操作
-* `shared_timed_mutex`                  ：支持所有操作
-
-成员函数：
-* `.lock()`                             ：获取锁（原子操作：读取-测试-上锁/阻塞）
-* `.try_lock()`                         ：尝试获取锁，成功返回true
-* `.unlock()`                           ：释放锁
-* `.try_lock_for(duration)`             ：尝试获取锁，成功返回true
-* `.try_lock_until(time_point)`         ：尝试获取锁，成功返回true
-* `.lock_shared()`                      ：释放读锁
-* `.unlock_shared()`                    ：释放读锁
-* `.try_lock_shared()`                  ：尝试获取锁读锁
-* `.try_lock_shared_for(duration)`      ：尝试获取锁读锁
-* `.try_lock_shared_until(time_point)`  ：尝试获取锁读锁
-
-全局函数：
-* `lock(Mutex...)`                      ：阻塞直至获取所有锁，或解锁已获取的锁并抛出异常（死锁）
-* `try_lock(Mutex...)`                  ：若全部获取则返回-1，否则解锁已获取的锁并返回第一个无法获取的锁的次序（加锁次序与实参次序相同且从0开始编号）
-* `call_once(once_flag, Func, Args...)` ：根据`once_flag`来判断并只调用一次`func(args...)`
-
-* * * * * * * * * *
-
-* `lock_guard<Mutex>`
-* `unique_lock<Mutex>`
-* `shared_lock<Mutex>`
-特种成员：
-* `~Lock()`                     ：释放锁
-* Move                          ：支持move操作，但不支持copy操作
-* `Lock(Mutex)`                 ：获取锁
-* `Lock(Mutex, std::adopt_lock)`：接管已上锁的锁
-* `Lock(Mutex, std::defer_lock)`：不上锁
-* `Lock(Mutex, std::try_lock)`  ：尝试上锁
-* `Lock(Mutex, duration)`       ：尝试上锁
-* `Lock(Mutex, time_point)`     ：尝试上锁
-
-成员函数：
-* `.lock()`
-* `.try_lock()`
-* `.unlock()`
-* `.try_lock_for()`
-* `.try_lock_until()`
-* `.owns_lock()`
-* `.operator bool()`
-<!-- entry end -->
-
-* * * * * * * * * *
-
-<!-- entry begin: cv condition_variable 条件量  -->
-> 头文件：`<condition_variable>`  
-> 命名空间：`std::`
-* `condition_variable`
-特种成员：
-* `~condition_variable()`
-* `condition_variable()`
-
-成员函数：
-* `.wait(unique_lock, OP0 = Return_True)`
-* `.wait_for(unique_lock, duration, OP0 = Return_True)`
-* `.wait_until(unique_lock, time_point, OP0 = Return_True)`
-* `.notify_one()`
-* `.notify_all()`
-
-全局函数：
-* `notify_all_at_thread_exit(condition_variable, unique_lock)`
-
-注释：
-* wait时限系列成员函数的无OP0版本的返回值：
-    * `std::cv_status::timeout`
-    * `std::cv_status::no_timeout`
-* 条件量的使用需要互斥锁提供临时保护区，创造条件的线程负责在保护区外调用notify系列函数
-* 注意条件量与互斥锁的区别：
-    > 需要强调的是，因互斥锁而阻塞的线程由互斥锁解锁时唤醒，而因条件量阻塞的线程需要调用notify系列函数唤醒
-    * 互斥锁提供原子操作：读取-检测-上锁/阻塞
-    * 条件量提供原子操作：解锁-阻塞
-<!-- entry end -->
-
-* * * * * * * * * *
-
-<!-- entry begin: atomic -->
-> 头文件：`<atomic>`  
-> 命名空间：`std::`
-* `atomic<BasicType>`
-
-特种成员：
-* `atomic()`                            ：构造时初始化lock
-
-成员函数：
-* `.compare_exchange_strong(exp, val)`  ：若`this->load() == exp`，则`this->store(val);return true;`，否则`exp = this->load();return false;`
-* `.compare_exchange_weak(exp, val)`    ：同上，但可能假失败，也可能更高效
-* `.load()`                             ：返回原值拷贝
-* `.store(val)`                         ：赋值val
-* `.exchange(val)`                      ：赋值val并返回旧值拷贝
-* `.operator=(val)`                     ：赋值val并返回新值拷贝
-* `++a, a++`
-* `--a, a--`
-* `a += val`
-* `a -= val`
-* `a &= val`
-* `a |= val`
-* `a ^= val`
-<!-- entry end -->
-
-### 并发实例
-<!-- entry begin: 并发实例 -->
+<!-- entry begin: future shared_future async -->
 ```cpp
-#include <condition_variable>
 #include <future>
-#include <iostream>
-#include <mutex>
-#include <queue>
+class future<T> {
+    // 特种成员：支持move拒绝copy
+    // 成员函数
+    bool    valid();                // 查看状态是否有效（未被获取并销毁）
+    T       get();                  // 获取并销毁状态（线程返回值或传递异常）。启动延迟线程
+    void    wait();                 // 等待线程结束。启动延迟线程
+    status  wait_for(duration);     // 等待线程结束
+    status  wait_until(time_point); // 等待线程结束
+    // status包括std::future_status::{deferred, timeout, ready}
 
-namespace
-{
-    std::mutex Mx{};
-    std::condition_variable Cv{};
-    std::queue<int> Que{};
-
-    void consumer();
-    void producer();
-} // namespace
-
-int main()
-{
-    auto f0 = std::async(consumer);
-    auto f1 = std::async(consumer);
-    auto f2 = std::async(consumer);
-    auto f3 = std::async(consumer);
-
-    auto f4 = std::async(producer);
-    auto f5 = std::async(producer);
-    auto f6 = std::async(producer);
-    auto f7 = std::async(producer);
-
-    return 0;
-}
-
-namespace
-{
-    void consumer()
-    {
-        { // synchronism
-            std::unique_lock ul{Mx};
-            Cv.wait(ul, [](){return Que.size();});
-            std::cout << "consumer pop " << Que.front() << std::endl;
-            Que.pop();
-        }
-    }
-
-    void producer()
-    {
-        static int Cntr{};
-
-        { // synchronism
-            std::unique_lock ul{Mx};
-            Que.push(++Cntr);
-            std::cout << "producer push " << Cntr << std::endl;
-        }
-        Cv.notify_one();
-    }
-} // namespace
+    shared_future share();          // 返回shared_future，其提供了copy操作且可多次调用get()而不销毁状态
+};
+// 注意：future最后一个副本在销毁时会同步等待线程结束，故要想异步则必须nodiscard
+future  async(function, args...);                   // 优先异步调用，不可行则延迟发射
+future  async(launch_policy, function, args...);    // std::launch::async或std::launch::deferred
 ```
 <!-- entry end -->
 
-## 文件系统
-### 文件信息
-<!-- entry begin: filesystem fs status file_size hard_link_count last_write_time space -->
-* status(path); symlink_status(path)：返回file_status
-    * .type()
-    * .permissions()
-* file_size(path)
-* hard_link_count(path)
-* last_write_time(path)
-
-* space()                           ：返回space_info
-    * .capacity
-    * .available
-    * .free
+<!-- entry begin: this_thread thread -->
+```cpp
+#include <thread>
+class thread {
+    // 构造函数
+    thread();
+    thread(function, args...);      // 构造同时启动线程
+    // 成员函数
+    tid     get_id();               // 获取线程ID（此为C++设置，非OS设置）
+    bool    joinable();             // 检查线程是否活跃
+    void    join();                 // 等待线程结束并释放资源，调用后non-joinable
+    void    detach();               // 卸离线程一旦退出自动释放资源，调用后non-joinable
+    handle  native_handle()         // 返回实现定义的线程句柄
+};
+namespace std::this_thread {
+    tid     get_id();               // 获取当前线程ID（此为C++设置，非OS设置）
+    void    yield();                // 建议系统切换其他线程执行
+    void    sleep_for(duration);    // 阻塞当前线程一段时间
+    void    sleep_until(time_point);// 阻塞当前线程直到指定时间
+}
+```
 <!-- entry end -->
 
-<!-- entry begin: filesystem fs filetype ft -->
-* 文件类型：
-    * is_regular_file()
-    * is_directory()
-    * is_symlink()              ：符号链接除此之外还具有链接目标的文件类型
-    * is_socket()
-    * is_fifo()
-    * is_block_file()
-    * is_character_file()
+### 线程同步
+<!-- entry begin: mutex lock try_lock call_once lock_guard scoped_lock unique_guard shared_guard 互斥锁管理器 -->
+```cpp
+#include <mutex>
+#include <shared_mutex>
+// 互斥锁：不可copy不可move
+typename mutex                                       // 支持前3个操作
+typename recursive_mutex                             // 支持前3个操作，支持多次上锁与解锁
+typename timed_mutex                                 // 支持前5个操作
+typename recursive_timed_mutex                       // 支持前5个操作，支持多次上锁与解锁
+typename shared_mutex                                // 支持除后2个之外的操作
+typename shared_timed_mutex                          // 支持所有操作
+// 成员函数
+class Mutex {
+    void    lock()                              // 获取锁（原子操作：读取-测试-上锁/阻塞）
+    void    unlock()                            // 释放锁
+    bool    try_lock()                          // 尝试获取锁，成功返回true
+    bool    try_lock_for(duration)              // 尝试获取锁，成功返回true
+    bool    try_lock_until(time_point)          // 尝试获取锁，成功返回true
+    void    lock_shared()                       // 释放读锁
+    void    unlock_shared()                     // 释放读锁
+    bool    try_lock_shared()                   // 尝试获取锁读锁
+    bool    try_lock_shared_for(duration)       // 尝试获取锁读锁
+    bool    try_lock_shared_until(time_point)   // 尝试获取锁读锁
+};
+// 辅助函数
+void    lock(Mutex...)                      // 阻塞直至获取所有锁，或解锁已获取的锁并抛出异常（死锁）
+int     try_lock(Mutex...)                  // 若全部获取则返回-1，否则解锁已获取的锁并返回第一个无法获取的锁的次序（加锁次序与实参次序相同且从0开始编号）
+void    call_once(once_flag, Func, Args...) //根据once_flag（不可copy不可move）来判断并只调用一次`func(args...)`
+// 互斥锁管理器
+typename    lock_guard<Mutex>       // 支持第2、3种构造函数，且不支持下述成员函数
+typename    scoped_lock<Mutex...>   // 支持第1个构造函数
+typename    unique_guard<Mutex>     // 支持除第1个外全部构造函数
+typename    shared_guard<Mutex>     // 支持除第1个外全部构造函数。上读锁
+class Lock {
+    // 特种成员：支持move拒绝copy
+    Lock(Mutex...)                          // 免死锁上锁
+    Lock(Mutex)                             // 获取锁
+    Lock(Mutex, std::adopt_lock)            // 接管已上锁的锁
+    Lock(Mutex, std::defer_lock)            // 不上锁
+    Lock(Mutex, std::try_lock)              // 尝试上锁
+    Lock(Mutex, duration)                   // 尝试上锁
+    Lock(Mutex, time_point)                 // 尝试上锁
+    ~Lock()                                 // 释放锁
+    // 成员函数
+    void    lock()
+    void    unlock()
+    bool    try_lock()
+    bool    try_lock_for(duration)
+    bool    try_lock_until(time_point)
+    Mutex*  release()
+    Mutex*  mutex()
+    bool    owns_lock()
+    operator bool()
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: filesystem fs file_type ft -->
-* file_type
-    > 领域枚举
-    * ::none
-    * ::not_found
-    * ::regular
-    * ::directory
-    * ::symlink
-    * ::block
-    * ::character
-    * ::fifo
-    * ::socket
-    * ::unkown
+<!-- entry begin: cv condition_variable 条件量  -->
+```cpp
+#include <condition_variable>
+class condition_variable {
+    // 构造函数：不可copy不可move
+
+    // 等待：若条件不满足则原子性唤醒-阻塞
+    void    wait(unique_lock)
+    void    wait(unique_lock, Pred)
+    cv_stat wait_for(unique_lock, duration)
+    bool    wait_for(unique_lock, duration, Pred)
+    cv_tsat wait_until(unique_lock, time_point)
+    bool    wait_until(unique_lock, time_point, Pred)
+    // cv_stat为std::cv_status::timeout或std::cv_status::no_timeout
+
+    // 唤醒：由条件量等待阻塞的线程，只能由同一条件量唤醒
+    void    notify_one()
+    void    notify_all()
+};
+void    notify_all_at_thread_exit(condition_variable, unique_lock)
+```
 <!-- entry end -->
 
-
-### 目录
-<!-- entry begin: filesystem fs directory_entry -->
-* directory_entry `<filesystem>`
-    > 目录项可能是目录下的任何类型的文件，文件名尾缀最好别带`/`
-    * 构造与赋值
-        * (path)                        ：string与path，path与direcoty_entry都可相互转换
-    * 读取
-        * .path()                       ：返回const path&（也可直接隐式转换为path）
+<!-- entry begin: atomic -->
+### 原子操作库
+```cpp
+#include <atomic>
+struct atomic<T> {  // 内置类型均有预定义别名
+    // 构造
+    atomic()        // 构造时初始化lock
+    atomic(T)       // 非原子
+    // 成员函数：
+    bool    compare_exchange_strong(exp, val)   // 若*this==exp，则*this=val
+    bool    compare_exchange_weak(exp, val)     // 同上，可能更高效但同时可能假失败
+    T       load()                              // 返回原值拷贝
+    void    store(val)                          // 赋值val
+    T       exchange(val)                       // 赋值val并返回旧值拷贝
+    operator=(val)                              // 赋值val并返回新值拷贝
+    operator--()
+    operator++()
+    operator--(int)
+    operator++(int)
+    operator-=(val)
+    operator+=(val)
+    operator&=(val)
+    operator|=(val)
+    operator^=(val)
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: filesystem fs directory_iterator recursive_directory_iterator  -->
-* directory_iterator `<filesystem>`
-    * 构造：
-        * (path)，默认构造为尾后迭代器
-* recursive_directory_iterator  `<filesystem>`
-    * .depth()                  ：返回当前递归深度
-    * .pop()                    ：返回上级目录
-    * .recursion_pending        ：返回当前目录是否禁用递归
-    * .disable_recursion_pending：下次自增前禁用递归
+## 文件系统库
+<!-- entry begin: filesystem fs path directory_entry -->
+### 路径与文件表示
+```cpp
+#include <filesystem>
+class path {
+    // 构造函数
+    path()
+    path(str)
+    path(b, e)
+    // 修改器
+    operator/=()
+    operator+=()
+    void    clear()
+    path&   remove_filename()
+    path&   replace_filename()
+    path&   replace_extension()
+    // 观察器
+    CString c_str()
+    String  native()
+    operator String()
+    itr     begin()
+    itr     end()
+    // 分解
+    // Linux以`/tmp/fs.cpp`为例，Windows以`C:\tmp\fs.cpp`为例
+    path    root_path()                 // `/`          或`C:\`
+    path    root_name()                 // ` `          或`C:`
+    path    root_directory()            // `/`          或`\`
+    path    relative_path()             // `tmp/fs.cpp` 或`tmp\fs.cpp`
+    path    parent_path()               // `/tmp/`      或`C:\tmp\`
+    path    file_name()                 // `fs.cpp`
+    path    stem()                      // `fs`
+    path    extension()                 // `.cpp`
+    // 查询
+    bool    empty()
+    bool    is_absolute()
+    bool    is_relative()
+    bool    has_root_path()
+    bool    has_root_name()
+    bool    has_root_directory()
+    bool    has_relative_path()
+    bool    has_parent_path()
+    bool    has_file_name()
+    bool    has_stem()
+    bool    has_extension()
+};
+class directory_entry { // 存储一个path作为成员，并可能附带文件属性
+    // 构造函数
+    directory_entry()
+    directory_entry(path)
+    // 修改器
+    void    replace_filename(path)      // 设置文件名，并更新缓存属性
+    void    refresh()                   // 更新缓存的文件属性
+    // 观察器
+    C path& path()
+    operator C path&()
+};
+```
 <!-- entry end -->
 
-<!-- entry begin: filesystem fs mkdir create_directory create_directories -->
-* create_directory(path)            ：`mkdir`
-* create_directories(path)          ：`mkdir -p`
+### 文件属性
+<!-- entry begin: permissions is_character_file is_block_file is_fifo is_socket is_symlink is_directory is_regular_file symlink_status status permissions file_status file_type perms -->
+```cpp
+#include <filesystem>
+class file_status {
+    // 成员函数
+    ft      type();             // 返回文件类型
+    void    type(ft);           // 设置文件类型
+    perm    permissions();      // 返回文件权限
+    void    permissions(perm);  // 设置文件权限
+};
+enum class file_type {
+    none,
+    not_found,
+    regular,
+    directory,
+    symlink,
+    block,
+    character,
+    fifo,
+    socket,
+    // 实现附加定义
+    unkown,
+};
+enum class perms {
+    none,         // 0000
+    owner_read,   // 0400
+    owner_write,  // 0200
+    owner_exec,   // 0100
+    owner_all,    // 0700
+    group_read,   // 0040
+    group_write,  // 0020
+    group_exec,   // 0010
+    group_all,    // 0070
+    others_read,  // 0004
+    others_write, // 0002
+    others_exec,  // 0001
+    others_all,   // 0007
+    all,          // 0777
+    set_uid,      // 04000
+    set_gid,      // 02000
+    sticky_bit,   // 01000
+    mask,         // 07777
+    unknown       // 0xFFFF
+};
+file_status status(path);
+file_status symlink_status(path);
+bool        is_regular_file()
+bool        is_directory()
+bool        is_symlink()                            // 符号链接除此之外还具有链接目标的文件类型
+bool        is_socket()
+bool        is_fifo()
+bool        is_block_file()
+bool        is_character_file()
+void        permissions(path, perms, perm_options)  // 修改权限
+// perm_options包括： std::filesystem::{replace, add, remove, nofollow}
+```
+<!-- entry end -->
+<!-- entry begin: fs filesystem relative canonical absolute exists equivalent temp_directory_path current_path hard_link_count last_write_time resize_file file_size space  -->
+```cpp
+#include <filesystem>
+struct space_info
+{
+    uintmax_t   capacity;   // 文件系统总字节大小
+    uintmax_t   free;       // 文件系统空闲空间
+    uintmax_t   available;  // 普通进程可用空闲空间
+};
+
+space_info  space(path);
+size        file_size(path);
+void        resize_file(path, new_size);
+time_point  last_write_time(path);
+size_t      hard_link_count(path);
+
+path        current_path()              // 获取当前工作路径
+path        temp_directory_path()       // 获取临时目录
+bool        equivalent(path1, path2)    // 判断两路径是否为同一文件
+bool        exists()
+path        absolute(path)              // 将path转换为绝对路径（可能带有`..`）
+path        canonical(path)             // 将path转换为绝对路径（无点、双点元素或符号链接）
+path        relative(path)              // 将path根据当前工作目录转换为相对路径
+```
 <!-- entry end -->
 
-### 符号链接
-<!-- entry begin: read_symlink create_symlink -->
-* read_symlink(path)    ：获取符号链接指向的文件path（可能为相对路径）
-* create_symlink(target, link)
+### 文件操作
+<!-- entry begin: copy rename remove_all remove create_hard_link create_directory_symlink create_symlink copy_symlink read_symlink create_directories create_directory disable_recursion_pending recursion_pending pop depth filesystem fs directory_iterator recursive_directory_iterator  -->
+```cpp
+// 文件系统库中函数发生错误时（如权限不足、文件不存在等等），
+// 一般都提供一个版本的重载用于传递一个error_code&来关闭该次调用的异常机制
+class directory_iterator {
+    directory_iterator()                // 默认构造尾后迭代器
+    directory_iterator(path , dir_opt)  // 构造指定路径的目录项迭代器（不递归子目录）
+};
+class recursive_directory_iterator {
+    recursive_directory_iterator()                // 默认构造尾后迭代器
+    recursive_directory_iterator(path , dir_opt)  // 构造指定路径的目录项迭代器（递归子目录）
+
+    int     depth()                     // 返回当前递归深度（目录深度），从0开始
+    void    pop()                       // 返回上级目录
+    bool    recursion_pending()         // 返回当前目录是否禁用递归
+    void    disable_recursion_pending() // 下次自增前禁用递归（用于跳过某些目录）
+};
+enum class directory_options {
+    none,                               // （默认）跳过符号链接、权限拒绝是错误
+    follow_directory_symlink,           // 跟随符号链接
+    skip_permission_denied              // 跳过不具权限的项
+};
+
+bool    create_directory(path)          // 创建目录文件，其路径必须存在
+bool    create_directory(path, epath)   // 从已存在的文件复制属性
+bool    create_directories(path)        // 创建目录文件，其路径不存在则创建
+
+path    read_symlink(path)              // 获取符号链接指向的文件path（可能为相对路径）
+void    copy_symlink(target, link)      // 创建符号链接（不跟随符号链接）
+void    create_symlink(target, link)    // 创建符号链接（不跟随符号链接）
+void    create_directory_symlink(tar, link) // 有些系统单独区分目录的符号链接
+void    create_hard_link(target, link)  // 创建硬链接
+
+void    remove(path)                    // 删除目标文件
+void    remove_all(path)                // 递归删除整个目录下文件
+void    rename(old_p, new_p)            // 移动或更名
+void    copy(from, to, copy_option)
+
+enum class copy_options {
+    none,                   // 默认
+    recursive,              // 目录递归复制
+    skip_existing,          // 跳过已存在文件
+    overwrite_existing,     // 覆盖已存在文件
+    update_existing,        // “更新”已存在文件
+    copy_symlinks,          // 复制符号链接本身而不（默认）跟随之
+    skip_symlinks,          // 忽略符号链接
+    directories_only,       // 仅复制目录结构，忽略非目录文件
+    create_symlinks,        // 创建符号链接
+    create_hard_links,      // 创建硬链接
+};
+```
 <!-- entry end -->
 
-### 硬链接
-<!-- entry begin: filesystem fs copy rename remove remove_all -->
-* copy(source, target, copy_options)
-    > * copy_options：领域枚举
-    >     * ::none
-    >     * ::skip_existing
-    >     * ::overwrite_existing
-    >     * ::update_existing
-    >     * ::recursive
-    >     * ::copy_symlinks
-    >     * ::skip_symlinks
-    >     * ::directories_only
-    >     * ::create_symlinks
-    >     * ::create_hard_links
-* rename(old_path, new_path)        ：`mv`
-* remove(path)                      ：`rm rmdir`
-* remove_all(path)                  ：`rm -r`
-<!-- entry end -->
-
-### 权限
-<!-- entry begin: filesystem fs file_perm permissions 权限 -->
-* permissions(path, perms, perm_options)
-    > * perm_options
-    >     * ::replace
-    >     * ::add
-    >     * ::remove
-    >     * ::nofollow（改变符号链接自身）
-* file_perm
-    > 领域枚举
-    * ::none          0000
-    * ::owner_read    0400
-    * ::owner_write   0200
-    * ::owner_exec    0100
-    * ::owner_all     0700
-    * ::group_read    0040
-    * ::group_write   0020
-    * ::group_exec    0010
-    * ::group_all     0070
-    * ::others_read   0004
-    * ::others_write  0002
-    * ::others_exec   0001
-    * ::others_all    0007
-    * ::all           0777
-    * ::set_uid       4000
-    * ::set_gid       2000
-    * ::sticky_bit    1000
-    * ::mask          7777
-<!-- entry end -->
-
-### 类
-<!-- entry begin: filesystem fs path -->
-* path `<filesystem>`
-    * 读取
-        * .c_str()                  ：返回char*
-        * .native()                 ：返回string&
-        * .begin()与.end()          ：若存在root_name则从root_name开始，否则从root_path开始，每个元素即是每层目录名（除了root_path外不加`/`或`\`）
-        * .root_name()              ：` `或`C:`
-        * .root_path()              ：`/`或`\`
-        * .relative_path()          ：`tmp/fs.cpp`或`tmp\fs.cpp`
-        * .parent_path()            ：`/tmp/`或`C:\tmp\`
-        * .file_name()              ：`fs.cpp`
-        * .stem()                   ：`fs`
-        * .extension()              ：`.cpp`
-    * 修改
-        * `operator<<(strm, path)`    ：`/tmp/fs.cpp`或`C:\tmp\fs.cpp`
-        * `operator>>(strm, path)`    ：`/tmp/fs.cpp`或`C:\tmp\fs.cpp`
-        * `operator/()与operator/=()`
-        * .remove_filename()
-        * .replace_filename()
-        * .replace_extension()
-    * 判断
-        * .empty()
-        * .is_absolute()
-        * .is_relative()
-        * .has_root_name()
-        * .has_root_path()
-        * .has_relative_path()
-        * .has_parent_path()
-        * .has_file_name()
-        * .has_stem()
-        * .has_extension()
-<!-- entry end -->
-
-### 函数
-<!-- entry begin: filesystem fs equivalent exists status_knows absolute canonical relative current_path temp_directory_path -->
-* equivalent(path1, path2)  ：判断两路径是否为同一文件（包括链接）
-* exists()
-* absolute(path)        ：将path转换为绝对路径（可能带有`..`）
-* canonical(path)       ：将path转换为绝对路径（不带有`..`）
-* relative(path)        ：将path根据当前工作目录转换为相对路径
-* current_path()        ：获取当前工作路径
-* temp_directory_path() ：获取临时目录
-<!-- entry end -->
 
 # BOOST库
+<!-- entry begin: boost locale codecvt 字符编码转换 字符转换 -->
 ## 字符编码转换
 ```cpp
 #include <boost/locale.hpp> // -lboost_locale
@@ -2188,6 +2036,8 @@ std::basic_string<CharT>    utf8_to_utf(Str);
 std::string                 between(b, e, to_charset, from_charset);
 std::string                 between(str, to_charset, from_charset);
 ```
+<!-- entry end -->
+
 ## 序列化
 <!-- entry begin: serialization boost 序列化 -->
 ```cpp
@@ -2195,15 +2045,12 @@ std::string                 between(str, to_charset, from_charset);
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/string.hpp>
 #include <fstream>
-#include <ios>
 #include <iostream>
 
 class Test
 {
     friend class boost::serialization::access; // Note!
 public:
-    Test() = default;
-
     Test(int i_a, double d_a, const std::string& s_a): i_m{i_a}, d_m{d_a}, s_m{s_a} {}
 
     void output()
@@ -2229,9 +2076,6 @@ private:
 
 int main()
 {
-    std::ios_base::sync_with_stdio(false);
-    std::cin.tie(nullptr);
-
     std::fstream file{"test.bin", std::ios_base::in | std::ios_base::out | std::ios_base::trunc}; // Note
 
     boost::archive::binary_oarchive toa{file};
