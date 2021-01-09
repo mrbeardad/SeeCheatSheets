@@ -42,7 +42,7 @@
 * 多分支首先想到数组/哈希表，然后是switch语句，最后才是if-else语句
 * `if-if`                               ：可能同时发生的条件
 * `if-else`与`if{continue或return}`     ：不可能或不应该或没必要同时发生的条件，若需要跳过的语句不多则选择前者
-* `if-elseif-else`与`if-else{if-else}`  ：有公共语句则前者转为后者，无则后者转前者
+* `if-elseif-else`与`if-else{if-else}`  ：有公共语句则前者转为后者，无则后者转前者。注意后者else条件必须包含前者elseif与else
 * `for{}与for{if-break}`                ：若条件检测需要插在循环操作之间进行，则使用`if-break`
 * `if{for}`
     * 条件：if与for的检测条件重合时

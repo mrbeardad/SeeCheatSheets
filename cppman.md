@@ -70,12 +70,14 @@
     - [文件属性](#文件属性)
     - [文件操作](#文件操作)
 - [BOOST库](#boost库)
-  - [字符编码转换](#字符编码转换)
-  - [序列化](#序列化)
-- [nlohmann-json](#nlohmann-json)
-  - [序列化](#序列化-1)
-  - [反序列](#反序列)
-  - [自定义变量转换](#自定义变量转换)
+  - [编码转换](#编码转换)
+- [GOOGLE库](#google库)
+  - [日志库](#日志库)
+  - [测试库](#测试库)
+- [序列化库](#序列化库)
+  - [YAS](#yas)
+  - [BOOST](#boost)
+  - [JSON](#json)
 - [Mysql++](#mysql)
   - [异常](#异常)
   - [连接](#连接)
@@ -1501,7 +1503,7 @@ class basic_iostream<CharT>
     int     peek()                              // 返回下个字符, 但不移动iterator
     strm&   unget()                             // 撤销上次读取的字符（回移iterator）
     strm&   putback(char)                       // 将指定字符置入流中
-    strm&   sync()
+    strm&   sync()                              // 对输出流冲刷缓冲区，对输入流清空缓冲区并重新读取
 
     stm&    put(char)
     strm&   write(char*, count)
@@ -1627,11 +1629,17 @@ class iostringstream {  // 预定义有stringstream istringstream ostringstream 
 ### 流缓冲区
 ```cpp
 #include <streambuf>
-// 析构时
-// basic_iostream族类析构时不会销毁streambuf
-// 其他流类析构时只不析构由rdbuf(buf*)得到的缓冲区
 
-// 高效非格式化输入输出
+class basic_streambuf<CharT> {
+    // 析构时
+    // basic_iostream族类析构时不会销毁streambuf
+    // 其他流类析构时只不析构由rdbuf(buf*)得到的缓冲区
+
+    // 成员函数
+    pos pubseekoff(off, dir, which);    // dir有std::ios_base::{beg, cur, end}
+    pos pubseekpos(pos, which);         // which有std::ios_base::{in, out}
+};
+// 高效非格式化输入输出：
 // 利用streambuf_iterator避开构造sentry进行非格式化I/O
 // 利用streambuf*预定义的输入输出操作进行直接I/O
 
@@ -2019,7 +2027,7 @@ enum class copy_options {
 
 # BOOST库
 <!-- entry begin: boost locale codecvt 字符编码转换 字符转换 -->
-## 字符编码转换
+## 编码转换
 ```cpp
 #include <boost/locale.hpp> // -lboost_locale
 using namespace boost::locale::conv;
@@ -2038,7 +2046,129 @@ std::string                 between(str, to_charset, from_charset);
 ```
 <!-- entry end -->
 
-## 序列化
+# GOOGLE库
+<!-- entry begin: 日志库 glog -->
+## 日志库
+```cpp
+#include <glog/logging.h>
+int main(int argc, char* argv[]) {
+    // 初始化glog
+    google::InitGoogleLogging(argv[0]);
+    // 日志等级包括 INFO、WARNING、ERROR、FATAL。
+    // 高等级日志同时会写入低等级的日志，ERROR与FATAL会写入stderr，FATAL还会终止程序
+    LOG(severity)                         << "Something goes wrong!";
+    LOG_IF(severity, cond)                << "Something goes wrong!";
+    LOG_EVERY_N(severity, times)          << "Something goes wrong!" << google::COUNTER;
+    LOG_IF_EVERY_N(severity, cond, times) << "Something goes wrong!" << google::COUNTER;
+    LOG_FIRST_N(severity, times)          << "Something goes wrong!" << google::COUNTER;
+    // 用于调试的日志，未定义宏NDEBUG时有效
+    DLOG(severity)                        << "Something goes wrong!";
+    // 用户自定义日志，用数字表示等级，其等级均属于INFO
+    VLOG(int)                             << "Something goes wrong!";
+    // 额外输出errno状态
+    PLOG(severity)
+    // 额外输出至系统日志
+    SYSLOG(severity)
+    // 检查失败则相当于FATAL报错
+    CHECK(cond)                           << "Something goes wrong!";
+    CHECK_EQ(cond1, cond2)                << "Something goes wrong!";
+    CHECK_LT(cond1, cond2)                << "Something goes wrong!";
+    CHECK_LE(cond1, cond2)                << "Something goes wrong!";
+    CHECK_GT(cond1, cond2)                << "Something goes wrong!";
+    CHECK_GE(cond1, cond2)                << "Something goes wrong!";
+    // 可检查C-string与std::string，C-string支持空指针（NULL!=non-NULL，NULL==NULL）
+    CHECK_STREQ(str1, str2)               << "Something goes wrong!";
+    CHECK_STRNE(str1, str2)               << "Something goes wrong!";
+    CHECK_STRCASEEQ(str1, str2)           << "Something goes wrong!";
+    CHECK_STRCASENE(str1, str2)           << "Something goes wrong!";
+    // 双精度相等性检测，误差不能超过e(-15)（或pre）
+    CHECK_DOUBLE_EQ(val1, val2);
+    CHECK_NEAR(val1, val2, pre);
+    // 检查指针是否为非空，返回ptr以继续正常代码
+    ptr CHECK_NOTNULL(ptr)
+    // 使用函数func代替发生FATAL日志或CHECK失败时的终止函数，一般在其内调用exit(1)
+    google::InstallFailureFunction(void(*func)());
+    // 日志清理
+    google::EnableLogCleaner(ndays);    // 日志有效期为3天，每次冲刷日志时检测
+    google::DisableLogCleaner();        // 关闭自动清理
+    google::FlushLogFiles(google::INFO) // 冲刷指定等级的日志
+}
+```
+
+* 设置glog行为
+    > 可通过更改运行程序的环境变量，变量名前缀`GLOG_`。
+    > 或者在代码中更改全局变量，变量名前缀`FLAGS_`。
+    * `logtostderr=0`：是否输出到stderr代替输出到tmpfile
+    * `stderrthreshold=2`：高于该等级的日志额外输出到stderr。
+        INFO、WARNING、ERROR、FATAL分别为0、1、2、3
+    * `minloglevel=0`：设置最低报告等级。数字同上
+    * `log_dir=""`：设置日志目录。需要在初始化前设置
+    * `v=0`：设置用户自定义VLOG的日志记录等级，只记录低于或等于设置值的日志
+    > 下述为完整宏名
+    * `GOOGLE_STRIP_LOG`：宏值表示删除低于该等级的日志字符串
+<!-- entry end -->
+
+<!-- entry begin: 单元测试 测试库 gtest gmock -->
+## 测试库
+```cpp
+#include <gtets/gtest.h>
+TEST(TestSuiteName, TestName) { // 注册一个单元测试，名字不能含下划线'_'
+    // 输出字符类型可不必为char，输出时自动转换为utf8
+    EXPECT_TRUE(exp)   << "Something goes wrong!";  // 失败则继续执行，一般用于会导致后续测试无意义的失败
+    EXPECT_FALSE(exp)  << "Something goes wrong!";
+    ASSERT_TRUE(exp)   << "Something goes wrong!";  // 失败则直接退出函数（小心资源泄露）
+    ASSERT_FALSE(exp)  << "Something goes wrong!";
+    /* ... 其他函数名后缀见glog日志库的CHECK ... */
+}
+class FixtureTestClass: public ::testing::Test {    // public继承::testing::Test
+    protected:  // 所有成员为protected
+    /* 定义用于多个测试复用成员对象 */
+    /* 设计默认构造函数或`void SetUp() override`用于初始化 */
+    /* 设计析构函数或`void TearDown() override`用于释放资源 */
+};
+TEST_F(FixtureTestClass, TestName) { // 注册前需定义类FixtureTestClass
+    // 内部可直接使用FixtureTestClass中定义并初始化的成员对象
+    // 每个测试中使用的对象会在测试前构造并调用SetUp()，然后在测试结束后调用TearDown并析构
+}
+int main(int argc, char* argv[]) {  // 或者直接链接libgtest_main.so而避免手动定义main函数
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS(); // 运行所有注册的单元测试，全部成功则返回0，出错返回非0 
+}
+```
+<!-- entry end -->
+
+# 序列化库
+<!-- entry begin: 序列化 json yas -->
+## YAS
+```cpp
+// 自定义序列化类
+YAS_DEFINE_STRUCT_SERIALIZE(oname, mem)                         // 前两者定义在类内
+YAS_DEFINE_STRUCT_SERIALIZE_NVP(oname, ("mem", mem))
+YAS_DEFINE_INTRUSIVE_SERIALIZE(oname, type, mem)                // 后两者定义在类外，type类型名不用字符串
+YAS_DEFINE_INTRUSIVE_SERIALIZE_NVP(oname. type, ("mem", mem))
+// 或者手动定义类模板成员
+template<typename Archive>
+void serialize(Archive &ar) {
+    auto o = YAS_OBJECT("type", m);
+    ar & o;
+}
+
+// 创建中间对象待读写，其作为实际对象的引用而不存储实体
+// 当序列化为yas::json时，对象名可做键值
+YAS_OBJECT(oname, v)                            // 创建v的中间对象（名为oname），v名即为"v"
+YAS_OBJECT_NVP(oname, ("value", v))             // 创建v的中间对象（名为oname），v名指定为"value"
+YAS_OBJECT_STRUCT(oname, sname, m)              // 创建sname.m的中间对象（名为oname），m名即为"m"
+YAS_OBJECT_STRUCT_NVP(oname, sname, ("mem", m)) // 创建sname.m的中间对象（名为oname），m名指定为"mem"
+
+// yas::Format包括yas::bin、yas::json、yas::text
+yas::save<yas::mem  | yas::Format>(yas_buf,  yas_object)    // 返回yas_buf
+yas::load<yas::mem  | yas::Format>(yas_buf,  yas_object)
+yas::save<yas::file | yas::Format>(filename, yas_object)
+yas::load<yas::file | yas::Format>(filename, yas_object)
+```
+<!-- entry end -->
+
+## BOOST
 <!-- entry begin: serialization boost 序列化 -->
 ```cpp
 #include <boost/archive/binary_iarchive.hpp>
@@ -2097,8 +2227,15 @@ int main()
 ```
 <!-- entry end -->
 
-# nlohmann-json
-## 序列化
+## JSON
+为自己的类定义下列两个函数
+* `void from_json(const json&, myClass&);`
+* `void to_json(json&, const myClass&);`
+
+* * * * * * * * * *
+
+**序列化** 
+
 * 构造nlohmann::json
     * 变量转换：
         > 转换时注意使用`{}`还是`()`
@@ -2131,7 +2268,9 @@ int main()
     * 字符解析：`.dump()与.dump(INDENT)`
         > 前者返回只一行字符串，后者可指定缩进且多行排版
 
-## 反序列
+* * * * * * * * * *
+**反序列化**
+
 * 构造nlohmann::json
     * 输入流：`istream >> json;`
     * 字符解析：`json::parse(strWithJson); json::parse(beg, end);`
@@ -2142,10 +2281,6 @@ int main()
     > 弱类型系统与强类型系统的交互原理可参见[mysqlpp](#mysqlpplx)
     * `.get<cppType>(); .get_to(cppObj);`：支持的类型转换以及STL接口见上
 
-## 自定义变量转换
-为自己的类定义下列两个函数
-* `void from_json(const json&, myClass&);`
-* `void to_json(json&, const myClass&);`
 
 # Mysql++
 <!-- entry begin: mysqlpp mysql++ 异常 exception -->
