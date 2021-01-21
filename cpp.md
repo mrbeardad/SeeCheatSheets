@@ -66,7 +66,7 @@
 
 <!-- vim-markdown-toc -->
 
-&emsp;混合了C++11/14/17/20的标准，C++20的Big-Four(模块、~~概念~~、协程、范围)并没有涉及，等C++23吧，期待。。
+&emsp;混合了C++11/14/17/20的标准，C++20的Big-Four(模块、~~概念~~、~~协程~~、范围)并没有涉及，等C++23吧，期待。。
 文中会有标记写出哪版标准支持该特性，但无标记可不代表每个版本都支持哦，因为。。我忘了时哪版支持的了  
 
 &emsp;因为C++的特性很多且复杂，所以对一些特性的描述会故意略去风格不太好的部分，以简化记忆。
@@ -113,6 +113,7 @@
         * `C++17     定义为 201703L`
 
 ## 属性
+<!-- entry begin: 属性 attribution -->
 * `[[deprecated]]`或`[[deprecated(解释弃用的理由并/或提议代替用实体的文本)]]`
 
     | 目标                      | 实例                                                             |
@@ -159,6 +160,7 @@
 
 * `[[no_unique_address]]`
     > 空类空间优化：`struct [[no_unique_address]] X {int i_m; Empty e1_m, e2_m;};`
+<!-- entry end -->
 
 ## 命名空间
 * 普通命名空间
@@ -374,6 +376,39 @@ namespace std { /* ... */}
 | temp T&&      | 引用、左值、右值、泛型、转发     |
 
 ### 协程
+想要理解协程，得先知道为什么需要协程，而这就要求了解异步编程与回调函数。
+
+C++20无栈协程特点：
+* 协程有两个栈帧用于存储状态：
+    * 一个是分配在栈上的普通栈帧，在 恢复/暂停 协程时就像调用普通函数一样 创建/销毁 栈帧。
+        若编译器判断一些局部变量的生命周期不超过协程的一次连续执行周期，则将其分配在该栈帧上。
+        在协程启动时会将“普通栈帧”上的函数参数copy/move到协程栈帧上。
+        > 当协程调用普通函数时，就会下移栈指针来扩充栈，在普通函数调用过程中，协程无法返回，
+        > 因为普通函数无法保存状态而暂停，而每次协程返回需要销毁普通栈帧
+    * 另一个是分配在堆上协程栈帧，该栈帧保存了伴随整个协程生命周期的数据以及协程Promise对象。
+
+* 协程的返回类型需要定义一个嵌套类`promise_type`来定义协程的行为，其成员包括
+    * `Awaitable initial_suspend()`     ：在协程开始处插入该段代码
+    * `Awaitable final_suspend()`       ：在协程结尾出插入该段代码
+    * `Future    get_return_object()`   ：协程第一次返回时的返回值
+    * `Awaitable yield_value(exp)`      ：`co_yield exp`相当于`co_awiat Promise.yield_value(exp)`在暂停时返回值给caller
+    * `Value     return_value(value)`   ：`co_return non_void_exp`在协程结束返回时调用
+    * `void      return_void()`         ：以下情形调用该函数1.`co_return;`2.`co_return void_exp`3.控制流出返回void协程结尾
+
+* 协程返回类型`Future`一般具有成员对象`coroutine_handle<promise_type>`用来返回给caller，其成员包括：
+    * `resume`或`operator()`：恢复协程
+    * `done`                ：是否处于final_suspend阶段
+    * `destroy`             ：销毁Promise对象
+    * `promise`             ：返回Promise对象引用
+    * `stattic from_promise`：从Promise对象返回其coroutine_handle
+
+* 语句`co_await Awaitable;`即产生一个暂停点，协程暂停的行为依赖Awiatable的定义，其成员包括：
+    * `bool awiat_ready()`                      ：若返回true则不暂停直接执行下条协程语句
+    * `?    await_suspend(coroutine_handle<>)`  ：根据返回值类型不同而具有不同行为
+        * 若返回void则直接暂停挂起
+        * 若返回bool为true则直接暂停挂起
+        * 若返回`coroutine_handle<>`则暂停挂起并调用其`resume`恢复那个协程
+    * `T    resume()`                           ：协程恢复时`co_awiat`语句的运算结果
 
 ### 表达式
 * 初等表达式
@@ -986,7 +1021,8 @@ namespace std { /* ... */}
 ## 函数模板
 > `template <typename T> int test(vector<T> t);`
 * 自动推断模板参数：具体规则见[auto推断](#autolxtd)
-    > `test(vector<int>{})`
+    > `test(vector<int>{})`  
+    > 注意不会推断返回类型，此时应使用auto返回
 * 显式指定模板参数：
     > `test<int>(vector<int>{})`
     * 指出无法由实参推断出的模板参数

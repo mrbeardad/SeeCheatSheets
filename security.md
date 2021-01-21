@@ -9,6 +9,7 @@
   - [数字证书](#数字证书)
   - [数字签名](#数字签名)
   - [安全隧道](#安全隧道)
+- [关于OpenSSL](#关于openssl)
 
 <!-- vim-markdown-toc -->
 
@@ -85,17 +86,23 @@
         > 由CA负责保证其私钥不会泄漏，从而杜绝伪造证书  
         > 注意上面说的是**证书不假**，证书是不是对方的还得继续往下看
     * 证书内容：
-        * 签发者    ：即签发此证书的CA，隐含信息是告诉浏览器用哪个CA的公钥
-        * 签给者    ：这个证书的主人的信息
-        * 签给者URL ：签给者的URL，由浏览器确认你正在访问的网站是你希望访问的
-        * 签给者公钥：这就是用来确认上面说的——对方是否为证书的主人
-        * 等等...
-        * **密文**  ：以上全是明文，此处的密文即由上面全部明文hash后再用CA的私钥加密得到。
-            浏览器会将全部明文同样进行hash得到串**S1**，再用CA的公钥解密该密文得到串**S2**，
-            若**S1**等于**S2**则说明证书是真的。
+        * 版本
+        * 签名算法（哈希算法与非对称加密算法）
+        * 证书有效期
+        * 使用者信息（国家、地区、组织、名字/域名）
+        * 使用者公钥
+            > 非常重要的信息，这就是用来确认上面说的——对方是否为证书的主人
+        * 颁发者信息（颁发者的网站与证书等）
+        * 等等。。。
+        * 颁发者利用其私钥对该证书的签名
+            > 此处的密文即由上面全部明文hash后再用CA的私钥加密得到。
+            > 浏览器会将全部明文同样进行hash得到串**S1**，再用CA的公钥解密该密文得到串**S2**，若**S1**等于**S2**则说明证书是真的。  
             > 用反证法可以证明：若证书为假(即密文并非由CA的私钥加密)，我们用CA的公钥解密出的**S2**
             > 应该是“乱码”(与**S1**碰撞的可能性极低)，而该“乱码”有与明文hash值相同，这违背了非对称加密技术的性质——私钥加密只有公钥能解密。
             > 故得证，证书为真
+
+**注意**：并不是对所有CA都是无条件信任的，验证一个网站的证书，还需验证其颁发者的证书，
+一直向上追溯直到需要验证Root CA时才无条件信任。
 
 ## 数字签名
 * 作用：确认消息的发送者确实是其附上公钥的主人
@@ -105,6 +112,8 @@
         * 发送方公钥
         * 正文信息(如发起的交易的信息)
     * 接收方用发送方公钥解密密文部分，在与明文hash后对比，若匹配则说明发送方确实是正文信息的主人
+
+> 数字签名与数字证书的验证，都需要一个信任的源头，数字签名即信任签名的公钥，数字证书即信任Root CA
 
 ## 安全隧道
 首先是SSL/TLS协议：
@@ -141,3 +150,43 @@ SSH协议与此不同，因为HTTPS是用于网站访问的加密：服务器是
 而SSH协议是有**用户**这个概念的，若客户端不是服务器的注册用户则不可访问，
 故连接过程需要验证用户身份，或者通过用户密码(散列算法)，或者用用户的私钥(非对称加密)，验证细节不再赘述
 
+
+# 关于OpenSSL
+* x509证书链
+    * .key：密钥
+        > `openssl genrsa -des3 -out server.key 2048`
+    * .crt：证书文件，由CA的私钥签名
+        > Windows下也叫.cer
+    * .pem：封装了crt与key（也可能只有其一）
+    * .csr：证书请求文件，需要用自己的私钥签名
+        > `openssl req -new -key server.key -out server.csr`  
+        > 依次输入国家、地区、组织、email、common name（名字或域名）
+
+关于[Diffie Hellman](https://wiki.openssl.org/index.php/Diffie_Hellman)
+> The Diffie-Hellman algorithm provides the capability for two communicating parties to agree upon a shared secret between them. Its an agreement scheme because both parties add material used to derive the key (as opposed to transport, where one party selects the key). The shared secret can then be used as the basis for some encryption key to be used for further communication.
+>
+> If Alice and Bob wish to communicate with each other, they first agree between them a large prime number p, and a generator (or base) g (where 0 < g < p).
+> 
+> Alice chooses a secret integer a (her private key) and then calculates ga mod p (which is her public key). Bob chooses his private key b, and calculates his public key in the same way.
+> 
+> Alice and Bob then send each other their public keys. Alice now knows a and Bob's public key gb mod p. She is not able to calculate the value b from Bob's public key as this is a hard mathematical problem (known as the discrete logarithm problem). She can however calculate (gb)a mod p = gab mod p.
+> 
+> Bob knows b and ga, so he can calculate (ga)b mod p = gab mod p. Therefore both Alice and Bob know a shared secret gab mod p. Eve who was listening in on the communication knows p, g, Alice's public key (ga mod p) and Bob's public key (gb mod p). She is unable to calculate the shared secret from these values.
+> 
+> In static-static mode both Alice and Bob retain their private/public keys over multiple communications. Therefore the resulting shared secret will be the same every time. In ephemeral-static mode one party will generate a new private/public key every time, thus a new shared secret will be generated.
+>
+> Anonymous Diffie-Hellman uses Diffie-Hellman, but without authentication. Because the keys used in the exchange are not authenticated, the protocol is susceptible to Man-in-the-Middle attacks. Note: if you use this scheme, a call to SSL_get_peer_certificate will return NULL because you have selected an anonymous protocol. This is the only time SSL_get_peer_certificate is allowed to return NULL under normal circumstances.
+> 
+> You should not use Anonymous Diffie-Hellman. You can prohibit its use in your code by using "!ADH" in your call to SSL_set_cipher_list.
+> 
+> Fixed Diffie-Hellman embeds the server's public parameter in the certificate, and the CA then signs the certificate. That is, the certificate contains the Diffie-Hellman public-key parameters, and those parameters never change.
+> 
+> Ephemeral Diffie-Hellman uses temporary, public keys. Each instance or run of the protocol uses a different public key. The authenticity of the server's temporary key can be verified by checking the signature on the key. Because the public keys are temporary, a compromise of the server's long term signing key does not jeopardize the privacy of past sessions. This is known as Perfect Forward Secrecy (PFS).
+> 
+> You should always use Ephemeral Diffie-Hellman because it provides PFS. You can specify ephemeral methods by providing "kEECDH:kEDH" in your call to SSL_set_cipher_list.
+
+> 如果双方有一个对称加密方案，希望加密通信，而且不能让别人得到钥匙，那么可以使用 Diffie-Hellman 算法交换密钥。
+
+> 如果你希望任何人都可以对信息加密，而只有你能够解密，那么就使用 RSA 非对称加密算法，公布公钥。
+
+更多相关信息[见](https://www.jianshu.com/p/fcd0572c4765)

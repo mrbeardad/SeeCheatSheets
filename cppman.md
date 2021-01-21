@@ -11,7 +11,7 @@
     - [智能指针](#智能指针)
   - [工具库](#工具库)
     - [系统工具](#系统工具)
-    - [语言工具](#语言工具)
+    - [基础设施](#基础设施)
     - [时间库](#时间库)
     - [对象载体](#对象载体)
   - [数值库](#数值库)
@@ -71,6 +71,7 @@
     - [文件操作](#文件操作)
 - [BOOST库](#boost库)
   - [编码转换](#编码转换)
+  - [网络库](#网络库)
 - [GOOGLE库](#google库)
   - [日志库](#日志库)
   - [测试库](#测试库)
@@ -297,7 +298,7 @@ double  strtod(const char* str, char** str_end);
 <!-- entry end -->
 
 <!-- entry begin: functional hash function reference_wrapper ref cref invoke -->
-### 语言工具
+### 基础设施
 ```cpp
 #include <functional>
 struct hash<T> {
@@ -421,11 +422,11 @@ class initializer_list<T> {
 struct integer_sequence<T, T... INTS> {
     // 成员函数
     static size_t size();
-    // 辅助模板
-    index_sequence<INTS>        = integer_sequence<size_t, INTS>
-    make_integer_sequence<T, N> = integer_sequence<T, 0..N-1>
-    make_index_sequence<N>      = integer_sequence<size_t, 0..N-1>
 };
+// 辅助模板
+using index_sequence<INTS>        = integer_sequence<size_t, INTS>
+using make_integer_sequence<T, N> = integer_sequence<T, 0..N-1>
+using make_index_sequence<N>      = integer_sequence<size_t, 0..N-1>
 ```
 <!-- entry end -->
 <!-- entry begin: utility pair -->
@@ -445,7 +446,7 @@ class pair<T1, T2> {
         tuple<Args2...> second_args
     );
 };
-pair    make_pair(x, y);            // 被C++17结构化绑定取代
+pair    make_pair(x, y);            // 被C++17模板类的模板参数推断取代
 T&      get<size_t>(p);
 T&      get<T>(p);
 size    tuple_size<pair>::value
@@ -462,7 +463,7 @@ class tuple<Types...> {
     tuple(tuple<UTypes...>);            // 成员模板构造
     tuple(p);                           // pair转换构造
 };
-tuple   make_tuple(args...);        // 被C++17结构化绑定取代
+tuple   make_tuple(args...);        // 被C++17模板类的模板参数推断取代
 tuple&  tie(args...);               // std::ignore作占位符。被C++17结构化绑定取代
 tuple   tuple_cat(tuples...);
 T&      get<size_t>(t);
@@ -621,19 +622,18 @@ class ratio<Num, Den=1> {
     // 成员对象
   S intmax_t num;
   S intmax_t den;
-    // 成员类型
-    // 辅助类
-    ratio_add           <r1, r2>::type
-    ratio_subtract      <r1, r2>::type
-    ratio_multiply      <r1, r2>::type
-    ratio_divide        <r1, r2>::type
-    ratio_equal         <r1, r2>::value
-    ratio_not_equal     <r1, r2>::value
-    ratio_less          <r1, r2>::value
-    ratio_less_equal    <r1, r2>::value
-    ratio_greater       <r1, r2>::value
-    ratio_greater_equal <r1, r2>::value
 };
+// 辅助类
+ratio_add           <r1, r2>::type
+ratio_subtract      <r1, r2>::type
+ratio_multiply      <r1, r2>::type
+ratio_divide        <r1, r2>::type
+ratio_equal         <r1, r2>::value
+ratio_not_equal     <r1, r2>::value
+ratio_less          <r1, r2>::value
+ratio_less_equal    <r1, r2>::value
+ratio_greater       <r1, r2>::value
+ratio_greater_equal <r1, r2>::value
 ```
 <!-- entry end -->
 
@@ -678,7 +678,7 @@ f   atan2(y, x);        // 求 arctan(y/x)在[-π, π]
 // 误差与伽马函数
 f   erf(arg);           // 误差函数
 f   erfc(arg);          // 补误差函数
-f   tgamma(arg);        // gamma函数
+f   tgamma(arg);        // gamma函数，传入正数相当于求阶乘arg!
 f   lgamma(arg);        // gamma函数的自然对数
 // 浮点取整
 f   ceil(f);            // 向上取整
@@ -780,6 +780,7 @@ class String {
     string& operator+=  (str) (cstr) (char)
     string& insert      (pos, 目标)         // 目标除开(char)
     string& replace     (pos, len, 目标)
+    string& erase       (pos=0, len=npos)
     // 查找
     bool    starts_with (str) (cstr) (char)
     bool    end_with    (str) (cstr) (char)
@@ -1336,7 +1337,7 @@ namespace std::regex_contants {
     format_default      // 使用ECMAScript规则进行模式替换
     format_sed          // 使用sed规则进行模式替换
     format_no_copy      // 不输出/返回不匹配的字符
-    format_first_only   // 只替换收个匹配
+    format_first_only   // 只替换首个匹配
 }
 ```
 <!-- entry end -->
@@ -1493,11 +1494,11 @@ class basic_iostream<CharT>
 {
     int     get()
     strm&   get(char&)
-    strm&   get(char*, count, delim='\n')       // 读取 count - 1 个字符, 并自动添加'\0'在末尾。不包括'\n'
+    strm&   get(char*, count, delim='\n')       // 最多读取 count-1 个字符，读到delim提前结束，并自动添加'\0'在末尾
     strm&   get(ostrmbuf&, delim='\n')
-    strm&   getline(char*, count, delim='\n')   // 其他同上, 但读取包括delim
-    strm&   read(char*, count)                  // count代表指定读取的字符
-    size    readsome(char*, count)              // 返回读取字符数, 只从缓冲区中读取已有字符，而不陷入系统调用
+    strm&   getline(char*, count, delim='\n')   // 最多读取 count-1 个字符，读取到delim则丢弃之并将提前结束，并自动添加'\0'在末尾
+    strm&   read(char*, count)                  // 最多读取 count 个字符
+    size    readsome(char*, count)              // 返回读取字符数, 最多读取count个字符。只从缓冲区中读取已有字符，而不陷入系统调用
     size    gcount()                            // 返回上次无格式读取字符数
     strm&   ignore(count=1, delim=eof)
     int     peek()                              // 返回下个字符, 但不移动iterator
@@ -1781,7 +1782,7 @@ class Lock {
 class condition_variable {
     // 构造函数：不可copy不可move
 
-    // 等待：若条件不满足则原子性唤醒-阻塞
+    // 等待：若条件不满足则原子性解锁-唤醒-阻塞
     void    wait(unique_lock)
     void    wait(unique_lock, Pred)
     cv_stat wait_for(unique_lock, duration)
@@ -2038,14 +2039,351 @@ std::string                 from_utf(Str, to_charset);
 std::basic_string<CharT>    to_utf(b, e, from_charset);
 std::basic_string<CharT>    to_utf(str, from_charset);
 // from端的utf编码由Str的类型推知，to端的utf编码由CharT显示指定
-std::basic_string<CharT>    utf8_to_utf(b, e);
-std::basic_string<CharT>    utf8_to_utf(Str);
-//
+std::basic_string<CharT>    utf_to_utf(b, e);
+std::basic_string<CharT>    utf_to_utf(Str);
+// from端与to端的编码均需显示指出，且类型为char
 std::string                 between(b, e, to_charset, from_charset);
 std::string                 between(str, to_charset, from_charset);
 ```
 <!-- entry end -->
 
+## 网络库
+**核心概念（Proactor设计模式）**
+
+* I/O object
+    * 主要功能：调用“异步操作处理器”来启动异步操作，并向io_context注册回调函数
+    * 主要实现：Service来实现异步操作、Executor/Strand来注册回调函数
+* io_context
+    * 主要功能：调用“异步事件解复用器”来取出已完成事件，并分派执行回调函数
+    * 主要实现：Service注册管理器、
+        Executor（包含queue并调度回调函数）、Strand（包含queue并同步执行回调函数）
+* 注意：
+    * 构造I/O object一般需要一个io_context做第一个参数；
+    * 注册回调函数时，默认使用对应的io_context的Executor；
+
+**关于服务器异步编程**
+
+&emsp;异步的目的是当低速I/O阻塞执行流时，进行其他工作。
+一个网络连接程序可看作一个状态机，一个状态机的状态是唯一的（没有薛定谔的状态机），
+也就是说一个状态机的状态切换是sequential，也就是说在读写网络套接字之前，必须先成功建立连接。
+但是建立连接是个低速操作，利用异步操作，我们在这个状态机阻塞的时候去执行另一个状态机的任务。
+
+&emsp;当一个异步操作完成后（不管I/O object底层是以系统调用还是以线程实现异步），
+触发一个操作然后回到原状态等待下个完成事件，该操作就是该异步操作对应的回调函数（由io_context执行）。
+在回调函数中进行下个阶段的异步操作，并再次设置回调函数。
+异步操作返回后进入下个状态等待异步操作完成，循环往复，这就是一个状态机。
+
+&emsp;为了简化模型，引入了复用器的概念。
+我们服务器一般有多个连接，也就有多个状态机，每当有异步事件完成（并调用io_context::run()），
+便从完成事件队列中将其取出并调用回调函数，这个过程是同步阻塞的，但由于回调函数利用了异步操作，
+程序很快从阻塞中恢复过来，继续响应其他将要到来的事件。
+看上去程序是在同时处理多个事件，实际上我们是同步响应多个事件，而对事件的处理反馈直接丢给异步操作了。
+如果响应的延迟仍不能接受，可以尝试在多个线程调用io_context::run()
+来在多个线程中同时进行同步阻塞操作以降低延迟，但同时也会引入锁的开销，需斟酌使用。
+
+&emsp;发现没有，其实我们每个连接的相关操作都是顺序执行的，所以异步并非完全等同并发。
+我们利用回调函数来实现顺序执行（回调函数在上阶段代码执行完成后被调用）。
+引入协程后，我们可以像写同步代码一样写来写异步代码，
+而回调函数的作用就不是启动下阶段的执行任务了，而是将控制流返回协程。
+协程的特性就是，随时随意切走执行流，然后在完成事件触发后切回来。
+
+&emsp;服务器一般存在三类状态机：
+* io_context为其一，负责运转其他状态机
+* acceptor为其二，负责创建一个新状态机
+* 每个连接为其三，负责程序主要工作
+
+&emsp;一般设计：
+* Server类 ：管理[io_context/ssl::context]与acceptor
+* Session类：管理socket于buffer。
+    > 利用`bind(&Session::handler, shared_from_this())`
+    > 或lambda捕获shared_from_this()来保证异步操作过程中buffer一直有效
+<!-- entry begin: boost asio io_context 异步 -->
+```cpp
+#include <boost/asio.hpp>   // 集成于boost库中的asio，命名空间boost::asio
+#include <asio.hpp>         // 独立于boost库的asio  ，命名空间asio::
+class io_context {
+    // 构造函数
+    io_context()
+    io_context(int concurrency_hint);   // 若传入1则会跳过所有锁机制
+    // 成员函数
+
+    // 等待事件完成-分发执行句柄-调用回调函数-重回等待状态。handler只在调用下列函数的线程中被调用
+    count       run();              // 返回完成了多少异步操作，下同
+    count       run_for(du);
+    count       run_until(tp);
+    count       run_one();
+    count       run_one_for(du);
+    count       run_one_until(tp);
+    // 仅执行已完成的异步操作的回调函数，不等待全部异步操作结束
+    count       poll();
+    count       poll_one();
+
+    void        stop();
+    bool        stopped();
+    void        restart();
+    executor&   get_executor();
+};
+?       post(ex, handler);          // 提交一个回调函数，提交后立即返回
+?       dispath(ex, handler);       // 提交一个回调函数，保证在该函数返回前开始调用handler
+wfunc   bind_executor(ex, func);    // 返回包装后的func，调用wfunc()相当于调用dispath(ex, func)
+
+// 可能出错而抛出异常的操作一般都提供一个版本的重载用于传递一个error_code&来关闭该次调用的异常机制
+// 异步版本的低速操作的handler的参数一般为 error_code + 同步版本返回值
+// 异步操作的协程版本的返回值与同步版本的返回值一样
+```
+<!-- entry end -->
+
+<!-- entry begin: 网络地址 asio::ip::address network endpoint resolver -->
+```cpp
+class ip::address { // 可以是ipv4也可是ipv6
+    // 成员函数
+    bool        is_loopback();
+    bool        is_multicast();
+    bool        is_unspecified();
+    bool        is_v4();
+    bool        is_v6();
+    address_v4  to_v4();
+    address_v6  to_v6();
+    str         to_string();
+    operator<<
+};
+address     ip::make_address(str);      // 返回IP地址，点分十进制或十六进制计数法
+
+class ip::network_v4 {  // ip::network_v6
+    // 一般用 ip::make_network_v4("192.168.0.1/24") 构造
+    // 成员函数
+    address_v4  address();      // 192.168.0.1
+    ushort      prefix_length();// 24
+    address_v4  netmask();      // 255.255.255.0
+    network_v4  canonical();    // 192.168.0.0/24
+    address_v4  network();      // 192.168.0.0
+    address_v4  broadcast();    // 192.168.255.255
+    bool        is_subnet_of(network_v4);
+    range       hosts();        // 返回ip::address_v4_range
+    str         to_string();
+    operator<<
+};
+network_v4  ip::make_network_v4(str);   // 返回带掩码的IP地址，一般用于本机判断网段
+address_v4  ip::address_v4::loopback(); // 返回IPv4表示本地回环127.0.0.1
+address_v4  ip::address_v4::any();      // 返回IPv4表示任意地址0.0.0.0
+address_v4  ip::address_v4::broadcast();// 返回IPv4表示绝对广播255.255.255.255
+string      ip::host_name();            // 返回本地主机名
+
+class ip::tcp::endpoint {       // ip::udp::endpoint、local::stream_protocol::endpoint
+    // 构造函数
+    endpoint(address, portNum);
+    endpoint(protocol, protNum);        // protocol一般为ip::tcp::v4()从而构造关于0.0.0.0的endpoint
+    /* endpoint(sockfile); */           // UNIX域socket的endpoint接受字符串指定文件名
+    // 成员函数
+    address     address();
+    void        address(address);
+    ushort      port();
+    void        port(portNum);
+};
+
+class ip::tcp::resolver {
+    // 构造函数
+    resolver(ex);
+    // 成员函数
+    // handle：void(const asio::error_code&, resolver::resilts_type&)
+    ?       async_resolve(host, service, [flag,] handle);
+    /* flag 位于 class ip::resolver_base 中
+     * address_configured   根据系统是否设置有non-loopback地址而只返回IPv4或IPv6
+     * all_matching         若同时指定了v4_mapped，则返回所有匹配到的IPv4与IPv6
+     * v4_mapped            若指定查询IPv6但会找到IPv6地址，则返回IPv4映射的IPv6地址
+     * numeric_host         强制指定host为数字表示而非域名表示
+     * numeric_service      强制指定service为数字表示而非服务名表示
+     * passive              指示返回的endpoint用于绑定本地，此时host应指定为""
+    */
+    void        cancel();
+};
+```
+<!-- entry end -->
+
+<!-- entry begin: 网络 asio buffer socket -->
+```cpp
+buffer    dynamic_buffer(array, max_size);
+buffer    dynamic_buffer(vector, max_size);
+buffer    buffer(array);
+buffer    buffer(vector);
+buffer    buffer(string);
+buffer    buffer(void*, size_t);
+
+class ip::tcp::acceptor {
+    // 构造函数
+    acceptor(ex, [endpoint]);
+    // 成员函数
+    void        bind(endpoint);
+    endpoint    local_endpoint();
+
+    // handle：void(const asio::error_code&, ip::tcp::socket&)
+    ?           async_accept(handler);
+    // handle：void(const asio::error_code&)
+    ?           async_accept(peer_sock, handler);
+
+    void        cancel();
+    void        close();
+    void        open([protocol]);
+    bool        is_open();
+};
+
+class ip::tcp::socket {
+    // 构造函数
+    socket(ex);
+    socket(ex, [endpoint]);
+
+    // 成员函数
+    void        bind(endpoint);
+    endpoint    local_endpoint();
+    endpoint    remote_endpoint();
+    size        available();                            // 返回socket缓冲区已接收字节数（可无阻塞读取）
+
+    // void(const asio::error_code&)
+    ?           async_connect(endpoint, handler);
+    // flag   ：ip::socket_type::socket::{message_peek, message_out_of_band}
+    // handler：void(const asio::error_code&, size)
+    ?           async_receive(buffer,[flag,] handler);  // async_read_some
+    ?           async_send(buffer,[flag,] handler);     // async_write_some
+    // 以下两成员函数为ip::udp::socket特有
+    /* ?        async_receive_from(buffer, endpoint,[flag,] handler); */
+    /* ?        async_send_to(buffer, endpoint,[flag,] handler);      */
+
+    void        cancel();
+    void        shutdown(what);                         // ip::tcp::socket::{shutdown_send, shutdown_receive, shutdown_both}
+    void        close();                                // 关闭底层socket
+    void        open([protocol ]);                      // 打开底层socket。ip::tcp::{v4(), v6()}
+    bool        is_open();
+};
+// condition：bool(const asio::error_code&, endpoint next)          // condition在每次连接尝试之前调用
+// handler  ：void(const asio::error_code&, iterator)               // iterator为当前连接成功的迭代器
+?       async_connect(socket, begin, [end,] [condition], handler);  // resolver得到的endpoint的ranger可用于此处begin
+
+// completion：size_t(const asio::error_code&, size)                // 返回size_t表示下次读取多少个字符，一直重复读取到其返回0
+// handler   ：void(const asio::error_ code&, size)
+?       async_read    (stream, buffer [, completion] ,handler)
+?       async_write   (stream, buffer [, completion] ,handler)
+?       async_read_at (stream, offset, buffer [, completion], handler)
+?       async_write_at(stream, offset, buffer [, completion], handler)
+
+// completion：pair<end,bool>(begin, end)                           // 返回的end表示下次调用completion的参数begin
+// handler   ：void(const asio::error_ code&, size)
+?       async_read_until(stream, buffer, delim, handler)            // delim为string或regex
+?       async_read_until(stream, buffer, completion, handler)
+
+// asio提供的completion快捷函数对象有
+transfer_all()
+transfer_at_least(n)
+transfer_exactly(n)
+```
+<!-- entry end -->
+
+<!-- entry begin: 网络 asio ssl -->
+```cpp
+#include <asio/ssl.hpp>
+class ssl::context {
+    // 构造函数
+    context(method);                // method一般为ssl::sslv23
+
+    // 一般由Server调用的成员函数（被验证）
+    void    set_options(opts);      // opts一般为 ssl::context::default_workarounds
+    void    clear_options(opts);
+    // callback：string(size_t max_len, int password_purpose);
+    // 第二参数可能是ssl::context::{for_reading, for_writing}
+    void    set_password_callback(callback);
+    // format为ssl::context::{pem, asn1}
+    void    use_certificate(buffer, format);
+    void    use_private_key(buffer, format);
+    void    use_certificate_file(file, format);
+    void    use_private_key_file(file, format);
+
+    // 一般由Client调用的成员函数（验证对方）
+    void    set_verify_mode(verify_mode);
+    // verify_mode包括ssl::{
+    // verify_none,                 // 不验证对方证书
+    // verify_peer,                 // 验证对方证书
+    // verify_fail_if_no_peer_cert, // 若对方无证书则失败，C验证S时无则默认失败，S验证C时无则默认继续
+    // verify_client_once           // 仅验证一次客户端的证书
+    // }
+    // callback为bool(bool preverified, ssl::verify_context&);  其中利用可OpenSSL API来获取证书信息
+    void    set_verify_callback(callback);
+    void    set_default_verify_paths();
+    void    add_certificate_authority(buffer);
+    void    add_verify_path(path);
+    void    load_verify_file(file);
+};
+
+class ssl::stream<Socket> {
+    // 构造函数
+    stream(socket, ssl::context);
+    stream(ex, ssl::context);
+    // 成员函数
+    socket& lowest_layer();         // 返回socket&用于connect、shutdown
+    // handshake_type：ssl::stream_base::{server, client}
+    // handler       ：void(const asio::error_code&);
+    ?       async_handshake(handshake_type, handler)
+    ?       async_shutdown(handshake_type, handler)
+    // handler       ：void(const asio::error_code&, size)
+    ?       async_read_some(buffer, handler)
+    ?       async_write_some(buffer, handler)
+};
+// 可使用async_read()等free function
+```
+<!-- entry end -->
+
+<!-- entry begin: asio co_spawn awaitable use_await 协程 -->
+```cpp
+#include <asio/co_spawn.hpp>
+asio::awaitable<void> test_asio_with_coroutine()
+{
+    // 异步获取当前协程的executor，通过某处调用co_spawn(executor, awaitable, token);实现
+    auto executor = co_await asio::this_coro::executor;
+
+    tcp::acceptor acceptor{ex, tcp::endpoint{ip::address_v4::loopback(), 50001}};
+
+    // 异步调用的协程版本，handler用asio::use_awaitable代替，返回值为同步版本返回值
+    // 可以定义宏ASIO_ENABLE_HANDLER_TRACKING来使用编译器预定义宏来讲源码位置传给use_awaitable
+    auto sock = co_await acceptor.async_aceept(asio::use_awaitable);
+}
+// ex为executor或者io_context，用于调度协程的执行（实质就是调度回调函数，而回调函数负责恢复相关协程）
+// awaitable为调用协程的（第一次）返回值，内含协程句柄可用于恢复协程等操作
+// void handler(std::exception_ptr, T); T为协程co_return结束返回的值的类型，若无则可使用asio::detached
+?   co_spawn(ex, awaitable, handler);
+?   co_spawn(ex, ret_awaitable_func, handler);
+```
+<!-- entry end -->
+
+<!-- entry begin: asio signal_set -->
+```cpp
+class signal_set {
+    // 构造函数
+    signal_set(ex [,signal1] [,signal2]);
+    // 成员函数
+    void    add(signal);
+    void    remove(signal);
+    void    clear();
+    ?       async_wait(handler);    // void(const asio::error_code&, int signal);
+    void    cancel();
+};
+```
+<!-- entry end -->
+
+<!-- entry begin: asio steady_timer system_timer -->
+```cpp
+class basic_waitable_timer {    // 预定义有steady_timer、system_timer等
+    // 构造函数
+    basic_waitable_timer(ex, duration); // ex可以是executor或者是io_context（提供其自身的executor）
+    basic_waitable_timer(ex, time_point);
+    // 成员函数
+    ?           async_wait(WaitHandle); // void(const asio::error_code&)
+    time_point  expiry();
+    ?           expires_at(tp);
+    ?           expires_after(du);
+    size_t      cancel();               // 返回取消的异步操作数目。取消后调用回调函数（以参数asio::error::operation_aborted）
+    size_t      cancel_one();           // 返回取消的异步操作数目（0或1），按FIFO顺序取消，并调用回调函数
+    executor    get_executor();
+};
+```
+<!-- entry end -->
 # GOOGLE库
 <!-- entry begin: 日志库 glog -->
 ## 日志库
@@ -2054,6 +2392,12 @@ std::string                 between(str, to_charset, from_charset);
 int main(int argc, char* argv[]) {
     // 初始化glog
     google::InitGoogleLogging(argv[0]);
+    // 使用函数func代替发生FATAL日志或CHECK失败时的终止函数，一般在其内调用exit(1)
+    google::InstallFailureFunction(void(*func)());
+    // 日志清理
+    google::EnableLogCleaner(ndays);    // 日志有效期为n天，每次冲刷日志时检测
+    google::DisableLogCleaner();        // 关闭自动清理
+    google::FlushLogFiles(google::INFO) // 冲刷指定等级的日志
     // 日志等级包括 INFO、WARNING、ERROR、FATAL。
     // 高等级日志同时会写入低等级的日志，ERROR与FATAL会写入stderr，FATAL还会终止程序
     LOG(severity)                         << "Something goes wrong!";
@@ -2086,12 +2430,6 @@ int main(int argc, char* argv[]) {
     CHECK_NEAR(val1, val2, pre);
     // 检查指针是否为非空，返回ptr以继续正常代码
     ptr CHECK_NOTNULL(ptr)
-    // 使用函数func代替发生FATAL日志或CHECK失败时的终止函数，一般在其内调用exit(1)
-    google::InstallFailureFunction(void(*func)());
-    // 日志清理
-    google::EnableLogCleaner(ndays);    // 日志有效期为3天，每次冲刷日志时检测
-    google::DisableLogCleaner();        // 关闭自动清理
-    google::FlushLogFiles(google::INFO) // 冲刷指定等级的日志
 }
 ```
 
@@ -2102,37 +2440,152 @@ int main(int argc, char* argv[]) {
     * `stderrthreshold=2`：高于该等级的日志额外输出到stderr。
         INFO、WARNING、ERROR、FATAL分别为0、1、2、3
     * `minloglevel=0`：设置最低报告等级。数字同上
-    * `log_dir=""`：设置日志目录。需要在初始化前设置
     * `v=0`：设置用户自定义VLOG的日志记录等级，只记录低于或等于设置值的日志
+    * `log_dir=""`：设置日志目录。需要在初始化前设置
     > 下述为完整宏名
     * `GOOGLE_STRIP_LOG`：宏值表示删除低于该等级的日志字符串
 <!-- entry end -->
 
-<!-- entry begin: 单元测试 测试库 gtest gmock -->
 ## 测试库
+<!-- entry begin: 单元测试 测试库 gtest -->
 ```cpp
 #include <gtets/gtest.h>
 TEST(TestSuiteName, TestName) { // 注册一个单元测试，名字不能含下划线'_'
     // 输出字符类型可不必为char，输出时自动转换为utf8
-    EXPECT_TRUE(exp)   << "Something goes wrong!";  // 失败则继续执行，一般用于会导致后续测试无意义的失败
-    EXPECT_FALSE(exp)  << "Something goes wrong!";
-    ASSERT_TRUE(exp)   << "Something goes wrong!";  // 失败则直接退出函数（小心资源泄露）
-    ASSERT_FALSE(exp)  << "Something goes wrong!";
-    /* ... 其他函数名后缀见glog日志库的CHECK ... */
+    EXPECT_*(exp)   << "Something goes wrong!";  // EXPECT系列，失败则继续执行
+    ASSERT_*(exp)   << "Something goes wrong!";  // ASSERT系列，失败则直接退出函数（小心资源泄露），一般用于会导致后续测试无意义的失败
+    SUCCEED()       // 直接返回成功
+    FAIL()          // ASSERT失败
+    ADD_FAILURE()   // EXPECT失败
+    // 以下只列出EXPECT版本
+    EXPECT_PRED1(pred1, arg1)               EXPECT_PRED2(pred2, arg1, arg2)
+    EXPECT_TRUE(cond)   EXPECT_FALSE(cond)  EXPECT_EQ(v1, v2)   EXPECT_NE(v1, v2)
+    EXPECT_LT(v1, v2)   EXPECT_LE(v1, v2)   EXPECT_GT(v1, v2)   EXPECT_GE(v1, v2)
+    EXPECT_FLOAT_EQ(f1, f2)                 EXPECT_DOUBLE_EQ(d1, d2)
+    EXPECT_NEAR(v1, v2, pre)
+    EXPECT_STREQ(s1, s2)                    EXPECT_STRNE(s1, s2)
+    EXPECT_STRCASEEQ(s1, s2)                EXPECT_STRCASENE(s1, s2)
+    EXPECT_THROW(exp, ExceptType)           EXPECT_ANY_THEOW(exp)
+    EXPECT_NO_THROW(exp)
+    // 死亡测试，TestSuitName必须以DeathTest为后缀来提前运行。
+    // pred包括testing::ExitedWithCode(exit_code)与testing::KilledBySignal(sig_num)
+    EXPECT_DEATH(exp, regex)                EXPECT_EXIT(exp, pred, regex)
 }
-class FixtureTestClass: public ::testing::Test {    // public继承::testing::Test
-    protected:  // 所有成员为protected
-    /* 定义用于多个测试复用成员对象 */
-    /* 设计默认构造函数或`void SetUp() override`用于初始化 */
-    /* 设计析构函数或`void TearDown() override`用于释放资源 */
+class TestClass: public testing::Test {    // 一、public继承testing::Test
+    protected:  // 二、所有成员为protected
+    /* 三、定义用于多个测试复用成员对象 */
+    /* 四、设计默认构造函数或`void SetUp() override`用于初始化 */
+    /* 五、设计析构函数或`void TearDown() override`用于释放资源 */
 };
-TEST_F(FixtureTestClass, TestName) { // 注册前需定义类FixtureTestClass
+TEST_F(TestClass, TestName) { // 注册前需定义Fixture类TestClass
     // 内部可直接使用FixtureTestClass中定义并初始化的成员对象
     // 每个测试中使用的对象会在测试前构造并调用SetUp()，然后在测试结束后调用TearDown并析构
 }
 int main(int argc, char* argv[]) {  // 或者直接链接libgtest_main.so而避免手动定义main函数
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS(); // 运行所有注册的单元测试，全部成功则返回0，出错返回非0 
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+```
+| gtest命令行参数          | 说明                                                |
+|--------------------------|-----------------------------------------------------|
+| --gtest_list_tests       | 列出所有测试而不运行                                |
+| --gtest_filter           | 通配符过滤，一次指定一个。通配符包括`-`,`?`,`*`,`:` |
+| --gtest_repeat           | 指定重复运行次数，-1表示无限                        |
+| --gtest_break_on_failure | 失败便停止                                          |
+| --gtest_throw_on_failure | 失败时以异常形式抛出                                |
+<!-- entry end -->
+<!-- entry begin: 单元测试 测试库 gmock -->
+```cpp
+#include <gmock/gmock.h>
+// 一、修改接口源码，将感兴趣的方法声明为纯虚函数（可继承且无需定义），
+// 特别是析构函数必须是虚函数且必须提供定义）
+struct MockClass: public Class { // 二、继承自需要模仿的类
+    // 三、在public区域定义方法
+    // 四、如下利用宏辅助进行定义
+    MOCK_METHOD(RetType, Method, (T1 arg1, T2 arg2), (const, override));
+};
+TEST(ClassTest, TestName) {
+    MockClass mc{};     // 声明对象
+    // 指定期望。matcher为匹配器，或直接省略参数列表（仅用于无重载方法）
+    EXPECT_CALL(mc, Method(matcher))
+        // 可忽略Times而由gmock推测：
+        // 若无WillOnce且无WillRepeatedly则为1，
+        // 若n>=1次WillOnce且无WillRepeatedly则为n，
+        // 若n>=0次WillOnce且有WillRepeatedly则为AtLeast(n)
+        .With(multi_argument_matcher)
+        .Times(cardinality)
+        .WillOnce(action)
+        .WillRepeatedly(action)
+        .RetiresOnSaturation(); // 指明该条期望满足后便失效，以便实施多重期望。
+    {
+        testing::InSequence seq{};
+        // 默认情况下，一个方法的多重期望是从后往前进行匹配，再对匹配到的期望进行测试
+    }   // 而在该块作用域内，顺序是强制从前往后依序测试，不管matcher是否匹配
+    // 注意：mock对象析构时会检测条件是否满足，故对mock类方法的调用应在此函数中出现
+}
+namespace testing {
+    DefaultValue<T>::Set(value);        // 设置T类方法的默认action，T必须可copy
+    DefaultValue<T>::SetFactory(MakeT); // 设置T类方法的默认action，T必须可move
+    DefaultValue<T>::Clear();           // 重置T类方法的默认action
+    // 匹配器matcher包括：（m表示匹配器）
+    // 通配符匹配
+    _               A<Type>()           An<Type>() 
+    // 值匹配：下述value通常会被copy，若其不能copy则使用std::ref(value)
+    value           Eq(value)           Ge(value)       Gt(value) 
+    Le(value)       Lt(value)           Ne(value) 
+    IsFalse()       IsTrue()            IsNull()        NotNull() 
+    Optional(m)     VariantWith<T>(m)   Ref(variable)   TypeEq<Type>(value) 
+    // 浮点数匹配：前两者视两NAN为不相等，随后两者视其作相等
+    DoubleEq(d)                         FloatEq(f)      IsNan() 
+    NanSensitiveDoubleEq(d)             NanSensitiveFloatEq(f) 
+    DoubleNear(d, pre)                  FloatNear(f, pre) 
+    NanSensitiveDoubleNear(d, pre)      NanSensitiveFloatNear(f, pre) 
+    // 字符串匹配
+    ContainsRegex(string)               MatchsRegex(string) 
+    StartsWith(prefix)                  EndsWith(suffix)    HasSubstr(string) 
+    StrEq(string)                       StrNe(string) 
+    StrCaseEq(string)                   StrCaseNe(string) 
+    // 容器匹配
+    SizeIs(m)       IsEmpty()           Contains(m)     Each(m) 
+    ElementsAre(m0,...,mn)              UnorderedElementsAre(m0,...,mn) 
+    WhenSorted(m)                       WhenSortedBy(comp, m) 
+    ContainerEq(cont)
+    // 成员匹配
+    Key(m)          Pair(m1, m2)
+    Field(&Type::Mem, m)                FieldsAre(m,...)
+    // func(argument)返回值匹配m
+    ResultOf(func, m)
+    // 指针匹配
+    Address(m)      Pointee(m)          Pointer(m)      WhenDynamicCastTo<T>(m)
+    // 复合匹配
+    Not(m)          AllOf(m0,...,mn)    AnyOf(m0,...,mn)
+    // 多参匹配
+    Eq()    Ne()    Ge()    Gt()        Le()    Lt()
+    AllArgs(m)      Args<N1,...,Nn>(m)
+
+    // 行为action包括：（a表示action）
+    // 返回值
+    Return()        Return(value)       ReturnArg<N>()  ReturnNew<T>(args...) 
+    Return(Null)                        ReturnPointee(ptr2Value) 
+    ReturnRef(variable)                 ReturnRefOfCopy(value)
+    ReturnRoundRobin({a0,a1,...,an}) 
+    // 副作用
+    Assign(&variable, value)            DeleteArg<N>()
+    SaveArg<N>(ptr)                     SaveArgPointee<N>(ptr)
+    SetArgReferee<N>(value)             SetArgPointee<N>(value)
+    SetArrayArgument<N>(beg, end)
+    Throw(exception)                    SetErrnoAndReturn(error, value)
+    // 调用
+    func            Invoke(f)           Invoke(obj_ptr, mem_ptr)
+    InvokeWithoutArgs(f)                InvokeWithoutArgs(obj_ptr, mem_ptr)
+    InvokeArgument<N>(arg1,...,argn)
+    // 复合
+    DoAll(a1,...,an)                    IgnoreResult(a)
+    WithArg<N>(a)                       WithArgs<N1,...,Nn>(a)
+    WithoutArgs(a)
+
+    // 计数cardinalities包括：
+    AnyNumber()     AtLeast(n)          AtMost(n)       Between(m, n)
 }
 ```
 <!-- entry end -->
@@ -2161,7 +2614,7 @@ YAS_OBJECT_STRUCT(oname, sname, m)              // 创建sname.m的中间对象�
 YAS_OBJECT_STRUCT_NVP(oname, sname, ("mem", m)) // 创建sname.m的中间对象（名为oname），m名指定为"mem"
 
 // yas::Format包括yas::bin、yas::json、yas::text
-yas::save<yas::mem  | yas::Format>(yas_buf,  yas_object)    // 返回yas_buf
+yas::save<yas::mem  | yas::Format>(yas_buf,  yas_object)    // 返回buffer{shared_ptr data; size_t size;};
 yas::load<yas::mem  | yas::Format>(yas_buf,  yas_object)
 yas::save<yas::file | yas::Format>(filename, yas_object)
 yas::load<yas::file | yas::Format>(filename, yas_object)

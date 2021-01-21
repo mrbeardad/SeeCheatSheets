@@ -221,10 +221,10 @@ time_t  mktime(tm* tmptr);                                                      
 #include <sys/time.h>
 struct tms
 {
-    clock_t tms_utime;      // 用户CPU时间
-    clock_t tms_stime;      // 系统CPU时间
-    clock_t tms_cutime;     // 用户CPU时间（已终止子进程）
-    clock_t tms_cstime;     // 系统CPU时间（已终止子进程）
+    clock_t tms_utime;      // 用户态CPU时间
+    clock_t tms_stime;      // 内核态CPU时间
+    clock_t tms_cutime;     // 用户态CPU时间（已终止子进程）
+    clock_t tms_cstime;     // 内核态CPU时间（已终止子进程）
 };
 clock_t times(tms* buf);    // 返回单调时间（除以每秒时钟滴答数即得秒数）。
 
@@ -974,6 +974,10 @@ int     pclose(FILE* fp);                               // 返回shell返回值�
 ```c
 #include <sys/socket.h>
 #include <netdb.h>
+struct sockaddr_un {
+    int     sun_family;
+    char    sun_path[108];
+};
 struct addrinfo
 {
     int         ai_flags;           // 见下表addrinfo ai_flags
@@ -988,7 +992,7 @@ struct addrinfo
 int getaddrinfo(                    // 若成功返回0，若出错返回errno
     const char* host,               // 指定主机名
     const char* service,            // 指定服务名
-    const addrinfo* hint,           // 可指定hist中ai_flag、ai_family、ai_socktype域ai_protocol字段
+    const addrinfo* hint,           // 可指定hint中ai_flag、ai_family、ai_socktype域ai_protocol字段
     addrinfo** res                  // 返回请求的addrinfo*的指针（链表）
 );
 int getnameinfo(                    // 若成功返回0，若出错返回非0
@@ -1308,6 +1312,7 @@ struct pollfd {
     short   revents;    // 返回事件
 }
 int poll(pollfd fdarray[], nfds_t nfds, int timeout);   // 返回准备好的描述符数量。若超时返回0。
+
 ```
 | poll事件   | events | revents | 解释                                 |
 |------------|--------|---------|--------------------------------------|
@@ -1321,7 +1326,50 @@ int poll(pollfd fdarray[], nfds_t nfds, int timeout);   // 返回准备好的描
 | POLLERR    |        | 1       | 已出错                               |
 | POLLHUP    |        | 1       | 已挂断                               |
 | POLLNVAL   |        | 1       | 描述符没有引用一个打开文件           |
-
+<!-- entry end -->
+<!-- entry begin: epoll -->
+```c
+#include <sys/epoll.h>
+typedef union epoll_data {
+    void*       ptr;
+    int         fd;
+    __uint32_t  u32;
+    __uint64_t  u64;
+} epoll_data_t;
+struct epoll_event {
+    __uint32_t      events;
+    epoll_data_t    data;
+};
+int     epoll_create(int size); // 返回epfd。参数size已无效，一般调用epoll_create(1)
+int     epoll_create1(int flag);// 返回epfd。flag可为EPOLL_CLOEXEC
+int     epoll_ctl(              // 返回0
+    int epfd,                   // epoll_create的返回值
+    int op,                     // 包括有EPOLL_CTL_ADD、EPOLL_CTL_MOD、EPOLL_CTL_DEL
+    int fd,                     // 指定监听的fd
+    epoll_event* event          // 
+);
+int     epoll_wait(
+    int epfd,                   // epoll_create的返回值
+    epoll_event* events,        // 指定等待的事件集合
+    int maxevents,              // 事件集合长度
+    int timout                  // 指定最大等待时间（ms），若为-1则无限等待，直到信号中断或fd触发事件
+);
+int epoll_pwait(
+    int epfd,
+    struct epoll_event *events,
+    int maxevents, int timeout,
+    const sigset_t *sigmask
+);
+```
+| epoll_event events | 说明                                                                                                          |
+|--------------------|---------------------------------------------------------------------------------------------------------------|
+| EPOLLIN            | 表示对应的文件描述符可以读（包括对端SOCKET正常关闭）；                                                        |
+| EPOLLOUT           | 表示对应的文件描述符可以写；                                                                                  |
+| EPOLLPRI           | 表示对应的文件描述符有紧急的数据可读（这里应该表示有带外数据到来）；                                          |
+| EPOLLERR           | 表示对应的文件描述符发生错误；                                                                                |
+| EPOLLHUP           | 表示对应的文件描述符被挂断；                                                                                  |
+| EPOLLET            | 将EPOLL设为边缘触发(Edge Triggered)模式，这是相对于水平触发(Level Triggered)来说的。                          |
+| EPOLLONESHOT       | 只监听一次事件，当监听完这次事件之后，如果还需要继续监听这个socket的话，需要再次把这个socket加入到EPOLL队列里 |
 <!-- entry end -->
 
 ### 异步I/O

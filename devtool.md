@@ -8,6 +8,7 @@
   - [cgdb](#cgdb)
   - [lldb](#lldb)
 - [ssh](#ssh)
+- [ssl](#ssl)
 - [tmux](#tmux)
 - [zsh](#zsh)
   - [Some Alias](#some-alias)
@@ -194,6 +195,56 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * `ssh-keygen -f ~/.ssh/id_ecdsa -p`        ：更改密码短语
 * `ssh-copy-id -i KEY.pub -p port user@host`：将公钥上传到主机
 * `ssh -p Port User@Host`                   ：SSH连接主机
+<!-- entry end -->
+
+# ssl
+<!-- entry begin: openssl -->
+**openssl命令**：参考至[OSCHINA](https://my.oschina.net/u/3794778/blog/3021643)
+* openssl genrsa -des3 -out server.key 2048
+    > 创建私钥。`-des3`表示对私钥进行加密，默认不加密`-nodes`
+* openssl req -key server.key -new -out server.csr
+    > 利用已有私钥创建证书请求。
+* openssl req -newkey rsa:2048 -keyout server.key -out server.csr
+    > 同时创建私钥与证书请求
+* openssl x509 -in server.crt -signkey server.key -x509toreq server.csr
+    > 利用已有证书创建证书请求。用于续订证书
+* openssl req -newkey rsa:2048 -keyout server.key -x509 -days 360 -out server.crt
+    > 同时创建私钥与自签证书。用于SSL加密
+* openssl req -key server.key -new -x509 -days 365 -out server.crt
+    > 利用已有私钥创建自签证书
+* openssl req  -text -noout -in server.csr
+    > 查看证书请求
+* openssl x509 -text -noout -in server.crt
+    > 查看证书
+* openssl ca -in server.csr -out server.crt -cert ca.crt -keyfile ca.key
+    > 利用CA自签证书与证书请求创建证书
+
+* openssl rsa -des3 -in unencrypted.key -out encrypted.key
+    > 加密私钥
+* openssl rsa -in encrypted.key -out decrypted.key
+    > 解密私钥
+* openssl rsa -check -in server.key
+    > 验证私钥是否有效
+* openssl verify -verbose -CAFile ca.crt server.crt
+    > 验证证书是否由CA签发
+
+* 验证私钥相关性
+    * openssl rsa  -noout -modulus -in domain.key | openssl md5
+    * openssl x509 -noout -modulus -in domain.crt | openssl md5
+    * openssl req  -noout -modulus -in domain.csr | openssl md5
+* 证书转换
+* openssl x509 -in domain.crt -outform der -out domain.der
+    > PEM转DER
+* openssl x509 -inform der -in domain.der -out domain.crt
+    > DER转PEM
+* openssl crl2pkcs7 -nocrl -certfile domain.crt -certfile ca-chain.crt -out domain.p7b
+    > PEM转PKCS7
+* openssl pkcs7 -in domain.p7b -print_certs -out domain.crt
+    > PKCS7转PEM
+* openssl pkcs12 -inkey domain.key -in domain.crt -export -out domain.pfx
+    > PEM转PKCS12
+* openssl pkcs12 -in domain.pfx -nodes -out domain.combined.crt
+    > PKCS12转PEM
 <!-- entry end -->
 
 # tmux

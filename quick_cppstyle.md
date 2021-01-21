@@ -81,6 +81,8 @@ GFM ? tempT&& :
     * =delete
 
 * 使用类/别名提高接口可读性
+* 使用tempT&&时注意使用`std::decay_t<T>`与`std::forward<T>(t)`
+* 使用T&&与T时注意使用`std::move(t)`
 <!-- entry end -->
 
 <!-- entry begin: cpp  初始化 -->
