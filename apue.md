@@ -61,7 +61,7 @@
 <!-- entry begin: 阻塞 block -->
 * 有些文件并非立即可用，需要等待，期间调用**线程**（而非进程）会阻塞。
 * 互斥锁机制（文件记录锁、线程同步锁）也会使线程阻塞
-* 当等待某些异步事件发生时，如调用`wait`、`sleep`、`pause`、`wait`、`sigsuspend`、`sigwait`也会主动进入阻塞状态（可打断睡眠状态S）
+* 当等待某些异步事件发生时，如调用`wait`、`sleep`、`pause`、`wait`、`sigsuspend`、`sigwait`也会主动进入阻塞状态
 <!-- entry end -->
 
 # 标准与限制
@@ -757,9 +757,9 @@ bool    S_ISCHR(mode_t st_mode);
 <!-- entry begin: utimes futimens utimesat -->
 ```c
 #include <sys/time.h>
-int utimes(const char* pathname, const struct timeval times[2]);                         // 返回0
-int futimens(int fd, const struct timespec times[2]);                                    // 返回0
-int utimensat(int fd, const char* pathname, const struct timespec times[2], int flag);   // 返回0
+int     utimes(const char* pathname, const struct timeval times[2]);                         // 返回0
+int     futimens(int fd, const struct timespec times[2]);                                    // 返回0
+int     utimensat(int fd, const char* pathname, const struct timespec times[2], int flag);   // 返回0
 
 struct timeval  { time_t tv_sec; long tv_usec; };
 struct timespec { time_t tv_sec; long tv_nsec; };
@@ -959,7 +959,8 @@ struct flock
 |--------------|------------------------------------------------------|
 | _PC_PIPE_BUF | 内核管道缓冲队列的大小，即能原子性写入的最大字节长度 |
 ```c
-/* 注意：使用两个管道与协同进程交流时，使用标准I/O可能会因为全缓冲而导致死锁（主进程没写完就开始读） */
+// 注意：使用两个管道与协同进程交流时，使用标准I/O可能会因为全缓冲而导致死锁（主进程没写完就开始读）
+// 注意：记得结束时关闭所有pipe（若你调用了fork()则父子进程都有其副本），关闭所有写pipe才会触发读pipe的EOF
 #include <unistd.h>
 int     pipe(int fd[2]);                                // 返回0。返回的fd[0]用于读，fd[1]用于写
 
@@ -1130,6 +1131,7 @@ char*   ctermid(char* buf);                                 // 若成功返回�
 int     isatty(int fd);                                     // 若为终端设备返回1，否则返回0
 char*   ttyname(int fd);                                    // 若成功返回终端路径名字符串，若出错返回NULL
 
+#include <sys/ioctl>
 struct winsize                                              // 获取winsize：ioctl(fd, TIOCGWINSZ, winsize*)
 {
     unsigned short ws_row;

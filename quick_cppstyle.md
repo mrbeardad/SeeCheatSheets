@@ -28,7 +28,7 @@
     * never call virtual
 * 析构
     * noexcept .destroy()
-    * (pure) virutal definition
+    * non-pure virutal definition
     * non-inline
     * never call virtual
 * copy/move
@@ -77,7 +77,7 @@ GFM ? tempT&& :
     * extern
     * inline
     * constexpr
-    * lambda auto
+    * ret auto
     * =delete
 
 * 使用类/别名提高接口可读性
@@ -94,7 +94,7 @@ GFM ? tempT&& :
     * `auto& = cast<>()`
     * T     {}
     * T     ()
-* 延后立初（集中）
+* 延后立初
 * 循环声明
 <!-- entry end -->
 
@@ -129,7 +129,7 @@ GFM ? tempT&& :
 
 <!-- entry begin: cpp  循环 -->
 # 循环
-* 多，变，顺，for-while
+* 多，顺，for-while
 * 变，迭，if-continue
 * 条，相，穷
 * 变，操，初，once

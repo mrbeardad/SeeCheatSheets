@@ -18,17 +18,17 @@
 其中`.*`表示关键字，see便会搜索其中的关键子决定是否匹配；
 详情请使用`see -h`查看。
 
+![see](images/see.png)
+
 **安装步骤：**
 ```sh
 git clone --depth=1 https://github.com/mrbeardad/SeeCheatSheets ~/.cheat
 # 国内访问github不太友好的话，可以将URL中的github.com改为gitee.com
-if [ ! -d ~/.local/bin ] ;then
-    mkdir -p ~/.local/bin
-fi
-g++ -O3 -std=c++17 -o ~/.local/bin/see ~/.cheat/see.cpp
+cd ~/.cheat
+./src/install.sh
 ```
 
-**注**：部分笔记插入了Tex公式，介于鄙人的懒惰，诸位就自己下个浏览器插件吧。
+**注**：部分笔记插入了Tex公式，介于 ~~鄙人的懒惰~~ GFM不支持Tex，诸位就自己下个浏览器插件吧。
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima/related)  
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 

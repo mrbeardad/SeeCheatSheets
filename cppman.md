@@ -71,7 +71,7 @@
     - [文件操作](#文件操作)
 - [BOOST库](#boost库)
   - [编码转换](#编码转换)
-  - [网络库](#网络库)
+  - [异步与网络库](#异步与网络库)
 - [GOOGLE库](#google库)
   - [日志库](#日志库)
   - [测试库](#测试库)
@@ -326,6 +326,9 @@ Result  invoke(Func, args...);
 // 对于成员函数指针，INVOKE(f, t1, t2, ..., tN) 等价于 (t1.*f)(t2, ..., tN)
 // 对于成员数据指针，INVOKE(f, t1)              等价于 t1.*f
 // 上述两者均对referece_wrapper有特化，将t1变为t1.get()
+
+Functor bind(Callable, args...);
+// bind(Callable, std::placeholders::_2, std::placeholders::_1)表示调用Functor(arg1, arg2)等于调用Callable(arg2, arg1)
 ```
 <!-- entry end -->
 
@@ -1139,7 +1142,7 @@ biitr   back_inserter(Cont)
 <!-- entry end -->
 
 ## 算法库
-<!-- entry begin: execution policy -->
+<!-- entry begin: execution policy 执行策略 -->
 ### 执行策略
 ```cpp
 #include <execution>
@@ -1410,6 +1413,7 @@ class regex_token_iterator<BidirIt> {   // cregex_token_iterator wcregex_token_i
 <!-- entry end -->
 <!-- entry begin: regex regex_match regex_search regex_replace -->
 ```cpp
+// 没搜索到则match为空，其prefix余suffix也为空
 bool    regex_match(str,  [match&,] regex, mflag);
 bool    regex_match(b, e, [match&,] regex, mflag);
 
@@ -1500,7 +1504,7 @@ class basic_iostream<CharT>
     strm&   read(char*, count)                  // 最多读取 count 个字符
     size    readsome(char*, count)              // 返回读取字符数, 最多读取count个字符。只从缓冲区中读取已有字符，而不陷入系统调用
     size    gcount()                            // 返回上次无格式读取字符数
-    strm&   ignore(count=1, delim=eof)
+    strm&   ignore(count=1, delim=eof)          // 忽略包括delim
     int     peek()                              // 返回下个字符, 但不移动iterator
     strm&   unget()                             // 撤销上次读取的字符（回移iterator）
     strm&   putback(char)                       // 将指定字符置入流中
@@ -1637,6 +1641,7 @@ class basic_streambuf<CharT> {
     // 其他流类析构时只不析构由rdbuf(buf*)得到的缓冲区
 
     // 成员函数
+    // 注意清除流的状态
     pos pubseekoff(off, dir, which);    // dir有std::ios_base::{beg, cur, end}
     pos pubseekpos(pos, which);         // which有std::ios_base::{in, out}
 };
@@ -2047,7 +2052,7 @@ std::string                 between(str, to_charset, from_charset);
 ```
 <!-- entry end -->
 
-## 网络库
+## 异步与网络库
 **核心概念（Proactor设计模式）**
 
 * I/O object
@@ -2126,6 +2131,13 @@ class io_context {
 ?       post(ex, handler);          // 提交一个回调函数，提交后立即返回
 ?       dispath(ex, handler);       // 提交一个回调函数，保证在该函数返回前开始调用handler
 wfunc   bind_executor(ex, func);    // 返回包装后的func，调用wfunc()相当于调用dispath(ex, func)
+
+my_execution_context.notify_fork(execution_context::fork_prepare);
+if (fork() == 0) {
+  my_execution_context.notify_fork(execution_context::fork_child);
+} else {
+  my_execution_context.notify_fork(execution_context::fork_parent);
+}
 
 // 可能出错而抛出异常的操作一般都提供一个版本的重载用于传递一个error_code&来关闭该次调用的异常机制
 // 异步版本的低速操作的handler的参数一般为 error_code + 同步版本返回值
@@ -2338,7 +2350,7 @@ asio::awaitable<void> test_asio_with_coroutine()
     // 异步获取当前协程的executor，通过某处调用co_spawn(executor, awaitable, token);实现
     auto executor = co_await asio::this_coro::executor;
 
-    tcp::acceptor acceptor{ex, tcp::endpoint{ip::address_v4::loopback(), 50001}};
+    tcp::acceptor acceptor{ex, tcp::endpoint{tcp::v4(), 50001}};
 
     // 异步调用的协程版本，handler用asio::use_awaitable代替，返回值为同步版本返回值
     // 可以定义宏ASIO_ENABLE_HANDLER_TRACKING来使用编译器预定义宏来讲源码位置传给use_awaitable
@@ -2348,7 +2360,7 @@ asio::awaitable<void> test_asio_with_coroutine()
 // awaitable为调用协程的（第一次）返回值，内含协程句柄可用于恢复协程等操作
 // void handler(std::exception_ptr, T); T为协程co_return结束返回的值的类型，若无则可使用asio::detached
 ?   co_spawn(ex, awaitable, handler);
-?   co_spawn(ex, ret_awaitable_func, handler);
+?   co_spawn(ex, ret_awaitable_func, handler);  // co_spawn保证传入的函数对象声明周期不短于协程生命周期
 ```
 <!-- entry end -->
 
@@ -2614,7 +2626,7 @@ YAS_OBJECT_STRUCT(oname, sname, m)              // 创建sname.m的中间对象�
 YAS_OBJECT_STRUCT_NVP(oname, sname, ("mem", m)) // 创建sname.m的中间对象（名为oname），m名指定为"mem"
 
 // yas::Format包括yas::bin、yas::json、yas::text
-yas::save<yas::mem  | yas::Format>(yas_buf,  yas_object)    // 返回buffer{shared_ptr data; size_t size;};
+yas::save<yas::mem  | yas::Format>(yas_object)          // 返回buffer{shared_ptr data; size_t size;};
 yas::load<yas::mem  | yas::Format>(yas_buf,  yas_object)
 yas::save<yas::file | yas::Format>(filename, yas_object)
 yas::load<yas::file | yas::Format>(filename, yas_object)

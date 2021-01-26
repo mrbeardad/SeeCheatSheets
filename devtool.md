@@ -7,6 +7,9 @@
   - [gdb](#gdb)
   - [cgdb](#cgdb)
   - [lldb](#lldb)
+- [性能剖析](#性能剖析)
+  - [Valgrind](#valgrind)
+  - [gperftools](#gperftools)
 - [ssh](#ssh)
 - [ssl](#ssl)
 - [tmux](#tmux)
@@ -188,6 +191,30 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 ```
 <!-- entry end -->
 
+# 性能剖析
+## Valgrind
+1. memcheck：检查程序中的内存问题，如泄漏、越界、非法指针等。
+
+2. callgrind：检测程序代码的运行时间和调用过程，以及分析程序性能。
+
+3. cachegrind：分析CPU的cache命中率、丢失率，用于进行代码优化。
+
+4. helgrind：用于检查多线程程序的竞态条件。
+
+5. massif：堆栈分析器，指示程序中使用了多少堆内存等信息。
+
+这几个工具的使用是通过命令：`valgrand --tool=tool_name exefile` 分别调用的，
+当不指定tool参数时默认是 --tool=memcheck
+
+## gperftools
+1. 链接指定库`-lprofiler -ltcmalloc`
+2. 设置环境变量`CPUPROFOLE=prof.out HEAPPROFILE=heap.out`
+3. 运行程序，产生文件`prof.out`与`heep.out`
+4. `pprof exe_file prof.out --text`与 `pprof exe_file heap.out --text`
+    > `--text`可换为`--gv`、`--web`、`--svg`、`--pdf`等等
+
+注意：逻辑使用CPU时间太短则会报告`No nodes to print`
+
 # ssh
 <!-- entry begin: ssh -->
 * `ssh-keygen -t ecdsa -b 521  -C "注释"`
@@ -317,7 +344,7 @@ alias ra='ranger'
 alias apt='sudo apt'
 alias expactf='expac --timefmt="%Y-%m-%d %T" "%l\t%n" | sort'
 alias stl='sudo systemctl'
-alias dk='docker'
+alias dok='docker'
 ```
 <!-- entry end -->
 

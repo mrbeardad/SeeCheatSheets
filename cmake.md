@@ -1,193 +1,250 @@
-# CMAKE命令
+# cmake命令
 <!-- entry begin: cmake -->
-* cmake
-    * -S        ：源码树
-    * -B        ：构建目录
-    * -D        ：指定CMAKE变量
-    * -G        ：指定生成的目标构建系统
-    * --build   ：指定构建目录并build
-        * -j    ：最大线程数
-        * -t    ：指定目标
-        * --config
-    * --install ：指定构建目录并install
-        * --prefix
-        * --config
+```conf
+# cmake命令
+cmake "[options]" "<path-to-source>"
+cmake "[options]" "<path-to-existing-build>"
+cmake "[options]" -S "<path-to-source>" -B "<path-to-build>"
+
+# 一般步骤
+cd build_dir
+cmake source_dir
+cmake --build .
+cmake --install .
+
+# 选项
+-D <var>=<val>
+-G <generator-name>
+
+--build   <build_dir> [<options>] [-- <build-tool-options>]
+    -j <jobs>            # 指定线程数
+    -t <target>          # 执行指定makefile目标
+    --clean-first        # build前先执行clean
+
+--install <build_dir> [<options>]
+    --prefix <path>      # 覆盖CMAKE_INSTALL_PREFIX
+    --component <compon> # 仅安装目标组件
+```
 <!-- entry end -->
 
 # CMakeLists.txt基础命令
 ```cmake
-# 版本要求
+# CMake版本要求
 cmake_minimum_required(VERSION 3.10)
 
-# 工程名字
-project(project_name VERSION 1.0)
+# 工程项目名称
+project(project_name
+    VERSION <major>[.<minor>[.<patch>[.<tweak>]]]
+    DESCRIPTION "project description string"
+    HOMEPAGE_URL "URL string")
 
-# 设置变量
-set(SOURCES src/main.cpp)
-set(ENV{SOURCE} src/main.cpp)
-file(GLOB SOURCES "src/*.cpp")
-# 使用系统环境变量：$ENV{HOME}
-
-# 打印消息
-message("notification")
-
-# 别名
-add_library(namespace::library ALIAS
-    library_name
-)
-
-# 静态库(target)
-add_library(library_name STATIC
-    src/lib_a.cpp
-)
-
-# 动态库(target)
-add_library(library_name SHARED
-    src/lib_so.cpp
-)
-
-# HeaderOnly库(target)
-add_library(library_name INTERFACE)
+# 注意：target的文件名不能加路径
 
 # 可执行文件(target)
-add_executable(executable_name main.cpp)
+add_executable(exe_target
+    main.cpp)
 
-# 构建期操作
-    # 将前者文件处理后安装到后者位置
-    # 将`@CMAKE_VAR@`替换为cmake项目变量值
-    # 若存在对应cmake变量则将`#cmakedefine MACRO`替换为`#define MACRO @MACRO@`
-configure_file(include/config/ver.h.in ${PROJECT_BINARY_DIR}/ver.hpp)
+# 别名(target)
+add_library(namespace::lib_target ALIAS
+    lib_target)
 
-# PRIVATE   :只用于target
-# PUBLIC    :用于target和链接到它的其他target
-# 一般编译库时使用target_include_directories(... PUBLIC ...)，
-# 其他target的编译只需target_link_libraries()即可同时指定`-I`与`-l`
+# 静态库(target)
+add_library(lib_target STATIC
+    src/lib_a.cpp)
+
+# 动态库(target)
+add_library(lib_target SHARED
+    src/lib_so.cpp)
+
+# HeaderOnly库(target)
+add_library(lib_target INTERFACE)
+    # 该target添加头文件时也只能指定INTERFACE
+```
+
+# CMakeLists.txt编译参数
+```cmake
+# INTERFACE :表示只用于链接到该target的其他target
+# PUBLIC    :表示用于target和链接到它的其他target
+# PRIVATE   :表示只用于target
 
 # 头文件
 target_include_directories(target
     PUBLIC
-        include/static
-        include/shared
-        include/installing
-        ${PROJECT_BINARY_DIR}
-)
+    include_dir)
 
 # 链接库
 target_link_libraries(target
     PRIVATE
-        library_name
-)
+    lib_target)
 
 # 宏定义
 target_compile_definitions(target
     PRIVATE
-        EX3
-)
-
-# 编译参数
-target_compile_definitions(target
-    PRIVATE
-        -O3
-)
+    MACRO=val)
 
 # 标准版本
-target_compile_features(target  # 或
-    PUBLIC                      # set(CMAKE_CXX_STANDARD 11)
-        cxx_feature_name        # set(CMAKE_CXX_STANDARD_REQUIRED True)
-)
+target_compile_features(target
+    PRIVATE
+    cxx_feature_name
+    cxx_std_11)
 
-# 子项目可以使用父项目在添加该子项目之前作用域的所有数据，于是可以与其他子项目交互
-add_subdirectory(dir_name)
+# 编译参数
+target_compile_options(target
+    PRIVATE
+    -lpthread -ldl -lutil -fcoroutines)
 ```
 
-# 构建类型
-* Release       ：`-O3 -DNDEBUG`
-* Debug         ：`-g`
-* MinSizeRel    ：`-Os -DNDEBUG`
-* RelWithDebInfo：`-O2 -g -DNDEBUG`
-
-# 搜索第三方库
+# CMakeLists.txt配置变量
 ```cmake
-    # 需要在CMAKE_MODULE_PATH中存在FindBoost.cmake文件
-    find_package(Boost
-        [version] [EXACT]               # Minimum or EXACT version e.g. 1.67.0
-        [REQUIRED]                      # Fail with error if Boost is not found
-        [COMPONENTS <libs>...]          # Boost libraries by their canonical name. e.g. "date_time" for "libboost_date_time"
-        [OPTIONAL_COMPONENTS <libs>...] # Optional Boost libraries by their canonical name. e.g. "date_time" for "libboost_date_time"
-    )
+# 构建期配置文件，关联cmake宏与cpp宏
+configure_file(include/ver.h.in ${PROJECT_BINARY_DIR}/ver.hpp)
+    # 将文件中的 `#cmakedefine MACRO` 替换为 `#define MACRO @MACRO@`
+    # 将文件中的 `@CMAKE_VAR@` 替换为cmake项目变量 `CMAKE_VAR` 的值
+    # 注意使用 target_include_directories(target ${PROJECT_BINARY_DIR})
 
-    # 执行搜索后一般会设置如下变量
-    # Boost_FOUND            - True if headers and requested libraries were found
-    # Boost_INCLUDE_DIRS     - Boost include directories
-    # Boost_LIBRARY_DIRS     - Link directories for Boost libraries
-    # Boost_LIBRARIES        - Boost component libraries to be linked
-    # Boost_<C>_FOUND        - True if component <C> was found (<C> is upper-case)
-    # Boost_<C>_LIBRARY      - Libraries to link for component <C> (may include target_link_libraries debug/optimized keywords)
+# 设置可开关的选项
+option(OPTION "description" ON)
+    # 与用普通cmake变量来控制cpp宏的区别在于：
+    # 1. 提示用户存在该选项
+    # 2. 可方便地开关(ON/OFF)
+
+# 相当于在此处插入并执行子目录下的CMakeLists.txt脚本
+add_subdirectory(dir_name)
+
+# 在当前函数作用域或目录作用域中设置变量，<value>为空相当于unset(<variable>)
+set(<variable> <value>... [PARENT_SCOPE] )
+    # 多个变量会存储为列表变量
+    # 为上级目录或上级函数作用域设置变量，而并非为当前作用域设置，返回后生效
+
+# 设置缓冲作用域的变量，其生命周期可跨多次cmake命令行调用
+set(<variable> <value>... CACHE <type> <doc-string> [FORCE])
+    # <type>包括BOOL、FILEPATH、PATH、STRING、INTERNAL（GUI不对外显示的字符串，隐式FORCE）
+    # FORCE表示强制覆盖已存在的缓存变量
+    # 设置缓存变量成功后会删除同名的普通变量
+
+# 设置环境变量
+set(ENV{VAR} <value>)
+
+# 读取文件内容到变量
+file(READ <filename> <variable>
+    [OFFSET <OFFSET>]
+    [LIMIT <max-bytes>]
+    [HEX])
+
+# 读取文件每行内容形成列表
+file(STRINGS <filename> <variable> [<options>...])
+    # <options>包括
+    # LENGTH_MAXIMUM <max-len>
+    # LENGTH_MINIMUM <min-len>
+    # LIMIT_COUNT    <max-line>
+    # REGEX          <regex>
+
+# 计算哈希值
+file(<HASH> <filename> <variable>)
+    # 支持的哈希算法有：MD5、SHA1、SHA256、SHA512、SHA3_256、SHA3_512
+
+# 下载文件
+file(DOWNLOAD <URL> [<file>] [<options>...])
+    # 不指定<file>则不下载而只判断<URL>是否存在
+    # INACTIVITY_TIMEOUT <seconds>
+    # TIMEOUT <seconds>
+    # LOG <variable>
+    # STATUS <variable>             # 两元素的列表变量，首元素为数字表示错误码，次元素为错误字符串
+    # EXPECTED_HASH ALGO=<value>    # ALGO为哈斯算法
+
+# 列表操作
+# Reading
+  list(LENGTH <list> <out-var>)
+  list(GET <list> <element index> [<index> ...] <out-var>)
+  list(JOIN <list> <glue> <out-var>)
+  list(SUBLIST <list> <begin> <length> <out-var>)
+# Search
+  list(FIND <list> <value> <out-var>)
+# Modification
+  list(APPEND <list> [<element>...])
+  list(FILTER <list> {INCLUDE | EXCLUDE} REGEX <regex>)
+  list(INSERT <list> <index> [<element>...])
+  list(POP_BACK <list> [<out-var>...])
+  list(POP_FRONT <list> [<out-var>...])
+  list(PREPEND <list> [<element>...])
+  list(REMOVE_ITEM <list> <value>...)
+  list(REMOVE_AT <list> <index>...)
+  list(REMOVE_DUPLICATES <list>)
+  list(TRANSFORM <list> <ACTION> [...])
+# Ordering
+  list(REVERSE <list>)
+  list(SORT <list> [...])
+
+# 打印字符串
+message( [<mode>] <message-string>... )
+    # FATAL_ERROR       # 停止进程与构建
+    # SEND_ERROR        # 继续进程但不构建
+    # WARNING           # 继续进程
+```
+**关于cmake脚本中的变量**：
+* 变量类型均为字符串（必要时使用""来转义），一些命令会自己将字符串解析为其它类型
+* 使用未定义的变量相当于使用空字符串
+* 引用普通变量`${VAR}`
+* 引用缓存变量`$CACHE{VAR}`
+* 引用环境变量`$ENV{VAR}`
+* 变量搜索会依照作用域向上进行搜索，最终还会搜索缓存变量
+
+
+# 第三方库依赖
+```cmake
+# 需要在CMAKE_MODULE_PATH中存在FindBoost.cmake文件
+find_package(Boost
+    [version]                       # 指定最小版本，如1.75
+    [EXACT]                         # 表示指定的版本是精准版本
+    [QUIET]                         # 搜索失败直接退出
+    [REQUIRED]                      # 搜索失败报错
+    [COMPONENTS <libs>...]          # 必要组件，e.g. "date_time" for "libboost_date_time"
+    [OPTIONAL_COMPONENTS <libs>...])# 可选组件，e.g. "date_time" for "libboost_date_time"
+
+# 执行搜索后一般会设置如下变量
+# Boost_FOUND            - True if headers and requested libraries were found
+# Boost_INCLUDE_DIRS     - Boost include directories
+# Boost_LIBRARY_DIRS     - Link directories for Boost libraries
+# Boost_LIBRARIES        - Boost component libraries to be linked
+# Boost_<C>_FOUND        - True if component <C> was found (<C> is upper-case)
+# Boost_<C>_LIBRARY      - Libraries to link for component <C> (may include target_link_libraries debug/optimized keywords)
 ```
 
 # 安装
-## Linux
 ```cmake
-install(TARGETS targets
-    DESTINATION bin
-)
-install(TARGETS targets
-    LIBRARY DESTINATION lib
-)
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ 
-    DESTINATION include
-)
-install (FILES cmake-examples.conf
-    DESTINATION etc
-)
+install(TARGETS   <target>... [...])
+install(FILES     <file>...   [...])
+install(DIRECTORY <dir>...    [...])
+# DESTINATION       <path>      指定安装目录的绝对或相对地址
+# PERMISSIONS       <perm>..    包括{OWNER|GROUP|WORLD}_{READ|WRITE|EXECUTE}, SETUID, SETGID
+# CONFIGURATIONS    <conf>      在指定配置下才生效
+# COMPONENT         <comp>      指定属于哪个安装组件，如runtime、development等
 ```
 
-## Windows
-```cmake
-install (TARGETS cmake_examples_inst
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
-)
-```
+# 内建变量
+| 变量名                | 含义                         |
+|-----------------------|------------------------------|
+| PROJECT_NAME          | 当前项目名称                 |
+| CMAKE_PROJECT_NAME    | 顶级项目名称                 |
+| PROJECT_VERSION       | 当前项目版本号               |
+| CMAKE_PROJECT_VERSION | 顶级项目版本号               |
+| name_VERSION          | 指定项目版本号               |
+| PROJECT_SOURCE_DIR    | 当前项目源码树               |
+| CMAKE_SOURCE_DIR      | 顶级项目源码树               |
+| name_SOURCE_DIR       | 指定项目源码树               |
+| PROJECT_BINARY_DIR    | 当前项目构建目录             |
+| CMAKE_BINARY_DIR      | 顶级项目构建目录             |
+| name_BINARY_DIR       | 指定项目构建目录             |
+| CMAKE_BUILD_TYPE      | 构建类型（见下）             |
+| CMAKE_CXX_COMPILER    | 编译平台                     |
+| CMAKE_CXX_FLAGS       | 编译参数                     |
+| CMAKE_CXX_STANDARD    | C++语言标准版本              |
+| CMAKE_MODULE_PATH     | 默认/usr/share/cmake/Modules |
+| CMAKE_INSTALL_PREFIX  | 安装路径前缀                 |
 
-# 变量
-## 内建变量
-| 变量名               | 含义                                              |
-|----------------------|---------------------------------------------------|
-| PROJECT_NAME         | Set by the current project()                      |
-| CMAKE_PROJECT_NAME   | Set by the top level project()                    |
-| PROJECT_SOURCE_DIR   | The source directory of current project           |
-| CMAKE_SOURCE_DIR     | The source directory of the top level project     |
-| name_SOURCE_DIR      | The source directory of the project called "name" |
-| PROJECT_BINARY_DIR   | The build directory of current project            |
-| CMAKE_BINARY_DIR     | The build directory of the top level project      |
-| name_BINARY_DIR      | The build directory of the project called "name"  |
-| CMAKE_BUILD_TYPE     |                                                   |
-| CMAKE_CXX_COMPILER   |                                                   |
-| CMAKE_CXX_FLAGS      |                                                   |
-| CMAKE_CXX_STANDARD   |                                                   |
-| CMAKE_MODULE_PATH    | /usr/share/cmake/Modules                          |
-| CMAKE_INSTALL_PREFIX | related to install()                              |
-
-## normal变量与cache变量的区别
-* cache变量会存储在CMake缓存文件中
-* 两种类型的同名变量课同时存在，但normal的存在会掩盖cache
-* 设置cache变量时需要该变量不存在在cache中
->
-
-同名normal与cache变量的作用：  
-提供默认值给父项目与子项目，而两个项目中又可以设置normal同名变量来掩盖默认值
-
-## 设置cache变量
-`set(<variable> <value> [[CACHE <type> <docstring> [FORCE]] | PARENT_SCOPE])`
-* 若`<value>`为空则同于unset()
-* 若指定了CACHE则需要指定`<type>`与`<docstring>`（给GUI用）
-    * FILEPATH
-    * PATH
-    * STRING
-    * BOOL
-    * INTERNAL：对用户隐藏，隐式FORCE
-
-* FORCE：强制修改cache值，即使该变量已存在于cache中
-* PARENT_SCOPE：This command will set the value of a variable into the parent directory or calling function (whichever is applicable to the case at hand). 
-* ENV：`set(ENV{PATH} /home/username)`
+| 构建类型       | 编译参数          |
+|----------------|-------------------|
+| Release        | `-O3 -DNDEBUG`    |
+| MinSizeRel     | `-Os -DNDEBUG`    |
+| RelWithDebInfo | `-O2 -g -DNDEBUG` |
+| Debug          | `-g`              |
