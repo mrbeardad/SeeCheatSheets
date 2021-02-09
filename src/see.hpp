@@ -1,9 +1,12 @@
-/************************************************
- * see.cpp -- A program to search cheat sheet
- * Copyright (c) 2020 Heachen Bear
- * Author: Heachen Bear < mrbeardad@qq.com >
- * License: GPLv3
- ************************************************/
+/**
+ * Copyright (c) 2020 Heachen Bear & Contributors
+ * File              : see.hpp
+ * License           : GPLv3
+ * Author            : Heachen Bear <mrbeardad@qq.com>
+ * Date              : 09.02.2021
+ * Last Modified Date: 09.02.2021
+ * Last Modified By  : Heachen Bear <mrbeardad@qq.com>
+ */
 
 #pragma once
 #ifndef MRBEARDAD_SEE_HPP

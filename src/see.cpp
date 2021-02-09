@@ -1,3 +1,13 @@
+/**
+ * Copyright (c) 2020 Heachen Bear & Contributors
+ * File              : see.cpp
+ * License           : GPLv3
+ * Author            : Heachen Bear <mrbeardad@qq.com>
+ * Date              : 09.02.2021
+ * Last Modified Date: 09.02.2021
+ * Last Modified By  : Heachen Bear <mrbeardad@qq.com>
+ */
+
 #include "see.hpp"
 #include <algorithm>
 #include <array>

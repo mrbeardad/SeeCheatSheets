@@ -1,4 +1,11 @@
 #!/bin/bash -e
+# Copyright (c) 2020 Heachen Bear & Contributors
+# File              : install.sh
+# License           : GPLv3
+# Author            : Heachen Bear <mrbeardad@qq.com>
+# Date              : 09.02.2021
+# Last Modified Date: 09.02.2021
+# Last Modified By  : Heachen Bear <mrbeardad@qq.com>
 
 mkdir -p src/build/include/unicode
 cd src/build

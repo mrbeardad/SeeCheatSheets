@@ -19,10 +19,15 @@
   - [外观模式(Facade)](#外观模式facade)
 - [行为模式](#行为模式)
   - [责任链模式(Chain of Responsibility)](#责任链模式chain-of-responsibility)
+  - [解释器模式(Interpreter)](#解释器模式interpreter)
   - [命令模式(Command)](#命令模式command)
   - [备忘录模式(Memento)](#备忘录模式memento)
   - [中介者模式(Mediator)](#中介者模式mediator)
   - [观察者模式(Observer)](#观察者模式observer)
+  - [状态模式(State)](#状态模式state)
+  - [策略模式(Strategy)](#策略模式strategy)
+  - [模板方法模式(Template Method)](#模板方法模式template-method)
+  - [访问者模式(Visitor)](#访问者模式visitor)
 
 <!-- vim-markdown-toc -->
 
@@ -117,6 +122,8 @@
 
 * 沿着一条链上的多个对象传递操作请求
 
+## 解释器模式(Interpreter)
+
 ## 命令模式(Command)
 ![command](images/command.png)
 
@@ -138,3 +145,8 @@
 
 ## 观察者模式(Observer)
 ![Observer](images/Obeserver.jpg)
+
+## 状态模式(State)
+## 策略模式(Strategy)
+## 模板方法模式(Template Method)
+## 访问者模式(Visitor)
