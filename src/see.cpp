@@ -1,250 +1,353 @@
-/************************************************
- * see.cpp -- A program to search cheat sheet
- * Copyright (c) 2020 Heachen Bear
- * Author: Heachen Bear < mrbeardad@qq.com >
- * License: Apache
- ************************************************/
-
+#include "see.hpp"
 #include <algorithm>
 #include <array>
-#include <boost/locale.hpp>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <regex>
 #include <srchilite/sourcehighlight.h>
-#include <sstream>
-#include <string>
 #include <sys/ioctl.h>
-#include <sys/wait.h>
-#include <tuple>
 #include <unicode/display_width.hpp>
 #include <unistd.h>
 #include <utility>
-#include <vector>
 
-#include "mine.hpp"
+namespace see
+{
 
-namespace
+int MkdBlock::Row{50};
+int MkdBlock::Col{100};
+
+bool MkdBlock::init_winsize()
 {
-struct Highlight
-{
-    int     row_;
-    int     col_;
-    bool    needPager_;
-public:
-    Highlight(): needPager_{}
-    {
+    // 初始化MkdBlock::Row和MkdBlock::Col
+    if ( isatty(STDOUT_FILENO) ) {
         winsize termWinSize{};
-        ioctl(STDERR_FILENO, TIOCGWINSZ, &termWinSize);
-        row_ = termWinSize.ws_row;
-        col_ = termWinSize.ws_col - 2;  // 稍微比真实宽度小一点，防止折回
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &termWinSize);
+        Row = termWinSize.ws_row;
+        Col = termWinSize.ws_col;
+        return false;
     }
+    return true;
+}
 
+std::unordered_map<std::string, std::pair<std::regex, std::string> > MkdBlock::Emphasizes{
+    {"code", {R"(`(.*?)`)"_rgx,
+        "\033[38;2;255;168;0m $1 "s}},
+    {"tex", {R"((\${1,2})(.*?)\1)"_rgx,
+        "\033[38;2;255;168;0m $1 "s}},
+    {"italic", {R"(\*(.*?)\*)"_rgx,
+        "\033[38;5;255m\033[3m $1 \033[m"s}},
+    {"bold", {R"(\*\*(.*?)\*\*)"_rgx,
+        "\033[38;5;255m\033[1m  $1  \033[m"s}},
+    {"bolditalic", {R"(\*\*\*(.*?)\*\*\*)"_rgx,
+        "\033[38;5;255m\033[1;3m   $1   \033[m"s}},
+    {"link", {R"(\[(.*?)\]\((.*)\))"_rgx,
+        "\033[33m[\033[m$1\033[33m](\033[4;34m$2\033[m\033[33m)"s}},
+    {"comment", {R"((<!--.*?-->))"_rgx,
+        "\033[38;5;245m$1\033[m"s}}
+};
 
-    std::string highlight(std::istream& entry) noexcept
+MkdBlock::MkdBlock(MkdHighlight& mediator, const std::string& bgColor)
+    : mediator_{mediator}, bgColor_{bgColor} {  }
+
+MkdBlock::~MkdBlock() {  }
+
+MkdHighlight& MkdBlock::mediator()
+{
+    return mediator_;
+}
+
+std::string MkdBlock::set_bg_color(const std::string& color)
+{
+    auto ret = bgColor_;
+    bgColor_ = color;
+    return ret;
+}
+
+bool MkdBlock::match_begin(const std::string&)
+{
+    return true;
+}
+
+bool MkdBlock::match_end(const std::string&)
+{
+    return true;
+}
+
+std::string& MkdBlock::highlight(std::string& text)
+{
+    text = std::regex_replace(text, Emphasizes.at("link").first,
+            Emphasizes.at("link").second + bgColor_);
+    text = std::regex_replace(text, Emphasizes.at("code").first,
+            Emphasizes.at("code").second + bgColor_);
+    text = std::regex_replace(text, Emphasizes.at("tex").first,
+            Emphasizes.at("tex").second + bgColor_);
+    text = std::regex_replace(text, Emphasizes.at("italic").first,
+            Emphasizes.at("italic").second + bgColor_);
+    text = std::regex_replace(text, Emphasizes.at("bold").first,
+            Emphasizes.at("bold").second + bgColor_);
+    text = std::regex_replace(text, Emphasizes.at("bolditalic").first,
+            Emphasizes.at("bolditalic").second + bgColor_);
+    text = std::regex_replace(text, Emphasizes.at("comment").first,
+            Emphasizes.at("comment").second + bgColor_);
+    text.insert(0, bgColor_);
+    return text;
+}
+
+/*************************************************************************************************/
+
+class HeaderBlk : public MkdBlock
+{
+public:
+    explicit HeaderBlk(MkdHighlight& mediator): MkdBlock{mediator, "\033[34m"} {  }
+
+    virtual bool match_begin(const std::string& oneline) override
     {
-        std::string ret{};
-
-        for ( std::string oneline{}; std::getline(entry, oneline); ) {
-            if ( !needPager_ && unicode::display_width(oneline) > col_ ) needPager_ = 1;
-
-            auto isStart = [] (const std::string& line, size_t idx) {
-                return std::regex_search(line, Start[idx]);
-            };
-
-            if ( isStart(oneline, HEADER) ) {
-#ifndef NDEBUG
-                std::cout << "header: " << oneline << std::endl;
-#endif // NDEBUG
-                do_header(oneline);
-            } else if ( isStart(oneline, SEPERATOR) ) {
-#ifndef NDEBUG
-                std::cout << "seperator: " << oneline << std::endl;
-#endif // NDEBUG
-                do_seperator(oneline);
-            } else if ( isStart(oneline, QUOTE) ) {
-                for ( std::string nextline{}; std::getline(entry, nextline); ) {
-                    if ( nextline.empty()
-                            || isStart(nextline, HEADER)
-                            || isStart(nextline, SEPERATOR)
-                            || isStart(nextline, LISTS)
-                            || isStart(nextline, CODE1)
-                            || isStart(nextline, COMMENT) ) {
-                        entry.rdbuf()->pubseekoff(-static_cast<int>(nextline.size()) - 1, io::cur, io::in); // 将最后读取的nextline还原回流中
-                        break;
-                    }
-                    oneline += "\n" + nextline;
-                }
-#ifndef NDEBUG
-                std::cout << "quote: " << oneline << std::endl;
-#endif // NDEBUG
-                do_quote(oneline);
-            } else if ( isStart(oneline, LISTS) ) {
-                for ( std::string nextline{}; std::getline(entry, nextline); ) {
-                    if ( nextline.empty()
-                            || isStart(nextline, HEADER)
-                            || isStart(nextline, SEPERATOR)
-                            || isStart(nextline, QUOTE)
-                            || isStart(nextline, LISTS)
-                            || isStart(nextline, CODE1)
-                            || isStart(nextline, COMMENT) ) {
-                        entry.rdbuf()->pubseekoff(-static_cast<int>(nextline.size()) - 1, io::cur, io::in); // 将最后读取的nextline还原回流中
-                        break;
-                    }
-                    oneline += "\n" + nextline;
-                }
-#ifndef NDEBUG
-                std::cout << "lists: " << oneline << std::endl;
-#endif // NDEBUG
-                do_lists(oneline);
-            } else if ( isStart(oneline, TABLE1) ) {
-                std::string nextline{};
-                std::getline(entry, nextline);
-                if ( !isStart(nextline, TABLE2) ) {
-                    oneline += "\n" + nextline;
-#ifndef NDEBUG
-                    std::cout << "normal in table: " << oneline << std::endl;
-#endif // NDEBUG
-                    do_normal(oneline);
-                } else {
-                    oneline += "\n" + nextline;
-                    while ( std::getline(entry, nextline) ) {
-                        if ( !isStart(nextline, TABLE1) ) {
-                            entry.rdbuf()->pubseekoff(-static_cast<int>(nextline.size()) - 1, io::cur, io::in); // 将最后读取的nextline还原回流中
-                            break;
-                        }
-                        oneline += "\n" + nextline;
-                    }
-#ifndef NDEBUG
-                    std::cout << "table: " << oneline << std::endl;
-#endif // NDEBUG
-                    do_table(oneline);
-                }
-            } else if ( isStart(oneline, CODE1) ) {
-                for ( std::string nextline{}; std::getline(entry, nextline); ) {
-                    oneline += "\n" + nextline;
-                    if ( isStart(nextline, CODE2) ) break;
-                }
-#ifndef NDEBUG
-                std::cout << "code: " << oneline << std::endl;
-#endif // NDEBUG
-                do_code(oneline);
-            } else {
-#ifndef NDEBUG
-                std::cout << "normal: " << oneline << std::endl;
-#endif // NDEBUG
-                do_normal(oneline);
-            }
-
-            ret += oneline + "\n";
-        }
-        return ret;
+        return std::regex_search(oneline, Header);
     }
 
+    virtual bool match_end(const std::string&) override
+    {
+        return true;
+    }
 
+    std::string& highlight(std::string& text) override
+    {
+        auto normal = text.substr(text.find_first_not_of("# "));
+        normal.pop_back();
+        auto hashs  = text.substr(0, text.find(" "));
+        int nHyphen{(Col - unicode::display_width(normal) - static_cast<int>(hashs.size()) * 2 - 4) / 2};
+        std::string hyphen{};
+        for ( int cnt{}; cnt < nHyphen; ++cnt ) hyphen += "─";
+
+        text = "\033[34;42m" + hyphen + "\033[m\033[34m " + hashs + " "
+            + MkdBlock::highlight(normal)
+            +  " " + hashs + " \033[34;42m" + hyphen + "\033[m\n";
+        return text;
+    }
 private:
-    void do_normal(std::string& text, const std::string& color = "\033[m")
+    static inline std::regex Header{R"(^(#+)\s*\S+$)"};
+};
+
+/*************************************************************************************************/
+
+class SeperatorBlk : public MkdBlock
+{
+    static inline std::regex Seperator{R"(^(\s*\*\s*){3,}$)"};
+public:
+    explicit SeperatorBlk(MkdHighlight& mediator): MkdBlock{mediator} {  }
+
+    bool match_begin(const std::string& oneline) override
     {
-        static std::regex           Code{R"(`(.*?)`)"};
-        static std::regex           Tex{R"((\${1,2})(.*?)\1)"};
-        static std::regex           Italic{R"(\*(.*?)\*)"};
-        static std::regex           Bold{R"(\*\*(.*?)\*\*)"};
-        static std::regex           BoldItalic{R"(\*\*\*(.*?)\*\*\*)"};
-        static std::regex           Link{R"(\[(.*?)\]\((.*)\))"};
-        static std::regex           Comment{R"((<!--.*?-->))"};
-        static std::string          hilitColor{"\033[38;5;255m"};
-        static std::string          codeColor{"\033[38;2;255;168;0m"};
-        text = std::regex_replace(text, Link, "\033[33m[\033[m$1\033[33m](\033[4;34m$2\033[m\033[33m)" + color);
-        text = std::regex_replace(text, Code, codeColor + " $1 " + color);
-        text = std::regex_replace(text, Tex, codeColor + " $1 " + color);
-        text = std::regex_replace(text, Italic, hilitColor + "\033[3m $1 \033[m" + color);
-        text = std::regex_replace(text, Bold, hilitColor + "\033[3m  $1  \033[m" + color);
-        text = std::regex_replace(text, BoldItalic, hilitColor + "\033[3m   $1   \033[m" + color);
-        text = std::regex_replace(text, Comment, "\033[38;5;245m$1\033[m" + color);
-        text.insert(0, color);
+        return std::regex_search(oneline, Seperator);
     }
 
-
-    void do_lists(std::string& lists)
+    bool match_end(const std::string&) override
     {
-        std::stringstream   sstrm{lists};
-        lists.clear();
+        return true;
+    }
+
+    std::string& highlight(std::string& text) override
+    {
+        std::string space(6, ' ');
+        std::string hyphen{};
+        for ( int cnt{}; cnt < Col - 12; ++cnt ) hyphen += "─";
+        return text = space + hyphen + space;
+    }
+};
+
+/*************************************************************************************************/
+
+class QuoteBlk : public MkdBlock
+{
+public:
+    explicit QuoteBlk(MkdHighlight& mediator): MkdBlock{mediator, "\033[38;5;245m"} {  }
+
+    bool match_begin(const std::string& oneline) override
+    {
+        return std::regex_search(oneline, Quote);
+    }
+
+    bool match_end(const std::string& oneline) override
+    {
+        return oneline.empty()
+            || mediator().get_block("header").match_end(oneline)
+            || mediator().get_block("seperator").match_end(oneline)
+            || mediator().get_block("list").match_end(oneline)
+            || mediator().get_block("code").match_end(oneline)
+            || mediator().get_block("comment").match_end(oneline);
+    }
+
+    std::string& highlight(std::string& text) override
+    {
+        std::stringstream sstrm{text};
+        text.clear();
+        for ( std::string oneline{}; std::getline(sstrm, oneline); ) {
+            auto quote = std::regex_replace(oneline, Quote, "\033[48;5;235m\033[38;5;240m$1\033[m");
+            auto normal = std::regex_replace(oneline, Quote, "$2");
+            MkdBlock::highlight(normal);
+            text += quote + normal + '\n';
+        }
+        return text;
+    }
+private:
+    static inline std::regex Quote{R"(^(\s*>+)(\s+\S*))"};
+};
+
+/*************************************************************************************************/
+
+class ListBlk : public MkdBlock
+{
+public:
+    explicit ListBlk(MkdHighlight& mediator): MkdBlock{mediator} {  }
+
+    bool match_begin(const std::string& oneline) override
+    {
+        return std::regex_search(oneline, List) && !mediator().get_block("seperator").match_begin(oneline);
+    }
+
+    bool match_end(const std::string &oneline) override
+    {
+        return oneline.empty()
+            || mediator().get_block("header").match_end(oneline)
+            || mediator().get_block("seperator").match_end(oneline)
+            || mediator().get_block("list").match_end(oneline)
+            || mediator().get_block("quote").match_end(oneline)
+            || mediator().get_block("code").match_end(oneline)
+            || mediator().get_block("comment").match_end(oneline);
+    }
+
+    std::string& highlight(std::string& text) override
+    {
+        std::stringstream sstrm{text};
+        text.clear();
         for ( std::string oneline{}; std::getline(sstrm, oneline); ) {
             std::smatch headMatch{};
             std::string head{};
             std::string normal{};
-            if ( std::regex_search(oneline, headMatch, Start[LISTS]) ) {
+            if ( std::regex_search(oneline, headMatch, List) ) {
                 head = headMatch.format("\033[36m$1\033[m");
                 normal = headMatch.suffix().str();
             } else {
                 normal = oneline;
             }
-            do_normal(normal);
-            lists = head + normal + "\n";
+            MkdBlock::highlight(normal);
+            text = head + normal + '\n';
         }
-        lists.erase(--lists.end());   // 最后一行的换行符在highlight函数里添加
+        return text;
+    }
+private:
+    static inline std::regex List{R"(^(\s*[-*+]\s+))"};
+};
+
+/*************************************************************************************************/
+
+class TableBlk : public MkdBlock
+{
+public:
+    explicit TableBlk(MkdHighlight& mediator): MkdBlock{mediator} {  }
+
+    bool match_begin(const std::string& oneline) override
+    {
+        return std::regex_search(oneline, Table1st);
     }
 
-
-    void do_table(std::string& table)
+    bool match_end(const std::string& oneline) override
     {
-        std::stringstream   sstrm{table};
-        std::string         line2nd{};
-        std::string         line1st{"┌"};
-        std::string         line3rd{"├"};
-
-        auto nlPosP1 = table.find('\n') + 1;
-        line2nd = table.substr(nlPosP1, table.find('\n', nlPosP1) - nlPosP1);
-        table.clear();
-
-        for ( auto pos = line2nd.begin() + 1, end = line2nd.end(); pos != end; ++pos ) {
-            if ( *pos == '|' ) {
-                line1st += "┬";
-                line3rd += "┼";
-            } else {    // '-'或':'
-                line1st += "─";
-                line3rd += "─";
-            }
-        }
-        line1st.replace(line1st.size() - 3, 3, "┐\n│");
-        line3rd.replace(line3rd.size() - 3, 3, "┤");
-        table = line1st;
-        std::getline(sstrm, line2nd);
-        std::string normal{};
-        for ( auto pos = line2nd.begin() + 1, end = line2nd.end(); pos != end; ++pos ) {
-            if ( *pos != '|' ) {
-                normal += *pos;
-            } else {
-                do_normal(normal);
-                table += normal + "│";
-                normal.clear();
-            }
-        }
-        table += '\n' + line3rd + '\n';
-
-        sstrm.ignore(512, '\n');
-        for ( int cnt{}; std::getline(sstrm, line2nd); ++cnt ) {
-            auto color = cnt % 2 ? "\033[38;5;240m\033[48;2;94;175;220m" : "\033[38;5;240m\033[48;2;128;128;255m";
-            do_normal(line2nd, color);
-            // std::cout << color + line2nd + "\033[m\n" << std::endl;
-            table += color + line2nd + "\033[m\n";
-        }
+        return !std::regex_search(oneline, Table1st);
     }
 
-
-    void do_code(std::string& code)
+    std::string& highlight(std::string& text) override
     {
-        std::stringstream   sstrm{};
-        std::vector<int>    nCols{};
-        std::string         type{code.substr(0, code.find('\n'))};
-        int                 maxCol{};
+        auto line2ndBegin   = text.find('\n') + 1;
+        auto line2ndEnd     = text.find('\n', line2ndBegin);
+        auto line2nd        = text.substr(line2ndBegin, line2ndEnd - line2ndBegin);
+        if ( std::regex_search(line2nd, Table2nd) ) {
+            std::stringstream   sstrm{text};
+            std::string         newLine1st{"┌"};
+            std::string         newLine2nd{};
+            std::string         newLine3rd{"├"};
 
-        sstrm.str(code.substr(type.size() + 1, code.find_last_not_of("`\n") - type.size()));   // 同时去掉形如```cpp头部与形如```尾部
-        auto typePos = type.find_first_not_of("` ");
-        if ( typePos != std::string::npos ) type = type.substr(typePos);
-        else type.clear();
+            for ( auto pos = line2nd.begin() + 1, end = line2nd.end(); pos != end; ++pos ) {
+                if ( *pos == '|' ) {
+                    newLine1st += "┬";
+                    newLine3rd += "┼";
+                } else {    // '-'或':'
+                    newLine1st += "─";
+                    newLine3rd += "─";
+                }
+            }
+            newLine1st.replace(newLine1st.size() - 3, 3, "┐\n│");
+            newLine3rd.replace(newLine3rd.size() - 3, 3, "┤");
 
+            text = newLine1st;
+
+            std::getline(sstrm, newLine2nd);
+            std::string normal{};
+            for ( auto pos = newLine2nd.begin() + 1, end = newLine2nd.end(); pos != end; ++pos ) {
+                if ( *pos != '|' ) {
+                    normal += *pos;
+                } else {
+                    text += MkdBlock::highlight(normal) + "│";
+                    normal.clear();
+                }
+            }
+            text += '\n' + newLine3rd + '\n';
+
+            sstrm.ignore(512, '\n');
+            // 复用之前的line2nd
+            for ( int cnt{}; std::getline(sstrm, line2nd); ++cnt ) {
+                set_bg_color(cnt % 2 ? "\033[38;5;240m\033[48;2;94;175;220m"
+                    : "\033[38;5;240m\033[48;2;128;128;255m");
+                text += MkdBlock::highlight(line2nd) + "\033[m\n";
+            }
+            set_bg_color("\033[m");
+        } else {
+            MkdBlock::highlight(text);
+        }
+        return text;
+    }
+private:
+    static inline std::regex Table1st{R"(^\s*(\|.*)+\|)"};
+    static inline std::regex Table2nd{R"(^\s*(\|[: -]+)+\|)"};
+};
+
+/*************************************************************************************************/
+
+class CodeBlk : public MkdBlock
+{
+    bool needHilit_;
+public:
+    explicit CodeBlk(MkdHighlight& mediator): MkdBlock{mediator}, needHilit_{true} {  }
+
+    bool match_begin(const std::string& oneline) override
+    {
+        return std::regex_search(oneline, CodeBegin);
+    }
+
+    bool match_end(const std::string &oneline) override
+    {
+        if ( !needHilit_ ) return true;
+        return std::regex_search(oneline, CodeEnd);
+    }
+
+    std::string& highlight(std::string& text) override
+    {
+        if ( needHilit_ ) needHilit_ = false;
+        else {
+            needHilit_ = true;
+            text.clear();
+            return text;
+        }
+        auto type = text.substr(0, text.find('\n') + 1);
+        // 同时去掉形如```cpp头部与形如```尾部
+        std::stringstream sstrm{text.substr(type.size(), text.find_last_not_of("`\n") + 2 - type.size())};
+        text.clear();
+        type = std::regex_replace(type, CodeBegin, "$1", std::regex_constants::format_no_copy);
+
+        // 当前版本unicode::display_wiwdth()不支持ANSI escape
+        std::vector<int> nCols{};
+        int maxCol{};
         for ( std::string oneline{}; std::getline(sstrm, oneline); ) {
             auto col = unicode::display_width(oneline);
             nCols.emplace_back(col);
@@ -253,12 +356,15 @@ private:
         sstrm.rdbuf()->pubseekpos(0);
         sstrm.clear();
 
-        std::wstring wline1st((maxCol + 4 - type.size() - 4) / 2 + 1, L'─'); // +4 = 2个空格 + 2个│；-4 = 2个空格 + ┌ + ┐，+1表示向上舍入
-        auto         line1st = boost::locale::conv::utf_to_utf<char>(wline1st);
-        code = "\033[38;2;255;165;0m┌" + line1st + " \033[32m" + type + "\033[38;2;255;165;0m " + line1st + "┐\033[m\n";
-        maxCol = wline1st.size() * 2 + type.size() + 4;
+        std::string hyphen{};
+        auto nHyphen = maxCol + 4 - static_cast<int>(type.size()) - 4;
+        nHyphen = nHyphen < 0 ? 0 : nHyphen / 2 + 1;
+        for ( int cnt{}; cnt < nHyphen; ++cnt )
+            hyphen += "─";
+        text = "\033[38;2;255;165;0m┌" + hyphen + " \033[32m" + type + "\033[38;2;255;165;0m " + hyphen + "┐\033[m\n";
+        maxCol = nHyphen * 2 + static_cast<int>(type.size()) + 4;
 
-        std::stringstream           hilitStrm{};
+        std::stringstream hilitStrm{};
         try {
             srchilite::SourceHighlight  codeHilit{"esc.outlang"};
             codeHilit.highlight(sstrm, hilitStrm, type + ".lang");
@@ -269,137 +375,74 @@ private:
         size_t idx{};
         for ( std::string oneline{}; std::getline(hilitStrm, oneline); ) {
             oneline = std::regex_replace(oneline, "\033\\[01;30m"_rgx, "\033[01;34m");
-            code += "\033[38;2;255;165;0m│\033[m " + oneline + std::string(maxCol - nCols.at(idx++) - 4, ' ') + " \033[38;2;255;165;0m│\033[m\n";
+            text += "\033[38;2;255;165;0m│\033[m "
+                + oneline
+                + std::string(maxCol - nCols.at(idx++) - 4, ' ')
+                + " \033[38;2;255;165;0m│\033[m\n";
         }
 
-        std::wstring lastLine(maxCol - 2, L'─');
-        code += "\033[38;2;255;165;0m└" + boost::locale::conv::utf_to_utf<char>(lastLine) + "┘\033[m";
+        text += "\033[38;2;255;165;0m└";
+        for ( int cnt{}; cnt < maxCol - 2; ++cnt ) text += "─";
+        text += "┘\033[m\n";
+
+        return text;
     }
-
-
-    void do_quote(std::string& quote)
-    {
-        std::stringstream   sstrm{quote};
-        quote.clear();
-        for ( std::string oneline{}; std::getline(sstrm, oneline); ) {
-            auto sep    = oneline.find('>') + 1;
-            auto head   = oneline.substr(0, sep);
-            auto normal = oneline.substr(sep);
-            head.replace(sep - 1, 1, "\033[48;5;235m\033[38;5;240m>\033[m");
-            do_normal(normal, "\033[38;5;245m");
-            quote += head + normal + "\n";
-        }
-        quote.erase(--quote.end());   // 最后一行的换行符在highlight函数里添加
-    }
-
-
-    void do_seperator(std::string& seperator)
-    {
-        std::wstring sep(col_ - 12, L'─');
-        std::wstring spc(6, L' ');
-        seperator = boost::locale::conv::utf_to_utf<char>(spc + sep);
-    }
-
-
-    void do_header(std::string& header)
-    {
-        auto normal = header.substr(header.find_first_not_of("# "));
-        auto hashs = header.substr(0, header.find(" "));
-        int numHeng{(col_ - unicode::display_width(normal) - static_cast<int>(hashs.size()) * 2 - 2) / 2};
-        do_normal(normal, "\033[34m");
-        std::wstring wnHeng(numHeng, L'─');
-        auto nHeng = boost::locale::conv::utf_to_utf<char>(wnHeng);
-
-        header = "\033[34;42m" + nHeng + "\033[m\033[34m " + hashs + " " + normal +  " " + hashs + " \033[34;42m" + nHeng + "\033[m";
-    }
-
-
-    static inline std::array Start{
-        R"(^(#+)\s*\S+$)"_rgx,      // header
-        R"(^(\s*\*\s*){3,}$)"_rgx,  // seperator
-        R"(^\s*>+\s+\S*)"_rgx,      // quote
-        R"(^(\s*[-*+]\s+))"_rgx,    // lists
-        R"(^\s*`{3,}.*)"_rgx,       // code1
-        R"(^\s*`{3,}$)"_rgx,        // code2
-        R"(^\s*(\|.*)+\|)"_rgx,     // table1
-        R"(^\s*(\|[: -]+)+\|)"_rgx, // table2
-        R"(^<!--.*-->)"_rgx         // comment
-    };
-
-    enum BlockType {
-        HEADER,
-        SEPERATOR,
-        QUOTE,
-        LISTS,
-        CODE1,
-        CODE2,
-        TABLE1,
-        TABLE2,
-        COMMENT
-    };
+private:
+    static inline std::regex CodeBegin{R"(^\s*`{3,}(.*))"};
+    static inline std::regex CodeEnd{R"(^\s*`{3,}$)"};
 };
 
 /*************************************************************************************************/
 
-std::stringstream   Output{};
-Highlight           Hilit{};
-
-// 打印错误提示（或者叫帮助信息）并退出
-void print_help_then_exit() noexcept;
-
-// 搜索用户指定查询的文件，并将结果返回到引用形参files
-void search_files(std::vector<std::string>& files) noexcept;
-
-// 解析命令行参数，返回需要搜索的keys和files
-std::tuple<std::vector<std::string>, std::vector<std::string>, bool>
-    parse_cmdline(int argc, char* argv[]) noexcept;
-
-// 在文件中搜索entry
-void search_entries_print(const std::string& file, const std::vector<std::string>& keys) noexcept;
-
-} // namespace
-
-
-
-int main(int argc, char* argv[])
+// 注册器
+MkdHighlight::MkdHighlight()
 {
-    if ( !isatty(STDIN_FILENO) ) {  // if redirect stdin to a file, then read entry from this file
-        std::cout << Hilit.highlight(std::cin);
-        return 0;
-    }
-    auto [keys, files, disablePager] = parse_cmdline(argc, argv);
-
-    for ( auto&& thisFile : files ) {
-        search_entries_print(thisFile, keys);
-    }
-
-    if ( !disablePager ) {
-        auto lineNum = std::count(std::istreambuf_iterator<char>{Output}, std::istreambuf_iterator<char>{}, '\n');
-        Output.rdbuf()->pubseekpos(0);
-        Hilit.needPager_ = lineNum > Hilit.row_;
-        if ( Hilit.needPager_ ) {
-            auto    pager = getenv("PAGER");
-            int     fds[2];
-            mine::handle(pipe(fds));
-            if ( auto pid = mine::handle(fork()); pid == 0 ) {
-                dup2(fds[0], STDIN_FILENO);
-                close(fds[1]);
-                mine::handle(execlp(pager, pager, nullptr));
-            } else {
-                dup2(fds[1], STDOUT_FILENO);
-                close(fds[1]);
-            }
-        }
-    }
-    std::cout << Output.rdbuf() << std::endl;
-    close(STDOUT_FILENO);
-    wait(nullptr);
-
-    return 0;
+    MkdBlock::init_winsize();
+    blocks.insert({"header", std::make_shared<HeaderBlk>(*this)});
+    blocks.insert({"seperator", std::make_shared<SeperatorBlk>(*this)});
+    blocks.insert({"quote", std::make_shared<QuoteBlk>(*this)});
+    blocks.insert({"list", std::make_shared<ListBlk>(*this)});
+    blocks.insert({"table", std::make_shared<TableBlk>(*this)});
+    blocks.insert({"code", std::make_shared<CodeBlk>(*this)});
 }
 
-namespace
+MkdBlock& MkdHighlight::get_block(const std::string& name)
 {
+    return *blocks.at(name);
+}
+
+std::string MkdHighlight::highlight(std::istream& text)
+{
+    std::string hilitText{};
+    for ( std::string oneline{}; std::getline(text, oneline); ) {
+        auto itr = blocks.begin();
+        auto end = blocks.end();
+        auto curBlk = std::make_shared<MkdBlock>(*this);
+        while ( itr != end ) {
+            if ( itr->second->match_begin(oneline) ) {
+                curBlk = itr->second;
+#ifndef NDEBUG
+                std::cout << "fuck: " << itr->first << ":" << oneline << std::endl;
+#endif // NDEBUG
+                break;
+            }
+            ++itr;
+        }
+
+        std::string nextline{};
+        while ( std::getline(text, nextline) && !curBlk->match_end(nextline) )
+            oneline +=  '\n' + nextline;
+        oneline += '\n';
+        // 将最后读取的nextline还原回流中
+        text.rdbuf()->pubseekoff(-static_cast<int>(nextline.size()) - 1, io::cur, io::in);
+
+        hilitText += curBlk->highlight(oneline);
+    }
+    return hilitText;
+}
+
+/*************************************************************************************************/
+
 void print_help_then_exit() noexcept
 {
     std::cout <<
@@ -418,54 +461,16 @@ void print_help_then_exit() noexcept
         "You can redirect stdin to a file(not a tty) to use only Markdown Syntax Highlight.\n"
         "\033[32mOptions:\033[m\n"
         "    \033[36m-h\033[m                : Display this help information\n"
-        "    \033[36m-f\033[m <file-prefix>  : Specify files in ~/.cheat/ whoes file name prefix match <file-prefix> to search\n"
-        "    \033[36m-w\033[m <keyword>      : Point out that the regex you give is a complete word, not a part of a word\n"
+        "    \033[36m-f\033[m <file-prefix>  : Specify file in ~/.cheat/ whoes file name prefix match <file-prefix> to search\n"
         "    \033[36m-p\033[m                : Disable to use Pager\n"
         << std::endl;
     std::exit(1);
 }
 
-void search_files(std::vector<std::string>& files) noexcept
+std::tuple<std::vector<fs::path>, std::vector<std::string>, bool>
+parse_cmdline(int argc, char* argv[]) noexcept
 {
-    fs::path cheatDir{std::getenv("HOME")};
-    cheatDir /= ".cheat/";
-
-    // 如果~/.cheat/目录不存在则报错并退出
-    if ( !fs::is_directory(cheatDir) ) {
-        std::cerr << "Error: No such directory ~/.cheat/" << std::endl;
-        std::exit(1);
-    }
-
-    auto origFiles = files;
-    files.clear();
-
-    for ( const auto& thisDirEntry : fs::directory_iterator{cheatDir} ) {
-        if ( !fs::is_regular_file(thisDirEntry) || thisDirEntry.path().extension() != ".md" ) {
-            continue;
-        }
-
-        if ( origFiles.empty() ) {
-            files.emplace_back(thisDirEntry.path());
-
-        } else {
-            std::string curFileName{thisDirEntry.path().filename()};
-
-            for ( auto& thisFilePrefix : origFiles ) {
-                // 确认文件名前缀是否与用户指定匹配
-                if ( curFileName.find(thisFilePrefix) != std::string::npos ) {
-                    files.emplace_back(thisDirEntry.path());
-                    break;
-                }
-            }
-        }
-    }
-}
-
-
-std::tuple<std::vector<std::string>, std::vector<std::string>, bool>
-    parse_cmdline(int argc, char* argv[]) noexcept
-{
-    std::vector<std::string> keys{}, words{}, files{};
+    std::vector<std::string> keys{}, filePrefix{};
     bool disablePager{};
     while ( true ) {
         auto choice = getopt(argc, argv, "hpw:f:");
@@ -479,11 +484,8 @@ std::tuple<std::vector<std::string>, std::vector<std::string>, bool>
             case 'p':
                 disablePager = true;
                 break;
-            case 'w':
-                words.emplace_back(optarg);
-                break;
             case 'f':
-                files.emplace_back(optarg);
+                filePrefix.emplace_back(optarg);
                 break;
             default:
                 break;
@@ -496,111 +498,106 @@ std::tuple<std::vector<std::string>, std::vector<std::string>, bool>
     }
 
     // 处理参数无效的情况
-    if ( keys.empty() && words.empty() ) {
+    if ( keys.empty() ) {
         std::cerr << "\e[31m`see` Error:\e[0m Need entry-regex-keys" << std::endl;
         print_help_then_exit();
     }
 
-    // 将words转换成keys
-    std::for_each(words.begin(), words.end(), [&keys](auto&& e){keys.emplace_back(R"(\b)" + e + R"(\b)");});
+    fs::path cheatDir{std::getenv("HOME")};
+    cheatDir /= ".cheat/";
 
-    search_files(files);
+    // 如果~/.cheat/目录不存在则报错并退出
+    if ( !fs::is_directory(cheatDir) ) {
+        std::cerr << "Error: No such directory ~/.cheat/" << std::endl;
+        std::exit(1);
+    }
 
-    return std::tuple{keys, files, disablePager};
+    std::vector<fs::path> files{};
+    for ( const auto& thisDirEntry : fs::directory_iterator{cheatDir} ) {
+        if ( !fs::is_regular_file(thisDirEntry) || thisDirEntry.path().extension() != ".md" ) {
+            continue;
+        }
+
+        if ( filePrefix.empty() ) {
+            files.emplace_back(thisDirEntry.path());
+        } else {
+            std::string curFileName{thisDirEntry.path().filename()};
+
+            for ( auto& thisFilePrefix : filePrefix ) {
+                // 确认文件名前缀是否与用户指定匹配
+                if ( curFileName.find(thisFilePrefix, 0) != std::string::npos )
+                    files.emplace_back(thisDirEntry.path());
+            }
+        }
+    }
+
+    return std::tuple{files, keys, disablePager};
 }
 
 /*************************************************************************************************/
 
-// void highlight_print(std::istream& entry) noexcept
-// {
-//     static std::array RegexAndRepl{
-//         std::pair{R"(<!--(.*?)-->)"_rgx, "\033[38;2;128;160;225m<!--$1-->\033[m"}, // comment
-//         std::pair{R"(<!-- entry begin:(.*)-->)"_rgx, "<!-- entry begin:\033[38;2;255;160;160m$1\033[38;2;128;160;255m-->"}, // comment
-//         std::pair{"\033\\[48;5;244m \033\\[0m(.*)"_rgx, "\033[48;2;0;0;0m\033[38;5;245m>\033[m\033[38;5;243m $1\033[m"},
-//         std::pair{R"(^(#+) (.*))"_rgx, "\033[38;2;255;165;0m$1 $2"}, // header
-//         std::pair{R"(^([-+*]) (.*))"_rgx, "\033[36m$1\033[m $2"}, // list1
-//         std::pair{R"(^(\s{4,})([-+*]) (.*))"_rgx, "$1\033[35m$2\033[m $3"}, // list2
-//         std::pair{R"(^(\s{8,})([-+*]) (.*))"_rgx, "$1\033[34m$2\033[m $3"}, // list3
-//         std::pair{R"(^(\s{12,})([-+*]) (.*))"_rgx, "$1\033[33m$2\033[m $3"} // list4
-//     };
-//
-//     std::string oneline{};
-//     while ( std::getline(entry, oneline) ) {
-//         for ( auto& thisRAR : RegexAndRepl ) {
-//             oneline = std::regex_replace(oneline, thisRAR.first, thisRAR.second);
-//         }
-//         Output << oneline << '\n';
-//     }
-//     Output << '\n';
-//     entry.clear();
-// }
-
-
-void search_entries_print(const std::string& file, const std::vector<std::string>& keys) noexcept
+std::stringstream search_entries(const std::vector<fs::path>& files, const std::vector<std::string>& keys) noexcept
 {
-    // 该函数会多次调用，将不变的对象静态存储
-    static std::stringstream    Entry{};
-    static std::regex           Regex4Beg{R"(^<!-- entry begin:.*-->$)", std::regex_constants::icase};
-    static std::regex           Regex4end{R"(^<!-- entry end -->$)", std::regex_constants::icase};
-    static std::string          Oneline{};
+    std::stringstream entries{};
+    std::regex entryBegin{R"(^<!-- entry begin:.*-->$)", std::regex_constants::icase};
+    std::regex entryEnd{R"(^<!-- entry end -->$)", std::regex_constants::icase};
 
-    std::fstream    fstrm{file, io::in};
-    if ( !fstrm ) {
-        std::cerr << "Error: Can not read file -- " << file << std::endl;
-        return;
-    }
+    for ( auto& thisFile : files ) {
+        std::ifstream fstrm{thisFile, io::in};
+        if ( !fstrm ) {
+            std::cerr << "Error: Can not read file -- " << thisFile << std::endl;
+            exit(1);
+        }
 
-    bool onceMatch{false}; // 用于提前打印文件名
-    bool inEntry{false};   // 用于判断当前匹配是否为某一entry内容
+        bool onceMatch{false}; // 用于提前打印文件名
+        bool inEntry{false};   // 用于判断当前匹配是否为某一entry内容
 
-    while ( std::getline(fstrm, Oneline) ) {
-        // 若未在entry中，则搜索合适entry并进入
-        if ( !inEntry && std::regex_match(Oneline, Regex4Beg) ) {
-            auto curEntryKeys = Oneline.substr(sizeof("<!-- entry begin:"), Oneline.size() - sizeof("-->"));
+        for ( std::string oneline{}; std::getline(fstrm, oneline); ) {
+            // 若未在entry中且搜索到entryBegin则尝试进入该entry
+            if ( !inEntry && std::regex_search(oneline, entryBegin) ) {
+                auto curEntryKeys = oneline.substr(sizeof("<!-- entry begin:"),
+                        oneline.size() - sizeof("<!-- entry begin:-->"));
 
-            // 有一个key不匹配则略过
-            auto isMatch = true;
-
-            for ( auto& thisKey : keys ) {
-                if ( !std::regex_search(curEntryKeys.begin(), curEntryKeys.end(), std::regex{thisKey, std::regex_constants::icase}) ) {
-                    isMatch = false;
-                    break;
+                // 有一个key不匹配则略过
+                bool isMatch{true};
+                for ( auto& thisKey : keys ) {
+                    if ( !std::regex_search(curEntryKeys, std::regex{thisKey, std::regex_constants::icase}) ) {
+                        isMatch = false;
+                        break;
+                    }
                 }
-            }
 
-            if ( isMatch ) {
-                if ( !onceMatch ) {
-                    Output <<
-                    "\033[38;2;255;0;0m\033[38;2;255;34;0m \033[38;2;255;85;0m \033[38;2;255;136;0m "
-                    "\033[38;2;255;170;0m \033[38;2;255;204;0m \033[38;2;255;255;0m \033[38;2;204;255;0m "
-                    "\033[38;2;170;255;0m \033[38;2;136;255;0m \033[38;2;85;255;0m \033[38;2;34;255;0m "
-                    "\033[38;2;0;255;0m \033[38;2;0;255;34m \033[38;2;0;255;85m \033[38;2;0;255;136m "
-                    "\033[38;2;0;255;170m \033[38;2;0;255;204m \033[38;2;0;255;255m \033[38;2;0;204;255m "
-                    "\033[38;2;0;170;255m \033[38;2;0;136;255m \033[38;2;0;85;255m \033[38;2;0;51;255m "
-                    "\033[38;2;0;0;255m \033[38;2;51;0;255m \033[38;2;85;0;255m \033[38;2;136;0;255m "
-                    "\033[38;2;170;0;255m \033[38;2;204;0;255m \033[38;2;255;0;255m \033[m "
-                    << file << "\e[m\n";
-                    onceMatch = true;
+                if ( isMatch ) {
+                    if ( !onceMatch ) {
+                        entries <<
+                        "\033[38;2;255;0;0m\033[38;2;255;34;0m \033[38;2;255;85;0m \033[38;2;255;136;0m "
+                        "\033[38;2;255;170;0m \033[38;2;255;204;0m \033[38;2;255;255;0m \033[38;2;204;255;0m "
+                        "\033[38;2;170;255;0m \033[38;2;136;255;0m \033[38;2;85;255;0m \033[38;2;34;255;0m "
+                        "\033[38;2;0;255;0m \033[38;2;0;255;34m \033[38;2;0;255;85m \033[38;2;0;255;136m "
+                        "\033[38;2;0;255;170m \033[38;2;0;255;204m \033[38;2;0;255;255m \033[38;2;0;204;255m "
+                        "\033[38;2;0;170;255m \033[38;2;0;136;255m \033[38;2;0;85;255m \033[38;2;0;51;255m "
+                        "\033[38;2;0;0;255m \033[38;2;51;0;255m \033[38;2;85;0;255m \033[38;2;136;0;255m "
+                        "\033[38;2;170;0;255m \033[38;2;204;0;255m \033[38;2;255;0;255m \033[m "
+                        << thisFile << "\e[m\n";
+                        onceMatch = true;
+                    }
+                    inEntry = true;
+                    entries << oneline << '\n';
                 }
-                inEntry = true;
-                Entry << Oneline << '\n';
-            }
-        } else if ( inEntry ) {
-            // 若在entry中且搜索到结束标志，则退出inEntry状态
-            if ( std::regex_match(Oneline, Regex4end) ) {
-                inEntry = false;
-
-                auto outputStr = Hilit.highlight(Entry);
-                Output << outputStr << std::endl;
-
-                Entry.clear();
-            // 若在entry中且未搜索到结束标志，则将该行送入entry流中
-            } else {
-                Entry << Oneline << '\n';
+            } else if ( inEntry ) {
+                // 若在entry中且搜索到结束标志，则退出inEntry状态
+                if ( std::regex_search(oneline, entryEnd) ) {
+                    inEntry = false;
+                    entries << '\n';
+                // 若在entry中且未搜索到结束标志，则将该行送入entry流中
+                } else {
+                    entries << oneline << '\n';
+                }
             }
         }
     }
+    return entries;
 }
 
-} // namespace
+} // namespace see
 

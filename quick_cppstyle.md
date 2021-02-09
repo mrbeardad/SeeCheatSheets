@@ -29,7 +29,7 @@
 * 析构
     * noexcept .destroy()
     * non-pure virutal definition
-    * non-inline
+    * nonempty non-inline
     * never call virtual
 * copy/move
     * copy? move?

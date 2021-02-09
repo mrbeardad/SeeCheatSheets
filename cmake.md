@@ -81,6 +81,7 @@ target_link_libraries(target
 target_compile_definitions(target
     PRIVATE
     MACRO=val)
+# add_definitions(-DNDEBUG)
 
 # 标准版本
 target_compile_features(target
