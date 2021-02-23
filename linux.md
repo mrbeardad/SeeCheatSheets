@@ -1006,8 +1006,8 @@ n为0表示线程启动时清除该信息；n为1表示继承启动该线程的�
     * cgroup        ：/sys/fs/cgroup/*/**/*
 * 接口文件：
     * cgroup.clone_children ：是否继承父cgroup（默认0）
-    * cgroup.procs          ：加入该cgroup的GID
-    * task                  ：加入该cgroup的PID
+    * cgroup.procs          ：加入该cgroup的PID
+        > 子进程继承父进程CGroups（跨fork()与execv()）
 
 系统创建hierarchy后，所有进程都会加入该hierarchy的根cgroup；  
 同一进程可同时加入多个不同hierarchy中的cgroup；  
