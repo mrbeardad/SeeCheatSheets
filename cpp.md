@@ -16,7 +16,7 @@
     - [可调用对象](#可调用对象)
     - [协程](#协程)
     - [表达式](#表达式)
-      - [列表初始化](#列表初始化)
+      - [初始列](#初始列)
       - [类型转换](#类型转换)
       - [左值与右值](#左值与右值)
       - [运算符优先级](#运算符优先级)
@@ -95,10 +95,10 @@
     * `#else`
     * `#endif`
 * 文件引入
-    * `__has_include(< >)`
-    * `__has_include(" ")`
     * `#include < >`
     * `#include " "`
+    * `__has_include(< >)`
+    * `__has_include(" ")`
 * 错误指令
     * `#error 错误消息`
 * 编译器预定义宏
@@ -301,7 +301,7 @@ namespace std { /* ... */}
     * 删除合成的特种成员：default构造、析构、copy操作、move操作
     * 删除成员函数或非成员函数，拒绝从某一类型进行类型转换而调用该函数
     * 删除一个模板实例，拒绝实例化出不希望的模板实例（也可使用`enable_if<>`）
-        > `template <> void func(bool) = delete`相当于声明一个特化版本并将其删除
+        > `template<> void func(bool) = delete`相当于声明一个特化版本并将其删除
 
 <!-- need reread: 非RVO的move -->
 * return：
@@ -376,6 +376,8 @@ namespace std { /* ... */}
 | temp const T& | 引用、左值、右值、泛型、只读     |
 | temp T&&      | 引用、左值、右值、泛型、转发     |
 
+> `const T&`接受右值时，该右值临时量会在调用语句结束时便销毁。所以编写异步/延迟调用的函数时注意这点
+
 ### 协程
 想要理解协程，得先知道为什么需要协程，而这就要求了解异步编程与回调函数。
 
@@ -385,23 +387,23 @@ C++20无栈协程特点：
         若编译器判断一些局部变量的生命周期不超过协程的一次连续执行周期，则将其分配在该栈帧上。
         在协程启动时会将“普通栈帧”上的函数参数copy/move到协程栈帧上。
         > 当协程调用普通函数时，就会下移栈指针来扩充栈，在普通函数调用过程中，协程无法返回，
-        > 因为普通函数无法保存状态而暂停，而每次协程返回需要销毁普通栈帧
+        > 因为普通函数的栈帧在协程普通栈帧下面，若每次协程返回销毁普通栈帧则就会连同普通函数栈帧一起销毁
     * 另一个是分配在堆上协程栈帧，该栈帧保存了伴随整个协程生命周期的数据以及协程Promise对象。
 
-* 协程的返回类型需要定义一个嵌套类`promise_type`来定义协程的行为，其成员包括
+* 协程的返回类型`Feature`需要定义一个成员类型`promise_type`来定义协程的行为，其成员包括
+    * `Feature    get_return_object()`   ：协程第一次返回时的返回值
     * `Awaitable initial_suspend()`     ：在协程开始处插入该段代码
     * `Awaitable final_suspend()`       ：在协程结尾出插入该段代码
-    * `Future    get_return_object()`   ：协程第一次返回时的返回值
     * `Awaitable yield_value(exp)`      ：`co_yield exp`相当于`co_awiat Promise.yield_value(exp)`在暂停时返回值给caller
     * `Value     return_value(value)`   ：`co_return non_void_exp`在协程结束返回时调用
     * `void      return_void()`         ：以下情形调用该函数1.`co_return;`2.`co_return void_exp`3.控制流出返回void协程结尾
 
-* 协程返回类型`Future`一般具有成员对象`coroutine_handle<promise_type>`用来返回给caller，其成员包括：
+* 协程返回类型`Feature`一般具有成员对象`coroutine_handle<promise_type>`用来返回给caller，其成员包括：
     * `resume`或`operator()`：恢复协程
     * `done`                ：是否处于final_suspend阶段
     * `destroy`             ：销毁Promise对象
     * `promise`             ：返回Promise对象引用
-    * `stattic from_promise`：从Promise对象返回其coroutine_handle
+    * `static coroutine_handle from_promise(Promise)`：从Promise对象返回其coroutine_handle
 
 * 语句`co_await Awaitable;`即产生一个暂停点，协程暂停的行为依赖Awiatable的定义，其成员包括：
     * `bool awiat_ready()`                      ：若返回true则不暂停直接执行下条协程语句
@@ -417,24 +419,26 @@ C++20无栈协程特点：
     * 字面量
     * 标识表达式
     * lambda表达式
-    * 折叠表达式
     * requires表达式
+    * 折叠表达式
     * 括号中的任何表达式
 * 不求值表达式
+    > 顾名思义
     * typeid（不为多态泛左值）
     * sizeof（sizeof(T)要求T::~T可访问）
     * noexcept
     * decltype
 * 弃值表达式
+    > 仅用于实施其副作用的表达式
     * 标志表达式
     * 数组下表达式
     * 类成员访问表达式
-    * 间接寻址表
+    * 间接寻址
     * 成员指针操作
     * 条件表达式（其第二、三操作数是弃值表达式）
     * 逗号表达式（其右操作数是弃值表达式）
 
-#### 列表初始化
+#### 初始列
 <span id="initlist"></span>
 * 作用：
     * 用于调用构造函数（**initializer_list优先** ） `string s{"str"};`
@@ -455,7 +459,7 @@ C++20无栈协程特点：
 * nullptr_t可以转换为任意指针类型，反之不成立
 * 任意指针类型可以转换为`void*`，反之只能显式转换
 * `const char*`与`char const*`均为底层const；`char* const`才是顶层const
-* 默认的C-Style字符串类型为`const char*`，标准提供了一个特殊转换：可以将C-Style-String转换为`char*`
+* 默认的C-Style字符串类型为`const char*`，标准提供了一个特殊转换来向后兼容：可以将C-Style-String转换为`char*`
 
 #### 左值与右值
 * 需要左值：赋值`=`、取地址`&`、自增减`--` `++`
@@ -489,7 +493,6 @@ C++20无栈协程特点：
 * t的所有public非静态数据成员必须为直接成员或相同基类的直接成员，不能绑定union
 * 值绑定：`auto [x, std::ignore, z] = t`
 * 引用绑定：`auto& [x, y, z] = t`
-* 移动绑定：`auto&& [x, y] = std::move(foo)`
 
 #### Lambda表达式
 * 形式：`[cap]<temp>(arg){sta}`
@@ -632,10 +635,10 @@ C++20无栈协程特点：
 >
 
 * 默认比较
-    > `auto operator<=>(Type obj)`
+    > `auto operator<=>(const Type& obj) = default`
     * auto可以指定为：
-        * std::strong_ordering  ：字典序比较
-        * std::weak_ordering    ：字符串比较时忽略大小写
+        * std::strong_ordering  ：等价的值表示完全相同
+        * std::weak_ordering    ：等价的值也不一定完全相同
         * std::partial_ordering ：允许忽略无法比较的成员
 
 <!-- need reread: 类型转换 -->
@@ -684,7 +687,7 @@ C++20无栈协程特点：
     * 有const或引用成员
     * 定义了析构函数、拷贝操作、移动构造
 
-**一言蔽之，若定义了除default构造函数的其它特种成员中的一个，其它所有特种成员也得重新定义**
+**一言蔽之，若重定义了除default构造函数的其它特种成员中的一个，其它所有特种成员也得重新定义**
 
 ## 特殊的类
 <!-- need reread -->
@@ -704,7 +707,7 @@ C++20无栈协程特点：
         * 所有成员与基类都为public
         * 无virtual函数
         * 未定义任何构造函数
-        * 注：C++11要求不能有类内初始值
+        * 注：C++14之前要求不能有类内初始值
 * 聚合初始化： <span id="jhcsh"></span>
     * 默认提供一个特殊构造函数：用花括号按顺序逐个构造**基类**和**数据成员**。
         但是注意，默认构造内置类型的成员时其值未定义，而非使用值初始化
@@ -719,8 +722,8 @@ C++20无栈协程特点：
     * 该类的成员为constexpr整数
     * 该类的对象是这些成员中的一个
 * 普通枚举：
-    > `enum Num {one, two, three};`  
-    > `enum Num: int {one, two, three};`
+    > `enum Num {ONE, TWO, THREE};`  
+    > `enum Num: int {ONE, TWO, THREE};`
     * 成员名字对外可见
     * 默认类型由编译器推断
     * 可以赋值给整型变量
@@ -955,15 +958,6 @@ C++20无栈协程特点：
 >
 
 ## 设计
-* 利用继承进行递归
-    > 利用编译器的运算符表达式解析器，不同表达式的结果均为基类引用或基类指针
-    * 定义一个封装基类指针的接口类，用于隐藏基类指针和整个继承体系
-    * 该接口类为继承体系中每个类的友元类，并取消继承体系中每个类的public
-    * 接口类提供包装的虚函数，继承体系中包含接口类作数据成员
-    * 接口类调用包装虚函数，会发生递归调用
-    > 直接利用参数包继承也可以实现递归
->
-
 * OOP与Template之间“多态”的区别
     * OOP通过继承体系的运行时转换(动态多态)
         * 需要设计virtual函数并override
@@ -1080,7 +1074,7 @@ C++20无栈协程特点：
     * 简单要求：要求表达式能够通过编译
         > `t.mem()`
     * 类型要求：要求目标类型合法
-        > `typename T`
+        > `typename T::type`
     * 复合要求：表达式结果作为类型约束的最后一个参数
         > `{简单约束的表达式} (可选)noexcept -> 类型约束`
     * 嵌套要求：相当于使用约束子句进行静态断言

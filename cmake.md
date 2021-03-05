@@ -1,6 +1,6 @@
 # cmake命令
 <!-- entry begin: cmake -->
-```conf
+```sh
 # cmake命令
 cmake "[options]" "<path-to-source>"
 cmake "[options]" "<path-to-existing-build>"
@@ -149,9 +149,9 @@ file(DOWNLOAD <URL> [<file>] [<options>...])
     # 不指定<file>则不下载而只判断<URL>是否存在
     # INACTIVITY_TIMEOUT <seconds>
     # TIMEOUT <seconds>
-    # LOG <variable>
+    # SHOW_PROGRESS
     # STATUS <variable>             # 两元素的列表变量，首元素为数字表示错误码，次元素为错误字符串
-    # EXPECTED_HASH ALGO=<value>    # ALGO为哈斯算法
+    # EXPECTED_HASH ALGO=<value>    # ALGO为哈希算法
 
 # 列表操作
 # Reading

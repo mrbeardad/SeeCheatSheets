@@ -23,14 +23,14 @@
 | 命名空间、函数名称                     | 全部小写和下划线间隔`example_name` |
 
 可用于命名标识符的一些通用前后缀：
-* 位置：`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`
-* 循环：`itr`，`idx`，`this`，`cur`，`beg`，`end`
-* 时间：`new`，`old`，`early`，`late`，`last`，`now`，`orig`
-* 计数：`size`，`len`，`num`，`cnt`，`nr`，`dep`，`wid`，`hei`
+* 位置：`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`，`this`
+* 时间：`new`，`old`，`orig`，`before`，`after`，`cur`
+* 循环：`itr`，`idx`
+* 计数：`size`，`len`，`width`，`height`，`depth`，`num`，`nr`，`cnter`
 * 序数：`1st`，`2nd`，`3th`，`last`
 * bool：`is`，`not`，`and`，`or`，`any`，`all`，`none`，`has`
 * 介词：`in`，`on`，`at`，`of`，`2`，`4`
-* 类型：`int`，`char`，`str`，`strm`，`ptr`，`p2`
+* 类型：`int`，`char`，`str`，`strm`，`ptr2`
 * 用途：`pos`，`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`tag`
 
 ## 注释

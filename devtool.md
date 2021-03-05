@@ -8,6 +8,7 @@
   - [cgdb](#cgdb)
   - [lldb](#lldb)
 - [性能剖析](#性能剖析)
+  - [Gprof](#gprof)
   - [Valgrind](#valgrind)
   - [gperftools](#gperftools)
 - [ssh](#ssh)
@@ -43,7 +44,8 @@
     * 制作动态库            ：-shared -fpic
     * 调用链接器            ：-ldl -rdynamic
     * 动态库搜索            ：-Wl,--rpath=PATH
-    * 链接库打桩            ：-Wl,--wrap,func
+    * 链接库打桩            ：-Wl,--wrap,symbol
+        > 对symbol的调用链接到__wrap_symbol，对__real_symbol的调用链接到symbol
     * GPROF剖析             ：-pg -g3   -fno-inline
     * 调试                  ：-g3 -ggdb -fno-inline
     * 报错                  ：-Werror -Wall -Wextra
@@ -63,7 +65,7 @@
     > 注：BSD风格：`cmd  opts  lib.a  a.o`
 <!-- entry end -->
 
-<!-- entry begin: objdump readelf ldd strace pmap gprof -->
+<!-- entry begin: objdump readelf ldd strace pmap -->
 * objdump
     * -dx   ：仅执行区域
     * -Dx   ：所有区域
@@ -73,7 +75,6 @@
 * pmap
 * size
 * nm
-* gprof
 <!-- entry end -->
 
 # 调试
@@ -139,8 +140,8 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * set follow-fork-mode child
 
 **调试多线程**
-    * i thread
-    * thread    ：`thread-id`
+* i thread
+* thread    ：`thread-id`
 <!-- entry end -->
 
 ## cgdb
@@ -192,6 +193,13 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 <!-- entry end -->
 
 # 性能剖析
+## Gprof
+1. 编译参数指定`-gp`
+
+2. 运行测试程序，会在当前目录生成gmon.out文件
+
+3. 执行`gprof exefile`得到输出
+
 ## Valgrind
 1. memcheck：检查程序中的内存问题，如泄漏、越界、非法指针等。
 
@@ -481,7 +489,7 @@ alias dok='docker'
         * core.editor
         * credential.helper cache ：托管私钥的密码短语
     * 配置<span id="refs">refs</span>
-    ```toml
+    ```gitconfig
     [remote "REMOTE"]
     url = URL
     fetch = +refs/heads/*:refs/remote/origin/*
@@ -544,6 +552,7 @@ alias dok='docker'
 * git rm PATH
     > 删除工作区与暂存区中的文件（只需要暂存区中存在目标文件）。
     * grm   ：`git rm`
+    * grmc  ：`git rm --cached`
 <!-- entry end -->
 
 <!-- entry begin: git mv -->

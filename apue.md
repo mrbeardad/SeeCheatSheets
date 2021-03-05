@@ -61,7 +61,7 @@
 <!-- entry begin: 阻塞 block -->
 * 有些文件并非立即可用，需要等待，期间调用**线程**（而非进程）会阻塞。
 * 互斥锁机制（文件记录锁、线程同步锁）也会使线程阻塞
-* 当等待某些异步事件发生时，如调用`wait`、`sleep`、`pause`、`wait`、`sigsuspend`、`sigwait`也会主动进入阻塞状态
+* 当等待某些异步事件发生时，如调用`wait`、`sleep`、`pause`、`sigsuspend`、`sigwait`也会主动进入阻塞状态
 <!-- entry end -->
 
 # 标准与限制
@@ -364,14 +364,14 @@ int getopt(int argc, char* const argv[], const char* optstring);
     * `optind`  ：类型为`size_t`，作为下次调用getopt()将要处理的argv数组中元素的索引
 * print-mode
     > getopts()函数自动打印错误消息
-    * 返回int表示当前选项字符
-        * `?`表示无效选项。无效选项即选项字符不在于`optstring`中或本该需要参数的选项却没有参数
-        * `-1`表示解析结束，剩余的都是命令参数
+    * 正常情况返回int表示当前选项字符
+    * `?`表示无效选项。无效选项即选项字符不在于`optstring`中或本该需要参数的选项却没有参数
+    * `-1`表示解析结束，剩余的都是命令参数
 * silent-mode
     > 不自动打印错误消息
-        * `?`表示未知选项，该选项未在`optstring`中指定
-        * `:`表示错误选项，该选项必有参数却为提供参数（即该选项作为最后一个命令行参数）
-        * `-1`表示解析结束，剩余的都是命令参数
+    * `?`表示未知选项，该选项未在`optstring`中指定
+    * `:`表示错误选项，该选项必有参数却为提供参数（即该选项作为最后一个命令行参数）
+    * `-1`表示解析结束，剩余的都是命令参数
 <!-- entry end -->
 
 <!-- entry begin: getopt_long getopt_long_only -->
@@ -407,13 +407,12 @@ pid_t   getppid(void);                  // 返回PPID
 pid_t   getpgid(pid_t pid);             // 返回PGID。pid==0表示获取调用进程的PGID
 pid_t   getsid(pid_t pid);              // 返回SID。pid==0表示获取调用进程的SID
 pid_t   tcgetpgrp(int fd);              // 返回TPGID
-
+#include <termios.h>
+pid_t   tcgetsid(int fd);               // 返回SID
+#include <unistd.h>
 int     setpgid(pid_t pid, pid_t pgid); // 返回0。pid==0表示设置调用进程；pgid==0表示设置PGID为PID；只能设置调用进程及其子进程。
 int     setsid(void);                   // 返回新SID。调用进程不能是进程组组长
 int     tcsetpgrp(int fd, pid_t pgid);  // 返回0。pgid必须属于同会话。若由后台进程组调用且其未忽略或阻塞SIGTTOU，则会发送SIGTTOU给该后台进程组
-
-#include <termios.h>
-pid_t   tcgetsid(int fd);               // 返回SID
 ```
 <!-- entry end -->
 <!-- entry begin: getlogin getuid geteuid getgid getegid setuid seteuid setgid setegid  -->
@@ -554,6 +553,8 @@ int         pthread_attr_setdetachstate(pthread_attr_t* attr, int* detachstate);
 int         pthread_setcancelstate(int state, int *oldstate);                       // PTHREAD_CANCEL_ENABLE、PTHREAD_CANCEL_DISABLE
 int         pthread_setcanceltype(int type, int *oldtype);                          // PTHREAD_CANCLE_ASYNCHRONOUS、PTHREAD_CANCEL_DEFERRED
 void        pthread_testcancel(void);                                               // 手动产生cancel点
+// cancelstate处于disable状态时，会将cancel请求挂起，知道下次转换为enable状态时处理
+// 异步cancel会在任意时间取消线程执行，而不非得在取消点
 
 /*
  * 同步原语：
@@ -572,16 +573,16 @@ int         pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*c
 ## 信号处理
 <!-- entry begin: signal_names strsignal sigemptyset sigfillset sigaddset sigdelset sigismember kill raise sigqueue pthread_kill sigqueue pthread_kill sigpending sigprocmask pthread_sigmask signal sigaction -->
 安全处理信号：
-* `volatile sig_atomic_t`设置标识即返回
+* 阻塞所有信号
 * 保存和恢复errno
 * 只调用异步安全函数
-* 阻塞所有信号
 * 多次处理不排队的信号
+* `volatile sig_atomic_t`设置标识即返回
 ```c
-#include <bash/signames.h>                                              // 该头文件依赖signal.h
-char*   signal_names[NSIG + 4];                                         // 信号名数组
 #include <string.h>
 char*   strsignal(int signo);                                           // 返回解释该信号的字符串
+#include <bash/signames.h>                                              // 该头文件依赖signal.h
+char*   signal_names[NSIG + 4];                                         // 信号名数组
 
 #include <signal.h>
 void    (*signal(int signo, void (*func)(int)))(int);                   // 返回之前的Handler
@@ -589,7 +590,7 @@ int     sigaction(int signo, const sigaction* act, sigaction* oldact);  // 返�
 
 int     kill(pid_t pid, int signo);                                     // 返回0。普通用户一般只能发送给UID或EUID等于其UID或EUID的进程
 int     raise(int signo);                                               // 返回0
-int     sigqueue(pid_t pid, int signo, const union sigval value);       // 返回0
+int     sigqueue(pid_t pid, int signo, const union sigval value);       // 返回0。实时信号必须由该函数发送，但处理时sigaction中两种处理函数都可
 int     pthread_kill(pthread_t tid, int signo);                         // 返回0，错误返回errno
 
 int     sigemptyset(sigset_t* set);                                     // 返回0
@@ -707,8 +708,8 @@ int     setpriority(int which, id_t who, int value);    // 返回0。
 <!-- entry begin: link linkat unlink unlinkat remove rename frenameat -->
 ```c
 #include <unistd.h>
-int link(const char* existingpath, const char* newpath);                                    // 返回0。若epath为符号链接则创建符号链接
-int linkat(int efd, const char* existingpath, int nfd, const char* newpath, int flag);      // 返回0。若epath为符号链接则创建符号链接；支持flag=AT_SYMLINK_FOLLOW表示强制创建硬链接
+int link(const char* existingpath, const char* newpath);                                    // 返回0。若epath为符号链接则创建指向最终目标的符号链接
+int linkat(int efd, const char* existingpath, int nfd, const char* newpath, int flag);      // 返回0。若epath为符号链接则创建指向最终目标的符号链接；支持flag=AT_SYMLINK_FOLLOW表示创建指向最终目标的硬链接
 int unlink(const char* pathname);                                                           // 返回0。不跟随符号链接
 int unlinkat(int fd, const char* pathname, int flag);                                       // 返回0。不跟随符号链接，支持flag=AT_REMOVEDIR表示删除空目录
 int remove(const char* pathname);                                                           // 返回0。不跟随符号链接
@@ -777,7 +778,7 @@ times[2]说明：
 ```c
 #include <unistd.h>
 int     access(const char* pathname, int mode);                                     // 返回0。按照实际的UID与GID进行权限判断
-int     faccessat(int fd, const char* pathname, int tmode, int flag);               // 返回0。支持flag=AT_EACCESS表示用EUID与EGID进行权限判断
+int     faccessat(int fd, const char* pathname, int mode, int flag);                // 返回0。支持flag=AT_EACCESS表示用EUID与EGID进行权限判断
 
 #include <sys/stat.h>
 mode_t  umask(mode_t mode);                                                         // 返回之前umask。进程独立；不限制chmod函数
@@ -826,8 +827,8 @@ int     fchownat(int fd, const char* pathname, uid_t owner, gid_t group, int fla
 ### 目录
 <!-- entry begin: mkdir mkdirat rmdir chdir fchdir getcwd chroot -->
 ```c
-#include <stdio.h>
-char*   mkdtemp(char* template);                                // 返回临时目录名字符串，若出错则返回NULL
+#include <stdlib.h>
+char*   mkdtemp(char* template);                                // 返回临时目录名字符串，若出错则返回NULL。template必须以XXXXXX结尾
 
 #include <sys/stat.h>
 int     mkdir(const char* pathname, mode_t mode);               // 返回0。不自动建立不存在的目录
@@ -872,8 +873,9 @@ unsigned int    minor(dev_t st_rdev);
 | _PC_PATH_MAX | 路径名最大长度                                          |
 | _PC_NO_TRUNC | 文件名或路径名超出限制是否直接截断而非出错              |
 ```c
-#include <stdio.h>
+#include <stdlib.h>
 int     mkstemp(char* template);                                        // 返回临时文件的文件描述符
+#include <stdio.h>
 int     fileno(FILE* file);                                             // 返回流相关的文件描述符(NOE)
 
 #include <fcntl.h>
@@ -1031,7 +1033,7 @@ const char* gai_strerrot(int errno);// 返回出错信息字符串。指定errno
 <!-- entry begin: socket bind listen accept connect send sendto recv recvfrom shutdown sockmark -->
 ```c
 int     socket(int domain, int socktype, int protocol);                                                     // 返回创建的套接字的描述符
-int     bind(int sockfd, const sockaddr* addr, socklen_t len);                                              // 返回0
+int     bind(int sockfd, const sockaddr* addr, socklen_t len);                                              // 返回0。server调用bind监听本地端口时，指定IP的意义是只接受指定IF传来的数据包
 int     listen(int sockfd, int backlog);                                                                    // 返回0
 int     accept(int sockfd, sockaddr* addr, socklen_t* len);                                                 // 返回连接的套接字描述符
 int     connect(int sockfd, const sockaddr*, socklen_t len);                                                // 返回0。为了可移植性，当connect失败时需要close(sockfd)然后重新创建
@@ -1252,7 +1254,7 @@ int     unlockpt(int fd);           // 返回0。允许对应从设备被访问
 char*   ptsname(int fd);            // 返回对应从设备名称字符串
 
 #include <pty.h> // 需要链接参数`-lutil`
-int     openpty(int* master, int* slave, char* name, const termios* termp, const winsize* winp);    // 返回0
+int     openpty(int* master, int* slave, char* name, const termios* termp, const winsize* winp);    // 返回0。name为slave设备名称
 pid_t   forkpty(int* master, char* name, const termios* termp, const winsize* winp);                // 若为父进程则返回子进程PID，若为子进程则返回0，若出错返回-1
 ```
 <!-- entry end -->

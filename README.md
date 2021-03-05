@@ -2,13 +2,13 @@
 <!-- vim-markdown-toc GFM -->
 
 - [安装](#安装)
-  - [C++](#c)
-  - [编程](#编程)
-  - [技术](#技术)
-  - [Linux](#linux)
-  - [网络](#网络)
-  - [底层](#底层)
-  - [其它](#其它)
+- [C++](#c)
+- [编程](#编程)
+- [技术](#技术)
+- [Linux](#linux)
+- [网络](#网络)
+- [底层](#底层)
+- [其它](#其它)
 
 <!-- vim-markdown-toc -->
 # 安装
@@ -24,55 +24,59 @@
 ```sh
 git clone --depth=1 https://github.com/mrbeardad/SeeCheatSheets ~/.cheat
 # 国内访问github不太友好的话，可以将URL中的github.com改为gitee.com
-cd ~/.cheat
-./src/install.sh
+mkdir ~/.cheat/build
+cd ~/.cheat/build
+cmake -D CMAKE_BUILD_TYPE=Release ..
+cmake --build .
+cmake --install .
 ```
 
-**注**：部分笔记插入了Tex公式，介于 ~~鄙人的懒惰~~ GFM不支持Tex，诸位就自己下个浏览器插件吧。
+**注**：部分笔记插入了Tex公式，~~介于鄙人的懒惰~~ 介于GFM不支持Tex，诸位就自己下个浏览器插件吧。
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima/related)  
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
-## C++
+# C++
 * [C++语法特性](cpp.md)
     > 一份语法清单，适合有基础的同学
 * [C++编码风格](cppstyle.md)
     > 对代码风格进行规范，拒绝选择困难症
 * [C++编程向导](cppguide.md)
     > 编写高效、健壮、可移植、可扩展的C++代码
-* [C++程序库](cppman.md)
+* [C++程序库](cppman.md):star:
     > C++标准库以及某些第三方库
 * [CMake构建系统](cmake.md)
     > CMake系统构建工具语法
+* [Quick Mini CPP](quick_cpp.md):star:
 
-## 编程
-* [设计模式](dspt.md)
+# 编程
+* [设计模式](dspt.md):star:
     > 应用框架的设计套路
 * [逻辑表达与简化](logic.md)
     > 代码的基本逻辑表达方式
-* [数据结构与算法](dsaa.md)
+* [数据结构与算法](dsaa.md):star:
     > 基础数据结构与算法
 * [正则表达式](regex.md)
     > 目前包含的正则语法版本有Grep、Vim、C++
 
-## 技术
+# 技术
 * [Docker](docker.md)
     > 容器，用于组建微服务架构
 * [MySQL](mysql.md)
     > 关系型数据库，存储于磁盘
 
-## Linux
-* [Linux体系架构](linux.md)
+# Linux
+* [Linux系统结构](linux.md):star:
     > Linux的开机流程，以及整个系统的内核态与用户态架构
-* [Unix系统接口](apue.md)
+* [Linux系统接口](apue.md):star:
     > 大部分都符合POSIX、XSI或USU规范
-* [Bash脚本](bash.md)
+* [Shell脚本](bash.md)
     > bash语法、内置命令以及一些linux基础命令
 * [开发者工具](devtool.md)
     > 包含gcc、gdb、ssh、tmux、zsh、git、pacman等工具使用
-* [Vim](vim.md)
-    > 此为[魔改版SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
+* [Vim使用手册](vim.md)
+    > 此为[mrbeardad/SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 
-## 网络
+# 网络
 * [计算机网络](network.md)
     > 自顶向下展示互联网架构
 * [比特币与区块链](bitcoin.md)
@@ -80,7 +84,7 @@ cd ~/.cheat
 * [差错校验与加密技术](security.md)
     > 这些技术在网络中有重要应用
 
-## 底层
+# 底层
 * [信息编码](code.md)
     > 整数之无符码与补码，浮点数之IEEE 754标准，字符之Unicode与UTF-8
 * [机器代码](asm.md)
@@ -92,7 +96,7 @@ cd ~/.cheat
 * [操作系统](os.md)
     > 链接、异常控制流、虚拟内存
 
-## 其它
+# 其它
 * [Markdown](markdown.md)
 * [English](english.md)
 

@@ -125,23 +125,25 @@ exception                        <exception>
 ### 异常对象使用
 ```cpp
 // 异常构造
-class Logic_error {
+class logic_error {
     logic_error(const string&);
     logic_error(const char*);
 };
-class Runtime_error {
+class runtime_error {
     runtime_error(const string&);
     runtime_error(const char*);
 };
-class System_error {
+class system_error {
     system_error(error_code);
     system_error(error_code, const string&);
     system_error(error_code, const char*);
 };
 error_code make_error_code(errc);
+// 通过errno构造System_error
+std::system_error{errno, std::generic_category()};
 
 // 异常成员
-class Exception {
+class exception {
     C char*     what();     // 返回的字符串指针保证在异常对象销毁前，或在调用异常对象的非静态成员函数前合法
 
     error_code& code();     // 适用于system_error及其派生类，与future_error
@@ -467,7 +469,7 @@ class tuple<Types...> {
     tuple(p);                           // pair转换构造
 };
 tuple   make_tuple(args...);        // 被C++17模板类的模板参数推断取代
-tuple&  tie(args...);               // std::ignore作占位符。被C++17结构化绑定取代
+tuple&  tie(args...);
 tuple   tuple_cat(tuples...);
 T&      get<size_t>(t);
 T&      get<T>(t);
@@ -702,21 +704,25 @@ f   copysign(x, y);     // 求 x 的模与 y 的符号组成的浮点值
 
 <!-- entry begin: midpoint lcm gcd transform_exclusive_scan transform_inclusive_scan exclusive_scan inclusive_scan partial_sum adjacent_difference inner_product transform_reduce transform_reduce reduce accumulate iota numeric 数值算法 -->
 ### 数值算法
+> bOp(e)二元操作符只有一个参数表示和
 ```cpp
 #include <numeric>
-void    iota(b, e, v);                                      // e=v++
+void    iota(b, e, v);                                      // destEle=v++
 T       accumulate(b, e, init, bOp=plus);                   // bOp(e)
-T       reduce(b, e, init=0, bOp=plus);                     // bOp(e)。支持policy(默认无序)
-T       transform_reduce(b1, e1, init, bOp, uOp);           // bOp(uOp(e))
-T       transform_reduce(b1, e1, b2, init,                  // bOp1(bOp2(e1, e2))
-                        bOp1=plus, bOp2=muiltiplies);
-T       inner_product(b1, e1, b2, init, bOp1, bOp2);        // bOp1(bOp2(e1, e2))。支持policy(默认无序)
-destE   adjacent_difference(b, e, destB, bOp=reduce);       // destEle=e - em1
+T       reduce(b, e, init=0, bOp=plus);                     // bOp(e)。支持policy
+T       transform_reduce(b1, e1, init, bOp, uOp);           // bOp(uOp(e))。支持policy
+T       transform_reduce(b1, e1, b2, init,                  // bOp1(bOp2(e1, e2))。支持policy
+                        bOp1=plus, bOp2=multiplies);
+T       inner_product(b1, e1, b2, init,
+                        bOp1=plus, bOp2=multiplies);        // bOp1(bOp2(e1, e2))
+destE   adjacent_difference(b, e, destB, bOp=minus);        // destEle=e - em1
 destE   partial_sum(b, e, destB, bOp=plus);                 // destEle=bOp(e)
-destE   inclusive_scan(b, e, destB, bOp=plus);              // destEle=bOp(e)
-destE   exclusive_scan(b, e, destB, bOp=plus);              // destEle=bOp(*p2e--)
-destE   transform_inclusive_scan(b, e, destB, bOp=plus);    // destEle=bOp(uOp(e))
-destE   transform_exclusive_scan(b, e, destB, bOp=plus);    // destEle=bOp(uOp(em1))
+destE   inclusive_scan(b, e, destB, bOp=plus);              // destEle=bOp(e)。支持policy
+destE   exclusive_scan(b, e, destB, bOp=plus);              // destEle=bOp(em1)。支持policy
+destE   transform_inclusive_scan(b, e, destB,
+                        bOp, uOp, init=0);                  // destEle=bOp(uOp(e))。支持policy
+destE   transform_exclusive_scan(b, e, destB,
+                        bOp, uOp, init=0);                  // destEle=bOp(uOp(em1))。支持policy
 T       gcd(m, n);                                          // 求最大公因数
 T       lcm(m, n);                                          // 求最小公倍数
 T       midpoint(a, b);                                     // 求中间值
@@ -779,8 +785,8 @@ class String {
     string& assign      (目标)
     string& append      (目标)
     string& operator=   (str) (cstr) (char)
-    string& operator+   (str) (cstr) (char)
     string& operator+=  (str) (cstr) (char)
+    string& operator+   (str) (cstr) (char)
     string& insert      (pos, 目标)         // 目标除开(char)
     string& replace     (pos, len, 目标)
     string& erase       (pos=0, len=npos)
@@ -797,7 +803,7 @@ class String {
     // 比较
     int     compare(pos, len, 目标);        // 目标除开(char) (n, char)
     // 复制
-    size_t  copy(dest, len, pos=0);
+    size_t  copy(cstr, len, pos=0);
     // 子串
     string  substr(pos=0, len=npos);
     // 容量
@@ -813,7 +819,7 @@ class String {
     C T*    c_str();
 };
 string  to_string(v);
-wstring to_string(v);
+wstring to_wstring(v);
 int     stoi(str, size_t*=nullptr, base=10);
 double  stod(str, size_t*=nullptr, base=10);
 ```
@@ -845,7 +851,7 @@ class String_view {
 ### 格式化
 > `"{arg_id:填充与对齐 符号 # 0 宽度 精度 L 类型}"`
 * arg_id
-    > 要么全部默认按顺序，要么全部手动指定
+    > 从0开始。要么全部默认按顺序，要么全部手动指定
 * 填充与对齐
     > 填充与对齐只能一同出现，无填充则默认为空格
     * `<`：左对齐（非整数与非浮点数默认左对齐）
@@ -855,7 +861,7 @@ class String_view {
     * `+`：显示正负号
     * `-`：显示负号（默认）
     * ` `：非负数前导空格
-* #
+* `#`
     * 对整数，showbase
     * 对浮点数，showpoint
 * 0
@@ -1236,10 +1242,10 @@ tagItr  adjacent_find(b, e, bOp=equal_to)               // 搜索一对连续相
 tagItr  find_first_of(b, e, seqB, seqE, bOp=equal_to)
 
 // 二分搜索，需要先排序
-tagItr  binary_search(b, e, v, bOp=lower_to)
-tagItr  lower_bound(b, e, v, bOp=lower_to)
-tagItr  upper_bound(b, e, v, bOp=lower_to)
-p<b,e>  equal_range(b, e, v, bOp=lower_to)
+tagItr  binary_search(b, e, v, bOp=less)
+tagItr  lower_bound(b, e, v, bOp=less)
+tagItr  upper_bound(b, e, v, bOp=less)
+p<b,e>  equal_range(b, e, v, bOp=less)
 ```
 <!-- entry end -->
 
@@ -1257,26 +1263,26 @@ m       partition_point(b, e, uOp)                          // 返回满足uOp()
 <!-- entry begin: sample shuffle rotate_copy rotate reverse_copy reverse prev_permutation next_permutation is_permutation lexicographical_compare equal sort_heap pop_heap push_heap make_heap is_heap_until is_heap nth_element partial_sort_copy partial_sort stable_sort sort is_sorted_until is_sorted 变序算法 -->
 ### 变序算法
 ```cpp
-bool    is_sorted(b, e, bOp=lower_to)
-sortE   is_sorted_until(b, e, bOp=lower_to)                 // 返回已排序区间的尾后迭代器
-void    sort(b, e, bOp=lower_to)
-void    stable_sort(b, e, bOp=lower_to)
-void    partial_sort(b, m, e, bOp=lower_to)
-copyE   partial_sort_copy(b, e, destB, destE, bOp=lower_to) // 若dest范围不够则取排序后的前面的元素
-void    nth_element(b, m, e, bOp=lower_to)                  // 按m所指的元素作分界进行两边划分
+bool    is_sorted(b, e, bOp=less)
+sortE   is_sorted_until(b, e, bOp=less)                 // 返回已排序区间的尾后迭代器
+void    sort(b, e, bOp=less)
+void    stable_sort(b, e, bOp=less)
+void    partial_sort(b, m, e, bOp=less)
+copyE   partial_sort_copy(b, e, destB, destE, bOp=less) // 若dest范围不够则取排序后的前面的元素
+void    nth_element(b, m, e, bOp=less)                  // 按m所指的元素作分界进行两边划分
 
-bool    is_heap(b, e, bOp = lower_to)
-sortE   is_heap_until(b, e, bOp = lower_to)                 // 返回已堆排序区间的尾后迭代器
-void    make_heap(b, e, bOp=lower_to)
-void    push_heap(b, e, bOp=lower_to)
-void    pop_heap(b, e, bOp=lower_to)
-void    sort_heap(b, e, bOp=lower_to)
+bool    is_heap(b, e, bOp = less)
+sortE   is_heap_until(b, e, bOp = less)                 // 返回已堆排序区间的尾后迭代器
+void    make_heap(b, e, bOp=less)
+void    push_heap(b, e, bOp=less)
+void    pop_heap(b, e, bOp=less)
+void    sort_heap(b, e, bOp=less)
 
 bool    equal(b, e, cmpB, bOp = equal_to)
-bool    lexicographical_compare(b1, e1, b2, e2, op=lower_to)// 比较两区间字典序
+bool    lexicographical_compare(b1, e1, b2, e2, op=less)// 比较两区间字典序
 bool    is_permutation(b1, e1, b2, bOp=equal_to)            // 检测两个区间的所有元素是否为同一个集合，即不考虑顺序
-bool    next_permutation(b, e, op=lower_to)                 // 当元素为完全升序时返回false
-bool    prev_permutation(b, e, op=lower_to)                 // 当元素为完全降序时返回false
+bool    next_permutation(b, e, op=less)                 // 当元素为完全升序时返回false
+bool    prev_permutation(b, e, op=less)                 // 当元素为完全降序时返回false
 
 void    reverse(b, e)
 destE   reverse_copy(b, e, destB)
@@ -1292,13 +1298,13 @@ destE   sample(b, e, destB, cnt, randomEngine)              // 随机取cnt个�
 ### 集合算法
 ```cpp
 // 集合算法均需提前排序
-destE   merge(b1, e1, b2, e2, destB, bOp=lower_to)
-void    inplace_merge(b, m, e, bOp=lower_to)                            // 将同一个集合中的两部分合并，两部分都有序
+destE   merge(b1, e1, b2, e2, destB, bOp=less)
+void    inplace_merge(b, m, e, bOp=less)                            // 将同一个集合中的两部分合并，两部分都有序
 bool    includes(b1, e1, b2, e2, bOp=equal_to)                          // 区间`[b2, e2)`是否为区间`[b1, e1)`的**子序列**
-destE   set_union(b1, e1, b2, e2, destB, bOp=lower_to)                  // 并集
-destE   set_intersection(b1, e1, b2, e2, destB, bOp=lower_to)           // 交集
-destE   set_symmetric_difference(b1, e1, b2, e2, destB, bOp=lower_to)   // 并集去交集
-destE   set_difference(b1, e1, b2, e2, destB, bOp=lower_to)             // 前一个集合去交集
+destE   set_union(b1, e1, b2, e2, destB, bOp=less)                  // 并集
+destE   set_intersection(b1, e1, b2, e2, destB, bOp=less)           // 交集
+destE   set_symmetric_difference(b1, e1, b2, e2, destB, bOp=less)   // 并集去交集
+destE   set_difference(b1, e1, b2, e2, destB, bOp=less)             // 前一个集合去交集
 ```
 <!-- entry begin: 极值算法 -->
 ### 极值算法
@@ -1310,9 +1316,9 @@ T       min(il)
 pair    minmax(x, y)                        // 返回`pair<min, max>`
 pair    minmax(il)                          // 返回`pair<min, max>`
 T       clamp(x, min, max)                  // 返回三者中的第二大者
-T       min_element(b, e, bOp=lower_to)     // 返回第一个最小值
-T       max_element(b, e, bOp=lower_to)     // 返回第一个最大值
-T       minmax_element(b, e, bOp=lower_to)  // 返回第一个最小值和最后一个最大值
+T       min_element(b, e, bOp=less)     // 返回第一个最小值
+T       max_element(b, e, bOp=less)     // 返回第一个最大值
+T       minmax_element(b, e, bOp=less)  // 返回第一个最小值和最后一个最大值
 ```
 <!-- entry end -->
 
@@ -1398,14 +1404,15 @@ class sub_match<BidirIt> {  // csub_match wcsub_match ssub_match wssub_match
 class regex_iterator<BidirIt> { // cregex_iterator wcregex_iterator sregex_iterator wsregex_iterator
     // 构造函数
     regex_iterator();                           // 默认构造为尾后迭代器
-    regex_iterator(b, e, regex, mflag);         // 迭代器在每个匹配区间停留，每次从上次末尾开始匹配（不重合）
+    regex_iterator(b, e, regex, mflag);         // 迭代器在每个匹配区间停留，每次从上次末尾开始匹配（不重合）。禁止regex右值
 
     match_results    operator*()                // 返回match_results
 };
 class regex_token_iterator<BidirIt> {   // cregex_token_iterator wcregex_token_iteratorsregex_token_iterator wsregex_token_iterator
     // 构造函数
     regex_token_iterator();                     // 默认构造为尾后迭代器
-    regex_token_iterator(b, e, regex, il, mflag);// il指定关注的regex中的子表达式，0表示全部，-1表示模式取反
+    regex_token_iterator(b, e, regex, il, mflag);// il指定关注的regex中的子表达式，0表示全部，-1表示模式取反。禁止regex右值。
+    // 若有多个匹配组，则匹配组之间轮换
 
     sub_match       operator*()                 // 返回sub_match
 };
@@ -1450,11 +1457,11 @@ string  regex_replace(b, e, regex, fmt, rflag);
 #include <iomanip>      // 格式化输入与输出的辅助函数
 #include <cstdio>       // C 风格输入输出函数
 
-std::ios_base           // (定义了一些标志位)
-streambuf               // (系统I/O并缓存数据, 提供位置信息)
-locale                  // (包含facet将I/O进行进行本地格式化)
-stream                  // (封装上述两者, 提供状态、格式化信息)
-centry                  // (帮助stream每次I/O预处理与后处理)
+typename std::ios_base  // (定义了一些标志位)
+typename streambuf      // (系统I/O并缓存数据, 提供位置信息)
+typename locale         // (包含facet将I/O进行进行本地格式化)
+typename stream         // (封装上述两者, 提供状态、格式化信息)
+typename centry         // (帮助stream每次I/O预处理与后处理)
 操作符                  // (提供调整stream的便捷方法)
 ```
 <!-- entry end -->
@@ -1479,7 +1486,7 @@ class basic_ios<CharT>
     ostrm*  tie(ostrm*)         // 关联目标流，返回之前关联流。关联后，任何在*this上的I/O之前，冲刷关联目标
 
     buf*    rdbuf()             // 返回当前流底层的缓冲区对象指针
-    buf*    rdbuf(buf*)         // 设置新的缓冲区并清空状态
+    buf*    rdbuf(buf*)         // 设置新的缓冲区并**清空状态**。注意缓冲区的生命周期
     strm&   copyfmt(strm&)      // 复制本地环境、格式化标志、tie()关联目标等信息到本地
 
     locale  getloc()
@@ -1651,11 +1658,12 @@ class basic_streambuf<CharT> {
 
 // 利用streambuf来通过文件描述符构造
 #include <ext/stdio_filebuf.h>
-std::iostream make_strm_by_fd(int fd) {
-    auto fd = fileno(fd);
-    __gnu_cxx::stdio_filebuf<char> buf{fd, std::ios_base::in};
-    std::istream istrm{&buf};
-}
+#include <ios>
+#include <cstdio>
+/* ... */
+auto fd = fileno(file);
+__gnu_cxx::stdio_filebuf<char> buf{fd, std::ios_base::in};
+std::istream istrm{&buf};
 ```
 <!-- entry end -->
 
@@ -1708,14 +1716,18 @@ class thread {
     thread();
     thread(function, args...);      // 构造同时启动线程
     // 成员函数
-    tid     get_id();               // 获取线程ID（此为C++设置，非OS设置）
+    tid     get_id();               // 获取线程ID
     bool    joinable();             // 检查线程是否活跃
     void    join();                 // 等待线程结束并释放资源，调用后non-joinable
     void    detach();               // 卸离线程一旦退出自动释放资源，调用后non-joinable
     handle  native_handle()         // 返回实现定义的线程句柄
 };
+// 对joinable的线程必须调用其join()，否则程序异常终止
+// 线程detach后便无必须将其join，故主线程终止后程序（所有线程）终止
+// thread属于异步操作，防止function的传引用参数悬垂，thread会将args复制到内部。若用户可保证生命周期则可使用std::ref()
+
 namespace std::this_thread {
-    tid     get_id();               // 获取当前线程ID（此为C++设置，非OS设置）
+    tid     get_id();               // 获取当前线程ID
     void    yield();                // 建议系统切换其他线程执行
     void    sleep_for(duration);    // 阻塞当前线程一段时间
     void    sleep_until(time_point);// 阻塞当前线程直到指定时间
@@ -1724,14 +1736,17 @@ namespace std::this_thread {
 <!-- entry end -->
 
 ### 线程同步
+> 并发会出现问题的地方
+> * 访问可能会改变的共享对象
+> * 阻塞以等待异步事件
 <!-- entry begin: mutex lock try_lock call_once lock_guard scoped_lock unique_guard shared_guard 互斥锁管理器 -->
 ```cpp
 #include <mutex>
 #include <shared_mutex>
 // 互斥锁：不可copy不可move
 typename mutex                                       // 支持前3个操作
-typename recursive_mutex                             // 支持前3个操作，支持多次上锁与解锁
 typename timed_mutex                                 // 支持前5个操作
+typename recursive_mutex                             // 支持前3个操作，支持多次上锁与解锁
 typename recursive_timed_mutex                       // 支持前5个操作，支持多次上锁与解锁
 typename shared_mutex                                // 支持除后2个之外的操作
 typename shared_timed_mutex                          // 支持所有操作
@@ -1808,17 +1823,52 @@ void    notify_all_at_thread_exit(condition_variable, unique_lock)
 ### 原子操作库
 ```cpp
 #include <atomic>
-struct atomic<T> {  // 内置类型均有预定义别名
+struct atomic<T> {  // 内置类型均有预定义别名，C++20针对shared_ptr与weak_ptr有特化以支持原子访问其指向的数据
     // 构造
     atomic()        // 构造时初始化lock
     atomic(T)       // 非原子
     // 成员函数：
-    bool    compare_exchange_strong(exp, val)   // 若*this==exp，则*this=val
-    bool    compare_exchange_weak(exp, val)     // 同上，可能更高效但同时可能假失败
+    operator T()
+    operator=(val)
     T       load()                              // 返回原值拷贝
     void    store(val)                          // 赋值val
     T       exchange(val)                       // 赋值val并返回旧值拷贝
-    operator=(val)                              // 赋值val并返回新值拷贝
+    bool    compare_exchange_strong(exp, val)   // 若*this==exp，则*this=val
+    bool    compare_exchange_weak(exp, val)     // 同上，可能更高效但同时可能假失败
+    // 仅支持内置类型
+    T       fetch_add(t)
+    T       fetch_sub(t)
+    T       fetch_and(t)
+    T       fetch_or(t)
+    T       fetch_xor(t)
+    operator--()
+    operator++()
+    operator--(int)
+    operator++(int)
+    operator-=(val)
+    operator+=(val)
+    operator&=(val)
+    operator|=(val)
+    operator^=(val)
+};
+struct atomic_ref<T> {
+    operator T()
+    operator=(val)
+    bool    is_lock_free()
+    T       load()
+    void    store(t)
+    T       exchange(t)
+    bool    compare_exchange_strong(exp, val)
+    bool    compare_exchange_weak(exp, val)
+    void    wait(t)         // 等待直到被提醒且原子值被更改为不等于t
+    void    notify_one()
+    void    notify_all()
+    // 仅支持内置类型
+    T       fetch_add(t)
+    T       fetch_sub(t)
+    T       fetch_and(t)
+    T       fetch_or(t)
+    T       fetch_xor(t)
     operator--()
     operator++()
     operator--(int)
@@ -1883,7 +1933,7 @@ class directory_entry { // 存储一个path作为成员，并可能附带文件�
     directory_entry()
     directory_entry(path)
     // 修改器
-    void    replace_filename(path)      // 设置文件名，并更新缓存属性
+    void    replace_filename(path)      // 设置文件名，并更新缓存属性。仅更改path不更改文件系统
     void    refresh()                   // 更新缓存的文件属性
     // 观察器
     C path& path()
@@ -1966,7 +2016,7 @@ void        resize_file(path, new_size);
 time_point  last_write_time(path);
 size_t      hard_link_count(path);
 
-path        current_path()              // 获取当前工作路径
+path        current_path(path)          // 获取/设置当前工作路径
 path        temp_directory_path()       // 获取临时目录
 bool        equivalent(path1, path2)    // 判断两路径是否为同一文件
 bool        exists()
@@ -2099,7 +2149,7 @@ std::string                 between(str, to_charset, from_charset);
 
 &emsp;一般设计：
 * Server类 ：管理[io_context/ssl::context]与acceptor
-* Session类：管理socket于buffer。
+* Session类：管理socket与buffer。
     > 利用`bind(&Session::handler, shared_from_this())`
     > 或lambda捕获shared_from_this()来保证异步操作过程中buffer一直有效
 <!-- entry begin: boost asio io_context 异步 -->
@@ -2197,14 +2247,14 @@ class ip::tcp::resolver {
     // 构造函数
     resolver(ex);
     // 成员函数
-    // handle：void(const asio::error_code&, resolver::resilts_type&)
+    // handle：void(const asio::error_code&, resolver::resilts_type&) 返回的查询结果是一个range
     ?       async_resolve(host, service, [flag,] handle);
     /* flag 位于 class ip::resolver_base 中
      * address_configured   根据系统是否设置有non-loopback地址而只返回IPv4或IPv6
      * all_matching         若同时指定了v4_mapped，则返回所有匹配到的IPv4与IPv6
      * v4_mapped            若指定查询IPv6但会找到IPv6地址，则返回IPv4映射的IPv6地址
-     * numeric_host         强制指定host为数字表示而非域名表示
-     * numeric_service      强制指定service为数字表示而非服务名表示
+     * numeric_host         强制指定host为数字表示而非域名表示。默认二者皆可
+     * numeric_service      强制指定service为数字表示而非服务名表示。默认二者皆可
      * passive              指示返回的endpoint用于绑定本地，此时host应指定为""
     */
     void        cancel();
@@ -2214,8 +2264,9 @@ class ip::tcp::resolver {
 
 <!-- entry begin: 网络 asio buffer socket -->
 ```cpp
-buffer    dynamic_buffer(array, max_size);
-buffer    dynamic_buffer(vector, max_size);
+buffer    dynamic_buffer(array, max_size=UMAX);
+buffer    dynamic_buffer(vector, max_size=UMAX);
+buffer    dynamic_buffer(string, max_size=UMAX);
 buffer    buffer(array);
 buffer    buffer(vector);
 buffer    buffer(string);
@@ -2225,7 +2276,7 @@ class ip::tcp::acceptor {
     // 构造函数
     acceptor(ex, [endpoint]);
     // 成员函数
-    void        bind(endpoint);
+    void        bind(endpoint);     // 意味着只接受来自绑定的IF的数据包
     endpoint    local_endpoint();
 
     // handle：void(const asio::error_code&, ip::tcp::socket&)
@@ -2254,8 +2305,8 @@ class ip::tcp::socket {
     ?           async_connect(endpoint, handler);
     // flag   ：ip::socket_type::socket::{message_peek, message_out_of_band}
     // handler：void(const asio::error_code&, size)
-    ?           async_receive(buffer,[flag,] handler);  // async_read_some
-    ?           async_send(buffer,[flag,] handler);     // async_write_some
+    ?           async_read_some(buffer,[flag,] handler);    // 读到EOF抛出异常!
+    ?           async_write_some(buffer,[flag,] handler);
     // 以下两成员函数为ip::udp::socket特有
     /* ?        async_receive_from(buffer, endpoint,[flag,] handler); */
     /* ?        async_send_to(buffer, endpoint,[flag,] handler);      */
@@ -2266,7 +2317,7 @@ class ip::tcp::socket {
     void        open([protocol ]);                      // 打开底层socket。ip::tcp::{v4(), v6()}
     bool        is_open();
 };
-// condition：bool(const asio::error_code&, endpoint next)          // condition在每次连接尝试之前调用
+// condition：bool(const asio::error_code&, endpoint next)          // condition在每次连接尝试之前调用，返回false则跳过该ep
 // handler  ：void(const asio::error_code&, iterator)               // iterator为当前连接成功的迭代器
 ?       async_connect(socket, begin, [end,] [condition], handler);  // resolver得到的endpoint的ranger可用于此处begin
 
@@ -2300,7 +2351,7 @@ class ssl::context {
     void    set_options(opts);      // opts一般为 ssl::context::default_workarounds
     void    clear_options(opts);
     // callback：string(size_t max_len, int password_purpose);
-    // 第二参数可能是ssl::context::{for_reading, for_writing}
+    // 其第二参数可能是ssl::context::{for_reading, for_writing}
     void    set_password_callback(callback);
     // format为ssl::context::{pem, asn1}
     void    use_certificate(buffer, format);
@@ -2316,6 +2367,7 @@ class ssl::context {
     // verify_fail_if_no_peer_cert, // 若对方无证书则失败，C验证S时无则默认失败，S验证C时无则默认继续
     // verify_client_once           // 仅验证一次客户端的证书
     // }
+
     // callback为bool(bool preverified, ssl::verify_context&);  其中利用可OpenSSL API来获取证书信息
     void    set_verify_callback(callback);
     void    set_default_verify_paths();
@@ -2358,7 +2410,7 @@ asio::awaitable<void> test_asio_with_coroutine()
 }
 // ex为executor或者io_context，用于调度协程的执行（实质就是调度回调函数，而回调函数负责恢复相关协程）
 // awaitable为调用协程的（第一次）返回值，内含协程句柄可用于恢复协程等操作
-// void handler(std::exception_ptr, T); T为协程co_return结束返回的值的类型，若无则可使用asio::detached
+// void handler(std::exception_ptr, T); T为协程co_return结束返回的值的类型（void则无），若无则可使用asio::detached
 ?   co_spawn(ex, awaitable, handler);
 ?   co_spawn(ex, ret_awaitable_func, handler);  // co_spawn保证传入的函数对象声明周期不短于协程生命周期
 ```
@@ -2414,7 +2466,7 @@ int main(int argc, char* argv[]) {
     // 高等级日志同时会写入低等级的日志，ERROR与FATAL会写入stderr，FATAL还会终止程序
     LOG(severity)                         << "Something goes wrong!";
     LOG_IF(severity, cond)                << "Something goes wrong!";
-    LOG_EVERY_N(severity, times)          << "Something goes wrong!" << google::COUNTER;
+    LOG_EVERY_N(severity, times)          << "Something goes wrong!" << google::COUNTER; // 原理是每次宏展开就从零开始，再内部记录状态
     LOG_IF_EVERY_N(severity, cond, times) << "Something goes wrong!" << google::COUNTER;
     LOG_FIRST_N(severity, times)          << "Something goes wrong!" << google::COUNTER;
     // 用于调试的日志，未定义宏NDEBUG时有效
@@ -2446,8 +2498,8 @@ int main(int argc, char* argv[]) {
 ```
 
 * 设置glog行为
-    > 可通过更改运行程序的环境变量，变量名前缀`GLOG_`。
-    > 或者在代码中更改全局变量，变量名前缀`FLAGS_`。
+    > 可通过更改运行程序的环境变量，变量名前缀`GLOG_`。注意就是小写
+    > 或者在代码中更改全局变量，变量名前缀`FLAGS_`，注意是赋值C++变量而非定义宏（再初始化glog之前）。
     * `logtostderr=0`：是否输出到stderr代替输出到tmpfile
     * `stderrthreshold=2`：高于该等级的日志额外输出到stderr。
         INFO、WARNING、ERROR、FATAL分别为0、1、2、3
@@ -2513,26 +2565,33 @@ int main(int argc, char* argv[]) {  // 或者直接链接libgtest_main.so而避�
 // 特别是析构函数必须是虚函数且必须提供定义）
 struct MockClass: public Class { // 二、继承自需要模仿的类
     // 三、在public区域定义方法
-    // 四、如下利用宏辅助进行定义
     MOCK_METHOD(RetType, Method, (T1 arg1, T2 arg2), (const, override));
 };
 TEST(ClassTest, TestName) {
-    MockClass mc{};     // 声明对象
-    // 指定期望。matcher为匹配器，或直接省略参数列表（仅用于无重载方法）
-    EXPECT_CALL(mc, Method(matcher))
+    MockClass mc{};
+    // 模拟指定方法的指定重载版本。当传入的各个参数与各个位置上的matcher适配时，执行对应的action
+    // matcher可以直接省略参数列表（包括括号），仅用于无重载的方法
+    // 默认情况下，期望的匹配顺序是按注册的顺序从后往前（覆盖）的
+    // 并且默认情况下，已经饱和（达到次数上限）了的期望仍会参与匹配，从而导致错误
+    EXPECT_CALL(mc, Method(matcher1, matcher2))
+        // 额外的匹配器，对各参数之间的关系再进行限定
+        // 比如，.Witch(Args<0,1>(Lt()))表示期望参数0小于参数1
+        .With(multi_argument_matcher)
         // 可忽略Times而由gmock推测：
         // 若无WillOnce且无WillRepeatedly则为1，
         // 若n>=1次WillOnce且无WillRepeatedly则为n，
         // 若n>=0次WillOnce且有WillRepeatedly则为AtLeast(n)
-        .With(multi_argument_matcher)
         .Times(cardinality)
         .WillOnce(action)
         .WillRepeatedly(action)
-        .RetiresOnSaturation(); // 指明该条期望满足后便失效，以便实施多重期望。
+        // 指明该整条期望满足后便失效，以便实施多重期望时已饱和的期望又参与匹配。
+        // [deprecated](https://stackoverflow.com/questions/52765902/gmock-insequence-vs-retiresonsaturation)
+        .RetiresOnSaturation();
     {
         testing::InSequence seq{};
-        // 默认情况下，一个方法的多重期望是从后往前进行匹配，再对匹配到的期望进行测试
-    }   // 而在该块作用域内，顺序是强制从前往后依序测试，不管matcher是否匹配
+        // 在该块作用域内，顺序是强制从前往后依序测试，若matcher不匹配则直接报错
+        // 期望满足后会自动退出
+    }
     // 注意：mock对象析构时会检测条件是否满足，故对mock类方法的调用应在此函数中出现
 }
 namespace testing {
@@ -2606,17 +2665,17 @@ namespace testing {
 <!-- entry begin: 序列化 json yas -->
 ## YAS
 ```cpp
-// 自定义序列化类
-YAS_DEFINE_STRUCT_SERIALIZE(oname, mem)                         // 前两者定义在类内
-YAS_DEFINE_STRUCT_SERIALIZE_NVP(oname, ("mem", mem))
-YAS_DEFINE_INTRUSIVE_SERIALIZE(oname, type, mem)                // 后两者定义在类外，type类型名不用字符串
-YAS_DEFINE_INTRUSIVE_SERIALIZE_NVP(oname. type, ("mem", mem))
-// 或者手动定义类模板成员
+// 手动定义类模板成员
 template<typename Archive>
 void serialize(Archive &ar) {
     auto o = YAS_OBJECT("type", m);
     ar & o;
 }
+// 自定义序列化类
+YAS_DEFINE_STRUCT_SERIALIZE(oname, mem)                         // 前两者定义在类内
+YAS_DEFINE_STRUCT_SERIALIZE_NVP(oname, ("mem", mem))
+YAS_DEFINE_INTRUSIVE_SERIALIZE(oname, type, mem)                // 后两者定义在类外，type类型名不用字符串
+YAS_DEFINE_INTRUSIVE_SERIALIZE_NVP(oname, type, ("mem", mem))
 
 // 创建中间对象待读写，其作为实际对象的引用而不存储实体
 // 当序列化为yas::json时，对象名可做键值
