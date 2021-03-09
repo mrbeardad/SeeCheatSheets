@@ -65,7 +65,7 @@ cmake --install .
     > 关系型数据库，存储于磁盘
 
 # Linux
-* [Linux系统结构](linux.md):star:
+* [Linux系统架构](linux.md):star:
     > Linux的开机流程，以及整个系统的内核态与用户态架构
 * [Linux系统接口](apue.md):star:
     > 大部分都符合POSIX、XSI或USU规范

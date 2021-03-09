@@ -491,7 +491,7 @@ C++20无栈协程特点：
 
 #### 结构化绑定
 * t的所有public非静态数据成员必须为直接成员或相同基类的直接成员，不能绑定union
-* 值绑定：`auto [x, std::ignore, z] = t`
+* 值绑定：`auto [x, ignore, z] = t`
 * 引用绑定：`auto& [x, y, z] = t`
 
 #### Lambda表达式
@@ -578,7 +578,7 @@ C++20无栈协程特点：
     * static：<span id="static"></span>
         * 可以使用不完整类型，但定义时需提供完整定义
         * const：若定义在类内则也应该在类外声明以形成实体（链接符号），non-const的只能定义在类外
-        * [inline](#inline语义)：可在类内提供定义，而无需再在类外再次声明以形成实体
+        * [inline](#inline语义)：在类内提供定义即可形成实体，利用inline语义避免符号多重定义
         * constexpr：隐式inline
 >
 
@@ -635,8 +635,9 @@ C++20无栈协程特点：
 >
 
 * 默认比较
-    > `auto operator<=>(const Type& obj) = default`
-    * auto可以指定为：
+    > `auto operator<=>(const Type& obj) const = default`
+    > 因为性能问题，你应该同时提供`operator==()`来完成整个比较操作的自动化生成
+    * auto可以显示指定为：
         * std::strong_ordering  ：等价的值表示完全相同
         * std::weak_ordering    ：等价的值也不一定完全相同
         * std::partial_ordering ：允许忽略无法比较的成员

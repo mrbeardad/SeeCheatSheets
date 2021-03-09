@@ -24,6 +24,7 @@ GFM
         : W
             ? T& -> T&&
             : cT& -> T&  -> T&&
+// 注：如果函数内部必定会copy一次形参，则可直接使用传值参数(T)
 ```
 * 修饰
     * this
@@ -55,7 +56,7 @@ GFM
     * never-call-virtual
 * 析构
     * noexcept & .destroy()
-    * virutal-definition
+    * virutal & definition
     * nonempty-non-inline
     * never-call-virtual
 * copy? & move?
@@ -86,7 +87,9 @@ GFM
 
 <!-- entry begin: cpp  初始化 -->
 # 初始化
-* 指针ins引用?
+* 引用：
+    * 可读性别名
+* 指针
     * 需要NULL
     * 更改指向
 * 形式
@@ -97,27 +100,13 @@ GFM
 * 循环声明
 <!-- entry end -->
 
-<!-- entry begin: cpp  STL -->
-# STL
-* operator
-* Stream.clear()
-* Stream.rdbuf(strmbuf*)
-* Cont.emplace()
-* Cont.at()
-* 容器增删
-    * range_based_for
-    * 引用、指针、迭代器
-<!-- entry end -->
-
 <!-- entry begin: cpp  异常 -->
 # 异常
 * 限制输入
-* 整数(U负溢出、-Tmin、除零)
-* 浮点数(有效、结合、比较)
-* 捕获异常?
-    * 可恢复
-    * 集中捕获
+    > 整数(U负溢出、-Tmin、除零)
+    > 浮点数(有效、结合、比较)
 * 代码前移
+* 集中捕获可恢复异常
 <!-- entry end -->
 
 <!-- entry begin: cpp  并发 -->
@@ -127,16 +116,28 @@ GFM
 * mutable
 <!-- entry end -->
 
+<!-- entry begin: cpp  STL -->
+# STL
+* 优先使用可读性更好的重载`operator`
+* Stream在循环中使用一定不要忘记调用`clear()`
+* Stream仅持有StreamBuf的指针而非完整对象，不保证其生命周期
+* `stringstream`只在需要格式化时才用来替代`string`
+* Container优先使用`emplace`函数而非`push`函数
+* Container引用元素时，若下标为非常量，则应使用`at()`代替`operator[]()`
+* Container增删元素时，注意range-based-for、引用、指针、迭代器的有效性
+<!-- entry end -->
+
 <!-- entry begin: logic  循环 -->
 # 循环
-* 多，顺，for-while
+* 多，顺
 * 变，迭，if-continue
 * 条，相，穷，if-break
 * 记，操，初，once
 * 尾
 * 终
-
-> 计数器：条件检测为until`向量-距离`
+> 循环计数器：
+> * 迭后，则初始状态为N，计数N步，最后状态+1则为N-1==0
+> * 迭前，则初始状态为N-1，计数N步，最后状态则为N-1+1==0
 <!-- entry end -->
 
 <!-- entry begin: logic  分支 条件 -->
@@ -157,3 +158,18 @@ GFM
     * 将尾递归转为循环
     * 用`stack`存储递归路径
 <!-- entry end -->
+
+# 步数
+获取数量：
+* `[X0, Xn]`
+* Xn - X0 + 1
+
+获取距离：
+* `(X0, Xn]`
+* Xn - X0
+
+获取尾后向量：
+* Xn + 数量
+
+获取尾部向量：
+* Xn + 距离

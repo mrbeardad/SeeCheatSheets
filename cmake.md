@@ -59,6 +59,13 @@ add_library(lib_target SHARED
 # HeaderOnly库(target)
 add_library(lib_target INTERFACE)
     # 该target添加头文件时也只能指定INTERFACE
+
+# 自定义脚本运行
+add_custom_target(target
+    cmd args...
+    [COMMAND cmd args...]...)
+add_dependencies(target
+     [<target-dependency>]...)
 ```
 
 # CMakeLists.txt编译参数
@@ -77,12 +84,6 @@ target_link_libraries(target
     PRIVATE
     lib_target)
 
-# 宏定义
-target_compile_definitions(target
-    PRIVATE
-    MACRO=val)
-# add_definitions(-DNDEBUG)
-
 # 标准版本
 target_compile_features(target
     PRIVATE
@@ -91,44 +92,54 @@ target_compile_features(target
 
 # 编译参数
 target_compile_options(target
+    [BEFORE] # 表示将参数加在前面而非缺省的最后
     PRIVATE
     -lpthread -ldl -lutil -fcoroutines)
+add_compile_options(-opt)
+
+# 宏定义
+target_compile_definitions(target
+    PRIVATE
+    MACRO=val)
+add_compile_definitions(MACRO=val)
+
 ```
 
 # CMakeLists.txt配置变量
 ```cmake
+# 相当于在此处插入并执行子目录下的CMakeLists.txt脚本
+add_subdirectory(dir_name)
+
 # 构建期配置文件，关联cmake宏与cpp宏
-configure_file(include/ver.h.in ${PROJECT_BINARY_DIR}/ver.hpp)
+configure_file(include/ver.h.in  ${PROJECT_BINARY_DIR}/ver.hpp)
     # 将文件中的 `#cmakedefine MACRO` 替换为 `#define MACRO @MACRO@`
     # 将文件中的 `@CMAKE_VAR@` 替换为cmake项目变量 `CMAKE_VAR` 的值
     # 注意使用 target_include_directories(target ${PROJECT_BINARY_DIR})
 
 # 设置可开关的选项
-option(OPTION "description" ON)
+option(OPTION "description" [OFF|ON])
     # 与用普通cmake变量来控制cpp宏的区别在于：
-    # 1. 提示用户存在该选项
-    # 2. 可方便地开关(ON/OFF)
+    # 1. 在GUI程序中显示该选项
+    # 2. 定义为CACHE变量
 
-# 相当于在此处插入并执行子目录下的CMakeLists.txt脚本
-add_subdirectory(dir_name)
-
-# 在当前函数作用域或目录作用域中设置变量，<value>为空相当于unset(<variable>)
-set(<variable> <value>... [PARENT_SCOPE] )
-    # 多个变量会存储为列表变量
-    # 为上级目录或上级函数作用域设置变量，而并非为当前作用域设置，返回后生效
+# 在当前函数作用域或目录作用域中设置变量
+set(<variable> <value>...
+    [PARENT_SCOPE])     # 该选项表示为上级目录或上级函数作用域设置变量，而并非为当前作用域设置，返回后生效
+    # 若有多个变量会存储为列表变量
+    # 若<value>为空相当于unset(<variable>)
 
 # 设置缓冲作用域的变量，其生命周期可跨多次cmake命令行调用
-set(<variable> <value>... CACHE <type> <doc-string> [FORCE])
-    # <type>包括BOOL、FILEPATH、PATH、STRING、INTERNAL（GUI不对外显示的字符串，隐式FORCE）
-    # FORCE表示强制覆盖已存在的缓存变量
+set(<variable> <value>...
+    CACHE <type> <doc-string> # <type>包括：BOOL、FILEPATH、PATH、STRING、INTERNAL（GUI不对外显示的字符串，隐式FORCE）
+    [FORCE])    # 表示强制覆盖已存在的缓存变量
     # 设置缓存变量成功后会删除同名的普通变量
 
 # 设置环境变量
-set(ENV{VAR} <value>)
+set($ENV{VAR} <value>)
 
 # 读取文件内容到变量
 file(READ <filename> <variable>
-    [OFFSET <OFFSET>]
+    [OFFSET <offset>]
     [LIMIT <max-bytes>]
     [HEX])
 
@@ -152,29 +163,6 @@ file(DOWNLOAD <URL> [<file>] [<options>...])
     # SHOW_PROGRESS
     # STATUS <variable>             # 两元素的列表变量，首元素为数字表示错误码，次元素为错误字符串
     # EXPECTED_HASH ALGO=<value>    # ALGO为哈希算法
-
-# 列表操作
-# Reading
-  list(LENGTH <list> <out-var>)
-  list(GET <list> <element index> [<index> ...] <out-var>)
-  list(JOIN <list> <glue> <out-var>)
-  list(SUBLIST <list> <begin> <length> <out-var>)
-# Search
-  list(FIND <list> <value> <out-var>)
-# Modification
-  list(APPEND <list> [<element>...])
-  list(FILTER <list> {INCLUDE | EXCLUDE} REGEX <regex>)
-  list(INSERT <list> <index> [<element>...])
-  list(POP_BACK <list> [<out-var>...])
-  list(POP_FRONT <list> [<out-var>...])
-  list(PREPEND <list> [<element>...])
-  list(REMOVE_ITEM <list> <value>...)
-  list(REMOVE_AT <list> <index>...)
-  list(REMOVE_DUPLICATES <list>)
-  list(TRANSFORM <list> <ACTION> [...])
-# Ordering
-  list(REVERSE <list>)
-  list(SORT <list> [...])
 
 # 打印字符串
 message( [<mode>] <message-string>... )
@@ -243,9 +231,9 @@ install(DIRECTORY <dir>...    [...])
 | CMAKE_MODULE_PATH     | 默认/usr/share/cmake/Modules |
 | CMAKE_INSTALL_PREFIX  | 安装路径前缀                 |
 
-| 构建类型       | 编译参数          |
-|----------------|-------------------|
-| Release        | `-O3 -DNDEBUG`    |
-| MinSizeRel     | `-Os -DNDEBUG`    |
-| RelWithDebInfo | `-O2 -g -DNDEBUG` |
-| Debug          | `-g`              |
+| 构建类型                | 编译参数          |
+|-------------------------|-------------------|
+| Release                 | `-O3 -DNDEBUG`    |
+| MinSizeRel              | `-Os -DNDEBUG`    |
+| RelWithDebInfo(default) | `-O2 -g -DNDEBUG` |
+| Debug                   | `-g`              |

@@ -783,7 +783,7 @@ class String {
     string(目标)
     // 修改
     string& assign      (目标)
-    string& append      (目标)
+    string& append      (目标)  // 目标除开(char)
     string& operator=   (str) (cstr) (char)
     string& operator+=  (str) (cstr) (char)
     string& operator+   (str) (cstr) (char)
@@ -794,7 +794,7 @@ class String {
     bool    starts_with (str) (cstr) (char)
     bool    end_with    (str) (cstr) (char)
     bool    contains    (str) (cstr) (char)
-    size_t  find             (str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
+    size_t  find             (str, pos=0) (cstr, pos=0, len=auto) (char, pos=0) // 起始索引可越界
     size_t  rfind            (str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
     size_t  find_first_of    (str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
     size_t  find_first_not_of(str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
@@ -1053,6 +1053,7 @@ void    reverse()
 ### 辅助函数
 ```cpp
 #include <iterator>
+// 不改变原来迭代器
 itr     next(itr, n = 1)
 itr     prev(itr, n = 1)
 itr     distance(itr1, itr2)
@@ -1513,7 +1514,7 @@ class basic_iostream<CharT>
     size    gcount()                            // 返回上次无格式读取字符数
     strm&   ignore(count=1, delim=eof)          // 忽略包括delim
     int     peek()                              // 返回下个字符, 但不移动iterator
-    strm&   unget()                             // 撤销上次读取的字符（回移iterator）
+    strm&   unget()                             // iterator回移一个宽度
     strm&   putback(char)                       // 将指定字符置入流中
     strm&   sync()                              // 对输出流冲刷缓冲区，对输入流清空缓冲区并重新读取
 
@@ -1632,7 +1633,7 @@ class iostringstream {  // 预定义有stringstream istringstream ostringstream 
     // 特有成员函数
     string_view view()
     string      str()       // 返回缓冲区的字符，与是否已被读取无关
-    string      str(str)
+    string      str(str)    // 该操作不清除流状态！！！
 };
 ```
 <!-- entry end -->
@@ -1648,9 +1649,12 @@ class basic_streambuf<CharT> {
     // 其他流类析构时只不析构由rdbuf(buf*)得到的缓冲区
 
     // 成员函数
-    // 注意清除流的状态
-    pos pubseekoff(off, dir, which);    // dir有std::ios_base::{beg, cur, end}
-    pos pubseekpos(pos, which);         // which有std::ios_base::{in, out}
+    // 流与缓冲区独立，注意清除流的状态
+    // 注意which需要适当给出，如istream不能接受out
+    pos pubseekoff(off, dir, which=in|out);    // dir有std::ios_base::{beg, cur, end}
+    pos pubseekpos(pos, which=in|out);         // which有std::ios_base::{in, out}
+    int sgetc();        // 获取下个字符而不移动指针
+    int sungetc();      // 回移指针
 };
 // 高效非格式化输入输出：
 // 利用streambuf_iterator避开构造sentry进行非格式化I/O
@@ -2014,9 +2018,11 @@ space_info  space(path);
 size        file_size(path);
 void        resize_file(path, new_size);
 time_point  last_write_time(path);
+time_point  last_write_time(path, new_time);
 size_t      hard_link_count(path);
 
-path        current_path(path)          // 获取/设置当前工作路径
+path        current_path()              // 获取当前工作路径
+void        current_path(path)          // 设置当前工作路径
 path        temp_directory_path()       // 获取临时目录
 bool        equivalent(path1, path2)    // 判断两路径是否为同一文件
 bool        exists()
@@ -2210,6 +2216,10 @@ class ip::address { // 可以是ipv4也可是ipv6
     operator<<
 };
 address     ip::make_address(str);      // 返回IP地址，点分十进制或十六进制计数法
+address_v4  ip::address_v4::loopback(); // 返回IPv4表示本地回环127.0.0.1
+address_v4  ip::address_v4::any();      // 返回IPv4表示任意地址0.0.0.0
+address_v4  ip::address_v4::broadcast();// 返回IPv4表示绝对广播255.255.255.255
+string      ip::host_name();            // 返回本地主机名
 
 class ip::network_v4 {  // ip::network_v6
     // 一般用 ip::make_network_v4("192.168.0.1/24") 构造
@@ -2226,10 +2236,6 @@ class ip::network_v4 {  // ip::network_v6
     operator<<
 };
 network_v4  ip::make_network_v4(str);   // 返回带掩码的IP地址，一般用于本机判断网段
-address_v4  ip::address_v4::loopback(); // 返回IPv4表示本地回环127.0.0.1
-address_v4  ip::address_v4::any();      // 返回IPv4表示任意地址0.0.0.0
-address_v4  ip::address_v4::broadcast();// 返回IPv4表示绝对广播255.255.255.255
-string      ip::host_name();            // 返回本地主机名
 
 class ip::tcp::endpoint {       // ip::udp::endpoint、local::stream_protocol::endpoint
     // 构造函数
@@ -2359,21 +2365,21 @@ class ssl::context {
     void    use_certificate_file(file, format);
     void    use_private_key_file(file, format);
 
-    // 一般由Client调用的成员函数（验证对方）
-    void    set_verify_mode(verify_mode);
-    // verify_mode包括ssl::{
-    // verify_none,                 // 不验证对方证书
-    // verify_peer,                 // 验证对方证书
-    // verify_fail_if_no_peer_cert, // 若对方无证书则失败，C验证S时无则默认失败，S验证C时无则默认继续
-    // verify_client_once           // 仅验证一次客户端的证书
-    // }
-
     // callback为bool(bool preverified, ssl::verify_context&);  其中利用可OpenSSL API来获取证书信息
     void    set_verify_callback(callback);
     void    set_default_verify_paths();
     void    add_certificate_authority(buffer);
     void    add_verify_path(path);
     void    load_verify_file(file);
+
+    // 一般由Client调用的成员函数（验证对方）
+    void    set_verify_mode(verify_mode);
+    // verify_mode包括ssl::{
+    //  verify_none,                 // 不验证对方证书
+    //  verify_peer,                 // 验证对方证书
+    //  verify_fail_if_no_peer_cert, // 若对方无证书则失败，C验证S时无则默认失败，S验证C时无则默认继续
+    //  verify_client_once           // 仅验证一次客户端的证书
+    // }
 };
 
 class ssl::stream<Socket> {

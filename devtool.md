@@ -10,7 +10,7 @@
 - [性能剖析](#性能剖析)
   - [Gprof](#gprof)
   - [Valgrind](#valgrind)
-  - [gperftools](#gperftools)
+  - [Gperftools](#gperftools)
 - [ssh](#ssh)
 - [ssl](#ssl)
 - [tmux](#tmux)
@@ -93,8 +93,11 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 **断点**
 * break     b   ：`func | linenum | *address`，`if CONDITION` 
 * tbreak    tb  ：`func | linenum`
-* condition     ：`break-id expr`
+* condition     ：`break-id CONDITION`
 * watch     w   ：`expr`
+* rwatch        ：`expr`
+* awatch        ：`expr`
+> breakpoint 与 watchpoint的区别在于，前者监听位置，后者监听变量（的读/写）
 * catch         ：`syscall | signal | exception`
 * enable        ：`break-id`
 * disable       ：`break-id`
@@ -130,8 +133,11 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * i locals  v
 
 **代码**
+> 当前行表示将要执行（还未执行）
 * layout    la  ：src|asm|reg|sp
 * list      l   ：`lineno | funcname`
+* i func
+* i sources
 * update
 * search        ：{regexpr}
 * reverse-search：{regexp}
@@ -193,6 +199,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 <!-- entry end -->
 
 # 性能剖析
+<!-- entry begin: gprof valgrind gperftools -->
 ## Gprof
 1. 编译参数指定`-gp`
 
@@ -214,14 +221,44 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 这几个工具的使用是通过命令：`valgrand --tool=tool_name exefile` 分别调用的，
 当不指定tool参数时默认是 --tool=memcheck
 
-## gperftools
-1. 链接指定库`-lprofiler -ltcmalloc`
-2. 设置环境变量`CPUPROFOLE=prof.out HEAPPROFILE=heap.out`
-3. 运行程序，产生文件`prof.out`与`heep.out`
-4. `pprof exe_file prof.out --text`与 `pprof exe_file heap.out --text`
-    > `--text`可换为`--gv`、`--web`、`--svg`、`--pdf`等等
+## Gperftools
+1. `-g3 -ggdb3 -rdynamic -lprofiler`：链接指定程序库
+    > 内存检测则添加参数`-ltcmalloc`
+    > 若不指定链接库，则运行时打桩（LD_PRELOAD=/usr/lib/libprofiler.so）
+2. `CPUPROFILE=prof.out exe`：设置环境变量并运行程序
+    > `CPUPROFILE_FREQUENCY=1000`指定取样频率(interrupts/second)，默认100  
+     内存检测则添加参数`HEAPPROFILE=heap.out`
+3. `pprof exe_file prof.out --text`：剖析CPU性能
+4. `pprof exe_file heap.out --text`：剖析内存使用
 
-注意：逻辑使用CPU时间太短则会报告`No nodes to print`
+```sh
+pprof --help
+
+--focus=<regexp>    关注指定节点
+--ignore=<regexp>   忽略指定节点
+--text              文本打印
+--web               浏览器图形，需要安装graphviz包
+```
+
+**注意**：逻辑使用CPU时间太短则会报告`No nodes to print`
+
+![pprof](images/pprof-test.gif)
+
+**信息解释：**
+* 节点信息：
+    ```
+    类名
+    方法名
+    本地时间：即函数本体以及内联到该函数的过程的总执行时间
+    累计时间：即包括本地时间以及该函数调用的其他函数的总执行时间（若等于本地时间则省略）
+    ```
+    * 时间单位与取样频率有关，默认每个时间单位大概10ms。累计时间的单位时间数目也即该函数的取样数目
+    * 单位时间数量后的括号中的百分比即该时间与程序运行总时间之比
+    * 节点大小与本地时间有关
+* 边信息：
+    * 箭头表示调用依赖关系
+    * 数字表示caller的取样总数中，有N个调用了callee
+<!-- entry end -->
 
 # ssh
 <!-- entry begin: ssh -->

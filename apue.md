@@ -622,7 +622,7 @@ int             system(const char* cmdstring);                          // 返�
 | kill pid    | 说明                                        |
 |-------------|---------------------------------------------|
 | `pid > 0`   | 发送给指定进程                              |
-| `pid < 0`   | 发送给PGID等于pid绝对值的进程组中的所有进程 |
+| `pid < -1`  | 发送给PGID等于pid绝对值的进程组中的所有进程 |
 | `pid == 0`  | 发送给同进程组所有有权限发送的进程          |
 | `pid == -1` | 发送给所有有权限发送的进程                  |
 <!-- entry end -->
@@ -1108,7 +1108,7 @@ int     sockmark(int sockfd);       // 若下个读取字节为外带数据返�
 <!-- entry end -->
 
 ### 终端
-<!-- entry begin: tcgetattr tcsetattr cfgetispeed cfgetospeed cfsetispeed cfsetospeed termios ctermid isatty ttyname winsize -->
+<!-- entry begin: ioctl tcgetattr tcsetattr cfgetispeed cfgetospeed cfsetispeed cfsetospeed termios ctermid isatty ttyname winsize -->
 ```c
 #include <termios.h>
 struct termios

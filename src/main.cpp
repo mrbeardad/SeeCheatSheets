@@ -1,11 +1,11 @@
 /**
  * Copyright (c) 2020 Heachen Bear & Contributors
- * File              : main.cpp
- * License           : GPLv3
- * Author            : Heachen Bear <mrbeardad@qq.com>
- * Date              : 09.02.2021
- * Last Modified Date: 09.02.2021
- * Last Modified By  : Heachen Bear <mrbeardad@qq.com>
+ * File: main.cpp
+ * License: GPLv3
+ * Author: Heachen Bear <mrbeardad@qq.com>
+ * Date: 09.02.2021
+ * Last Modified Date: 08.03.2021
+ * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
 #include "see.hpp"
@@ -16,46 +16,77 @@
 
 int main(int argc, char* argv[])
 {
-    see::MkdHighlight hilit{};
-    auto [files, keys, disablePager] = see::parse_cmdline(argc, argv);
+    auto& hilit = see::MkdHighlight::Instance_;
+
+#if !defined(NDEBUG)
+    mine::ProfTimer profTimer{};
+#endif // !defined(NDEBUG)
 
     // 如果stdin被重定向到非终端文件则转而高亮之
     if ( !isatty(STDIN_FILENO) ) {
-        std::cout << hilit.highlight(std::cin);
+        std::string getInput{};
+        for ( std::istreambuf_iterator<char> itr{std::cin}, end{}; itr != end; ++itr ) {
+            getInput.push_back(*itr);
+        }
+        std::cout << hilit.highlight(getInput);
+#if !defined(NDEBUG)
+        profTimer();
+#endif // !defined(NDEBUG)
         return 0;
     }
 
+    auto [files, keys, disablePager] = see::parse_cmdline(argc, argv);
     auto entries = see::search_entries(files, keys);
+
+#if !defined(NDEBUG)
+    profTimer();
+#endif // !defined(NDEBUG)
 
     // 是否启动PAGER
     if ( !disablePager ) {
-        int row{};
-        int maxCol{91}; // unicode::display_width()不支持控制字符，文件名提示行宽为91
-        for ( std::string oneline{}; std::getline(entries, oneline); ) {
+        int row{}, col{};
+        for ( size_t first{}, last{};  (last = entries.find('\n', last)) != std::string::npos; ) {
             ++row;
-            maxCol = std::max(maxCol, unicode::display_width(oneline));
+            col = std::max(col, unicode::display_width(entries.substr(first, last)));
+            first = ++last;
         }
-        entries.rdbuf()->pubseekpos(0);
-        entries.clear();
-        if ( isatty(STDOUT_FILENO) || row > see::MkdBlock::Row || maxCol > see::MkdBlock::Col ) {
-            auto    pager = getenv("PAGER");
-            int     fds[2];
+        if ( isatty(STDOUT_FILENO) && (row > see::MkdHighlight::Instance_.get_tty_row()
+                    || col > see::MkdHighlight::Instance_.get_tty_col() ) ) {
+            const auto* pager = getenv("PAGER");
+            pager = pager == nullptr ? "less" : pager;
+            int fds[2];
             mine::handle(pipe(fds));
-            if ( auto pid = mine::handle(fork()); pid == 0 ) {
-                dup2(fds[0], STDIN_FILENO);
-                close(fds[1]);
+
+            if ( auto pid = mine::handle(fork()); pid == 0 ) {  // 子进程
+                mine::handle(dup2(fds[0], STDIN_FILENO));
+                mine::handle(close(fds[0]));    // 关闭pipe-read-end副本
+                mine::handle(close(fds[1]));    // 关闭pipe-write-end副本
                 if ( pager == "less"s ) mine::handle(execlp(pager, pager, "-S", nullptr));
                 else mine::handle(execlp(pager, pager, nullptr));
-            } else {
-                dup2(fds[1], STDOUT_FILENO);
-                close(fds[1]);
+            } else {    // 父进程
+                mine::handle(dup2(fds[1], STDOUT_FILENO));
+                mine::handle(close(fds[0]));    // 关闭pipe-read-end副本
+                mine::handle(close(fds[1]));    // 关闭pipe-write-end副本
             }
         }
     }
 
+    if ( getenv("OUTPUT_DEBUG_LOG") != nullptr ) {
+        std::cout << entries << std::endl;
+        std::cout << "\e[31m============================================================================================\e[m" << std::endl;
+    }
     std::cout << hilit.highlight(entries) << std::endl;
-    close(STDOUT_FILENO);
-    wait(nullptr);
+
+#if !defined(NDEBUG)
+        profTimer();
+#endif // !defined(NDEBUG)
+
+    mine::handle(close(STDOUT_FILENO));   // 关闭pipe-write-end
+    wait(nullptr);  // 不检测返回值，如此一来，是否使用PAGER都适用
+
+#if !defined(NDEBUG)
+        dup2(STDERR_FILENO, STDOUT_FILENO);
+#endif // !defined(NDEBUG)
 
     return 0;
 }
