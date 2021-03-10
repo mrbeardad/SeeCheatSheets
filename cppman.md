@@ -897,6 +897,7 @@ class String_view {
 * A : Assoicated
 * U : Unordered
 * M : all-kinds-of-Map
+> c++20新增std::span，类似std::string_view之于std::string
 
 ### 构造
 <!-- entry begin: 容器构造 -->
