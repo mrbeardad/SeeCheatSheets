@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 08.03.2021
+ * Last Modified Date: 10.03.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -144,7 +144,7 @@ void print_help_then_exit() noexcept
         "    \033[33msee\033[m will find cheat-sheets among ~/.cheat/*.md.\n"
         "Yeah! They are markdown files. Each entry starts with '\033[34m<!-- entry begin: keywords... -->\033[m',\n"
         "and ends with '\033[34m<!-- entry end -->\033[m'. \033[33msee\033[m will search apposite entries and print them.\n"
-        "    For example, \033[33msee echo.*\033[m will match :\n\033[36m"
+        "    For example, \033[33msee 'echo.*'\033[m will match :\n\033[36m"
         "        <!-- entry begin: echo -->\n"
         "        * echo\n"
         "            * -n        ：不自动加入换行符（zsh会将无换行结尾的输出的尾部标记`反显的%`）\n"
@@ -152,7 +152,9 @@ void print_help_then_exit() noexcept
         "        <!-- entry end -->\n"
         "\033[32mUsage:\033[m\n"
         "    see [<options>] <keyword> [<keyword>...]\n"
-        "You can redirect stdin to a file(not a tty) to use only Markdown Syntax Highlight.\n"
+        "\n"
+        "    You can redirect stdin to a file(not a tty) to use only Markdown Syntax Highlight.\n"
+        "    see </path/to/file"
         "\033[32mOptions:\033[m\n"
         "    \033[36m-h\033[m                : Display this help information\n"
         "    \033[36m-f\033[m <file-prefix>  : Specify file in ~/.cheat/ whoes file name prefix match <file-prefix> to search\n"
@@ -233,8 +235,6 @@ parse_cmdline(int argc, char* argv[]) noexcept
 std::string search_entries(const std::vector<fs::path>& files, const std::vector<std::string>& keys) noexcept
 {
     std::string entries{};
-    std::regex entryBegin{R"(^<!-- entry begin:.*-->$)"};
-    std::regex entryEnd{R"(^<!-- entry end -->$)"};
 
     for ( auto& thisFile : files ) {
         std::ifstream fstrm{thisFile, io::in};
@@ -248,14 +248,15 @@ std::string search_entries(const std::vector<fs::path>& files, const std::vector
 
         for ( std::string oneline{}; std::getline(fstrm, oneline); ) {
             // 若未在entry中且搜索到entryBegin则尝试进入该entry
-            if ( !inEntry && std::regex_search(oneline, entryBegin) ) {
-                auto curEntryKeys = oneline.substr(sizeof("<!-- entry begin:"),
-                        oneline.size() - sizeof("<!-- entry begin:-->"));
+            if ( !inEntry && oneline.starts_with("<!-- entry begin:") && oneline.ends_with("-->") ) {
+                std::string_view curEntryKeys{oneline};
+                curEntryKeys.remove_prefix(sizeof("<!-- entry begin:"));
+                curEntryKeys.remove_suffix(sizeof("-->"));
 
                 // 有一个key不匹配则略过
                 bool isMatch{true};
                 for ( auto& thisKey : keys ) {
-                    if ( !std::regex_search(curEntryKeys, std::regex{thisKey, std::regex_constants::icase}) ) {
+                    if ( curEntryKeys.find(thisKey) == std::string::npos  ) {
                         isMatch = false;
                         break;
                     }
@@ -271,7 +272,7 @@ std::string search_entries(const std::vector<fs::path>& files, const std::vector
                 }
             } else if ( inEntry ) {
                 // 若在entry中且搜索到结束标志，则退出inEntry状态
-                if ( std::regex_search(oneline, entryEnd) ) {
+                if ( oneline == "<!-- entry end -->" ) {
                     inEntry = false;
                     entries << '\n';
                 // 若在entry中且未搜索到结束标志，则将该行送入entry流中

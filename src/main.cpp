@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 08.03.2021
+ * Last Modified Date: 10.03.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -18,10 +18,6 @@ int main(int argc, char* argv[])
 {
     auto& hilit = see::MkdHighlight::Instance_;
 
-#if !defined(NDEBUG)
-    mine::ProfTimer profTimer{};
-#endif // !defined(NDEBUG)
-
     // 如果stdin被重定向到非终端文件则转而高亮之
     if ( !isatty(STDIN_FILENO) ) {
         std::string getInput{};
@@ -29,18 +25,10 @@ int main(int argc, char* argv[])
             getInput.push_back(*itr);
         }
         std::cout << hilit.highlight(getInput);
-#if !defined(NDEBUG)
-        profTimer();
-#endif // !defined(NDEBUG)
-        return 0;
     }
 
     auto [files, keys, disablePager] = see::parse_cmdline(argc, argv);
     auto entries = see::search_entries(files, keys);
-
-#if !defined(NDEBUG)
-    profTimer();
-#endif // !defined(NDEBUG)
 
     // 是否启动PAGER
     if ( !disablePager ) {
@@ -77,16 +65,8 @@ int main(int argc, char* argv[])
     }
     std::cout << hilit.highlight(entries) << std::endl;
 
-#if !defined(NDEBUG)
-        profTimer();
-#endif // !defined(NDEBUG)
-
     mine::handle(close(STDOUT_FILENO));   // 关闭pipe-write-end
     wait(nullptr);  // 不检测返回值，如此一来，是否使用PAGER都适用
-
-#if !defined(NDEBUG)
-        dup2(STDERR_FILENO, STDOUT_FILENO);
-#endif // !defined(NDEBUG)
 
     return 0;
 }

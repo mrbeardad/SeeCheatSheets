@@ -228,12 +228,13 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 2. `CPUPROFILE=prof.out exe`：设置环境变量并运行程序
     > `CPUPROFILE_FREQUENCY=1000`指定取样频率(interrupts/second)，默认100  
      内存检测则添加参数`HEAPPROFILE=heap.out`
-3. `pprof exe_file prof.out --text`：剖析CPU性能
-4. `pprof exe_file heap.out --text`：剖析内存使用
+3. `pprof --text exe_file prof.out`：剖析CPU性能
+4. `pprof --text exe_file heap.out`：剖析内存使用
 
 ```sh
 pprof --help
 
+--maxdegree=<n>     最大递归深度
 --focus=<regexp>    关注指定节点
 --ignore=<regexp>   忽略指定节点
 --text              文本打印

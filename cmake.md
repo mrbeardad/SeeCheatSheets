@@ -62,6 +62,7 @@ add_library(lib_target INTERFACE)
 
 # 自定义脚本运行
 add_custom_target(target
+    [ALL] # 表示该target应该加入default target
     cmd args...
     [COMMAND cmd args...]...)
 add_dependencies(target

@@ -1203,6 +1203,8 @@ newE    remove(b, e, v)
 newE    remove_if(b, e, uOp)
 destE   remove_copy(b, e, destB, v)
 destE   remove_copy_if(b, e, destB, uOp)
+rmCnt   erase(VecOrDeq, v)                      // 真正删除而非将元素后移
+rmCnt   erase_if(VecOrDeq, v, uOp)              // 真正删除而非将元素后移
 newE    unique(b, e, bOp=equal_to)              // 需要先排序
 destE   unique_copy(b, e, destB, bOp=equal_to)  // 需要先排序
 newE    shift_left(b, e, cnt)                   // 不回绕

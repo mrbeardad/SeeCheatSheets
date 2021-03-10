@@ -50,21 +50,21 @@ target_include_directories(mkdhilit
 target_link_libraries(mkdhilit
     PRIVATE source-highlight)
 target_compile_features(mkdhilit
-    PRIVATE cxx_std_17)
+    PRIVATE cxx_std_20)
 
 # target: see
 ###################################################################################################
 target_link_libraries(see
     PRIVATE mkdhilit)
 target_compile_features(see
-    PRIVATE cxx_std_17)
+    PRIVATE cxx_std_20)
 
 # target: see_test
 ###################################################################################################
 target_link_libraries(see_test
     PRIVATE mkdhilit gtest gtest_main)
 target_compile_features(see_test
-    PRIVATE cxx_std_17)
+    PRIVATE cxx_std_20)
 
 # custom_target: test
 ###################################################################################################
@@ -75,8 +75,8 @@ add_dependencies(test see_test)
 # custom_target: prof
 ###################################################################################################
 add_custom_target(prof
-    env LD_PRELOAD=/usr/lib/libprofiler.so CPUPROFILE=prof.out CPUPROFILE_FREQUENCY=1000 ./see -p e
-    COMMAND pprof see prof.out --web)
+    env LD_PRELOAD=/usr/lib/libprofiler.so CPUPROFILE=prof.out CPUPROFILE_FREQUENCY=1000 ./see -p e > /dev/null
+    COMMAND pprof --web see prof.out)
 add_dependencies(prof see)
 
 # custom_target: prof_heap
