@@ -2,7 +2,34 @@
 #include <array>
 #include <string.h>
 
-see::NormalBlk see::NormalBlk::Instance_{};
+
+see::NormalBlk::NormalBlk()
+    : see::MkdBlock{"normal"} {  }
+
+
+bool see::NormalBlk::match_begin(const std::string& oneline)
+{
+    const auto& allBlk = see::MkdHighlight::Instance().get_all_blocks();
+    for( auto itr = allBlk.begin(), end = allBlk.end(); itr != end; ++itr ) {
+        if ( itr->first != "normal" && itr->second->match_begin(oneline) ) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+bool see::NormalBlk::match_end(const std::string&)
+{
+    return true;
+}
+
+
+std::string& see::NormalBlk::highlight(std::string& text)
+{
+    return highlight(text, "\e[m");
+}
+
 
 std::string& see::NormalBlk::highlight(std::string& text, const std::string& bgColor)
 {
@@ -205,3 +232,11 @@ std::string& see::NormalBlk::highlight(std::string& text, const std::string& bgC
 
     return text += "\e[m" + bgColor;
 }
+
+
+std::string see::NormalBlk::highlight(std::string&& text, const std::string& bgColor)
+{
+    return highlight(text, bgColor);
+}
+
+

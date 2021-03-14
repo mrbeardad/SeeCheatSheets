@@ -5,29 +5,6 @@ project(SeeCheatSheet VERSION 3.0)
 
 # prepare
 ###################################################################################################
-function(download_file url filename)
-    if(NOT EXISTS ${filename})
-        message("Downloading ... " ${filename})
-        file(DOWNLOAD ${url} ${filename}
-            INACTIVITY_TIMEOUT 10
-            SHOW_PROGRESS
-            STATUS statu)
-        list(GET ${statu} 0 exitCode)
-        message(FATAL_ERROR ${exitCode})
-        if(${exitCode} NOT EQUAL 0)
-            list(GET ${statu} 1 exitInfo)
-            message(FATAL_ERROR ${exitInfo})
-        endif()
-        message("Downloaded")
-    endif()
-endfunction(download_file)
-
-download_file(http://github.com/mrbeardad/Practices/raw/master/include/mine.hpp
-    ${PROJECT_SOURCE_DIR}/include/mine.hpp)
-
-download_file(https://github.com/mrbeardad/unicode_display_width/raw/master/include/unicode/display_width.hpp
-    ${PROJECT_SOURCE_DIR}/include/unicode/display_width.hpp)
-
 message("[33m===>[m You must install source-highlight libraries by your package manager!")
 
 # build type
@@ -39,7 +16,7 @@ message("[34m===>[m Build Type: " ${CMAKE_BUILD_TYPE})
 
 # targets
 ###################################################################################################
-add_library(mkdhilit STATIC src/see.cpp src/normal.cpp)
+add_library(mkdhilit STATIC src/see.cpp src/normal.cpp src/header.cpp)
 add_executable(see src/main.cpp)
 add_executable(see_test test/test.cpp)
 

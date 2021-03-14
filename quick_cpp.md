@@ -28,12 +28,13 @@ GFM
 ```
 * 修饰
     * this
+    * const
     * noexcept
     * unamedspace
     * extern
     * inline
     * constexpr
-    * ret auto
+    * auto return
     * =delete
 
 * 使用`temp T&&`时注意使用`std::decay_t<T>`与`std::forward<T>(t)`
@@ -93,11 +94,13 @@ GFM
     * 需要NULL
     * 更改指向
 * 形式
-    * `auto& = cast<>()`
-    * T     {}
-    * T     ()
+    * `auto = cast<>()`
+    * `auto& = initializer`
+    * `T t{}`
+    * `T t()`
 * 延后立初
 * 循环声明
+* 多个翻译单元中引用静态变量应利用reference-return技术
 <!-- entry end -->
 
 <!-- entry begin: cpp  异常 -->
@@ -136,8 +139,8 @@ GFM
 * 尾
 * 终
 > 循环计数器：
-> * 迭后，则初始状态为N，计数N步，最后状态+1则为N-1==0
-> * 迭前，则初始状态为N-1，计数N步，最后状态则为N-1+1==0
+> * 迭后，则初始状态为N，计数N步，最后状态+1则为N-N==0
+> * 迭前，则初始状态为N-1，计数N步，最后状态则为N-1-N+1==0
 <!-- entry end -->
 
 <!-- entry begin: logic  分支 条件 -->

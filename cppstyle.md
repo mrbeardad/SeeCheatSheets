@@ -20,7 +20,6 @@
 | 动态变量                               | 小驼峰拼写法`exampleName`              |
 | 类的数据成员                           | 带`_`后缀`exampleName_` `ExampleName_` |
 | 命名空间、函数名称                     | 全部小写和下划线间隔`example_name`     |
-| 类的静态成员函数                       | 首字母大写和下划线隔离`Example_name`   |
 | 宏、常量、模板非类型参数               | 全部大写和下划线间隔`EXAMPLE_NAME`     |
 
 可用于命名标识符的一些通用前后缀：
@@ -103,6 +102,7 @@ private:
         operator bool();
         operator new();
     ```
+* 函数默认实参的等号两边都不隔空格`void f(int i=1)`
 * 用4个`<space>`代替`<tab>`
 * 指针与引用声明中，`*`与`&`应该与类型放在一起，从而引用和指针应该单独声明，如`int& r; double* p;`
 * 控制流语句关键字与括号隔空格，控制流语句的括号需内部空格，如`if ( get_bool() )`

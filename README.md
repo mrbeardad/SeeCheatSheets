@@ -32,7 +32,7 @@ cmake --install .
 ```
 
 **注**：部分笔记插入了Tex公式，~~介于鄙人的懒惰~~ 介于GFM不支持Tex，诸位就自己下个浏览器插件吧。
-[github-mathjax](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima/related)  
+[github-mathjax](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima/related "如果从Web Store安装失败则尝试手动下载并安装其github源码")  
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
 # C++
@@ -56,7 +56,7 @@ cmake --install .
 * [数据结构与算法](dsaa.md):star:
     > 基础数据结构与算法
 * [正则表达式](regex.md)
-    > 目前包含的正则语法版本有Grep、Vim、C++
+    > 目前包含的正则语法版本有egrep、Vim、C++
 
 # 技术
 * [Docker](docker.md)
@@ -72,7 +72,7 @@ cmake --install .
 * [Shell脚本](bash.md)
     > bash语法、内置命令以及一些linux基础命令
 * [开发者工具](devtool.md)
-    > 包含gcc、gdb、ssh、tmux、zsh、git、pacman等工具使用
+    > 包含gcc、gdb、openssh、openssl、tmux、zsh、git、pacman等工具使用
 * [Vim使用手册](vim.md)
     > 此为[mrbeardad/SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 

@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 10.03.2021
+ * Last Modified Date: 14.03.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -16,7 +16,7 @@
 
 int main(int argc, char* argv[])
 {
-    auto& hilit = see::MkdHighlight::Instance_;
+    auto& hilit = see::MkdHighlight::Instance();
 
     // 如果stdin被重定向到非终端文件则转而高亮之
     if ( !isatty(STDIN_FILENO) ) {
@@ -38,8 +38,8 @@ int main(int argc, char* argv[])
             col = std::max(col, unicode::display_width(entries.substr(first, last)));
             first = ++last;
         }
-        if ( isatty(STDOUT_FILENO) && (row > see::MkdHighlight::Instance_.get_tty_row()
-                    || col > see::MkdHighlight::Instance_.get_tty_col() ) ) {
+        if ( isatty(STDOUT_FILENO) && (row > see::MkdHighlight::Instance().get_tty_row()
+                    || col > see::MkdHighlight::Instance().get_tty_col() ) ) {
             const auto* pager = getenv("PAGER");
             pager = pager == nullptr ? "less" : pager;
             int fds[2];

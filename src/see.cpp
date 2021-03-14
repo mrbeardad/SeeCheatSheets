@@ -4,16 +4,17 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 10.03.2021
+ * Last Modified Date: 14.03.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
 #include "see.hpp"
 #include <iostream>
 #include <regex>
-#include <srchilite/sourcehighlight.h>
-#include <unicode/display_width.hpp>
+#include "header.hpp"
 #include "normal.hpp"
+#include "srchilite/sourcehighlight.h"
+#include "unicode/display_width.hpp"
 #include <unistd.h>
 
 #include "mine.hpp"
@@ -26,7 +27,7 @@ namespace see
 // 注册器：其子类仅需创建一个对象实例便自动向中介者(MkdHighlight)注册
 MkdBlock::MkdBlock(std::string name): registName_(std::move(name))
 {
-    if ( !MkdHighlight::Instance_.regist(registName_, this) ) {
+    if ( !MkdHighlight::Instance().regist(registName_, this) ) {
         throw std::logic_error{name + "regist error"};
     }
 }
@@ -121,6 +122,7 @@ std::string& MkdHighlight::highlight(std::string& text)
         std::string nextline{};
         while ( std::getline(textStrm, nextline) && !curBlk->match_end(nextline) )
             oneline +=  '\n' + nextline;
+        // 若最后读取nextline时忽略了存在于末尾的换行，则添加上去
         oneline += textStrm.unget().peek() == '\n' ? "\n" : "";
         // 将最后读取的nextline还原回流中
         textStrm.rdbuf()->pubseekoff(-static_cast<int>(nextline.size()), io::cur, io::in);
@@ -132,40 +134,44 @@ std::string& MkdHighlight::highlight(std::string& text)
 }
 
 
-MkdHighlight MkdHighlight::Instance_{};
+MkdHighlight& MkdHighlight::Instance()
+{
+    static MkdHighlight Instance;
+    return Instance;
+}
 
 
 /*************************************************************************************************/
-
-void print_help_then_exit() noexcept
-{
-    std::cout <<
-        "\033[32mDescription:\033[m\n"
-        "    \033[33msee\033[m will find cheat-sheets among ~/.cheat/*.md.\n"
-        "Yeah! They are markdown files. Each entry starts with '\033[34m<!-- entry begin: keywords... -->\033[m',\n"
-        "and ends with '\033[34m<!-- entry end -->\033[m'. \033[33msee\033[m will search apposite entries and print them.\n"
-        "    For example, \033[33msee 'echo.*'\033[m will match :\n\033[36m"
-        "        <!-- entry begin: echo -->\n"
-        "        * echo\n"
-        "            * -n        ：不自动加入换行符（zsh会将无换行结尾的输出的尾部标记`反显的%`）\n"
-        "            * -e        ：启用转义语义（zsh自动开启）\n"
-        "        <!-- entry end -->\n"
-        "\033[32mUsage:\033[m\n"
-        "    see [<options>] <keyword> [<keyword>...]\n"
-        "\n"
-        "    You can redirect stdin to a file(not a tty) to use only Markdown Syntax Highlight.\n"
-        "    see </path/to/file"
-        "\033[32mOptions:\033[m\n"
-        "    \033[36m-h\033[m                : Display this help information\n"
-        "    \033[36m-f\033[m <file-prefix>  : Specify file in ~/.cheat/ whoes file name prefix match <file-prefix> to search\n"
-        "    \033[36m-p\033[m                : Disable to use Pager\n"
-        << std::endl;
-    std::exit(1);
-}
-
+// parse_cmdline
+/*************************************************************************************************/
 std::tuple<std::vector<fs::path>, std::vector<std::string>, bool>
-parse_cmdline(int argc, char* argv[]) noexcept
+parse_cmdline(int argc, char* argv[])
 {
+    auto print_help_then_exit = [] () {
+        std::cout <<
+            "\033[32mDescription:\033[m\n"
+            "    \033[33msee\033[m will find cheat-sheets among ~/.cheat/*.md.\n"
+            "Yeah! They are markdown files. Each entry starts with '\033[34m<!-- entry begin: keywords... -->\033[m',\n"
+            "and ends with '\033[34m<!-- entry end -->\033[m'. \033[33msee\033[m will search apposite entries and print them.\n"
+            "    For example, \033[33msee 'echo.*'\033[m will match :\n\033[36m"
+            "        <!-- entry begin: echo -->\n"
+            "        * echo\n"
+            "            * -n        ：不自动加入换行符（zsh会将无换行结尾的输出的尾部标记`反显的%`）\n"
+            "            * -e        ：启用转义语义（zsh自动开启）\n"
+            "        <!-- entry end -->\n"
+            "\033[32mUsage:\033[m\n"
+            "    see [<options>] <keyword> [<keyword>...]\n"
+            "\n"
+            "    You can redirect stdin to a file(not a tty) to use only Markdown Syntax Highlight.\n"
+            "    see </path/to/file"
+            "\033[32mOptions:\033[m\n"
+            "    \033[36m-h\033[m                : Display this help information\n"
+            "    \033[36m-f\033[m <file-prefix>  : Specify file in ~/.cheat/ whoes file name prefix match <file-prefix> to search\n"
+            "    \033[36m-p\033[m                : Disable to use Pager\n"
+            << std::endl;
+        std::exit(1);
+    };
+
     std::vector<std::string> keys{}, filePrefix{};
     bool disablePager{};
     while ( true ) {
@@ -204,8 +210,7 @@ parse_cmdline(int argc, char* argv[]) noexcept
 
     // 如果~/.cheat/目录不存在则报错并退出
     if ( !fs::is_directory(cheatDir) ) {
-        std::cerr << "Error: No such directory ~/.cheat/" << std::endl;
-        std::exit(1);
+        throw std::runtime_error{"Error: No such directory ~/.cheat/"};
     }
 
     std::vector<fs::path> files{};
@@ -232,15 +237,14 @@ parse_cmdline(int argc, char* argv[]) noexcept
 
 /*************************************************************************************************/
 
-std::string search_entries(const std::vector<fs::path>& files, const std::vector<std::string>& keys) noexcept
+std::string search_entries(const std::vector<fs::path>& files, const std::vector<std::string>& keys)
 {
     std::string entries{};
 
     for ( auto& thisFile : files ) {
         std::ifstream fstrm{thisFile, io::in};
         if ( !fstrm ) {
-            std::cerr << "Error: Can not read file -- " << thisFile << std::endl;
-            exit(1);
+            throw std::runtime_error{"Error: Can not read file -- " + thisFile.string()};
         }
 
         bool onceMatch{false}; // 用于提前打印文件名
@@ -256,7 +260,7 @@ std::string search_entries(const std::vector<fs::path>& files, const std::vector
                 // 有一个key不匹配则略过
                 bool isMatch{true};
                 for ( auto& thisKey : keys ) {
-                    if ( curEntryKeys.find(thisKey) == std::string::npos  ) {
+                    if ( !std::regex_search(curEntryKeys.begin(), curEntryKeys.end(), std::regex{thisKey}) ) {
                         isMatch = false;
                         break;
                     }
@@ -287,44 +291,6 @@ std::string search_entries(const std::vector<fs::path>& files, const std::vector
 
 /*************************************************************************************************/
 
-class HeaderBlk : public see::MkdBlock
-{
-public:
-    HeaderBlk(): see::MkdBlock{"header"} {  }
-
-    virtual bool match_begin(const std::string& oneline) override
-    {
-        return std::regex_search(oneline, Header);
-    }
-
-    virtual bool match_end(const std::string&) override
-    {
-        return true;
-    }
-
-    std::string& highlight(std::string& text) override
-    {
-        auto normal = text.substr(text.find_first_not_of("# "));
-        normal.pop_back();
-        auto hashs  = text.substr(0, text.find(" "));
-        int nHyphen{(see::MkdHighlight::Instance_.get_tty_col() - unicode::display_width(normal) - static_cast<int>(hashs.size()) * 2 - 4) / 2};
-        std::string hyphen{};
-        for ( int cnt{}; cnt < nHyphen; ++cnt ) hyphen += "─";
-
-        text = "\033[34;42m" + hyphen + "\033[m\033[34m " + hashs + " "
-            + see::MkdHighlight::Instance_.get_block("normal").highlight(normal)
-            +  " " + hashs + " \033[34;42m" + hyphen + "\033[m\n";
-        return text;
-    }
-private:
-    static inline std::regex Header{R"(^(#+)\s*\S+.*$)"};
-    static HeaderBlk Instance_;
-};
-HeaderBlk HeaderBlk::Instance_{};
-
-
-/*************************************************************************************************/
-
 class SeperatorBlk : public see::MkdBlock
 {
     static inline std::regex Seperator{R"(^(\s*\*\s*){3,}$)"};
@@ -345,7 +311,7 @@ public:
     {
         std::string space(6, ' ');
         std::string hyphen{};
-        for ( int cnt{}; cnt < see::MkdHighlight::Instance_.get_tty_col() - 12; ++cnt ) hyphen += "─";
+        for ( int cnt{}; cnt < see::MkdHighlight::Instance().get_tty_col() - 12; ++cnt ) hyphen += "─";
         return text = space + hyphen + space;
     }
 
@@ -370,11 +336,11 @@ public:
     bool match_end(const std::string& oneline) override
     {
         return oneline.empty()
-            || see::MkdHighlight::Instance_.get_block("header").match_end(oneline)
-            || see::MkdHighlight::Instance_.get_block("seperator").match_end(oneline)
-            || see::MkdHighlight::Instance_.get_block("list").match_end(oneline)
-            || see::MkdHighlight::Instance_.get_block("code").match_end(oneline)
-            || see::MkdHighlight::Instance_.get_block("comment").match_end(oneline);
+            || see::MkdHighlight::Instance().get_block("header").match_end(oneline)
+            || see::MkdHighlight::Instance().get_block("seperator").match_end(oneline)
+            || see::MkdHighlight::Instance().get_block("list").match_end(oneline)
+            || see::MkdHighlight::Instance().get_block("code").match_end(oneline)
+            || see::MkdHighlight::Instance().get_block("comment").match_end(oneline);
     }
 
     std::string& highlight(std::string& text) override
@@ -384,7 +350,7 @@ public:
         for ( std::string oneline{}; std::getline(sstrm, oneline); ) {
             auto quote = std::regex_replace(oneline, Quote, "\033[48;5;235m\033[38;5;240m$1\033[m");
             auto normal = std::regex_replace(oneline, Quote, "$2");
-            auto& normalBlk = see::MkdHighlight::Instance_.get_block("normal");
+            auto& normalBlk = see::MkdHighlight::Instance().get_block("normal");
             dynamic_cast<NormalBlk&>(normalBlk).highlight(normal, "\033[38;5;245m");
             text += quote + normal + '\n';
         }
@@ -405,18 +371,18 @@ public:
 
     bool match_begin(const std::string& oneline) override
     {
-        return std::regex_search(oneline, List) && !see::MkdHighlight::Instance_.get_block("seperator").match_begin(oneline);
+        return std::regex_search(oneline, List) && !see::MkdHighlight::Instance().get_block("seperator").match_begin(oneline);
     }
 
     bool match_end(const std::string &oneline) override
     {
         return oneline.empty()
-            || see::MkdHighlight::Instance_.get_block("header").match_end(oneline)
-            || see::MkdHighlight::Instance_.get_block("seperator").match_end(oneline)
-            || see::MkdHighlight::Instance_.get_block("list").match_end(oneline)
-            || see::MkdHighlight::Instance_.get_block("quote").match_end(oneline)
-            || see::MkdHighlight::Instance_.get_block("code").match_end(oneline)
-            || see::MkdHighlight::Instance_.get_block("comment").match_end(oneline);
+            || see::MkdHighlight::Instance().get_block("header").match_end(oneline)
+            || see::MkdHighlight::Instance().get_block("seperator").match_end(oneline)
+            || see::MkdHighlight::Instance().get_block("list").match_end(oneline)
+            || see::MkdHighlight::Instance().get_block("quote").match_end(oneline)
+            || see::MkdHighlight::Instance().get_block("code").match_end(oneline)
+            || see::MkdHighlight::Instance().get_block("comment").match_end(oneline);
     }
 
     std::string& highlight(std::string& text) override
@@ -433,7 +399,7 @@ public:
             } else {
                 normal = oneline;
             }
-            see::MkdHighlight::Instance_.get_block("normal").highlight(normal);
+            see::MkdHighlight::Instance().get_block("normal").highlight(normal);
             text = head + normal + '\n';
         }
         return text;
@@ -492,7 +458,7 @@ public:
                 if ( *pos != '|' ) {
                     normal += *pos;
                 } else {
-                    text += see::MkdHighlight::Instance_.get_block("normal").highlight(normal) + "│";
+                    text += see::MkdHighlight::Instance().get_block("normal").highlight(normal) + "│";
                     normal.clear();
                 }
             }
@@ -501,13 +467,13 @@ public:
             sstrm.ignore(512, '\n');
             // 复用之前的line2nd
             for ( int cnt{}; std::getline(sstrm, line2nd); ++cnt ) {
-                auto& normalBlk = see::MkdHighlight::Instance_.get_block("normal");
+                auto& normalBlk = see::MkdHighlight::Instance().get_block("normal");
                 text += dynamic_cast<NormalBlk&>(normalBlk).highlight(line2nd,
                         cnt % 2 ? "\033[38;5;240m\033[48;2;94;175;220m" : "\033[38;5;240m\033[48;2;128;128;255m")
                     + "\033[m\n";
             }
         } else {
-            see::MkdHighlight::Instance_.get_block("normal").highlight(text);
+            see::MkdHighlight::Instance().get_block("normal").highlight(text);
         }
         return text;
     }

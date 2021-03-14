@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 09.03.2021
+ * Last Modified Date: 14.03.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -69,8 +69,8 @@ public:
     const Register& get_all_blocks() const;
     std::string& highlight(std::string& text);
 
-    // Mediator Pattern: Singleton
-    static MkdHighlight Instance_;
+    // Singleton Pattern: Singleton
+    static MkdHighlight& Instance();
 
 private:
     MkdHighlight();
@@ -78,11 +78,11 @@ private:
 
 
 std::tuple<std::vector<fs::path>, std::vector<std::string>, bool>
-parse_cmdline(int argc, char* argv[]) noexcept;
+parse_cmdline(int argc, char* argv[]);
 
 
 std::string
-search_entries(const std::vector<fs::path>& files, const std::vector<std::string>& keys) noexcept;
+search_entries(const std::vector<fs::path>& files, const std::vector<std::string>& keys);
 
 
 } // namespace see

@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 07.03.2021
- * Last Modified Date: 09.03.2021
+ * Last Modified Date: 13.03.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -21,47 +21,30 @@ namespace see
 class NormalBlk : public see::MkdBlock
 {
 public:
-    NormalBlk(): see::MkdBlock{"normal"} {  }
+    NormalBlk();
 
 
-    bool match_begin(const std::string& oneline) override
-    {
-        const auto& allBlk = see::MkdHighlight::Instance_.get_all_blocks();
-        for( auto itr = allBlk.begin(), end = allBlk.end(); itr != end; ++itr ) {
-            if ( itr->first != "normal" && itr->second->match_begin(oneline) ) {
-                return false;
-            }
-        }
-        return true;
-    }
+    bool match_begin(const std::string& oneline);
 
 
-    bool match_end(const std::string&) override
-    {
-        return true;
-    }
+    bool match_end(const std::string&) override;
 
 
-    using MkdBlock::highlight;
-
-    virtual std::string& highlight(std::string& text) override
-    {
-        return highlight(text, "\e[m");
-    }
+    virtual std::string& highlight(std::string& text) override;
 
 
     std::string& highlight(std::string& text, const std::string& bgColor);
 
-    std::string highlight(std::string&& text, const std::string& bgColor)
-    {
-        return highlight(text, bgColor);
-    }
+
+    std::string highlight(std::string&& text, const std::string& bgColor);
 
 private:
     static NormalBlk Instance_;
 };
+inline NormalBlk NormalBlk::Instance_{};
 
 
 } // namespace see
+
 
 #endif // !defined(MRBEARDAD_SEE_NORMAL_HPP)
