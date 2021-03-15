@@ -2,6 +2,7 @@
 <!-- vim-markdown-toc GFM -->
 
 - [安装](#安装)
+- [Python](#python)
 - [C++](#c)
 - [编程](#编程)
 - [技术](#技术)
@@ -34,6 +35,10 @@ cmake --install .
 **注**：部分笔记插入了Tex公式，~~介于鄙人的懒惰~~ 介于GFM不支持Tex，诸位就自己下个浏览器插件吧。
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima/related "如果从Web Store安装失败则尝试手动下载并安装其github源码")  
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
+
+# Python
+* [Python基础](python.md)
+    > 基础语法与基础类型对象操作
 
 # C++
 * [C++语法特性](cpp.md)

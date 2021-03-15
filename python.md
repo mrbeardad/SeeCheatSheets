@@ -1,8 +1,3 @@
-**Python中所有实际数据（包括字面量）都是对内存中对象的引用，`a = b`代表的不是将b赋值到a上，而是将a引用指向b引用的对象！** 
-
-**immutable对象的值不可更改，只能新建；mutable的对象则可通过一些方法修改原值而非新建对象** 
-
-
 # 模块
 ```python
 import module1, module2                             # 导入模块，隔离其符号表
@@ -27,6 +22,7 @@ from package import *               # 导入package中由__all__定义的模块
 * 包搜索路径：
     1. 脚本所在目录（若未指定脚本则搜索当前工作目录）
     2. `sys.path`中指定路径
+
 
 # 函数
 ```python
@@ -64,6 +60,7 @@ def f4(arg1: Type1, arg2: Type2 = type2()) -> RetType:
     pass
 
 # 函数调用
+# 注意：函数内部是可以访问调用点处到全局作用域的！！！
 f(0, arg3=1)   # 0为位置参数，arg3=1为键值对参数（arg3必须存在于函数定义的参数列表中），前者必须在后者前面
 
 dict_arg = {'arg1': 1, 'arg2': 2, 'arg3': 3}
@@ -71,8 +68,18 @@ f(**dict_arg)
 
 list_arg = [0, 1, 2]
 f(*list_arg)
-```
 
+# 函数属性
+__doc__
+__name__
+__module__
+__defaults__
+__kwdefaults__
+__annotations__
+
+# lambda
+lambda arg1, arg2: express
+```
 
 # 类
 ```python
@@ -99,148 +106,266 @@ class MyClass(Base1, Base2):
 
 
 ## 整数
-* 支持任意大小的整数
-* 二进制`0b10`、八进制`0o10`、十进制`10`、十六进制`0x10`
+* **支持任意大小的整数**
 ```python
-int.bit_length()            # 返回表示该整数所需最少的二进制位数
+# 构造
+0b10    # 二进制
+0o17    # 八进制
+19      # 十进制
+0x1F    # 十六进制
+10_000  # 支持用_来分割数字
+int([x])
 
-int.to_bytes(length,        # 返回整数的前length个字节
+# 底层表示
+Int.bit_length()            # 返回表示该整数所需最少的二进制位数
+
+Int.to_bytes(length,        # 返回整数的前length个字节
     byteorder,              # 大端'big'或小段'little'
     *, signed=False)        # 是否使用补码
 
-int.from_bytes(bytes,
+Int.from_bytes(bytes,
     byteorder,
     *, signed=False)
 ```
 
 
 ## 浮点数
-* 浮点数`1.`、`.5`、`1.5`、`1.e2`、`.5e2`、`1.5e2`、`1e2`
+* **浮点数一般使用IEEE双精度浮点数，存在精度问题**
 * 整数与浮点数混合运算结果为浮点数
 ```python
-float.as_integer_ratio()    # 返回一对整数（分子/分母）
-float.is_integer()          # 能不丢失精度得转换为整数
+# 构造
+1.
+.5
+1.5
+1.e1
+.5e1
+1.5e1
+1e1
+f = float([x])
+
+# 其他
+Float.is_integer()          # 能不丢失精度得转换为整数
+Float.as_integer_ratio()    # 返回一对整数（分子/分母）
 ```
 
 
+## 高精度浮点数
+* **利用字符串存储浮点值** 
+```python
+from decimal import Decimal
+
+# 上下文
+getcontext()        # 取得当前上下文。修改其数据属性.prec即可修改精度。精度只用于计算过程中，而不作用于存储时
+setcontext(context) # 设置当前上下文
+BasicContext        # 精度9，舍入ROUND_HALF_UP，启动所有陷阱
+ExtendedContext     # 精度9，舍入ROUND_HALF_EVEN，关闭所有陷阱
+DefaultContext      # 精度28，舍入ROUND_HALF_EVEN，启用陷阱Overflow、InvalidOperation、DivisionByZero
+
+Decimal('3.14')
+Decimal('0')
+Decimal('-0')
+Decimal('inf')
+Decimal('-inf')
+Decimal('nan')
+```
+
+
+## 分数
+```python
+from fractions import Fraction
+
+Fraction(num=0, den=1)
+Fraction(Float)
+Fraction(Decimal)
+Fraction(string)    # "[sign] numerator [/ denominator]"
+```
+
 # 序列类型
-* 存在：`key in Seq`    `key not in Seq`
-* 连接：`seq1 + seq2`
-* 重复：`n * seq`
-* 索引：`Seq[0]`、`Seq[-1]`、`Dict[key]`
-* 切片：`Seq[begin:end[:step]]`
+```python
+all(itr)                    # 元素全为True
+any(itr)                    # 元素存在True
+len(seq)                    # 返回元素数量
 
-> mutable序列
+zip(*itr)                   # 返回链接各组元素后的迭代器
+filter(func, itr)           # 过滤出func(e)为True的元素，返回迭代器
+map(func, itr)              # 将每个元素经由func处理后装入返回的迭代器中
+reversed(Itr)               # 返回反向的迭代器
+sorted(itr, *,              # 返回已排序列表
+    key=None, reverse=False)# key返回元素比较键，reverse表示反向排序
+sum(itr, /, start=0)        # 从第start个元素开始求和
 
-* s[i] = x
-* s[i:j] = t
-* s[i:j:k] = t
-* s.append(x)
-* s.copy()
-* s.extend(t)或s += t
-* s.insert(i, x)
-* s.reverse()
-* s.pop([i])
-* s.remove(x)
-* s.clear()
-* del s[i:j]
-* del s[i:j:k]
+max(itr, *[, key, default]) # 返回范围中最大值。default为默认值（当范围为空时）
+max(arg1, arg2, *args[,key])# 返回范围中最大值。key返回元素比较键
+min(itr, *[, key, default]) # 返回范围中最小值。default为默认值（当范围为空时）
+min(arg1, arg2, *args[,key])# 返回范围中最小值。key返回元素比较键
+
+range(N)                    # 返回列表[0, 1, ..., N-1]
+range(B, E, S=1)            # 返回列表[B, B+S, ..., E-S]
+enumerate(itr)              # 返回元素为（索引，值）元组的迭代器
+```
+
 
 ## 字符串
-* 字符串：
-    * `'可直接包含"" '`
-    * `"可直接包含'' "`
-    * `R"raw string"`
-    * `F"format string"`
-    * 多行字符串
-        > 利用`\`可以转义删除行尾的换行符
-    ```python
-    """multiline
-    string"""
-
-    '''
-    multiline
-    string
-    '''
-    ```
-
 ```python
-str.count(sub)
-str.encode(encoding="utf-8")
-str.startswith(preffix)
-str.endswith(suffix)
-str.expandtabs(tabsize=8)
-str.find(sub)
-str.rfind(sub)
-str.index(sub)      # 触发ValueError
-str.rindex(sub)     # 触发ValueError
+# 构造
+'可直接包含""的字符串'
+"可直接包含''的字符串"
+R"可以直接包含\的字符串"
+F"可以使用{format语法}到字符串"
 
-str.isalpha()       # Unicode Letter
-str.isdecimal()     # Unicode Decimal
-str.isdigit()       # Unicode Decimal,Digit
-str.isnumeric()     # Unicode Decimal,Digit,Numeric
-str.isalnum()       # 若以上四个方法均返回True则返回True
-str.isspace()       # Unicode Seperator,Space
-str.isascii()       # ASCII
-str.isprintable()   # 是否可打印
-str.isidentifier()  # 是否为保留标识符
-str.istitle()       # 单词开头字符若区分大小写则为大写，其余字符若区分大小写则为小写
-str.isupper()       # 至少一个区分大小写字符且为大写
-str.islower()       # 至少一个区分大小写字符且为小写
-str.title()
-str.upper()
-str.lower()
-str.swapcase()
+"""多行
+字符串"""
 
-str.lstrip([chars]) # 移除开头出现在chars中的字符，默认空白符
-str.rstrip([chars]) # 移除结尾出现在chars中的字符，默认空白符
-str.strip([chars])  # 移除两边出现在chars中的字符，默认空白符
-str.removeprefix(p)
-str.removesuffix(s)
-str.replace(old, new
-    [, count])      # 默认替换所有old为new
+'''
+可用\
+转义行尾换行符
+'''
 
-str.join(itr)       # itr元素必须是str
-str.partition(sep)  # 返回三元组（之前、分隔符、之后）
-str.rpartition(sep) # 最后一次出现
-str.split(sep=None  # 默认sep为空白符，最多分隔maxsplit
+"多行字符串"
+"忽略之间空白符"
+"自动连接"
+
+Str = str(obj)
+Str = Str1 + Str2
+Str = Str * num
+
+
+# 访问与搜索
+Str[0]
+Str[-1]
+Str[begin:end[:step]]
+Str[::-1]
+char in Str
+subStr in Str
+Str.startswith(preffix)
+Str.endswith(suffix)
+Str.find(sub)
+Str.rfind(sub)
+Str.index(sub)
+Str.rindex(sub)
+Str.count(sub)
+
+# 字符类
+Str.isalpha()       # Unicode Letter
+Str.isdecimal()     # Unicode Decimal
+Str.isdigit()       # Unicode Decimal,Digit
+Str.isnumeric()     # Unicode Decimal,Digit,Numeric
+Str.isalnum()       # 若以上四个方法均返回True则返回True
+Str.isspace()       # Unicode Seperator,Space
+Str.isascii()       # ASCII
+Str.isprintable()   # 是否可打印
+Str.isidentifier()  # 是否为保留标识符
+Str.istitle()       # 单词开头字符若区分大小写则为大写，其余字符若区分大小写则为小写
+Str.isupper()       # 至少一个区分大小写字符且为大写
+Str.islower()       # 至少一个区分大小写字符且为小写
+
+# 修改：注意修改操作并非修改原字符串（字符串为immutable），而是返回新到修改值
+Str.title()
+Str.upper()
+Str.lower()
+Str.swapcase()
+Str.replace(old, new [, count]) # 默认替换所有old为new
+Str.encode(encoding="utf-8")
+Str.expandtabs(tabsize=8)
+Str.center(width[, fill])
+Str.ljust(width[, fill])
+Str.rjust(width[, fill])
+Str.zfill(width)    # 用零填充左边至长度为width（若width小于len(Str)则忽略），若第一个字符为+或-则在其后添加0
+
+Str.lstrip([chars]) # 移除开头出现在chars中的字符，默认空白符
+Str.rstrip([chars]) # 移除结尾出现在chars中的字符，默认空白符
+Str.strip([chars])  # 移除两边出现在chars中的字符，默认空白符
+Str.removeprefix(p)
+Str.removesuffix(s)
+
+Str.join(itr)       # itr元素必须是str
+Str.partition(sep)  # 返回三元组（之前、分隔符、之后）
+Str.rpartition(sep) # 最后一次出现
+Str.split(sep=None  # 默认sep为空白符，最多分隔maxsplit
     maxsplit=-1)
-str.rsplit(sep=None # 从右边开始分割
+Str.rsplit(sep=None # 从右边开始分割
     maxsplit=-1)
-str.splitlines(keepends=False)
+Str.splitlines(keepends=False)
 ```
 
 
 ## 元组
+* **元组虽也属于immutable对象，但其元素可以时mutable的，注意这点！**
 ```python
-# 元组虽也属于immutable对象，但其元素可以时mutable的，注意这点！
-tuple0 = ()
-tuple1 = (t1, t2)
-tuple2 = t1,
-tuple3 = t1, t2
-t1, t2, t3 = sequence
-(t1, t2, t3) = sequence
+# 构造
+Tuple = tuple([itr])
+Tuple = ()
+Tuple = (e0, e1)   # 括号在一定情况下可省略
+Tuple = e0,
+Tuple = e0, e1
+Tuple = Tuple1 + Tuple2
+Tuple = Tuple * num
+
+T1, T2= e0, e1
+T1, T2= itr
+
+# 访问与搜索
+Tuple[0]
+Tuple[-1]
+Tuple[begin:end[:step]]
+Tuple[::-1]
+ele in Tuple
+Tuple.count(e)
+Tuple.index(e)
 ```
 
 
 ## 列表
 ```python
-list0 = []
-list1 = [resultExp for x in List if condition] # resultList.appen(resltExp)
+# 构造
+List = list([itr])
+List = []
+List = [e0, e1]
+List = [resultExpr for x in List if condition] # resultList.appen(resltExp)
+List = List1 + List2
+List = List * num
+
+# 访问与搜索
+List[0]
+List[-1]
+List[begin:end[:step]]
+List[::-1]
+ele in List
+List.count(e)
+List.index(e)
+
+# 修改
+List[i] = e
+List[i:j] = itr
+List[i:j:k] = itr
+List.append(e)
+List.extend(itr)
+List.insert(i, e)
+List.pop([i])
+List.remove(x)
+List.clear()
+del s[i:j]
+del s[i:j:k]
+List.reverse()
 ```
 
 
 ## 集合
 ```python
-set0 = set()
-set1 = {0, 1.0, '2'}
-set2 = {resultExp for x in List if condition} # resultList.appen(resltExp)
+# 构造
+Set = set([itr])
+Set = {ex, ey, ez}
+Set = {resultExp for x in List if condition} # resultList.appen(resltExp)
+Set = Set1 + Set2
+Set = Set * num
 
-set.add(e)
-set.remove(e)   # 若不存在则引发KeyError
-set.discard(e)
-set.pop()       # 弹出任一元素，为空则引发KeyError
-set.clear()
+# 修改
+Set.add(e)
+Set.discard(e)
+Set.remove(e)   # 若不存在则引发KeyError
+Set.pop()       # 弹出任一元素，为空则引发KeyError
+Set.clear()
+Set.update(itr)
 ```
 * 支持集合论运算：
     `<` `<=` `>` `>=` `|` `&` `-` `^` `|=` `&=` `-=` `^=`
@@ -248,15 +373,24 @@ set.clear()
 
 ## 字典
 ```python
-dict0 = {}
-dict1 = {'str': v1, 0: v2}  # 键为不可变类型，如整数、浮点数、字符串、元组
-{keyExp: valueExp for x in List if condition} # resultList.appen(keyExp, valueExp)
+# 构造
+Dict = dict([itr])      # itr元素为键值对元组
+Dict = {}
+Dict = {key: value, k: v}  # 键为不可变类型，如数值类型、字符串、元组
+Dict = {keyExp: valueExp for x in List if condition} # resultList.appen(keyExp, valueExp)
 
-dict.get(key[, default])
-dict.items()
-dict.keys()
-dict.values()
-dict1 | dict2
+# 访问与搜索
+Dict.items()            # 元素为元组的列表
+Dict.keys()             # 元素为键的列表。dict作itr时其元素即dict的键
+Dict.values()           # 元素为值到列表
+
+key in Dict             # for key, value in Dict
+Dict[key]               # 若key不存在则自动创建
+Dict.get(key[, default])# 不自动创建
+Dict.pop(key[, default])
+Dict.clear()
+Dict.update(itr)
+Dict | Other            # 合并两字典，Other的键值优先
 ```
 
 
@@ -281,14 +415,6 @@ dict1 | dict2
 | `and`                                                                | 逻辑与                                     |
 | `or`                                                                 | 逻辑或                                     |
 | `=` `+=` `-=` `*=` `/=` `%=` `//=` `**=` `&=` `\|=` `^=` `>>=` `<<=` | （复合）赋值运算符                         |
-
-
-# 表达式
-```python
-nonlocal var    # 指明变量var属于上层作用域
-global var      # 指明变量var属于全局作用域
-lambda arg1, arg2: arg1 + arg2
-```
 
 
 # 语句
@@ -338,36 +464,27 @@ except:
 # 若未捕获到异常则执行else段
 else:
     pass
-# 无论异常是否被捕获都会执行该段，若异常未被捕获则执行完该段后重新抛出
+# 无论异常是否产生、是否被捕获都会执行该段，若异常未被捕获则执行完该段后重新抛出
 finally:
     pass
 ```
 * 用户定义的异常类应该派生自`Exception`
 
+# 语法杂项
+* 逻辑行即一条完整的语句
+* 物理行即两个换行符之间到内容
+* 多个逻辑行可显示或隐式的连接成一个逻辑行
+    * 显示：利用`\`转义行尾换行符
+    * 隐式：`()` `[]` `{}`内可自动转义行尾换行符
+* 逻辑行到缩进层级与结束利用 **单调栈** 来判断
+* 利用`nonlocal`与`global`调整变量到作用域
+* **Python中所有实际数据（包括字面量）都是对内存中对象的引用，`a = b`代表的不是将b赋值到a上，而是将a引用指向b引用的对象！**
+* **immutable对象的值不可更改，只能新建；mutable的对象则可通过一些方法修改原值而非新建对象**
+
+
+
+
 # 标准库
-## 序列算法
-```python
-all(itr)                    # 元素全为True
-any(itr)                    # 元素存在True
-len(seq)                    # 返回元素数量
-
-zip(*itr)                   # 返回链接各组元素后的迭代器
-filter(func, itr)           # 过滤出func(e)为True的元素，返回迭代器
-map(func, itr)              # 将每个元素经由func处理后装入返回的迭代器中
-reversed(Seq)               # 返回反向的迭代器
-sorted(itr, *,              # 返回已排序列表
-    key=None, reverse=False)# key返回元素比较键，reverse表示反向排序
-sum(itr, /, start=0)        # 从第start个元素开始求和
-
-max(itr, *[, key, default]) # 返回范围中最大值。default为默认值（当范围为空时）
-max(arg1, arg2, *args[,key])# 返回范围中最大值。key返回元素比较键
-min(itr, *[, key, default]) # 返回范围中最小值。default为默认值（当范围为空时）
-min(arg1, arg2, *args[,key])# 返回范围中最小值。key返回元素比较键
-
-range(N)                    # 返回列表[0, 1, ..., N-1]
-range(B, E, S=1)            # 返回列表[B, B+S, ..., E-S]
-```
-
 ## 数值处理
 ```python
 abs(v)                  # 返回绝对值
@@ -391,25 +508,15 @@ exec(code)      # 动态解析代码片段并仅产生其副作用而返回None
 
 ## 语言特性
 ```python
-callable(obj)               # 返回bool表示obj是否可调用
 dir(obj)                    # 返回obj的符号表
 type(obj)                   # 返回obj的类型
 id(obj)                     # 返回对象标识值
+callable(obj)               # 返回bool表示obj是否可调用
 isinstance(obj, class)      # 若obj为class的实例或其子类的实例则为True
 issubclass(subclass, class) # 若subclass为class的子类则为True
 super()                     # 返回当前类的父类（基类）部分
 ```
 
-## 类型处理
-```python
-class bool([x])
-class int([x])
-class float([x])
-class str(obj)
-class tuple([itr])
-class list([itr])
-class set([itr])
-```
 
 ## 输入输出
 ```python
