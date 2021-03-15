@@ -37,7 +37,7 @@ cmake --install .
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
 # Python
-* [Python基础](python.md)
+* [Python基础](python.md):star:
     > 基础语法与基础类型对象操作
 
 # C++
