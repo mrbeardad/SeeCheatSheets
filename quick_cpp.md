@@ -30,8 +30,6 @@ GFM
     * this
     * const
     * noexcept
-    * unamedspace
-    * extern
     * inline
     * constexpr
     * auto return
@@ -50,6 +48,7 @@ GFM
     * private
     * 顺序 & 对齐
     * const & 引用
+    * static reference-return
 * 构造
     * default?
     * explicit?
@@ -100,14 +99,18 @@ GFM
     * `T t()`
 * 延后立初
 * 循环声明
-* 多个翻译单元中引用静态变量应利用reference-return技术
 <!-- entry end -->
 
 <!-- entry begin: cpp  异常 -->
 # 异常
 * 限制输入
-    > 整数(U负溢出、-Tmin、除零)
-    > 浮点数(有效、结合、比较)
+    * 整数(U负溢出、-Tmin、除零)
+    * 浮点数(有效、结合、比较)
+    * 指针(nullptr)
+* 错误处理方式
+    * 操作系统报错
+    * 抛出异常
+    * 静默处理
 * 代码前移
 * 集中捕获可恢复异常
 <!-- entry end -->

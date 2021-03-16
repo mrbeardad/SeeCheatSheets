@@ -16,7 +16,7 @@ from module import *                                # 导入模块中所有符�
 ```python
 import package.subpackage.module    # 可将其完全当做module来编写
 from package import module          # 从指定的package中导入module
-from package import *               # 导入package中由__all__定义的模块
+from package import *               # 导入__init__.py中由__all__定义的模块
 ```
 * 在一个目录下创建名为`__init__.py`的文件即可形成一个package
 * 包搜索路径：
@@ -46,6 +46,8 @@ def f2(*tupleArg, **dictArg, mustKeyword=None):
     # *tuple_arg存储多余的位置参数，**dict_arg存储多余的键值对参数，前者必须在后者前面
     pass
 
+f2(*tuple(), **dict())
+
 # 位置参数与键值参数
 def f3(pos1, pos2, /, pos_or_kwd, *, kwd1, kwd2):
     # -----------    ----------     ----------
@@ -55,27 +57,20 @@ def f3(pos1, pos2, /, pos_or_kwd, *, kwd1, kwd2):
     #    -- Positional only
     pass
 
+f3(a1, a2, a3, kwd1=a4, kwd2=a5)
+f3(a1, a2, pos_or_kwd=a3, kwd1=a4, kwd2=a5)
+
 # 类型注解
 def f4(arg1: Type1, arg2: Type2 = type2()) -> RetType:
     pass
 
-# 函数调用
-# 注意：函数内部是可以访问调用点处到全局作用域的！！！
-f(0, arg3=1)   # 0为位置参数，arg3=1为键值对参数（arg3必须存在于函数定义的参数列表中），前者必须在后者前面
-
-dict_arg = {'arg1': 1, 'arg2': 2, 'arg3': 3}
-f(**dict_arg)
-
-list_arg = [0, 1, 2]
-f(*list_arg)
-
 # 函数属性
-__doc__
-__name__
-__module__
-__defaults__
-__kwdefaults__
-__annotations__
+func.__doc__
+func.__name__
+func.__module__
+func.__defaults__
+func.__kwdefaults__
+func.__annotations__
 
 # lambda
 lambda arg1, arg2: express
@@ -85,15 +80,53 @@ lambda arg1, arg2: express
 ```python
 # python不存在真正的封装
 class MyClass(Base1, Base2):
-    """Docstring."""
+    """Docstring starts with upper letter and ends with dot.
 
-    # 数据属性无需声明，在第一次赋值时产生
-    member_ = []    # 该mutable数据属性对象在所有实例间共享
-    __mem = member_ # 名称改写，__mem被解释器替换为_classname__mem，从而尽量避免与子类中的名称冲突
+    If contains multi line, the second line should be blank.
+    """
 
-    # 方法属性的第一个参数为self
+    # 属性无需声明，在第一次赋值时产生。定义在方法外的属性在所有实例间共享
+    member_ = []
+
+    # 方法的第一个参数为self
     def __init__(self, *args):  # __init__方法再构造实例时自动调用
+        # 单继承可使用super()获取父类部分的实例
+        Base1.__init__()
+        Base2.__init__()
         self.member_ = args     # 定义一个实例的数据属性
+
+    # 名称改写：以两个下划线开头的 __name 会被改写为 _classname__name ，从而尽量避免与子类中的名称冲突
+    __mem = []          # 改写为_MyClass__mem
+    def __name(self):   # 改写为_MyClass__name
+        pass
+
+    # 限制只能该类只能绑定如下属性
+    __slots__ = ('mem1_', 'mem2_')
+
+    # 利用装饰器设置只读属性或方法
+    @property
+    def mem(self):
+        return self.mem_
+
+    # 修改属性mem时会调用mem.setter。默认不能修改
+    @mem.setter
+    def mem(self, new):
+        self.mem_ = new
+
+    # 删除属性mem时会调用mem.deleter。默认不能删除
+    @mem.deleter
+    def mem(self):
+        del self.mem_
+
+    # 利用装饰器设置静态方法
+    @staticmethod
+    def StaticMethod(args):
+        pass
+
+    # 利用装饰器定义类方法，第一个参数为该类（类本身即一个对象）
+    @classmethod
+    def ClassMethod(cls):
+        pass
 ```
 
 
@@ -184,12 +217,12 @@ Fraction(string)    # "[sign] numerator [/ denominator]"
 ```python
 all(itr)                    # 元素全为True
 any(itr)                    # 元素存在True
-len(seq)                    # 返回元素数量
+len(itr)                    # 返回元素数量
 
 zip(*itr)                   # 返回链接各组元素后的迭代器
 filter(func, itr)           # 过滤出func(e)为True的元素，返回迭代器
 map(func, itr)              # 将每个元素经由func处理后装入返回的迭代器中
-reversed(Itr)               # 返回反向的迭代器
+reversed(itr)               # 返回反向的迭代器
 sorted(itr, *,              # 返回已排序列表
     key=None, reverse=False)# key返回元素比较键，reverse表示反向排序
 sum(itr, /, start=0)        # 从第start个元素开始求和
@@ -347,6 +380,18 @@ List.clear()
 del s[i:j]
 del s[i:j:k]
 List.reverse()
+
+# 堆算法
+import heapq
+heapq.heapify(List)
+heapq.heappush(heap, itm)
+heapq.heappop(heap)
+heapq.heappushpop(heap, itm)    # 将itm插入并弹出最小值（比分开操作更快速）
+heapq.heapreplace(heap, itm)    # 同上，但弹出的值可能会大于压入的itm
+heapq.merge(*itr, key=None, reverse=False)
+# 利用堆排序算法返回小值，若n太大则应使用sorted，若n==1则应使用max或min
+heapq.nlargest(n, itr, key=None)
+heapq.nsmallest(n, itr, key=None)
 ```
 
 
@@ -426,6 +471,9 @@ elif condition2:
     pass
 else:
     pass
+
+# 条件表达式
+x if Condition else y
 ```
 
 
@@ -451,11 +499,11 @@ try:
     raise Exception('error', 'message')
 # 捕获异常实例并命名为inst
 except Exception as inst:
-    # 抛出异常链，并将新异常挂到inst后面。from None 表示丢弃之前的旧链
-    raise Exception('error2') from inst
+    # 丢弃之前的旧异常链，并抛出新链
+    raise Exception('error2') from None
 # 捕获异常
 except Exception:
-    # 同上，抛出异常链，并将新异常挂到捕获实例后面
+    # 抛出异常链，并将新异常挂到捕获实例后面
     raise Exception('error3')
 # 捕获所有类型的异常
 except:
@@ -466,6 +514,11 @@ else:
     pass
 # 无论异常是否产生、是否被捕获都会执行该段，若异常未被捕获则执行完该段后重新抛出
 finally:
+    pass
+
+
+# 相当当于C++ unique_ptr，一般用于管理file对象
+with Expr as inst:
     pass
 ```
 * 用户定义的异常类应该派生自`Exception`
@@ -504,6 +557,10 @@ hex(i)      # 返回整数对应十六进制字符串（`0x`开头）
 repr(obj)       # 返回对象字符串
 eval(expr)      # 动态解析单个表达式并返回结果
 exec(code)      # 动态解析代码片段并仅产生其副作用而返回None
+
+import re
+re.findall(regex, string)   # 返回匹配子串的列表
+re.sub(regex, repl, string) # 替换，语法类似sed
 ```
 
 ## 语言特性
@@ -521,18 +578,34 @@ super()                     # 返回当前类的父类（基类）部分
 ## 输入输出
 ```python
 input([prompt])
+
 print(*obj,
     sep=' ', end='\n'
     file=sys.stdout,
     flush=False)
-open(file,                  # 打开失败返回OSError
-    mode='r',               # 只读'r'、读写'+'、截断'w'、追加'a'、排它'x'、二进制'b'、文本't'）
+
+open(file,                  # 返回file可用于for-in语句，每次循环处理一行（包含换行符）
+    mode='r',               # 只读'r'、截断'w'、追加'a'、读写'+'、排它'x'、二进制'b'、文本't'）
     buffering=-1,           # 关闭缓冲0（仅二进制）、行缓冲1（仅文本）、指定缓冲区大小>1
     encoding=None,
     errors=None,
     newline=None,
     closefd=True,
     opener=None)
+
+import json
+json.dump(obj, File, *      # dict中的键会强制转换为字符串
+    skipkeys=False          # 若键不为bool、int、float、str、None则是否跳过而避免引发异常
+    indent=None             # 缩进宽度
+    sort_keys=False)        # 是否对dict排序
+
+json.dumps(obj, *           # 返回json字符串而非写入文件
+    skipkeys=False          # 若键不为bool、int、float、str、None则是否跳过而避免引发异常
+    indent=None             # 缩进宽度
+    sort_keys=False)        # 是否对dict排序
+
+json.load(File)
+json.loads(Str)
 ```
 
 
@@ -555,10 +628,6 @@ sys.argv            # 返回命令行参数列表
 sys.stdin
 sys.stdout
 sys.stderr
-
-import re
-re.findall(regex, string)   # 返回匹配子串的列表
-re.sub(regex, repl, string) # 替换，语法类似sed
 ```
 
 
