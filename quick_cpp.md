@@ -48,7 +48,7 @@ GFM
     * private
     * 顺序 & 对齐
     * const & 引用
-    * static reference-return
+    * static reference-return ? inline
 * 构造
     * default?
     * explicit?

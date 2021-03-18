@@ -102,6 +102,7 @@
 ![Mediator](images/Mediator.jpg)
 
 * 利用中介对象来隔离一系列对象的复杂交互，使各对象无需显示相互引用
+    > C++中中介者持有shared_ptr，同事类持有weak_ptr
 
 ## 适配器模式(Adapter)
 ![Adapter](images/Adapter.jpg)

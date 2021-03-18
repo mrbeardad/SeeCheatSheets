@@ -95,6 +95,10 @@ class MyClass(Base1, Base2):
         Base2.__init__()
         self.member_ = args     # 定义一个实例的数据属性
 
+    # 定义与bool值的转换，若未定义该方法且未定义__len__则皆为True
+    def __nonzero__(self):
+        return True
+
     # 名称改写：以两个下划线开头的 __name 会被改写为 _classname__name ，从而尽量避免与子类中的名称冲突
     __mem = []          # 改写为_MyClass__mem
     def __name(self):   # 改写为_MyClass__name
@@ -461,6 +465,10 @@ Dict | Other            # 合并两字典，Other的键值优先
 | `or`                                                                 | 逻辑或                                     |
 | `=` `+=` `-=` `*=` `/=` `%=` `//=` `**=` `&=` `\|=` `^=` `>>=` `<<=` | （复合）赋值运算符                         |
 
+**注意**：
+* 多重赋值`a = b = c`的意思是`a = c; b = c`
+* 元组赋值`a, b = b, a`中，先计算等号右边形成右值，再将已固定的右值赋值给左边
+* 支持连续比较`a > b > c`
 
 # 语句
 ## 分支
@@ -531,6 +539,8 @@ with Expr as inst:
     * 隐式：`()` `[]` `{}`内可自动转义行尾换行符
 * 逻辑行到缩进层级与结束利用 **单调栈** 来判断
 * 利用`nonlocal`与`global`调整变量到作用域
+* 变量生命周期会延长至语句局部作用域外，循环体中局部变量仍会跨越多次循环
+    > （静态语言中变量需要声明，从语法上就不可能跨越多次循环）
 * **Python中所有实际数据（包括字面量）都是对内存中对象的引用，`a = b`代表的不是将b赋值到a上，而是将a引用指向b引用的对象！**
 * **immutable对象的值不可更改，只能新建；mutable的对象则可通过一些方法修改原值而非新建对象**
 
@@ -572,6 +582,8 @@ callable(obj)               # 返回bool表示obj是否可调用
 isinstance(obj, class)      # 若obj为class的实例或其子类的实例则为True
 issubclass(subclass, class) # 若subclass为class的子类则为True
 super()                     # 返回当前类的父类（基类）部分
+locals()                    # 返回局部符号表，可用于判断变量是否存在
+globals()                   # 返回全局符号表，可用于判断变量是否存在
 ```
 
 

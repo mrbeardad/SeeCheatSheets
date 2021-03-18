@@ -1,9 +1,25 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
-- [哲学思想](#哲学思想)
+- [算法设计](#算法设计)
+  - [贪婪算法](#贪婪算法)
+  - [回溯算法](#回溯算法)
+  - [分治算法](#分治算法)
+  - [动态规划](#动态规划)
   - [算法优化](#算法优化)
-  - [算法设计](#算法设计)
+- [时空复杂度](#时空复杂度)
+  - [复杂度计算](#复杂度计算)
+  - [经典复杂度](#经典复杂度)
+- [数论](#数论)
+  - [指数](#指数)
+  - [对数：](#对数)
+  - [级数](#级数)
+  - [模运算](#模运算)
+  - [排列组合](#排列组合)
+  - [最大公因数](#最大公因数)
+  - [快速幂运算](#快速幂运算)
+  - [厄拉多塞筛](#厄拉多塞筛)
+  - [唯一分解定理](#唯一分解定理)
 - [标准库容器](#标准库容器)
 - [数据结构](#数据结构)
   - [栈](#栈)
@@ -13,18 +29,6 @@
   - [并查集](#并查集)
   - [Trie树](#trie树)
   - [跳跃表](#跳跃表)
-- [时空复杂度](#时空复杂度)
-  - [复杂度标记](#复杂度标记)
-  - [复杂度计算](#复杂度计算)
-  - [经典复杂度](#经典复杂度)
-- [数论](#数论)
-  - [同余与模算术](#同余与模算术)
-  - [gcd与lcm](#gcd与lcm)
-  - [扩展欧几里得算法](#扩展欧几里得算法)
-  - [排列组合](#排列组合)
-  - [快速幂运算](#快速幂运算)
-  - [厄拉多塞筛](#厄拉多塞筛)
-  - [唯一分解定理](#唯一分解定理)
 - [匹配与排序](#匹配与排序)
   - [KMP](#kmp)
   - [AC自动机](#ac自动机)
@@ -53,13 +57,29 @@
 
 <!-- vim-markdown-toc -->
 
-# 哲学思想
-* **由宏及微**  
-先确定大目标，再确定小目标，按顺序步骤设计
-* **自顶向下**  
-需要什么，设计什么；怎么使用，怎么设计
-* **面向对象**  
-数据抽象，派生继承，动态绑定
+# 算法设计
+## 贪婪算法
+* 需要证明局部最优解即全局最优解
+
+## 回溯算法
+* 利用***DFS***进行多路分叉选择，若选择错误或无选择则函数返回(撤销)重新选择
+* 注意是否可以裁剪掉一些情况
+
+## 分治算法
+> 分治一般需要至少两次递归调用
+* 将大问题分解为各类型子问题，各部分递归求解
+* 子问题的解可以用来裁剪掉一些情况
+
+## 动态规划
+动态规划的核心问题就是拆分出的子问题(状态)有重叠部分，
+核心思想就是利用记忆表或者逆向计算来消除重复的计算。
+* 问题分解：分治策略拆分出子问题
+    > 相邻依赖，状态决策
+* 状态定义：确定记忆表的维度和记录值的语义
+    > 前者即影响状态的变量，后者即解决之前状态的解
+* 递推方程：当前解如何依赖之前表中的解推出
+* 初始状态：由最初始解即边界条件决定是否改为循环逆推
+
 
 ## 算法优化
 * 找出重复的计算
@@ -67,35 +87,245 @@
 * 避免重复的访存
 * 高速缓存命中率
 * 分支预测命中率
->
 
-## 算法设计
-* 贪婪：
-    * 需要证明局部最优解即全局最优解
+# 时空复杂度
+## 复杂度计算
+* `T ≤ O `
+* `T ≥ Ω `
+* `T = Θ `
+* `T < o `
 
-* 回溯
-    * 利用***DFS***进行多路分叉选择，若选择错误或无选择则函数返回(撤销)重新选择
+* 复杂度合并：
+    * $T_1+T_2=\max(O_1,O_2)$
 
-    * 注意是否可以裁剪掉一些情况
+    * $T_1\times T_2=O_1\times O_2$
 
-* 分治：
-    > 分治一般需要至少两次递归调用
-    * 将大问题分解为各类型子问题，各部分递归求解
+## 经典复杂度
+![fzd](images/fzd1.jpg)
+![fzd2](images/fzd2.png)
+![fzd3](images/fzd3.png)
 
-    * 子问题的解可以用来裁剪掉一些情况
+# 数论
+## 指数
+* $X^AX^B=X^{A+B}$
+* $X^A/X^B=X^{A-B}$
+* $(X^A)^B=X^{AB}$
 
-* DP：
-动态规划的核心问题就是拆分出的子问题(状态)有重叠部分，  
-核心思想就是利用记忆表或者逆向计算来消除重复的计算。
-    * 问题分解：分治策略拆分出子问题
-        > 相邻依赖，状态决策
+## 对数：
+* $\ln AB=\ln A+\ln B$
+* $\ln A/B=\ln A-\ln B$
+* $\ln A^B=B\ln A$
+* $\log_AB=\frac{\log_CB}{\log_CA}$
 
-    * 状态定义：确定记忆表的维度和记录值的语义
-        > 前者即影响状态的变量，后者即解决之前状态的解
+## 级数
+* $\sum_{i=0}^{N}A^i=\frac{1-A^{N+1}}{1-A}\qquad(|A|>1)$
 
-    * 递推方程：当前解如何依赖之前表中的解推出
+* $\sum_{i=0}^{N}A^i\le\frac{1}{1-A}\qquad(|A|<1)$
 
-    * 初始状态：由最初始解即边界条件决定是否改为循环逆推
+* $\sum_{i=1}^{N}i^k\approx \frac{N^{k+1}}{|k+1|}\qquad(k \ne -1)$
+
+* $\sum_{i=1}^Ni^k\approx \ln{N}\qquad(k=-1)$
+
+* $F_{k+1}\lt(5/3)^{k+1}\qquad(F_{k+1}=F_k+F_{k-1})$
+
+## 模运算
+* 同余方程：
+    > 若$(a-b)\% N=0$
+    * 则$a\equiv b\mod N$
+
+    * 则$a+c\equiv b+c\mod N$
+
+    * 则$a\times d\equiv b\times d\mod N$
+
+* 求余方程：
+    * $(a+b)\% N = (a\% N + b\% N)\% N$
+
+    * $(a\times b)\% N = (a\% N \times b\% N)\% N$
+
+    * $(a-b)\% N = (a\% N - b\% N + N)\% N$
+
+    * $(a\div b)\% N = (a\times b^{-1})\% N$
+        > 公式推导：
+        > $$
+        > (a\div b)\mod N \Rightarrow (a\div b)\times 1\mod N
+        > \Rightarrow(a\div b)\times(b\times b^{-1})\mod N
+        > \Rightarrow(a\times b^{-1})\mod N
+        > $$
+        > **$b^{-1}$是$b$ 的逆元。因为计算机整数运算中`a/b`会丢弃小数，违反了上述证明必要的数学运算逻辑，故需要 $a$ 可以被 $b$ 整除**
+
+* 模算术逆元：
+    * 定义：$b\times b^{ -1 } \equiv 1 \mod N$  
+        > 所有$x=b^{-1}+k\times N(k\in Z)$ 都是 $b$ 在模$N$意义下的逆元；  
+        > **整数 $b$ 存在逆元的充要条件是 $b$ 与 $N$ 互素**
+    * 求解：
+        * 费马小定理：  
+            > 若$b$为整数，$N$为素数，  
+            > 则$b^{N-1} \equiv 1 \mod N\Rightarrow b\times b^{N-2} \equiv 1 \mod N$，  
+            > 即$b^{N-2}$就是$b$在模$N$意义下的逆元
+        * 扩展欧几里得算法
+            > 前提条件：a能被b整除
+            <details>
+                <summary><b>Code ...</b></summary>
+            
+            ```cpp
+            int ext_gcd(int a, int b, int& x, int& y)
+            {
+                if ( b == 0 ) {
+                    x = 1;
+                    y = 0;
+                    return a;
+                }
+                auto gcd = ext_gcd(b, a % b, y, x);
+
+                #   因 ans == b * y + (a % b) * x
+                #   又 a % b == a - (a / b) * b
+                #   故 ans == b * y + (a - (a / b) * b) * x == x * a + (y - (a / b) * x) * b
+                y -= a / b * x;
+
+                return gcd;
+            }
+            ```
+            </details>
+        * 穷举法
+            <details>
+                <summary><b>Code ...</b></summary>
+            
+            ```python
+            def inverse(b, mod):
+                for i in range(1, mod):
+                    if i * b % mod == 1:
+                        return i
+                return 0
+            ```
+            </details>
+
+## 排列组合
+* 加法原理：完成一个过程有N类方法
+
+* 乘法原理：完成一个过程有N个步骤
+
+* 排列数
+$$
+A^m_n=\frac{n!}{(n-m)!}
+$$
+* 多重集的全排列数：
+    > 对于每个元素都存在$n_i!$次相同排列
+$$
+\binom{n}{n_1,n_2,\cdots,n_k}=\frac{n!}{\prod_{i=1}^kn_i!}
+$$
+* 组合数
+    > 抽出的组合存在$m!$种排列，除去这些重复组合
+$$
+C^m_n=\binom{n}{m}=\frac{n!}{m!(n-m)!}
+$$
+* 多重集的组合数：
+    > 即求$x_1+x_2+\cdots+x_k=r$的解的个数，  
+    > 利用插板法得$(x_1+1)+(x_2+1)+\cdots+(x_k+1)=r+k$，  
+    > 需要在$r+k-1$个位置中插入$k-1$个隔板
+$$
+得\binom{r+k-1}{k-1}
+$$
+
+## 最大公因数
+* 最大公因数(gcd)的性质
+    * $\gcd(a, b) = \gcd(b, a)$
+    * $\gcd(a, b) = \gcd(a-b, b)\qquad(a ≥ b)$
+    * $\gcd(a, b) = \gcd(a\% b, b)$
+    * $\gcd(a, b, c) = \gcd(gcd(a, b), c)$
+* 最小公倍数(lcm)：$lcm(a, b) = a\times b \div gcd(a, b)$
+<details>
+    <summary><b>Code...</b></summary>
+
+```cpp
+int gcd(int m, int n)
+{
+    while ( n != 0 ) {
+        auto tmp = m % n;
+        m = n;
+        n = tmp;
+    }
+    return m;
+}
+```
+</details>
+
+
+## 快速幂运算
+* 描述：$a^{23}=a^{0x17}=a^{0b00010111}=a^{0x10}\times a^{0x4}\times a^{0x2}\times a^{0x1}$
+<details>
+    <summary><b>Code...</b></summary>
+
+```cpp
+int quick_pow(int num, int pow) { // 利用指数的二进制分解与指数加法，简化整数的幂运算
+    int ret{1};
+    while ( pow != 0 ) {
+        if ( pow & 0x1 ) { // 如果thisBit为1，则乘以x(现在的x表示当前的指数的x的幂)
+            ret *= num;
+        }
+        num *= num; // 每次循环都更新x，需要时才乘入ret
+        pow >>= 1;
+    }
+    return ret;
+}
+```
+</details>
+
+
+## 厄拉多塞筛
+* 描述：素数的倍数均为非素数，筛掉这些倍数
+<details>
+    <summary><b>Code...</b></summary>
+
+```cpp
+vector<int> prime_sieve(int maxNum) // 筛掉初始值的所有倍数
+{
+    const int SQRT_N = sqrt(maxNum);
+    vector<bool> prime(maxNum + 1, true), ret; // 数组索引标识元素
+    for ( size_t num{2}; num <= SQRT_N; ++num ) {
+        if ( prime[num] ) { // 跳过已经被排除的元素
+            ret.push_back(num); // 半online算法
+            for ( size_t needErase{num + num}; needErase <= maxNum; needErase += num ) {
+                prime[needErase] = false; // MEM_OPT
+            }
+        }
+    }
+    for ( size_t idx{SQRT_N + 1}; idx <= maxNum; ++idx ) {
+        if ( prime[idx] ) {
+            ret.push_back(idx);
+        }
+    }
+    return ret;
+}
+```
+</details>
+
+
+## 唯一分解定理
+* 描述：每个整数可以被分解为质数的幂的乘积，如$20=2^2\times 3^0\times 5^1$
+* 拓展： 从多个数的质数分解式中，选取每个质数的指数的最小值则得到gcd的质数分解式，
+    选取最大值则得到lcm的质数分解式
+<details>
+    <summary><b>Code...</b></summary>
+
+```cpp
+vector<int> udt(int num) // 每个正整数都可以分解为唯一的素数的幂的积
+{
+    vector<int> ret(Primes.size()); // Primes为素数表
+    for ( size_t idx{}; num > 0; ++idx ) {
+        int thisPrime{Primes[idx]}, pows{};
+        auto divd{div(num, thisPrime)};
+        while ( divd.rem == 0 ) { // 如果当前的素数为因子，则计算其最大的指数
+            ++pows;
+            num = divd.quot;
+            divd = div(num, thisPrime);
+        }
+        ret[idx] = pows;
+    }
+    return ret;
+}
+```
+</details>
+
 
 # 标准库容器
 * vector
@@ -489,233 +719,6 @@ struct Trie
 //真的没有o(=·ェ·=)m
 ```
 </details>
-
-# 时空复杂度
-
-## 复杂度标记
-* T ≤ O
-* T ≥ Ω 
-* T = Θ 
-* T `<` o
-
-## 复杂度计算
-复杂度合并：
-* $T_1 + T_2 = \max(O_1, O_2)$
-
-* $T_1 \times T_2 = O_1 \times O_2$
-
-级数公式：
-* $\sum_{i=0}^{N}A^i=\frac{A^{N+1}-1}{A-1}$
-
-* $\sum_{i=0}^{N}A^i\le\frac{1}{1-A}\qquad(0\lt A\lt 1)$
-
-* $\sum_{i=1}^{N}i^k\approx \frac{N^{k+1}}{|k+1|}\qquad(k \ne -1)$
-
-* $\sum_{i=1}^N\frac{1}{i}\approx \ln{N}$
-
-* $F_{k+1}=F_k+F_{k-1}\qquad，则F_{k+1}\lt(5/3)^{k+1}$
-
-## 经典复杂度
-![fzd](images/fzd1.jpg)
-![fzd2](images/fzd2.png)
-![fzd3](images/fzd3.png)
-
-# 数论
-
-## 同余与模算术
-* 同余方程： 若$(a-b)\%N=0$，则$a\equiv b\mod N$
-
-* 逆元：$b\times b^{ -1 } \equiv 1 \mod N$  
-    所有$x=b^{-1}+k\times N(k\in Z)$ 都是 $b$ 在模$N$意义下的逆元  
-    整数 $b$ 存在逆元的充要条件是 $b$ 与 $N$ 互素
-
-* 取余方程：
-    * 计算机运算：整数运算丢弃小数部分`a % b == a - (a / b) * b`
-
-    * $(a+b)\%N = (a\%N + b\%N)\%N$
-
-    * $(a-b)\%N = (a\%N - b\%N + N)\%N$
-
-    * $(a\times b)\%N = (a\%N \times b\%N)\%N$
-
-    * $(a\div b)\%N = (a\times b^{-1})\%N$，$b^{-1}$是$b$ 的逆元
-> 推导：
-> $$
-> (a\div b)\mod N \Rightarrow (a\div b)\times 1\mod N\Rightarrow(a\div b)\times(b\times b^{-1})\mod N
-> \Rightarrow(a\times b^{-1})\mod N
-> $$
-> 故需要 $a$ 可以被 $b$ 整除，因为计算机整数运算中`a/b`会丢弃小数，违反了上述证明必要的数学运算逻辑
-
-如何求逆元：
-* 费马小定理：  
-    若$b$为整数，$N$为素数，  
-    则$b^{N-1} \equiv 1 \mod N$，  
-    即$b\times b^{N-2} \equiv 1 \mod N$，$b^{m-2}$就是$b$在模$N$意义下的逆元
-
-* [扩展欧几里得算法](#扩展欧几里得算法)
-
-## gcd与lcm
-* 描述：最大公因数(gcd)与最小公倍数(lcm)
-* gcd性质
-    * $\gcd(a, b) = \gcd(b, a)$
-    * $\gcd(a, b) = \gcd(a-b, b) (a ≥ b)：辗转相减法$
-    * $\gcd(a, b) = \gcd(a\%b, b)$
-    * $\gcd(a, b, c) = \gcd(gcd(a, b), c)$
-* lcm性质
-    * $lcm(a, b) = a\times b \div gcd(a, b)$
-<details>
-    <summary><b>Code...</b></summary>
-
-```cpp
-inline int
-gcd(int m, int n)
-{
-    while ( n != 0 ) {
-        int tmp{m % n};
-        m = n;
-        n = tmp;
-    }
-    return m;
-}
-
-inline int
-lcm(int m, int n)
-{
-    return m * n / gcd(m, n);
-}
-```
-</details>
-
-## 扩展欧几里得算法
-* 描述：求 $x$ 与 $y$ 使得$a\times x+b\times y=\gcd(a, b)$
-* 应用：
-    * $ax + by = c$的解
-        * $x = \frac{c}{g} \times x_0 + \frac{b}{g} \times t$
-        * $y = \frac{c}{g} \times y_0 - \frac{a}{g} \times t$
-    * 逆元：
-        * $b\times x+N\times y = 1 =\gcd(b, N)$ ，则$x$即$b$的逆元
-<details>
-    <summary><b>Code...</b></summary>
-
-```cpp
-int ext_gcd(int a, int b, int& x, int& y)
-{
-    if ( b == 0 ) {
-        x = 1;
-        y = 0;
-        return a;
-    }
-
-    int ans{ext_gcd(b, a % b, y, x)};
-    /*
-     * 因 ans == b * y + (a % b) * x
-     * 又 a % b == a - (a / b) * b
-     * 故 ans == b * y + (a - (a / b) * b) * x == x * a + (y - (a / b) * x) * b
-     */
-    y -= a / b * x;
-    return ans;
-}
-```
-</details>
-
-## 排列组合
-* 加法原理：同类相加
-
-* 乘法原理：异类相乘
-
-* 容斥原理：加法重叠
-
-* 多重集的排列数：
-$$
-\binom{n}{n_1,n_2,\cdots,n_k}=\frac{n!}{\prod_{i=1}^kn_i!}
-$$
-$$
-\binom{n}{m}等价于\binom{n}{m,n-m}
-$$
-* 多重集的组合数：
-$$
-即求x_1+x_2+\cdots+x_k=r，利用插板法(x_1+1)+(x_2+1)+\cdots+(x_k+1)=r+k
-$$
-$$
-得\binom{r+k-1}{k-1}
-$$
-
-## 快速幂运算
-* 描述：$a^{23}=a^{0x17}=a^{0b00010111}=a^{0x10}\times a^{0x4}\times a^{0x2}\times a^{0x1}$
-<details>
-    <summary><b>Code...</b></summary>
-
-```cpp
-int quick_pow(int num, int pow) { // 利用指数的二进制分解与指数加法，简化整数的幂运算
-    int ret{1};
-    while ( pow != 0 ) {
-        if ( pow & 0x1 ) { // 如果thisBit为1，则乘以x(现在的x表示当前的指数的x的幂)
-            ret *= num;
-        }
-        num *= num; // 每次循环都更新x，需要时才乘入ret
-        pow >>= 1;
-    }
-    return ret;
-}
-```
-</details>
-
-
-## 厄拉多塞筛
-* 描述：素数的倍数均为非素数，筛掉这些倍数
-<details>
-    <summary><b>Code...</b></summary>
-
-```cpp
-vector<int> prime_sieve(int maxNum) // 筛掉初始值的所有倍数
-{
-    const int SQRT_N = sqrt(maxNum);
-    vector<bool> prime(maxNum + 1, true), ret; // 数组索引标识元素
-    for ( size_t num{2}; num <= SQRT_N; ++num ) {
-        if ( prime[num] ) { // 跳过已经被排除的元素
-            ret.push_back(num); // 半online算法
-            for ( size_t needErase{num + num}; needErase <= maxNum; needErase += num ) {
-                prime[needErase] = false; // MEM_OPT
-            }
-        }
-    }
-    for ( size_t idx{SQRT_N + 1}; idx <= maxNum; ++idx ) {
-        if ( prime[idx] ) {
-            ret.push_back(idx);
-        }
-    }
-    return ret;
-}
-```
-</details>
-
-
-## 唯一分解定理
-* 描述：每个整数可以被分解为质数的幂的乘积，如$20=2^2\times 3^0\times 5^1$
-* 拓展： 从多个数的质数分解式中，选取每个质数的指数的最小值则得到gcd的质数分解式，
-    选取最大值则得到lcm的质数分解式
-<details>
-    <summary><b>Code...</b></summary>
-
-```cpp
-vector<int> udt(int num) // 每个正整数都可以分解为唯一的素数的幂的积
-{
-    vector<int> ret(Primes.size()); // Primes为素数表
-    for ( size_t idx{}; num > 0; ++idx ) {
-        int thisPrime{Primes[idx]}, pows{};
-        auto divd{div(num, thisPrime)};
-        while ( divd.rem == 0 ) { // 如果当前的素数为因子，则计算其最大的指数
-            ++pows;
-            num = divd.quot;
-            divd = div(num, thisPrime);
-        }
-        ret[idx] = pows;
-    }
-    return ret;
-}
-```
-</details>
-
 
 # 匹配与排序
 
