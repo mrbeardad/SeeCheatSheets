@@ -101,20 +101,6 @@ GFM
 * 循环声明
 <!-- entry end -->
 
-<!-- entry begin: cpp  异常 -->
-# 异常
-* 限制输入
-    * 整数(U负溢出、-Tmin、除零)
-    * 浮点数(有效、结合、比较)
-    * 指针(nullptr)
-* 错误处理方式
-    * 操作系统报错
-    * 抛出异常
-    * 静默处理
-* 代码前移
-* 集中捕获可恢复异常
-<!-- entry end -->
-
 <!-- entry begin: cpp  并发 -->
 # 并发
 * atomic
@@ -133,11 +119,26 @@ GFM
 * Container增删元素时，注意range-based-for、引用、指针、迭代器的有效性
 <!-- entry end -->
 
+<!-- entry begin: cpp  异常 -->
+# 异常
+* 限制输入
+    * 容器（空、首尾、前后、下标越界）
+    * 整数（U负溢出、-Tmin、除零）
+    * 浮点数（有效、结合、比较）
+    * 指针（nullptr）
+* 错误处理方式
+    * 发射信号
+    * 抛出异常
+    * 静默处理
+* 代码前移
+* **集中** 捕获 **可恢复** 异常
+<!-- entry end -->
+
 <!-- entry begin: logic  循环 -->
 # 循环
 * 多，顺
 * 变，迭，if-continue
-* 条，相，穷，if-break
+* 条，穷，相，if-break
 * 记，操，初，once
 * 尾
 * 终

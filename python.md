@@ -142,6 +142,7 @@ class MyClass(Base1, Base2):
 * 任何`空`的序列和多项集视作`False`
 
 
+<!-- entry begin: python int -->
 ## 整数
 * **支持任意大小的整数**
 ```python
@@ -164,8 +165,9 @@ Int.from_bytes(bytes,
     byteorder,
     *, signed=False)
 ```
+<!-- entry end -->
 
-
+<!-- entry begin: python float -->
 ## 浮点数
 * **浮点数一般使用IEEE双精度浮点数，存在精度问题**
 * 整数与浮点数混合运算结果为浮点数
@@ -184,8 +186,9 @@ f = float([x])
 Float.is_integer()          # 能不丢失精度得转换为整数
 Float.as_integer_ratio()    # 返回一对整数（分子/分母）
 ```
+<!-- entry end -->
 
-
+<!-- entry begin: python decimal -->
 ## 高精度浮点数
 * **利用字符串存储浮点值** 
 ```python
@@ -205,8 +208,9 @@ Decimal('inf')
 Decimal('-inf')
 Decimal('nan')
 ```
+<!-- entry end -->
 
-
+<!-- entry begin: python fraction -->
 ## 分数
 ```python
 from fractions import Fraction
@@ -216,7 +220,9 @@ Fraction(Float)
 Fraction(Decimal)
 Fraction(string)    # "[sign] numerator [/ denominator]"
 ```
+<!-- entry end -->
 
+<!-- entry begin: python sequence -->
 # 序列类型
 ```python
 all(itr)                    # 元素全为True
@@ -240,8 +246,9 @@ range(N)                    # 返回列表[0, 1, ..., N-1]
 range(B, E, S=1)            # 返回列表[B, B+S, ..., E-S]
 enumerate(itr)              # 返回元素为（索引，值）元组的迭代器
 ```
+<!-- entry end -->
 
-
+<!-- entry begin: python string -->
 ## 字符串
 ```python
 # 构造
@@ -276,9 +283,9 @@ char in Str
 subStr in Str
 Str.startswith(preffix)
 Str.endswith(suffix)
-Str.find(sub)
+Str.find(sub)       # find函数若未搜索到目标则静默处理，返回-1
 Str.rfind(sub)
-Str.index(sub)
+Str.index(sub[ i[,j]])
 Str.rindex(sub)
 Str.count(sub)
 
@@ -315,7 +322,7 @@ Str.strip([chars])  # 移除两边出现在chars中的字符，默认空白符
 Str.removeprefix(p)
 Str.removesuffix(s)
 
-Str.join(itr)       # itr元素必须是str
+Str.join(itr)       # itr元素必须是str，连接符就是Str
 Str.partition(sep)  # 返回三元组（之前、分隔符、之后）
 Str.rpartition(sep) # 最后一次出现
 Str.split(sep=None  # 默认sep为空白符，最多分隔maxsplit
@@ -326,13 +333,15 @@ Str.splitlines(keepends=False)
 ```
 
 
+<!-- entry begin: python tuple -->
 ## 元组
 * **元组虽也属于immutable对象，但其元素可以时mutable的，注意这点！**
 ```python
 # 构造
 Tuple = tuple([itr])
 Tuple = ()
-Tuple = (e0, e1)   # 括号在一定情况下可省略
+Tuple = (e0, )      # 括号在一定情况下可省略
+Tuple = (e0, e1)    # 括号在一定情况下可省略
 Tuple = e0,
 Tuple = e0, e1
 Tuple = Tuple1 + Tuple2
@@ -348,10 +357,11 @@ Tuple[begin:end[:step]]
 Tuple[::-1]
 ele in Tuple
 Tuple.count(e)
-Tuple.index(e)
+Tuple.index(e[,i[,j]])
 ```
+<!-- entry end -->
 
-
+<!-- entry begin: python list heap -->
 ## 列表
 ```python
 # 构造
@@ -369,7 +379,7 @@ List[begin:end[:step]]
 List[::-1]
 ele in List
 List.count(e)
-List.index(e)
+List.index(e[,i[,j]])
 
 # 修改
 List[i] = e
@@ -397,8 +407,10 @@ heapq.merge(*itr, key=None, reverse=False)
 heapq.nlargest(n, itr, key=None)
 heapq.nsmallest(n, itr, key=None)
 ```
+<!-- entry end -->
 
 
+<!-- entry begin: python set -->
 ## 集合
 ```python
 # 构造
@@ -412,14 +424,14 @@ Set = Set * num
 Set.add(e)
 Set.discard(e)
 Set.remove(e)   # 若不存在则引发KeyError
-Set.pop()       # 弹出任一元素，为空则引发KeyError
 Set.clear()
 Set.update(itr)
 ```
 * 支持集合论运算：
     `<` `<=` `>` `>=` `|` `&` `-` `^` `|=` `&=` `-=` `^=`
+<!-- entry end -->
 
-
+<!-- entry begin: python dict -->
 ## 字典
 ```python
 # 构造
@@ -434,13 +446,14 @@ Dict.keys()             # 元素为键的列表。dict作itr时其元素即dict�
 Dict.values()           # 元素为值到列表
 
 key in Dict             # for key, value in Dict
-Dict[key]               # 若key不存在则自动创建
+Dict[key]               # 若key不存在则仅在赋值时自动创建
 Dict.get(key[, default])# 不自动创建
 Dict.pop(key[, default])
 Dict.clear()
 Dict.update(itr)
 Dict | Other            # 合并两字典，Other的键值优先
 ```
+<!-- entry end -->
 
 
 # 运算符
@@ -589,7 +602,7 @@ globals()                   # 返回全局符号表，可用于判断变量是�
 
 ## 输入输出
 ```python
-input([prompt])
+input([prompt])             # 遇换行停止
 
 print(*obj,
     sep=' ', end='\n'

@@ -355,103 +355,25 @@ vector<int> udt(int num) // 每个正整数都可以分解为唯一的素数的�
 
 ## 栈
 * LIFO表：后进先出
+
 * 单调栈：
-    * 从栈顶弹出破坏单调性的元素
-    * 压入元素为排在弹出元素后面的第一个较小值（单调升序）
-<details>
-    <summary><b>monotonic_stack ...</b></summary>
-
-```cpp
-template <typename T, typename CMP = less<T> >
-struct MonoStack
-{
-    deque<T> stk_m;
-    CMP cmp_m;
-
-    void push(const T& val)
-    {
-        while ( !stk_m.empty() && cmp_m(val, stk_m.back()) ) {
-            cout << stk_m.back() << ": " << val << endl;
-            stk_m.pop_back();
-        }
-        stk_m.push_back(val);
-    }
-
-    void pop()
-    {
-        stk_m.pop_back();
-    }
-};
-
-```
-</details>
+    > 从栈顶弹出破坏单调性的元素（以单调**递增**栈为例）
+    * 对出栈元素：
+        * 入栈元素是其右侧第一个 **小值**
+    * 对入栈元素：
+        * 栈中元素即其左侧单调排列的元素（去除了破坏单调性的元素）
+        * 弹出所有破坏单调性的元素后，栈顶元素即其左侧第一个 **小值**
 
 
 ## 队列
 * FIFO表：先进先出
+
 * 多级反馈队列：
     * 优先级高的任务未完成则放入下级队列尾部（操作系统的调度算法）
+
 * 单调队列：
-    * 从**队尾**弹出破坏单调性的元素
+    * 从 **队尾** 弹出破坏单调性的元素
     * 从队首弹出不属于滑动窗口内的元素后，队首元素即窗口内的最小值（单调升序）
-<details>
-    <summary><b>humdrum_queue ...</b></summary>
-
-```cpp
-#include <cstddef>
-#include <deque>
-#include <functional>
-#include <iostream>
-#include <utility>
-#include <vector>
-
-using namespace std;
-
-template <typename T, typename CMP = less<T> >
-struct HumdQue
-{
-    deque<T> que_m;
-    CMP cmp_m;
-
-    void push(const T& val)
-    {
-        while ( !que_m.empty() && cmp_m(val, que_m.back()) ) {
-            que_m.pop_back();
-        }
-        que_m.push_back(val);
-    }
-
-    void pop()
-    {
-        que_m.pop_front();
-    }
-};
-
-int main()
-{
-    ios::sync_with_stdio(false);
-    std::cin.tie(nullptr);
-
-    /*
-     * 滑动窗口
-     */
-    constexpr int WIN_SIZE{3};
-    HumdQue<pair<int, int> > humdQueue;
-    for ( int nr{}, tmp4que{}; cin >> tmp4que; ++nr ) {
-        humdQueue.push({tmp4que, nr});
-        constexpr int WIN_SIZE_1{WIN_SIZE - 1};
-        if ( nr >= WIN_SIZE_1 ) {
-            if ( nr - humdQueue.que_m.front().second + 1 > WIN_SIZE ) {
-                humdQueue.pop();
-            }
-            cout << "min(" << nr - WIN_SIZE + 1 << ", " << nr << ") = " << humdQueue.que_m.front().first << endl;
-        }
-    }
-
-    return 0;
-}
-```
-</details>
 
 
 ## 树状数组

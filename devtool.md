@@ -95,14 +95,14 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * tbreak    tb  ：`func | linenum`
 * condition     ：`break-id CONDITION`
 * watch     w   ：`expr`
-* rwatch        ：`expr`
-* awatch        ：`expr`
+* rwatch    rw  ：`expr`
+* awatch    aw  ：`expr`
 > breakpoint 与 watchpoint的区别在于，前者监听位置，后者监听变量（的读/写）
 * catch         ：`syscall | signal | exception`
-* enable        ：`break-id`
-* disable       ：`break-id`
-* ignore        ：`break-id N`
-* delete    d   ：`break-id`
+* enable    e   ：`break-id`
+* disable   d   ：`break-id`
+* ignore    ig  ：`break-id N`
+* delete    del ：`break-id`
 * i b
 * save b        ：`FILE`
 * source        ：`FILE`
@@ -120,7 +120,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * next      n   ：`N`
 * nexti     ni  ：`N`
 * until     u   ：`line-num`
-* return        ：`ret-val`
+* return    ret ：`ret-val`
 * finish    f
 * backtrace bt
 
@@ -135,19 +135,13 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 **代码**
 > 当前行表示将要执行（还未执行）
 * layout    la  ：src|asm|reg|sp
-* list      l   ：`lineno | funcname`
-* i func
-* i sources
-* update
-* search        ：{regexpr}
-* reverse-search：{regexp}
-
-**调试子进程**
-* set follow-fork-mode child
 
 **调试多线程**
 * i thread
 * thread    ：`thread-id`
+
+**调试子进程**
+* set follow-fork-mode child
 <!-- entry end -->
 
 ## cgdb
