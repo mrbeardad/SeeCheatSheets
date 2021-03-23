@@ -103,7 +103,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * disable   d   ：`break-id`
 * ignore    ig  ：`break-id N`
 * delete    del ：`break-id`
-* i b
+* i break   ib
 * save b        ：`FILE`
 * source        ：`FILE`
 
@@ -137,8 +137,8 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * layout    la  ：src|asm|reg|sp
 
 **调试多线程**
-* i thread
-* thread    ：`thread-id`
+* i thread  it
+* thread        ：`thread-id`
 
 **调试子进程**
 * set follow-fork-mode child

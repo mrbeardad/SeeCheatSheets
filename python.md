@@ -385,15 +385,15 @@ List.index(e[,i[,j]])
 List[i] = e
 List[i:j] = itr
 List[i:j:k] = itr
-List.append(e)
-List.extend(itr)
-List.insert(i, e)
+List.reverse()
+List.append(e)      # List[len:len] = [e]
+List.extend(itr)    # List[len:len] = itr
+List.insert(i, e)   # List[i:i] = e
 List.pop([i])
-List.remove(x)
-List.clear()
+List.remove(e)
 del s[i:j]
 del s[i:j:k]
-List.reverse()
+List.clear()
 
 # 堆算法
 import heapq
@@ -556,6 +556,7 @@ with Expr as inst:
     > （静态语言中变量需要声明，从语法上就不可能跨越多次循环）
 * **Python中所有实际数据（包括字面量）都是对内存中对象的引用，`a = b`代表的不是将b赋值到a上，而是将a引用指向b引用的对象！**
 * **immutable对象的值不可更改，只能新建；mutable的对象则可通过一些方法修改原值而非新建对象**
+* **Python中的表达式并不行C/C++一样有严格的规律的（左右值、类型、返回值），使用Python时更应注重使用其常用的语法糖** 
 
 
 
