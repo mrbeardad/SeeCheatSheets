@@ -1236,7 +1236,7 @@ tagItr  find_if(b, e, uOp)
 tagItr  find_if_not(b, e, uOp)
 
 // 搜索子区间
-tagItr  search(b, e, seqB, seqE, bOp=equal_to)
+tagItr  search(b, e, seqB, seqE, bOp=equal_to)          // 支持模板参数在functinal头文件中<boyer_noore_searcher>
 tagItr  search_n(b, e, N, v, bOp=equal_to)              // bOp(elem, v)
 tagItr  find_end(b, e, seqB, seqE, bOp=equal_to)
 tagItr  adjacent_find(b, e, bOp=equal_to)               // 搜索一对连续相等的元素
@@ -1272,28 +1272,28 @@ void    sort(b, e, bOp=less)
 void    stable_sort(b, e, bOp=less)
 void    partial_sort(b, m, e, bOp=less)
 copyE   partial_sort_copy(b, e, destB, destE, bOp=less) // 若dest范围不够则取排序后的前面的元素
-void    nth_element(b, m, e, bOp=less)                  // 按m所指的元素作分界进行两边划分
+void    nth_element(b, m, e, bOp=less)                  // 按m所指的元素作分界进行两边划分，左边元素小于或等于右边元素
 
 bool    is_heap(b, e, bOp = less)
 sortE   is_heap_until(b, e, bOp = less)                 // 返回已堆排序区间的尾后迭代器
-void    make_heap(b, e, bOp=less)
-void    push_heap(b, e, bOp=less)
-void    pop_heap(b, e, bOp=less)
-void    sort_heap(b, e, bOp=less)
+void    make_heap(b, e, bOp=less)                       // 创建最大堆
+void    push_heap(b, e, bOp=less)                       // 将e-1插入到[b, e-1)的最大堆中（上滤）
+void    pop_heap(b, e, bOp=less)                        // 交换b与e-1的元素，并重新调整[b, e-1)的最大堆（下沉）
+void    sort_heap(b, e, bOp=less)                       // 将最大堆进行序列的升序排序
 
 bool    equal(b, e, cmpB, bOp = equal_to)
 bool    lexicographical_compare(b1, e1, b2, e2, op=less)// 比较两区间字典序
-bool    is_permutation(b1, e1, b2, bOp=equal_to)            // 检测两个区间的所有元素是否为同一个集合，即不考虑顺序
+bool    is_permutation(b1, e1, b2, bOp=equal_to)        // 检测两个区间的所有元素是否为同一个集合，即不考虑顺序
 bool    next_permutation(b, e, op=less)                 // 当元素为完全升序时返回false
 bool    prev_permutation(b, e, op=less)                 // 当元素为完全降序时返回false
 
 void    reverse(b, e)
 destE   reverse_copy(b, e, destB)
-b+e-m   rotate(b, m, e)                                     // 返回原本的begin现在的位置
+b+e-m   rotate(b, m, e)                                 // 返回原本的begin现在的位置
 destE   rotate_copy(b, m, e, destB)
 
 void    shuffle(b, e, randomEngine)
-destE   sample(b, e, destB, cnt, randomEngine)              // 随机取cnt个值到destB
+destE   sample(b, e, destB, cnt, randomEngine)          // 随机取cnt个值到destB
 ```
 <!-- entry end -->
 
@@ -1303,7 +1303,7 @@ destE   sample(b, e, destB, cnt, randomEngine)              // 随机取cnt个�
 // 集合算法均需提前排序
 destE   merge(b1, e1, b2, e2, destB, bOp=less)
 void    inplace_merge(b, m, e, bOp=less)                            // 将同一个集合中的两部分合并，两部分都有序
-bool    includes(b1, e1, b2, e2, bOp=equal_to)                          // 区间`[b2, e2)`是否为区间`[b1, e1)`的**子序列**
+bool    includes(b1, e1, b2, e2, bOp=equal_to)                      // 区间`[b2, e2)`是否为区间`[b1, e1)`的**子序列**
 destE   set_union(b1, e1, b2, e2, destB, bOp=less)                  // 并集
 destE   set_intersection(b1, e1, b2, e2, destB, bOp=less)           // 交集
 destE   set_symmetric_difference(b1, e1, b2, e2, destB, bOp=less)   // 并集去交集
@@ -1316,9 +1316,9 @@ T       max(x, y)
 T       max(il)
 T       min(x, y)
 T       min(il)
-pair    minmax(x, y)                        // 返回`pair<min, max>`
-pair    minmax(il)                          // 返回`pair<min, max>`
-T       clamp(x, min, max)                  // 返回三者中的第二大者
+pair    minmax(x, y)                    // 返回`pair<min, max>`
+pair    minmax(il)                      // 返回`pair<min, max>`
+T       clamp(x, min, max)              // 若x小于min则返回min，否则若x大于max则返回max，否则返回x
 T       min_element(b, e, bOp=less)     // 返回第一个最小值
 T       max_element(b, e, bOp=less)     // 返回第一个最大值
 T       minmax_element(b, e, bOp=less)  // 返回第一个最小值和最后一个最大值
@@ -1406,18 +1406,18 @@ class sub_match<BidirIt> {  // csub_match wcsub_match ssub_match wssub_match
 };
 class regex_iterator<BidirIt> { // cregex_iterator wcregex_iterator sregex_iterator wsregex_iterator
     // 构造函数
-    regex_iterator();                           // 默认构造为尾后迭代器
-    regex_iterator(b, e, regex, mflag);         // 迭代器在每个匹配区间停留，每次从上次末尾开始匹配（不重合）。禁止regex右值
+    regex_iterator();                               // 默认构造为尾后迭代器
+    regex_iterator(b, e, regex, mflag);             // 迭代器在每个匹配区间停留，每次从上次末尾开始匹配（不重合）。禁止regex右值
 
-    match_results    operator*()                // 返回match_results
+    match_results    operator*()                    // 返回match_results
 };
 class regex_token_iterator<BidirIt> {   // cregex_token_iterator wcregex_token_iteratorsregex_token_iterator wsregex_token_iterator
     // 构造函数
-    regex_token_iterator();                     // 默认构造为尾后迭代器
-    regex_token_iterator(b, e, regex, il, mflag);// il指定关注的regex中的子表达式，0表示全部，-1表示模式取反。禁止regex右值。
+    regex_token_iterator();                         // 默认构造为尾后迭代器
+    regex_token_iterator(b, e, regex, il, mflag);   // il指定关注的regex中的子表达式，0表示全部，-1表示模式取反。禁止regex右值。
     // 若有多个匹配组，则匹配组之间轮换
 
-    sub_match       operator*()                 // 返回sub_match
+    sub_match       operator*()                     // 返回sub_match
 };
 ```
 <!-- entry end -->

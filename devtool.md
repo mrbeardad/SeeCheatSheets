@@ -94,6 +94,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * break     b   ：`func | linenum | *address`，`if CONDITION` 
 * tbreak    tb  ：`func | linenum`
 * condition     ：`break-id CONDITION`
+* command   cmd ：`break-id COMMANDs`
 * watch     w   ：`expr`
 * rwatch    rw  ：`expr`
 * awatch    aw  ：`expr`

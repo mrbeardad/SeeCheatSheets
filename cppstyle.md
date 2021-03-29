@@ -23,15 +23,15 @@
 | 宏、常量、模板非类型参数               | 全部大写和下划线间隔`EXAMPLE_NAME`     |
 
 可用于命名标识符的一些通用前后缀：
-* 位置：`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`，`this`
+* 位置：`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`，`last`，`this`
 * 时间：`new`，`old`，`orig`，`before`，`after`，`cur`
-* 循环：`itr`，`idx`
+* 循环：`pos`，`idx`
 * 计数：`size`，`len`，`width`，`height`，`depth`，`num`，`nr`，`cnter`
-* 序数：`1st`，`2nd`，`3th`，`last`
+* 序数：`1st`，`2nd`，`3th`
 * bool：`is`，`not`，`and`，`or`，`any`，`all`，`none`，`has`
 * 介词：`in`，`on`，`at`，`of`，`2`，`4`
-* 类型：`int`，`char`，`str`，`strm`，`ptr2`
-* 用途：`pos`，`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`tag`
+* 类型：`int`，`char`，`str`，`strm`，`ptr2`，`itr`
+* 用途：`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`tag`
 
 ## 注释
 * 块注释`/* comment */`：

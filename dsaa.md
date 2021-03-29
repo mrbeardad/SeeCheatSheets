@@ -2,7 +2,7 @@
 <!-- vim-markdown-toc GFM -->
 
 - [算法设计](#算法设计)
-  - [贪婪算法](#贪婪算法)
+  - [贪心算法](#贪心算法)
   - [回溯算法](#回溯算法)
   - [分治算法](#分治算法)
   - [动态规划](#动态规划)
@@ -16,14 +16,21 @@
   - [级数](#级数)
   - [模运算](#模运算)
   - [排列组合](#排列组合)
-  - [最大公因数](#最大公因数)
-  - [快速幂运算](#快速幂运算)
-  - [厄拉多塞筛](#厄拉多塞筛)
-  - [唯一分解定理](#唯一分解定理)
-- [标准库容器](#标准库容器)
+- [排序算法](#排序算法)
+  - [冒泡排序](#冒泡排序)
+  - [选择排序](#选择排序)
+  - [插入排序](#插入排序)
+  - [希尔排序](#希尔排序)
+  - [归并排序](#归并排序)
+  - [快速排序](#快速排序)
+  - [堆排序](#堆排序)
+  - [基数排序](#基数排序)
+  - [计数排序](#计数排序)
+- [C++标准库容器](#c标准库容器)
 - [数据结构](#数据结构)
   - [栈](#栈)
   - [队列](#队列)
+  - [二叉堆](#二叉堆)
   - [树状数组](#树状数组)
   - [ST表](#st表)
   - [并查集](#并查集)
@@ -32,7 +39,7 @@
 - [匹配与排序](#匹配与排序)
   - [KMP](#kmp)
   - [AC自动机](#ac自动机)
-  - [计数排序](#计数排序)
+  - [计数排序](#计数排序-1)
 - [图论](#图论)
   - [拓扑排序有向无圈图](#拓扑排序有向无圈图)
   - [单源无权路径](#单源无权路径)
@@ -54,12 +61,18 @@
   - [井字棋博弈回溯](#井字棋博弈回溯)
   - [单词代表](#单词代表)
   - [子序列最大值(max为负则0)](#子序列最大值max为负则0)
+  - [最大公因数](#最大公因数)
+  - [快速幂运算](#快速幂运算)
+  - [厄拉多塞筛](#厄拉多塞筛)
+  - [唯一分解定理](#唯一分解定理)
 
 <!-- vim-markdown-toc -->
 
 # 算法设计
-## 贪婪算法
-* 需要证明局部最优解即全局最优解
+## 贪心算法
+一个问题的整体最优解可通过一系列局部的最优解的选择达到，（即每个阶段做出对当前而言最好的选择而不考虑将来的后果），
+并且每次的选择可以依赖以前作出的选择，但不依赖于后面要作出的选择，这就是贪心选择性质。
+对于一个具体问题，要确定它是否具有贪心选择性质，必须证明每一步所作的贪心选择最终导致问题的整体最优解
 
 ## 回溯算法
 * 利用***DFS***进行多路分叉选择，若选择错误或无选择则函数返回(撤销)重新选择
@@ -226,108 +239,184 @@ $$
 得\binom{r+k-1}{k-1}
 $$
 
-## 最大公因数
-* 最大公因数(gcd)的性质
-    * $\gcd(a, b) = \gcd(b, a)$
-    * $\gcd(a, b) = \gcd(a-b, b)\qquad(a ≥ b)$
-    * $\gcd(a, b) = \gcd(a\% b, b)$
-    * $\gcd(a, b, c) = \gcd(gcd(a, b), c)$
-* 最小公倍数(lcm)：$lcm(a, b) = a\times b \div gcd(a, b)$
-<details>
-    <summary><b>Code...</b></summary>
-
+# 排序算法
+## 冒泡排序
 ```cpp
-int gcd(int m, int n)
-{
-    while ( n != 0 ) {
-        auto tmp = m % n;
-        m = n;
-        n = tmp;
-    }
-    return m;
+int* bubbleSort(int* A, int n) {
+    for ( ssize_t right{n - 1}; right > 0; --right )
+        for ( ssize_t idx{}; idx < right; ++idx )
+            if ( A[idx] > A[idx + 1] )
+                std::swap(A[idx], A[idx + 1]);
+    return A;
 }
 ```
-</details>
-
-
-## 快速幂运算
-* 描述：$a^{23}=a^{0x17}=a^{0b00010111}=a^{0x10}\times a^{0x4}\times a^{0x2}\times a^{0x1}$
-<details>
-    <summary><b>Code...</b></summary>
-
+## 选择排序
 ```cpp
-int quick_pow(int num, int pow) { // 利用指数的二进制分解与指数加法，简化整数的幂运算
-    int ret{1};
-    while ( pow != 0 ) {
-        if ( pow & 0x1 ) { // 如果thisBit为1，则乘以x(现在的x表示当前的指数的x的幂)
-            ret *= num;
-        }
-        num *= num; // 每次循环都更新x，需要时才乘入ret
-        pow >>= 1;
+int* selectionSort(int* A, int n) {
+    for ( ssize_t right{n - 1}; right > 0; --right ) {
+        int maxIdx{};
+        for ( ssize_t idx{1}; idx <= right; ++idx )
+            maxIdx = A[idx] > A[maxIdx] ? idx : maxIdx;
+        std::swap(A[maxIdx], A[right]);
     }
-    return ret;
+    return A;
 }
 ```
-</details>
-
-
-## 厄拉多塞筛
-* 描述：素数的倍数均为非素数，筛掉这些倍数
-<details>
-    <summary><b>Code...</b></summary>
-
+## 插入排序
 ```cpp
-vector<int> prime_sieve(int maxNum) // 筛掉初始值的所有倍数
+int* insertionSort(int* A, int n) {
+    for ( ssize_t idx{1}; idx < n; ++idx )
+        for ( ssize_t swapIdx{idx}; swapIdx >= 1 && A[swapIdx - 1] > A[swapIdx]; --swapIdx )
+            std::swap(A[swapIdx - 1], A[swapIdx]);
+    return A;
+}
+```
+## 希尔排序
+```cpp
+int* shellSort(int* A, int n)
 {
-    const int SQRT_N = sqrt(maxNum);
-    vector<bool> prime(maxNum + 1, true), ret; // 数组索引标识元素
-    for ( size_t num{2}; num <= SQRT_N; ++num ) {
-        if ( prime[num] ) { // 跳过已经被排除的元素
-            ret.push_back(num); // 半online算法
-            for ( size_t needErase{num + num}; needErase <= maxNum; needErase += num ) {
-                prime[needErase] = false; // MEM_OPT
+    std::array<size_t, 5> shellGaps{1, 5, 19, 41, 109}; // 增量序列：9 * 4**i - 9 与 4**i - 3 * 2**i + 1
+    for ( size_t gap : shellGaps )
+        for ( size_t idx{gap}; idx < n; ++idx )
+            for ( size_t prev{idx}; prev >= gap && A[prev - gap] > A[prev]; prev -= gap )
+                std::swap(A[prev - gap], A[prev]);
+    return A;
+}
+```
+
+## 归并排序
+```cpp
+void mergeSort(int* A, int* B, size_t begin, size_t end)
+{
+    if ( end - begin <= 1 )
+        return;
+
+    size_t middle{(begin + end) / 2};
+    mergeSort(A, B, begin, middle);
+    mergeSort(A, B, middle, end);
+    size_t leftIdx{begin}, rightIdx{middle}, mergeIdx{begin};
+    for ( ; leftIdx < middle && rightIdx < end; ++mergeIdx ) {
+        if ( A[leftIdx] <= A[rightIdx] )
+            B[mergeIdx] = A[leftIdx++];
+        else
+            B[mergeIdx] = A[rightIdx++];
+    }
+    for ( ; leftIdx < middle; ++leftIdx )
+        B[mergeIdx++] = A[leftIdx];
+    for ( ; rightIdx < end; ++rightIdx )
+        B[mergeIdx++] = A[rightIdx];
+    for ( size_t idx{begin}; idx < end; ++idx )
+        A[idx] = B[idx];
+}
+```
+## 快速排序
+```cpp
+void quickSort(int* A, ssize_t begin, ssize_t end)
+{
+    // 小数组使用插入排序优化
+    if ( end - begin <= 10 ) {
+        for ( ssize_t idx{begin + 1}; idx < end; ++idx )
+            for ( ssize_t swapIdx{idx}; swapIdx > 0 && A[swapIdx - 1] > A[swapIdx]; --swapIdx )
+                std::swap(A[swapIdx - 1], A[swapIdx]);
+        return;
+    }
+
+    // 选取枢纽点
+    ssize_t middle{(begin + end) / 2}, last{end - 1};
+    if ( A[middle] < A[begin] )
+        std::swap(A[middle], A[begin]);
+    if ( A[last] < A[begin] )
+        std::swap(A[last], A[begin]);
+    if ( A[middle] < A[last] )
+        std::swap(A[middle], A[last]);
+    int& pivot{A[last]};
+
+    ssize_t left{begin}, right{last};
+    for ( ; ; ) {
+        // 有[begin] <= pivot 与 [last] == pivot作边界，不可能越界
+        for ( ; A[++left] < pivot; );
+        for ( ; A[--right] > pivot; );
+        if ( left <= right )
+            std::swap(A[left], A[right]);
+        else
+            break;
+    }
+    std::swap(A[left], pivot);
+
+    quickSort(A, begin, left);
+    quickSort(A, left + 1, end);
+}
+```
+
+## 堆排序
+```cpp
+void percolate_down(int* A, ssize_t n, ssize_t root)
+{
+    int holeVal{A[root]};
+    auto leftChild = [] (ssize_t rootIdx) {
+        return rootIdx * 2 + 1;
+    };
+
+    for ( ; leftChild(root) < n; ) {
+        ssize_t child{leftChild(root)};
+        if ( child + 1 < n && A[child + 1] > A[child] )
+            ++child;
+        if ( A[child] > holeVal )
+            A[root] = A[child];
+        else
+            break;
+        root = child;
+    }
+    A[root] = holeVal;
+}
+int* heapSort(int* A, int n) {
+    for ( ssize_t idx{n / 2 - 1}; idx >= 0; --idx )
+        percolate_down(A, n, idx);
+
+    for ( ssize_t right{n - 1}; right > 0; --right ) {
+        std::swap(A[0], A[right]);
+        percolate_down(A, right, 0);
+    }
+    return A;
+}
+```
+
+## 基数排序
+```cpp
+int* radixSort(int* A, int n) {
+    std::vector<std::vector<int> > buckets(10);
+    for ( int times{1}; buckets.front().size() < n; times *= 10 ) {
+        std::for_each(buckets.begin(), buckets.end(), [](std::vector<int>& thisB){thisB.clear();});
+        std::for_each(A, A + n, [&buckets, &times](int elem){buckets[elem / times % 10].emplace_back(elem);});
+        size_t idx{};
+        for ( auto& thisB : buckets ) {
+            for ( int thisElem : thisB ) {
+                A[idx++] = thisElem;
             }
         }
     }
-    for ( size_t idx{SQRT_N + 1}; idx <= maxNum; ++idx ) {
-        if ( prime[idx] ) {
-            ret.push_back(idx);
-        }
-    }
-    return ret;
+    return A;
 }
 ```
-</details>
-
-
-## 唯一分解定理
-* 描述：每个整数可以被分解为质数的幂的乘积，如$20=2^2\times 3^0\times 5^1$
-* 拓展： 从多个数的质数分解式中，选取每个质数的指数的最小值则得到gcd的质数分解式，
-    选取最大值则得到lcm的质数分解式
-<details>
-    <summary><b>Code...</b></summary>
-
+## 计数排序
 ```cpp
-vector<int> udt(int num) // 每个正整数都可以分解为唯一的素数的幂的积
+int* countingSort(int* A, size_t n)
 {
-    vector<int> ret(Primes.size()); // Primes为素数表
-    for ( size_t idx{}; num > 0; ++idx ) {
-        int thisPrime{Primes[idx]}, pows{};
-        auto divd{div(num, thisPrime)};
-        while ( divd.rem == 0 ) { // 如果当前的素数为因子，则计算其最大的指数
-            ++pows;
-            num = divd.quot;
-            divd = div(num, thisPrime);
+    auto minmax = std::minmax_element(A, A + n);
+    int min{*minmax.first}, max{*minmax.second};
+    std::vector<std::vector<int> > buckets(max - min + 1);
+    std::for_each(A, A + n, [&buckets, min](int elem){buckets[elem - min].emplace_back(elem);});
+    size_t idx{};
+    for ( auto& thisBkt : buckets ) {
+        for ( auto thisElem : thisBkt ) {
+            A[idx++] = thisElem;
         }
-        ret[idx] = pows;
     }
-    return ret;
+    return A;
 }
 ```
-</details>
 
-
-# 标准库容器
+# C++标准库容器
 * vector
     * 无其他需求一般选择vector
 * array
@@ -375,6 +464,12 @@ vector<int> udt(int num) // 每个正整数都可以分解为唯一的素数的�
     * 从 **队尾** 弹出破坏单调性的元素
     * 从队首弹出不属于滑动窗口内的元素后，队首元素即窗口内的最小值（单调升序）
 
+
+## 二叉堆
+* 节点值大于其子节点值
+* 子节点索引为`i`，其父节点索引为`(i + 1) / 2 - 1`
+    > 若索引0空缺则为`i / 2`
+* 从最后节点往前进行堆序化
 
 ## 树状数组
 * 特点：快速进行任意范围区间的可加性操作与查询
@@ -984,3 +1079,105 @@ vector<int>
 * 步骤：
     * 若前缀为负则可选择下一个非负前缀进行优化
     * 注：记录maxBeg，maxEnd，maxVal，thisBeg，thisEnd，thisMax，nowSum
+
+## 最大公因数
+* 最大公因数(gcd)的性质
+    * $\gcd(a, b) = \gcd(b, a)$
+    * $\gcd(a, b) = \gcd(a-b, b)\qquad(a ≥ b)$
+    * $\gcd(a, b) = \gcd(a\% b, b)$
+    * $\gcd(a, b, c) = \gcd(gcd(a, b), c)$
+* 最小公倍数(lcm)：$lcm(a, b) = a\times b \div gcd(a, b)$
+<details>
+    <summary><b>Code...</b></summary>
+
+```cpp
+int gcd(int m, int n)
+{
+    while ( n != 0 ) {
+        auto tmp = m % n;
+        m = n;
+        n = tmp;
+    }
+    return m;
+}
+```
+</details>
+
+
+## 快速幂运算
+* 描述：$a^{23}=a^{0x17}=a^{0b00010111}=a^{0x10}\times a^{0x4}\times a^{0x2}\times a^{0x1}$
+<details>
+    <summary><b>Code...</b></summary>
+
+```cpp
+int quick_pow(int num, int pow) { // 利用指数的二进制分解与指数加法，简化整数的幂运算
+    int ret{1};
+    while ( pow != 0 ) {
+        if ( pow & 0x1 ) { // 如果thisBit为1，则乘以x(现在的x表示当前的指数的x的幂)
+            ret *= num;
+        }
+        num *= num; // 每次循环都更新x，需要时才乘入ret
+        pow >>= 1;
+    }
+    return ret;
+}
+```
+</details>
+
+
+## 厄拉多塞筛
+* 描述：素数的倍数均为非素数，筛掉这些倍数
+<details>
+    <summary><b>Code...</b></summary>
+
+```cpp
+vector<int> prime_sieve(int maxNum) // 筛掉初始值的所有倍数
+{
+    const int SQRT_N = sqrt(maxNum);
+    vector<bool> prime(maxNum + 1, true), ret; // 数组索引标识元素
+    for ( size_t num{2}; num <= SQRT_N; ++num ) {
+        if ( prime[num] ) { // 跳过已经被排除的元素
+            ret.push_back(num); // 半online算法
+            for ( size_t needErase{num + num}; needErase <= maxNum; needErase += num ) {
+                prime[needErase] = false; // MEM_OPT
+            }
+        }
+    }
+    for ( size_t idx{SQRT_N + 1}; idx <= maxNum; ++idx ) {
+        if ( prime[idx] ) {
+            ret.push_back(idx);
+        }
+    }
+    return ret;
+}
+```
+</details>
+
+
+## 唯一分解定理
+* 描述：每个整数可以被分解为质数的幂的乘积，如$20=2^2\times 3^0\times 5^1$
+* 拓展： 从多个数的质数分解式中，选取每个质数的指数的最小值则得到gcd的质数分解式，
+    选取最大值则得到lcm的质数分解式
+<details>
+    <summary><b>Code...</b></summary>
+
+```cpp
+vector<int> udt(int num) // 每个正整数都可以分解为唯一的素数的幂的积
+{
+    vector<int> ret(Primes.size()); // Primes为素数表
+    for ( size_t idx{}; num > 0; ++idx ) {
+        int thisPrime{Primes[idx]}, pows{};
+        auto divd{div(num, thisPrime)};
+        while ( divd.rem == 0 ) { // 如果当前的素数为因子，则计算其最大的指数
+            ++pows;
+            num = divd.quot;
+            divd = div(num, thisPrime);
+        }
+        ret[idx] = pows;
+    }
+    return ret;
+}
+```
+</details>
+
+
