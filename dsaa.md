@@ -143,7 +143,7 @@
 
 ## 模运算
 * 同余方程：
-    > 若$(a-b) \% N=0$
+    > 若$(a-b)\\\% N=0$
     * 则$a\equiv b\mod N$
 
     * 则$a+c\equiv b+c\mod N$
@@ -151,13 +151,13 @@
     * 则$a\times d\equiv b\times d\mod N$
 
 * 求余方程：
-    * $(a+b) \% N = (a \% N + b \% N) \% N$
+    * $(a+b)\\\% N = (a\\\% N + b\\\% N)\\\% N$
 
-    * $(a\times b) \% N = (a \% N \times b \% N) \% N$
+    * $(a\times b)\\\% N = (a\\\% N \times b\\\% N)\\\% N$
 
-    * $(a-b) \% N = (a \% N - b \% N + N) \% N$
+    * $(a-b)\\\% N = (a\\\% N - b\\\% N + N)\\\% N$
 
-    * $(a\div b) \% N = (a\times b^{-1}) \% N$
+    * $(a\div b)\\\% N = (a\times b^{-1})\\\% N$
         > 公式推导：
         > $$
         > (a\div b)\mod N \Rightarrow (a\div b)\times 1\mod N
@@ -1084,7 +1084,7 @@ vector<int>
 * 最大公因数(gcd)的性质
     * $\gcd(a, b) = \gcd(b, a)$
     * $\gcd(a, b) = \gcd(a-b, b)\qquad(a ≥ b)$
-    * $\gcd(a, b) = \gcd(a\% b, b)$
+    * $\gcd(a, b) = \gcd(a\\\% b, b)$
     * $\gcd(a, b, c) = \gcd(gcd(a, b), c)$
 * 最小公倍数(lcm)：$lcm(a, b) = a\times b \div gcd(a, b)$
 <details>
