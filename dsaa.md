@@ -80,7 +80,7 @@
 
 ## 分治算法
 > 分治一般需要至少两次递归调用
-* 将大问题分解为各类型子问题，各部分递归求解
+* 将大问题分解为各类型子问题，各部分递归求解，然后综合结果
 * 子问题的解可以用来裁剪掉一些情况
 
 ## 动态规划
@@ -143,7 +143,7 @@
 
 ## 模运算
 * 同余方程：
-    > 若$(a-b)\% N=0$
+    > 若$(a-b) \% N=0$
     * 则$a\equiv b\mod N$
 
     * 则$a+c\equiv b+c\mod N$
@@ -151,13 +151,13 @@
     * 则$a\times d\equiv b\times d\mod N$
 
 * 求余方程：
-    * $(a+b)\% N = (a\% N + b\% N)\% N$
+    * $(a+b) \% N = (a \% N + b \% N) \% N$
 
-    * $(a\times b)\% N = (a\% N \times b\% N)\% N$
+    * $(a\times b) \% N = (a \% N \times b \% N) \% N$
 
-    * $(a-b)\% N = (a\% N - b\% N + N)\% N$
+    * $(a-b) \% N = (a \% N - b \% N + N) \% N$
 
-    * $(a\div b)\% N = (a\times b^{-1})\% N$
+    * $(a\div b) \% N = (a\times b^{-1}) \% N$
         > 公式推导：
         > $$
         > (a\div b)\mod N \Rightarrow (a\div b)\times 1\mod N

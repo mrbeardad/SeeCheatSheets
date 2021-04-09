@@ -420,15 +420,32 @@ Set = {resultExp for x in List if condition} # resultList.appen(resltExp)
 Set = Set1 + Set2
 Set = Set * num
 
+# 访问与搜索
+ele in Set
+Set.copy()
+
 # 修改
 Set.add(e)
 Set.discard(e)
 Set.remove(e)   # 若不存在则引发KeyError
 Set.clear()
 Set.update(itr)
+
+# 集合运算
+isdisjoint(Set)
+Set <   Other
+Set <=  Other
+Set >   Other
+Set >=  Other
+Set |   Other
+Set |=  Other
+Set &   Other
+Set &=  Other
+Set -   Other
+Set -=  Other
+Set ^   Other
+Set ^=  Other
 ```
-* 支持集合论运算：
-    `<` `<=` `>` `>=` `|` `&` `-` `^` `|=` `&=` `-=` `^=`
 <!-- entry end -->
 
 <!-- entry begin: python dict -->
@@ -451,7 +468,8 @@ Dict.get(key[, default])# 不自动创建
 Dict.pop(key[, default])
 Dict.clear()
 Dict.update(itr)
-Dict | Other            # 合并两字典，Other的键值优先
+Dict |  Other           # 合并两字典，Other的键值优先
+Dict |= Other           # 合并两字典，Other的键值优先
 ```
 <!-- entry end -->
 
