@@ -33,7 +33,7 @@ cmake --install .
 ```
 
 **注**：部分笔记插入了Tex公式，~~介于鄙人的懒惰~~ 介于GFM不支持Tex，诸位就自己下个浏览器插件吧。
-[github-mathjax](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima/related "如果从Web Store安装失败则尝试手动下载并安装其github源码")  
+[github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")  
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
 # Python
@@ -84,10 +84,10 @@ cmake --install .
 # 网络
 * [计算机网络](network.md)
     > 自顶向下展示互联网架构
-* [比特币与区块链](bitcoin.md)
-    > 理解大名顶顶的比特币
 * [差错校验与加密技术](security.md)
     > 这些技术在网络中有重要应用
+* [比特币系统](bitcoin.md)
+    > 理解大名顶顶的比特币
 
 # 底层
 * [信息编码](code.md)

@@ -1651,7 +1651,7 @@ class basic_streambuf<CharT> {
     // 其他流类析构时只不析构由rdbuf(buf*)得到的缓冲区
 
     // 成员函数
-    // 流与缓冲区独立，注意清除流的状态
+    // 流与缓冲区独立，注意清除流的状态；还要注意以下4个函数只对stringstream_buf适用，因为它不冲刷缓冲区
     // 注意which需要适当给出，如istream不能接受out
     pos pubseekoff(off, dir, which=in|out);    // dir有std::ios_base::{beg, cur, end}
     pos pubseekpos(pos, which=in|out);         // which有std::ios_base::{in, out}
@@ -2482,9 +2482,9 @@ int main(int argc, char* argv[]) {
     // 用户自定义日志，用数字表示等级，其等级均属于INFO
     VLOG(int)                             << "Something goes wrong!";
     // 额外输出errno状态
-    PLOG(severity)
+    PLOG(severity)                        << "Something goes wrong!";
     // 额外输出至系统日志
-    SYSLOG(severity)
+    SYSLOG(severity)                      << "Something goes wrong!";
     // 检查失败则相当于FATAL报错
     CHECK(cond)                           << "Something goes wrong!";
     CHECK_EQ(cond1, cond2)                << "Something goes wrong!";
@@ -2506,7 +2506,7 @@ int main(int argc, char* argv[]) {
 ```
 
 * 设置glog行为
-    > 可通过更改运行程序的环境变量，变量名前缀`GLOG_`。注意就是小写
+    > 可通过更改运行程序的环境变量，变量名前缀`GLOG_`。注意后缀就是小写
     > 或者在代码中更改全局变量，变量名前缀`FLAGS_`，注意是赋值C++变量而非定义宏（再初始化glog之前）。
     * `logtostderr=0`：是否输出到stderr代替输出到tmpfile
     * `stderrthreshold=2`：高于该等级的日志额外输出到stderr。
