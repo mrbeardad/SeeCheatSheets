@@ -142,7 +142,7 @@ CMD         ["cmd", "args"]     # 设置容器启动命令，以JSON-List形式�
     * `-p HPORT:CPORT`      ：指定容器IP:容器端口:宿主机端口
     * `-h HOSTNAME`         ：指定容器主机名，会写入容器中的`/etc/{hostname,hosts}`
     * `--dns=IP`            ：指定容器DNS，会写入容器中的`/etc/resolv.conf`
-    * `--add-host=HOST:IP`  ：指定容器hostname解析，写入`/etx/hosts`
+    * `--add-host=HOST:IP`  ：指定容器hostname解析，写入`/etc/hosts`
 <!-- entry end -->
 
 <!-- entry begin: docker-compose -->

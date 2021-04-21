@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 14.03.2021
+ * Last Modified Date: 19.04.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -147,6 +147,10 @@ MkdHighlight& MkdHighlight::Instance()
 std::tuple<std::vector<fs::path>, std::vector<std::string>, bool>
 parse_cmdline(int argc, char* argv[])
 {
+    // 从管道读取数据，仅用于渲染，不解析命令行参数
+    if ( !isatty(STDIN_FILENO) )
+        return {};
+
     auto print_help_then_exit = [] () {
         std::cout <<
             "\033[32mDescription:\033[m\n"

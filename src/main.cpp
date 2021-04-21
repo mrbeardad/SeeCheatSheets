@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 14.03.2021
+ * Last Modified Date: 19.04.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -14,32 +14,31 @@
 #include <unicode/display_width.hpp>
 #include <unistd.h>
 
+#include "mine.hpp"
+
 int main(int argc, char* argv[])
 {
     auto& hilit = see::MkdHighlight::Instance();
 
+    auto [files, keys, disablePager] = see::parse_cmdline(argc, argv);
+    std::string text{};
+
     // 如果stdin被重定向到非终端文件则转而高亮之
     if ( !isatty(STDIN_FILENO) ) {
-        std::string getInput{};
-        for ( std::istreambuf_iterator<char> itr{std::cin}, end{}; itr != end; ++itr ) {
-            getInput.push_back(*itr);
-        }
-        std::cout << hilit.highlight(getInput);
+        text.assign(std::istreambuf_iterator<char>{std::cin}, std::istreambuf_iterator<char>{});
+    } else {
+        text = see::search_entries(files, keys);
     }
 
-    auto [files, keys, disablePager] = see::parse_cmdline(argc, argv);
-    auto entries = see::search_entries(files, keys);
-
-    // 是否启动PAGER
-    if ( !disablePager ) {
-        int row{}, col{};
-        for ( size_t first{}, last{};  (last = entries.find('\n', last)) != std::string::npos; ) {
+    // 是否允许使用PAGER
+    if ( !disablePager && isatty(STDOUT_FILENO) ) {
+        int row{1}, col{};
+        for ( size_t first{}, last{};  (last = text.find('\n', last)) != std::string::npos; ) {
             ++row;
-            col = std::max(col, unicode::display_width(entries.substr(first, last)));
+            col = std::max(col, unicode::display_width(text.substr(first, last)));
             first = ++last;
         }
-        if ( isatty(STDOUT_FILENO) && (row > see::MkdHighlight::Instance().get_tty_row()
-                    || col > see::MkdHighlight::Instance().get_tty_col() ) ) {
+        if ( (row > hilit.get_tty_row() || col > hilit.get_tty_col()) ) {
             const auto* pager = getenv("PAGER");
             pager = pager == nullptr ? "less" : pager;
             int fds[2];
@@ -60,10 +59,10 @@ int main(int argc, char* argv[])
     }
 
     if ( getenv("OUTPUT_DEBUG_LOG") != nullptr ) {
-        std::cout << entries << std::endl;
+        std::cout << text << std::endl;
         std::cout << "\e[31m============================================================================================\e[m" << std::endl;
     }
-    std::cout << hilit.highlight(entries) << std::endl;
+    std::cout << hilit.highlight(text) << std::endl;
 
     mine::handle(close(STDOUT_FILENO));   // 关闭pipe-write-end
     wait(nullptr);  // 不检测返回值，如此一来，是否使用PAGER都适用

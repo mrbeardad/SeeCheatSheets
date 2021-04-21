@@ -1042,7 +1042,7 @@ void    sort(cmp = less)
 void    unique(cmp = less)
 void    merge(srcL, cmp = less)             // 需要先排序
 void    splice(pos, srcL, srcPos)
-void    splice(pos, srcL, srcBeg, srcEnd)
+void    splice(pos, srcL, srcBeg, srcEnd)   // 注意pos不能在[srcBeg, srcEnd)中
 void    reverse()
 ```
 <!-- entry end -->
