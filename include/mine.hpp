@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 06.03.2021
- * Last Modified Date: 10.03.2021
+ * Last Modified Date: 26.04.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -12,7 +12,9 @@
 /*************************************************************************************************/
 // 关闭iosteam与stdio之间的同步，同时也会关闭iostream的线程安全性
 /*************************************************************************************************/
-#if !defined(MRBEARDAD_MINE_HPP_CSWS) && !defined(DISABLE_CLOSE_SYNC_WITH_STDIO) && (defined(_GLIBCXX_IOSTREAM) || defined(_IOSTREAM_))
+#if !defined(MRBEARDAD_MINE_HPP_CSWS) && !defined(DISABLE_CLOSE_SYNC_WITH_STDIO) \
+    && (defined(_GLIBCXX_IOSTREAM) || defined(_IOSTREAM_)) \
+    && __cplusplus >= 201704L
 #define MRBEARDAD_MINE_HPP_CSWS
 struct CloseSyncWithStdio
 {
@@ -23,7 +25,9 @@ struct CloseSyncWithStdio
     }
 };
 inline CloseSyncWithStdio CloseSyncWithStdio{};
-#endif // !defined(MRBEARDAD_MINE_HPP_CSWS) && !defined(DISABLE_CLOSE_SYNC_WITH_STDIO) && (defined(_GLIBCXX_IOSTREAM) || defined(_IOSTREAM_))
+#endif // !defined(MRBEARDAD_MINE_HPP_CSWS) && !defined(DISABLE_CLOSE_SYNC_WITH_STDIO)
+// && (defined(_GLIBCXX_IOSTREAM) || defined(_IOSTREAM_))
+// && __cplusplus >= 201704L
 
 
 /*************************************************************************************************/
@@ -32,6 +36,7 @@ inline CloseSyncWithStdio CloseSyncWithStdio{};
 #if defined(_GLIBCXX_FILESYSTEM) || defined(_FILESYSTEM_)
 namespace fs = std::filesystem;
 #endif // defined(_GLIBCXX_FILESYSTEM) || defined(_FILESYSTEM_)
+
 
 /*************************************************************************************************/
 // std::ios_base别名
@@ -82,13 +87,13 @@ using std::literals::operator""sv;
 /*************************************************************************************************/
 #if !defined(MRBEARDAD_MINE_HPP_REGEX) && (defined(_GLIBCXX_REGEX) || defined(_REGEX_))
 #define MRBEARDAD_MINE_HPP_REGEX
-inline
-std::regex operator""_rgx(const char* str, size_t len)
+inline std::regex
+operator""_rgx(const char* str, size_t len)
 {
     return std::regex{str, len};
 }
-inline
-std::wregex operator""_rgx(const wchar_t* str, size_t len)
+inline std::wregex
+operator""_rgx(const wchar_t* str, size_t len)
 {
     return std::wregex{str, len};
 }
@@ -101,6 +106,7 @@ std::wregex operator""_rgx(const wchar_t* str, size_t len)
 #if defined(_GLIBCXX_FUNCTIONAL) || defined(_FUNCTIONAL_)
 using namespace std::placeholders;
 #endif // defined(_GLIBCXX_FUNCTIONAL) || defined(_FUNCTIONAL_)
+
 
 /*************************************************************************************************/
 // ASIO namespace别名
@@ -129,14 +135,12 @@ using udd = asio::local::datagram_protocol;
 #define MRBEARDAD_MINE_HPP 1
 
 
-#if __has_include(<ext/stdio_filebuf.h>)
-#   include <ext/stdio_filebuf.h>
-#endif // __has_include(<ext/stdio_filebuf.h>)
-#include <chrono>
+#if __cplusplus >= 201703L
+#   include <string_view>
+#endif // __cplusplus >= 201703L
 #include <system_error>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 /*************************************************************************************************/
 // Use string instead of stringstream in most time
@@ -164,38 +168,57 @@ operator<<(std::string& output, const char* cstr)
 namespace mine
 {
 
+#if __cplusplus >= 201703L
 
-class GetLineView
+// 默认以连续的空白符作为分隔符
+class Split
 {
-    const std::string* view_;
-    size_t curIdx_;
+    const std::string*  view_;
+    size_t              curIdx_;
+    char                sep_;
 public:
-    explicit GetLineView(const std::string& str)
-        : view_{&str}, curIdx_{} {  }
+    explicit Split(const std::string& str, char sep=-1)
+        : view_{&str}, curIdx_{}, sep_{sep} {  }
 
-    const std::string* reset(const std::string* newPtr)
+    const std::string& reset(const std::string& newView, char sep=-1)
     {
-        std::swap(newPtr, view_);
-        return newPtr;
+        curIdx_ = 0;
+        sep_ = sep;
+        auto ret = view_;
+        view_ = &newView;
+        return *ret;
     }
 
     bool operator()(std::string_view& oneline)
     {
-        auto posNL = view_->find('\n', curIdx_);
-        if ( posNL != std::string::npos ) {
-            oneline = std::string_view{view_->data() + curIdx_, view_->data() + posNL};
-            curIdx_ = posNL + 1;
+        if ( sep_ == -1 ) {
+            auto& viewStr = *view_;
+            for ( ; curIdx_ < viewStr.size() && std::isspace(viewStr[curIdx_]); ++curIdx_ );
+            if ( curIdx_ == viewStr.size() )
+                return false;
+            size_t nextSpace{curIdx_};
+            for ( ; nextSpace < viewStr.size() && !std::isspace(viewStr[nextSpace]); ++nextSpace );
+            oneline = std::string_view{viewStr.data() + curIdx_, viewStr.data() + nextSpace};
+            curIdx_ = nextSpace;
+            return true;
+        }
+
+        auto sepPos = view_->find(sep_, curIdx_);
+        if ( sepPos != std::string::npos ) {
+            oneline = std::string_view{view_->data() + curIdx_, view_->data() + sepPos};
+            curIdx_ = sepPos + 1;
             return true;
         } else if ( curIdx_ < view_->size() ) {
             oneline = std::string_view{view_->data() + curIdx_, view_->data() + view_->size()};
-            curIdx_ = posNL; // 防止下次再次进行搜索
-            return false;
+            curIdx_ = sepPos;
+            return true;
         } else {
             return false;
         }
     }
 };
 
+#endif // __cplusplus >= 201703L
 
 /*************************************************************************************************/
 // Y Combinator
@@ -245,21 +268,8 @@ T* handle(T* sysCallRet)
 }
 
 
-/*************************************************************************************************/
-// Construct streambuf from posix file descriptor
-/*************************************************************************************************/
-#if __has_include(<ext/stdio_filebuf.h>)
-inline __gnu_cxx::stdio_filebuf<char>
-make_strmbuf_from_fd(int fd, std::ios_base::openmode oflag) {
-    return {fd, oflag};
-}
-#endif // __has_include(<ext/stdio_filebuf.h>)
-
-
-
 } // namespace mine
 
 
 #endif  // MRBEARDAD_MINE_HPP
-
 

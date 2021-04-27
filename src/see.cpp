@@ -4,20 +4,21 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 19.04.2021
+ * Last Modified Date: 26.04.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
-#include "see.hpp"
+#include <fstream>
 #include <iostream>
 #include <regex>
-#include "header.hpp"
-#include "normal.hpp"
-#include "srchilite/sourcehighlight.h"
-#include "unicode/display_width.hpp"
 #include <unistd.h>
 
+#include "header.hpp"
 #include "mine.hpp"
+#include "normal.hpp"
+#include "see.hpp"
+#include "srchilite/sourcehighlight.h"
+#include "unicode/display_width.hpp"
 
 namespace see
 {
@@ -251,41 +252,39 @@ std::string search_entries(const std::vector<fs::path>& files, const std::vector
             throw std::runtime_error{"Error: Can not read file -- " + thisFile.string()};
         }
 
-        bool onceMatch{false}; // 用于提前打印文件名
+        bool onceMatch{true}; // 用于提前打印文件名
         bool inEntry{false};   // 用于判断当前匹配是否为某一entry内容
 
         for ( std::string oneline{}; std::getline(fstrm, oneline); ) {
             // 若未在entry中且搜索到entryBegin则尝试进入该entry
             if ( !inEntry && oneline.starts_with("<!-- entry begin:") && oneline.ends_with("-->") ) {
-                std::string_view curEntryKeys{oneline};
-                curEntryKeys.remove_prefix(sizeof("<!-- entry begin:"));
-                curEntryKeys.remove_suffix(sizeof("-->"));
+                ssize_t prefix{sizeof("<!-- entry begin:") - 1}, suffix{sizeof("-->") - 1};
 
                 // 有一个key不匹配则略过
                 bool isMatch{true};
                 for ( auto& thisKey : keys ) {
-                    if ( !std::regex_search(curEntryKeys.begin(), curEntryKeys.end(), std::regex{thisKey}) ) {
+                    if ( !std::regex_search(oneline.begin() + prefix, oneline.end() - suffix, std::regex{thisKey}) ) {
                         isMatch = false;
                         break;
                     }
                 }
 
                 if ( isMatch ) {
-                    if ( !onceMatch ) {
+                    if ( onceMatch ) {
                         entries << "# FILE: " << thisFile << "\n";
-                        onceMatch = true;
+                        onceMatch = false;
                     }
                     inEntry = true;
                     entries << oneline << '\n';
                 }
             } else if ( inEntry ) {
+                // 若在entry中且未搜索到结束标志，则将该行送入entry流中
+                if ( oneline != "<!-- entry end -->" ) {
+                    entries << oneline << '\n';
                 // 若在entry中且搜索到结束标志，则退出inEntry状态
-                if ( oneline == "<!-- entry end -->" ) {
+                } else {
                     inEntry = false;
                     entries << '\n';
-                // 若在entry中且未搜索到结束标志，则将该行送入entry流中
-                } else {
-                    entries << oneline << '\n';
                 }
             }
         }

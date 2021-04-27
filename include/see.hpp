@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 14.03.2021
+ * Last Modified Date: 26.04.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -88,3 +88,4 @@ search_entries(const std::vector<fs::path>& files, const std::vector<std::string
 } // namespace see
 
 #endif // MRBEARDAD_SEE_HPP
+

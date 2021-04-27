@@ -739,8 +739,8 @@ typename    ranlux48
 typename    knuth_b
 typename    default_random_engine
 // 常用分布：有重载操作符`random operator()(engine)`返回符合分布的随机数
-typename    uniform_int_distribution(min=0, max=INTMAX) // min-max的均匀整数分布
-typename    uniform_real_distribution(min=0, max=1.0)   // min-max的均匀实数分布
+typename    uniform_int_distribution(min=0, max=INTMAX) // [min, max]的均匀整数分布
+typename    uniform_real_distribution(min=0, max=1.0)   // [min, max)的均匀实数分布，可使用实现闭区间std::nextafter(b, std::numeric_limits<RealType>::max())
 typename    bernoulli_distribution(p=0.5)               // 0-1分布，返回bool
 typename    binomial_distribution(n=1, p=0.5)           // 二项分布
 typename    normal_distribution(u=0, o=1)               // 正态分布
@@ -953,8 +953,8 @@ itr     crend()                 // ALL
 1st_ins insert(pos, beg, end)   // s+v+d+l
 1st_ins insert(pos, num, val)   // s+v+d+l
 T&      emplace(pos, args...)   // v+d+l
-T&      emplace_back(v)         // v+d+l
-T&      emplace_front(v)        // d+l
+T&      emplace_back(args...)   // v+d+l
+T&      emplace_front(args...)  // d+l
 void    push_back(v)            // s+v+d+l
 void    push_front(v)           // d+l
 
@@ -2680,10 +2680,10 @@ void serialize(Archive &ar) {
     ar & o;
 }
 // 自定义序列化类
-YAS_DEFINE_STRUCT_SERIALIZE(oname, mem)                         // 前两者定义在类内
-YAS_DEFINE_STRUCT_SERIALIZE_NVP(oname, ("mem", mem))
-YAS_DEFINE_INTRUSIVE_SERIALIZE(oname, type, mem)                // 后两者定义在类外，type类型名不用字符串
-YAS_DEFINE_INTRUSIVE_SERIALIZE_NVP(oname, type, ("mem", mem))
+YAS_DEFINE_STRUCT_SERIALIZE(oname, m)                       // 前两者定义在类内
+YAS_DEFINE_STRUCT_SERIALIZE_NVP(oname, ("m", m))
+YAS_DEFINE_INTRUSIVE_SERIALIZE(oname, type, m)              // 后两者定义在类外，type类型名不用字符串
+YAS_DEFINE_INTRUSIVE_SERIALIZE_NVP(oname, type, ("m", m))
 
 // 创建中间对象待读写，其作为实际对象的引用而不存储实体
 // 当序列化为yas::json时，对象名可做键值

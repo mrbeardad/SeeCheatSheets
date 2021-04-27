@@ -4,17 +4,17 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 19.04.2021
+ * Last Modified Date: 26.04.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
-#include "see.hpp"
 #include <iostream>
 #include <sys/wait.h>
 #include <unicode/display_width.hpp>
 #include <unistd.h>
 
 #include "mine.hpp"
+#include "see.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -58,10 +58,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    if ( getenv("OUTPUT_DEBUG_LOG") != nullptr ) {
-        std::cout << text << std::endl;
-        std::cout << "\e[31m============================================================================================\e[m" << std::endl;
-    }
     std::cout << hilit.highlight(text) << std::endl;
 
     mine::handle(close(STDOUT_FILENO));   // 关闭pipe-write-end
