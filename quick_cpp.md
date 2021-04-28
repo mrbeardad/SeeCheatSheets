@@ -43,20 +43,20 @@ GFM
 <!-- entry begin: cpp  类设计 -->
 # 类的设计
 * 取消友元
-* 成员对象
+* 数据成员
     * handle
     * private
-    * 顺序 & 对齐
+    * 顺序  & 对齐
     * const & 引用
-    * static reference-return ? inline
+    * static ? reference-return : inline
 * 构造
     * default?
     * explicit?
     * non-inline
     * never-call-virtual
 * 析构
+    * virutal  & definition
     * noexcept & .destroy()
-    * virutal & definition
     * non-inline
     * never-call-virtual
 * copy? & move?
@@ -89,16 +89,17 @@ GFM
 # 初始化
 * 引用：
     * 可读性别名
+    * 传引用参数
 * 指针
     * 需要NULL
     * 更改指向
     * 注意，任何时候使用裸指针意味着持有者（接收者）无需在意其生命周期
 * 形式
     > 内置类型统一使用`T t{}`
-    * `auto = cast<T>(initializer)`
-    * `auto& = initializer`
-    * `T t{}`
-    * `T t()`
+    * `auto  t = initializer`
+    * `auto& t = initializer`
+    * `T t{args}`
+    * `T t(args)`
 * 延后立初
 * 循环声明
 <!-- entry end -->
@@ -115,94 +116,8 @@ GFM
 * 优先使用可读性更好的重载`operator`
 * Stream在循环中使用一定不要忘记调用`clear()`
 * Stream仅持有StreamBuf的指针而非完整对象，不保证其生命周期
-* `stringstream`只在需要格式化时才用来替代`string`
-* Container优先使用`emplace`函数而非`push`函数
+* Container使用`emplace`函数代替`push|insert`函数
 * Container引用元素时，若下标为非常量，则应使用`at()`代替`operator[]()`
 * Container增删元素时，注意range-based-for、引用、指针、迭代器的有效性
 <!-- entry end -->
 
-<!-- entry begin: cpp  异常 -->
-# 异常
-* 限制输入
-    * 容器（空小、前后、边界）
-    * 整数（U负溢出、-Tmin、除零）
-    * 浮点数（有效、结合、比较）
-    * 指针（nullptr）
-* 错误处理方式
-    * 发射信号
-    * 抛出异常
-    * 静默处理
-* 代码前移
-* **集中** 捕获 **可恢复** 异常
-<!-- entry end -->
-
-<!-- entry begin: logic  循环 -->
-# 循环
-* 多，顺
-* 变，语，迭，if-continue
-* 条，穷，相，if-break
-* 记，操，初，once
-* 终
-
-> 补充：
-* 循环计数器：空操作，可视作迭前或迭后
-    * 迭后，则初始状态为S，计数N步，最后状态+1则为S+N
-    * 迭前，则初始状态为S+1，计数N步，最后状态则为S+1+N-1==0
-
-* 相关关系：
-    * 若在条件检测中使用 **前缀** 自增或自减会导致
-        **检测前初始状态** 额外地+1，但仍属于 **检测最后状态+1** 
-    * 若在条件检测中使用 **后缀** 自增或自减会导致
-        **检测后初始状态** 与 **最后状态** 额外地+1，属于 **检测最后状态**
-
-* 初始状态：
-    * 若构造循环 **初始状态** 的代码与循环体内片段重复，则用if-break代替 **条件检测** 从而将其融合进循环体
-
-* 如果第一次循环存在特殊操作：
-    * 改变初始状态，将第一次循环操作抽出
-    * 利用once标识，只在第一次循环执行特殊操作
-    * 观察是否可转换为最后一次循环做特殊操作
-
-* 如果最后一次循环存在特殊操作：
-    * 改变条件检测，将最后一次循环操作抽出
-    * 利用if-break代替头部条件检测，在最后一次循环时执行特殊操作
-    * 观察是否可转换为第一次循环做特殊操作
-
-
-<!-- entry end -->
-
-<!-- entry begin: logic  分支 条件 -->
-# 分支
-* if-if
-* if-else if-continue if-break if-return if-exit
-* if-elif-else  `<=>` if-else{if-else}
-* if{for}       ` =>` for
-* 多if `=>` switch `=>` 跳转表（数组） `=>`跳转表（hash表）
-
-> 对于if-elif-else  `<=>` if-else{if-else}：
-> * 保证合并后的else条件包含原来两分支的条件，即逻辑或语义
-> * 有时两分支的条件检测有部分重叠时，也可合并两分支
-<!-- entry end -->
-
-<!-- entry begin: logic  递归 -->
-# 递归
-* 明确功能：参数，返回值，所有副作用
-* 基准情况：结束递归，并符合上述功能
-* 一般进展：利用递归获取下层结果，与本层计算结合得到本层结果
-* 尾递归：转为循环
-<!-- entry end -->
-
-# 步数
-获取数量：
-* `[X0, Xn]`
-* Xn - X0 + 1
-
-获取距离：
-* `(X0, Xn]`
-* Xn - X0
-
-获取尾后向量：
-* Xn + 数量
-
-获取尾部向量：
-* Xn + 距离

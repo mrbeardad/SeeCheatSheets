@@ -938,10 +938,10 @@ itr     begin()                 // ALL
 itr     cbegin()                // ALL
 itr     end()                   // ALL
 itr     cend()                  // ALL
-itr     rbegin()                // ALL
-itr     crbegin()               // ALL
-itr     rend()                  // ALL
-itr     crend()                 // ALL
+itr     rbegin()                // ALL-U
+itr     crbegin()               // ALL-U
+itr     rend()                  // ALL-U
+itr     crend()                 // ALL-U
 ```
 <!-- entry end -->
 
@@ -964,6 +964,10 @@ void    insert(il)              // A+U
 void    insert(beg, end)        // A+U
 ins     emplace(args...)        // A+U（非multi返回pair<ins, bool>）
 ins     emplace_hint(pos,args..)// A+U
+<ins,bool>  try_emplace(key, val)           // map+Umap
+ins         try_emplace(hint, key, val)     // map+Umap
+<ins,bool>  insert_or_assign(key, val)      // map+Umap
+ins         insert_or_assign(hint, key, val)// map+Umap
 ```
 <!-- entry end -->
 
