@@ -14,13 +14,16 @@
 部分风格参考自[HosseinYousefi/CompetitiveCPPManifesto](https://github.com/HosseinYousefi/CompetitiveCPPManifesto)
 
 ## 名字
-| 内容                                   | 规范                                   |
-|----------------------------------------|----------------------------------------|
-| 类名、类型别名、模板类型参数、静态变量 | 大驼峰拼写法`ExampleName`              |
-| 动态变量                               | 小驼峰拼写法`exampleName`              |
-| 类的数据成员                           | 带`_`后缀`exampleName_` `ExampleName_` |
-| 命名空间、函数名称                     | 全部小写和下划线间隔`example_name`     |
-| 宏、常量、模板非类型参数               | 全部大写和下划线间隔`EXAMPLE_NAME`     |
+| 内容                         | 规范                  | 举例                           |
+|------------------------------|-----------------------|--------------------------------|
+| 命名空间、全局函数           | 全部小写+下划线       | `example_name`                 |
+| 宏、常量、模板非类型参数     | 全部大写+下划线       | `EXAMPLE_NAME`                 |
+| 类名、类型别名、模板类型参数 | 大驼峰拼写法          | `ExampleName`                  |
+| 全局静态变量                 | 大驼峰拼写法+`g_`前缀 | `g_ExampleName`                |
+| 局部静态变量                 | 大驼峰拼写法          | `ExampleName`                  |
+| 动态变量                     | 小驼峰拼写法          | `exampleName`                  |
+| 类的数据成员                 | 带`_`后缀             | `exampleName_`与`ExampleName_` |
+| 类的成员函数                 | 带`_`后缀             | `exampleName`与`ExampleName`   |
 
 可用于命名标识符的一些通用前后缀：
 * 位置：`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`，`last`，`this`
@@ -82,7 +85,7 @@ private:
 #   endif // NDEBUG
 #endif  // TEST
 ```
-* 命名空间内成员无需缩进
+* 命名空间内成员无需行首缩进
 * 尖括号`<>`只与右边间隔空格，如`template<typename T>`
 * 嵌套模板参数的右括号`>`间隔空格，如`vector<vector<int> >`
 * 模板参数包`...`只与右边隔空格，如`<typename... T>`与`(T&&... args)`
@@ -116,7 +119,7 @@ private:
     ```
 * 一元运算符只隔一边空格，二元两边空格，三元全隔，`*x`、`x + y`、`x < y ? x : y`
 * 逗号与分号只与右边隔空格，`func(a, b, c)` `for ( init; condition; iterate )` `return 0;`
-* 标签的冒号只与右边隔空格，其他地方两边都隔空格
+* 标签与访问控制后面的冒号只与右边隔空格，其他地方两边都隔空格
 * lambda函数体语句与控制流语句内容超过1句时应该分行
 * 若本该在一行的内容过长，要有节奏的断行。
 * 断行时二元运算符（除了逗号）断到次行开端。

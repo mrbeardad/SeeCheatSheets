@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 06.03.2021
- * Last Modified Date: 26.04.2021
+ * Last Modified Date: 04.05.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -138,6 +138,7 @@ using udd = asio::local::datagram_protocol;
 #if __cplusplus >= 201703L
 #   include <string_view>
 #endif // __cplusplus >= 201703L
+#include <ios>
 #include <system_error>
 #include <type_traits>
 #include <utility>
@@ -164,6 +165,14 @@ operator<<(std::string& output, const char* cstr)
     return output.append(cstr);
 }
 
+#if __cplusplus >= 201703L
+inline std::string&
+operator<<(std::string& output, const std::string_view& strv)
+{
+    return output.append(strv);
+}
+#endif // __cplusplus >= 201703L
+
 
 namespace mine
 {
@@ -189,6 +198,16 @@ public:
         return *ret;
     }
 
+    size_t seek(ssize_t offset, std::ios_base::seekdir dir=std::ios_base::cur)
+    {
+        if ( dir == std::ios_base::beg )
+            return curIdx_ = offset;
+        if ( dir == std::ios_base::end )
+            return curIdx_ = view_->size() + offset;
+        if ( dir == std::ios_base::cur )
+            return curIdx_ += offset;
+    }
+
     bool operator()(std::string_view& oneline)
     {
         if ( sep_ == -1 ) {
@@ -198,18 +217,18 @@ public:
                 return false;
             size_t nextSpace{curIdx_};
             for ( ; nextSpace < viewStr.size() && !std::isspace(viewStr[nextSpace]); ++nextSpace );
-            oneline = std::string_view{viewStr.data() + curIdx_, viewStr.data() + nextSpace};
+            oneline = std::string_view{viewStr.data() + curIdx_, nextSpace - curIdx_};
             curIdx_ = nextSpace;
             return true;
         }
 
         auto sepPos = view_->find(sep_, curIdx_);
         if ( sepPos != std::string::npos ) {
-            oneline = std::string_view{view_->data() + curIdx_, view_->data() + sepPos};
+            oneline = std::string_view{view_->data() + curIdx_, sepPos - curIdx_};
             curIdx_ = sepPos + 1;
             return true;
         } else if ( curIdx_ < view_->size() ) {
-            oneline = std::string_view{view_->data() + curIdx_, view_->data() + view_->size()};
+            oneline = std::string_view{view_->data() + curIdx_, view_->size() - curIdx_};
             curIdx_ = sepPos;
             return true;
         } else {

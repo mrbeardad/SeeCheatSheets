@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 26.04.2021
+ * Last Modified Date: 30.04.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -31,12 +31,6 @@ MkdBlock::MkdBlock(std::string name): registName_(std::move(name))
     if ( !MkdHighlight::Instance().regist(registName_, this) ) {
         throw std::logic_error{name + "regist error"};
     }
-}
-
-
-std::string MkdBlock::highlight(std::string&& text)
-{
-    return highlight(text);
 }
 
 
@@ -98,37 +92,41 @@ MkdBlock& MkdHighlight::get_block(const std::string& name)
 }
 
 
-const MkdHighlight::Register& MkdHighlight::get_all_blocks() const
+MkdHighlight::AllBlocks MkdHighlight::get_all_blocks() const
 {
-    return blocks_;
+    return {blocks_.begin(), blocks_.end()};
 }
 
 
 std::string& MkdHighlight::highlight(std::string& text)
 {
-    std::stringstream textStrm{text};
+    auto origText = std::move(text);
+    mine::Split getLine{origText, '\n'};
     text.clear();
 
-    for ( std::string oneline{}; std::getline(textStrm, oneline); ) {
+    for ( std::string_view oneline{}; getLine(oneline); ) {
         MkdBlock* curBlk{};
-        for ( auto itr = blocks_.begin(), end = blocks_.end(); itr != end; ++itr ) {
-            if ( itr->second->match_begin(oneline) ) {
+        for ( auto itr = blocks_.begin(); itr != blocks_.end(); ++itr ) {
+            if ( itr->second->match_begin(std::string{oneline}) ) {
                 curBlk = itr->second;
-                if ( getenv("OUTPUT_DEBUG_LOG") != nullptr )
+                if ( ::getenv("OUTPUT_DEBUG_LOG") != nullptr )
                     std::cerr << "match: " << itr->first << ":" << oneline << '\n';
                 break;
             }
         }
 
-        std::string nextline{};
-        while ( std::getline(textStrm, nextline) && !curBlk->match_end(nextline) )
-            oneline +=  '\n' + nextline;
-        // 若最后读取nextline时忽略了存在于末尾的换行，则添加上去
-        oneline += textStrm.unget().peek() == '\n' ? "\n" : "";
-        // 将最后读取的nextline还原回流中
-        textStrm.rdbuf()->pubseekoff(-static_cast<int>(nextline.size()), io::cur, io::in);
+        std::string blockText{oneline};
+        blockText << '\n';
+        for ( std::string_view nextline{}; getLine(nextline); ) {
+            if ( curBlk->match_end(std::string{nextline}) ) {
+                ssize_t offset = nextline.size() + text[getLine.seek(0, std::ios_base::cur) - 1] == '\n';
+                getLine.seek(offset);
+                break;
+            }
+            blockText << nextline << '\n';
+        }
 
-        text += curBlk->highlight(oneline);
+        text += curBlk->highlight(blockText);
     }
 
     return text;
@@ -310,7 +308,7 @@ public:
         return true;
     }
 
-    std::string& highlight(std::string& text) override
+    std::string highlight(const std::string& text) override
     {
         std::string space(6, ' ');
         std::string hyphen{};

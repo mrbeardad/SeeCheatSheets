@@ -461,10 +461,10 @@ C++20无栈协程特点：
 
 #### 类型转换
 > 不鼓励使用旧式的C-style-cast，下面的新式转换更容易在文件中搜索，且更容易由编译期帮助检测
-* `static_cast<>()`&emsp;&emsp;&emsp; ：一般用于将`void*`转换为具体类型的指针等允许但非隐式的转换
-* `const_cast<>()`&emsp;&emsp;&emsp;&emsp;：用于取消底层const
-* `reinterpret_cast<>()`&emsp;：一般用于转换指针类型
-* `dynamic_cast<>()`&emsp;&emsp;&emsp;：用于在继承体系中转换它们的指针或引用
+* `static_cast<>()`     ：一般用于隐式转换规则允许的转换
+* `const_cast<>()`      ：一般用于取消底层const限定
+* `reinterpret_cast<>()`：一般用于转换指针类型
+* `dynamic_cast<>()`    ：一般用于在继承体系中转换它们实例的指针或引用
 
 **有关指针类型的转换**
 * nullptr_t可以转换为任意指针类型，反之不成立

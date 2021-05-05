@@ -4,16 +4,17 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 26.04.2021
+ * Last Modified Date: 29.04.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
 #ifndef MRBEARDAD_SEE_HPP
 #define MRBEARDAD_SEE_HPP
 
+#include <sys/ioctl.h>
+
 #include <filesystem>
 #include <string>
-#include <sys/ioctl.h>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -35,8 +36,7 @@ public:
 
     virtual bool match_begin(const std::string& oneline) =0;
     virtual bool match_end(const std::string& oneline) =0;
-    virtual std::string& highlight(std::string& text) =0;
-    std::string highlight(std::string&& text);
+    virtual std::string highlight(const std::string& text) =0;
 };
 
 
@@ -56,6 +56,7 @@ class MkdHighlight
 {
 public:
     using Register = std::unordered_map<std::string, MkdBlock*>;
+    using AllBlocks = std::pair<Register::const_iterator, Register::const_iterator>;
 
 private:
     WinSize     winsize_;
@@ -66,7 +67,7 @@ public:
     int get_tty_col() const noexcept;
     bool regist(std::string name, MkdBlock* block);
     MkdBlock& get_block(const std::string& name);
-    const Register& get_all_blocks() const;
+    AllBlocks get_all_blocks() const;
     std::string& highlight(std::string& text);
 
     // Singleton Pattern: Singleton

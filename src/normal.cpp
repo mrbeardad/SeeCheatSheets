@@ -9,9 +9,9 @@ see::NormalBlk::NormalBlk()
 
 bool see::NormalBlk::match_begin(const std::string& oneline)
 {
-    const auto& allBlk = see::MkdHighlight::Instance().get_all_blocks();
-    for( auto itr = allBlk.begin(), end = allBlk.end(); itr != end; ++itr ) {
-        if ( itr->first != "normal" && itr->second->match_begin(oneline) ) {
+    auto [begin, end] = see::MkdHighlight::Instance().get_all_blocks();
+    for( ; begin != end; ++begin ) {
+        if ( begin->first != "normal" && begin->second->match_begin(oneline) ) {
             return false;
         }
     }
