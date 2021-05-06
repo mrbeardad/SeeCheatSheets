@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 06.03.2021
- * Last Modified Date: 04.05.2021
+ * Last Modified Date: 05.05.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -206,6 +206,7 @@ public:
             return curIdx_ = view_->size() + offset;
         if ( dir == std::ios_base::cur )
             return curIdx_ += offset;
+        return -1;
     }
 
     bool operator()(std::string_view& oneline)

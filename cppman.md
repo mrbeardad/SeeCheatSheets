@@ -278,7 +278,7 @@ class weak_ptr<T> {
 void    exit(int exit_code);                            // 正常终止进程，进行清理
 void    quick_exit(int exit_code);                      // 正常终止进程，进行非完全清理
 void    _Exit(int exit_code);                           // 正常终止进程，不进行清理
-void    abort();                                        // 异常终止进程，不进行清理
+void    abort();                                        // 异常终止进程，不进行清理；可捕获但无法阻止程序终止
 int     atexit(void(*func)());                          // 注册在调用exit()时被调用
 int     at_quick_exit(void(*func)());                   // 注册在调用quick_exit()时被调用
 // 系统环境
@@ -468,7 +468,7 @@ class tuple<Types...> {
     tuple(p);                           // pair转换构造
 };
 tuple   make_tuple(args...);        // 被C++17模板类的模板参数推断取代
-tuple&  tie(args...);
+tuple   tie(args...);
 tuple   tuple_cat(tuples...);
 T&      get<size_t>(t);
 T&      get<T>(t);
@@ -1042,12 +1042,12 @@ void    reserve(bnum)
 ```cpp
 ers_num remove(v)
 ers_num remove_if(uOp)
+void    reverse()
 void    sort(cmp = less)
 void    unique(cmp = less)
 void    merge(srcL, cmp = less)             // 需要先排序
 void    splice(pos, srcL, srcPos)
 void    splice(pos, srcL, srcBeg, srcEnd)   // 注意pos不能在[srcBeg, srcEnd)中
-void    reverse()
 ```
 <!-- entry end -->
 
@@ -1058,8 +1058,8 @@ void    reverse()
 ```cpp
 #include <iterator>
 // 不改变原来迭代器
-itr     next(itr, n = 1)
-itr     prev(itr, n = 1)
+itr     next(itr, n=1)
+itr     prev(itr, n=1)
 itr     distance(itr1, itr2)
 void    iter_swap(itr1, itr2)
 ```
@@ -1442,8 +1442,8 @@ string  regex_replace(b, e, regex, fmt, rflag);
 // $&       替换为regex中整个表达式的匹配
 // $0       替换为regex中整个表达式的匹配
 // $1, ...  替换为regex中第1个子表达式的匹配
-// $'       替换为后缀
 // $`       替换为前缀
+// $'       替换为后缀
 // $$       转义$
 ```
 <!-- entry end -->
@@ -2117,44 +2117,24 @@ std::string                 between(str, to_charset, from_charset);
 ## 异步与网络库
 **核心概念（Proactor设计模式）**
 
-* I/O object
-    * 主要功能：调用“异步操作处理器”来启动异步操作，并向io_context注册回调函数
-    * 主要实现：Service来实现异步操作、Executor/Strand来注册回调函数
-* io_context
-    * 主要功能：调用“异步事件解复用器”来取出已完成事件，并分派执行回调函数
-    * 主要实现：Service注册管理器、
-        Executor（包含queue并调度回调函数）、Strand（包含queue并同步执行回调函数）
-* 注意：
-    * 构造I/O object一般需要一个io_context做第一个参数；
-    * 注册回调函数时，默认使用对应的io_context的Executor；
+![Proactor](images/proactor.png)
 
-**关于服务器异步编程**
+* Initiator
+    > 如socket
+    1. 启动异步操作，如低速IO、计时器等等，以非阻塞调用的形式（利用系统调用或多线程）保证快速完成返回
+    2. 注册该异步事件，同时记录其回调函数
+* AOP & AED
+    > 如io_context
+    * 如果完成事件队列中存在任务则取出（线程安全）
+        1. 执行其回调函数
+        2. 若底层为Reactor模式实现，可能需要执行额外的流程（如读取执行数目的数据）
+        3. 回调函数作为Initiator再次启动异步操作、注册异步事件
+    * 如果完成事件队列中无任务则阻塞
+        1. 利用操作系统接口（如epoll）实现多路复用阻塞监听
+        2. 当异步操作完成时，会触发监听事件，唤醒线程
+        3. 循环往复（此时已存在队列）
 
-&emsp;异步的目的是当低速I/O阻塞执行流时，进行其他工作。
-一个网络连接程序可看作一个状态机，一个状态机的状态是唯一的（没有薛定谔的状态机），
-也就是说一个状态机的状态切换是sequential，也就是说在读写网络套接字之前，必须先成功建立连接。
-但是建立连接是个低速操作，利用异步操作，我们在这个状态机阻塞的时候去执行另一个状态机的任务。
-
-&emsp;当一个异步操作完成后（不管I/O object底层是以系统调用还是以线程实现异步），
-触发一个操作然后回到原状态等待下个完成事件，该操作就是该异步操作对应的回调函数（由io_context执行）。
-在回调函数中进行下个阶段的异步操作，并再次设置回调函数。
-异步操作返回后进入下个状态等待异步操作完成，循环往复，这就是一个状态机。
-
-&emsp;为了简化模型，引入了复用器的概念。
-我们服务器一般有多个连接，也就有多个状态机，每当有异步事件完成（并调用io_context::run()），
-便从完成事件队列中将其取出并调用回调函数，这个过程是同步阻塞的，但由于回调函数利用了异步操作，
-程序很快从阻塞中恢复过来，继续响应其他将要到来的事件。
-看上去程序是在同时处理多个事件，实际上我们是同步响应多个事件，而对事件的处理反馈直接丢给异步操作了。
-如果响应的延迟仍不能接受，可以尝试在多个线程调用io_context::run()
-来在多个线程中同时进行同步阻塞操作以降低延迟，但同时也会引入锁的开销，需斟酌使用。
-
-&emsp;发现没有，其实我们每个连接的相关操作都是顺序执行的，所以异步并非完全等同并发。
-我们利用回调函数来实现顺序执行（回调函数在上阶段代码执行完成后被调用）。
-引入协程后，我们可以像写同步代码一样写来写异步代码，
-而回调函数的作用就不是启动下阶段的执行任务了，而是将控制流返回协程。
-协程的特性就是，随时随意切走执行流，然后在完成事件触发后切回来。
-
-&emsp;服务器一般存在三类状态机：
+服务器一般存在三类状态机：
 * io_context为其一，负责运转其他状态机
 * acceptor为其二，负责创建一个新状态机
 * 每个连接为其三，负责程序主要工作
@@ -2164,6 +2144,7 @@ std::string                 between(str, to_charset, from_charset);
 * Session类：管理socket与buffer。
     > 利用`bind(&Session::handler, shared_from_this())`
     > 或lambda捕获shared_from_this()来保证异步操作过程中buffer一直有效
+
 <!-- entry begin: boost asio io_context 异步 -->
 ```cpp
 #include <boost/asio.hpp>   // 集成于boost库中的asio，命名空间boost::asio
@@ -2190,8 +2171,8 @@ class io_context {
     void        restart();
     executor&   get_executor();
 };
-?       post(ex, handler);          // 提交一个回调函数，提交后立即返回
-?       dispath(ex, handler);       // 提交一个回调函数，保证在该函数返回前开始调用handler
+?       post(ex, handler);          // 将handler加入完成事件队列，保证在该函数返回前不会调用handler
+?       dispath(ex, handler);       // 将handler加入完成事件队列，保证在该函数返回前开始调用handler
 wfunc   bind_executor(ex, func);    // 返回包装后的func，调用wfunc()相当于调用dispath(ex, func)
 
 my_execution_context.notify_fork(execution_context::fork_prepare);
@@ -2200,6 +2181,9 @@ if (fork() == 0) {
 } else {
   my_execution_context.notify_fork(execution_context::fork_parent);
 }
+
+// 构造I/O object一般需要一个io_context做第一个参数；
+// 注册回调函数时，默认使用对应的io_context的Executor；
 
 // 可能出错而抛出异常的操作一般都提供一个版本的重载用于传递一个error_code&来关闭该次调用的异常机制
 // 异步版本的低速操作的handler的参数一般为 error_code + 同步版本返回值
@@ -2276,13 +2260,14 @@ class ip::tcp::resolver {
 
 <!-- entry begin: 网络 asio buffer socket -->
 ```cpp
-buffer    dynamic_buffer(array, max_size=UMAX);
+// 无需保证size()足够，缓冲区自动扩张最大为max_size
 buffer    dynamic_buffer(vector, max_size=UMAX);
 buffer    dynamic_buffer(string, max_size=UMAX);
-buffer    buffer(array);
-buffer    buffer(vector);
-buffer    buffer(string);
+// 需要保证size()足够，缓冲区大小限制为min(C.size(), max_size)
 buffer    buffer(void*, size_t);
+buffer    buffer(array[, max_size]);
+buffer    buffer(vector[,max_size]);
+buffer    buffer(string[,max_size]);
 
 class ip::tcp::acceptor {
     // 构造函数
@@ -2346,7 +2331,7 @@ class ip::tcp::socket {
 ?       async_read_until(stream, buffer, completion, handler)
 
 // asio提供的completion快捷函数对象有
-transfer_all()
+transfer_all()          // 默认completion
 transfer_at_least(n)
 transfer_exactly(n)
 ```
@@ -2424,7 +2409,7 @@ asio::awaitable<void> test_asio_with_coroutine()
 // awaitable为调用协程的（第一次）返回值，内含协程句柄可用于恢复协程等操作
 // void handler(std::exception_ptr, T); T为协程co_return结束返回的值的类型（void则无），若无则可使用asio::detached
 ?   co_spawn(ex, awaitable, handler);
-?   co_spawn(ex, ret_awaitable_func, handler);  // co_spawn保证传入的函数对象声明周期不短于协程生命周期
+?   co_spawn(ex, ret_awaitable_func, handler);  // co_spawn保证传入的函数对象生命周期不短于协程生命周期
 ```
 <!-- entry end -->
 
@@ -2534,7 +2519,7 @@ TEST(TestSuiteName, TestName) { // 注册一个单元测试，名字不能含下
     FAIL()          // ASSERT失败
     ADD_FAILURE()   // EXPECT失败
     // 以下只列出EXPECT版本
-    EXPECT_PRED1(pred1, arg1)               EXPECT_PRED2(pred2, arg1, arg2)
+    EXPECT_PRED1(pred1, arg1)               EXPECT_PRED2(pred2, arg1, arg2)     // 可打印参数值
     EXPECT_TRUE(cond)   EXPECT_FALSE(cond)  EXPECT_EQ(v1, v2)   EXPECT_NE(v1, v2)
     EXPECT_LT(v1, v2)   EXPECT_LE(v1, v2)   EXPECT_GT(v1, v2)   EXPECT_GE(v1, v2)
     EXPECT_FLOAT_EQ(f1, f2)                 EXPECT_DOUBLE_EQ(d1, d2)

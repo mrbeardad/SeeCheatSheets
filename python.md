@@ -118,7 +118,7 @@ class MyClass(Base1, Base2):
 
         # 为self实例添加属性
         self._privateMember_ = args[0]
-        self.public_member_ = args[1]
+        self.publicMember_ = args[1]
 
     # 在需要将用户自定义类的实例转换为bool值时，
     # 先尝试调用__nonzero__方法，若不存在则调用__len__，若都不存在则转换为True
@@ -319,9 +319,9 @@ Str[::-1]
 subStr in Str
 Str.startswith(preffix)
 Str.endswith(suffix)
-Str.find(sub)       # find函数若未搜索到目标则静默处理，返回-1
+Str.find(sub)           # find函数若未搜索到目标则静默处理，返回-1
 Str.rfind(sub)
-Str.index(sub[ i[,j]])
+Str.index(sub[ i[,j]])  # index函数若未搜索到目标则引发异常
 Str.rindex(sub)
 Str.count(sub)
 
@@ -422,10 +422,10 @@ List[i] = e
 List[i:j] = itr
 List[i:j:k] = itr
 List.reverse()
+List.insert(i, e)   # List[i:i] = e
 List.append(e)      # List[len:len] = [e]
 List.extend(itr)    # List[len:len] = itr
-List.insert(i, e)   # List[i:i] = e
-List.pop([i])
+List.pop([i])       # 若不存在则引发ValueError
 List.remove(e)
 del s[i:j]
 del s[i:j:k]

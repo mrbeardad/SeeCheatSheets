@@ -11,12 +11,13 @@
 <!-- vim-markdown-toc -->
 
 # C++ Style
-部分风格参考自[HosseinYousefi/CompetitiveCPPManifesto](https://github.com/HosseinYousefi/CompetitiveCPPManifesto)
+风格部分参考自[HosseinYousefi/CompetitiveCPPManifesto](https://github.com/HosseinYousefi/CompetitiveCPPManifesto)
 
 ## 名字
 | 内容                         | 规范                  | 举例                           |
 |------------------------------|-----------------------|--------------------------------|
-| 命名空间、全局函数           | 全部小写+下划线       | `example_name`                 |
+| 命名空间                     | 全部小写+下划线       | `example_name`                 |
+| 全局函数                     | 全部小写+下划线       | `::example_name`               |
 | 宏、常量、模板非类型参数     | 全部大写+下划线       | `EXAMPLE_NAME`                 |
 | 类名、类型别名、模板类型参数 | 大驼峰拼写法          | `ExampleName`                  |
 | 全局静态变量                 | 大驼峰拼写法+`g_`前缀 | `g_ExampleName`                |

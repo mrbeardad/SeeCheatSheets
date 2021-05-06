@@ -38,25 +38,26 @@ cmake --install .
 
 # Python
 * [Python基础](python.md):star:
-    > 基础语法与基础类型对象操作
+    > 基础语法与内置类型操作
 
 # C++
 * [C++语法特性](cpp.md):star:
     > 一份语法清单，适合有基础的同学
 * [C++程序库](cppman.md):star:
     > C++标准库以及某些第三方库
-* [CMake构建系统](cmake.md)
-    > CMake系统构建工具语法
+* [C++编程向导](cppguide.md):star:
+    > 编写高效健壮的C++代码
 * [C++编码风格](cppstyle.md)
     > 对代码风格进行规范，拒绝选择困难症
-* [C++编程向导](cppguide.md)
-    > 编写高效、健壮、可移植、可扩展的C++代码
-* [Quick Mini CPP](quick_cpp.md):star:
+* [CMake构建系统](cmake.md)
+    > CMake系统构建工具语法
 
 # 编程
 * [设计模式](dspt.md):star:
     > 应用框架的设计套路
-* [数据结构与算法](dsaa.md):star:
+* [编码经验](quick_logic.md):star:
+    > 解题技巧，编码经验
+* [数据结构与算法](dsaa.md)
     > 基础数据结构与算法
 * [逻辑表达与简化](logic.md)
     > 代码的基本逻辑表达方式

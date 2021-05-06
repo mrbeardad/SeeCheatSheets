@@ -4,11 +4,10 @@
 - [设计模式SOLID原则](#设计模式solid原则)
 - [对象创建](#对象创建)
   - [简单工厂模式(Simple Factory)](#简单工厂模式simple-factory)
-  - [原型模式(Prototype)](#原型模式prototype)
   - [工厂方法模式(Factory Method)](#工厂方法模式factory-method)
   - [抽象工厂模式(Abstract Factory)](#抽象工厂模式abstract-factory)
+  - [原型模式(Prototype)](#原型模式prototype)
   - [建造者模式(Builer)](#建造者模式builer)
-  - [桥接模式(Bridge)](#桥接模式bridge)
   - [单例模式(Singleton)](#单例模式singleton)
   - [享元模式(Flyweight)](#享元模式flyweight)
 - [接口隔离](#接口隔离)
@@ -19,6 +18,7 @@
   - [代理器模式(Proxy)](#代理器模式proxy)
   - [装饰器模式(Decorator)](#装饰器模式decorator)
   - [访问者模式(Visitor)](#访问者模式visitor)
+  - [桥接模式(Bridge)](#桥接模式bridge)
   - [状态模式(State)](#状态模式state)
   - [命令模式(Command)](#命令模式command)
 - [组件协作](#组件协作)
@@ -49,12 +49,6 @@
 * 将对象的创建与使用分离，避免将具体类型硬编码到客户代码中，扩展时只需要修改一处创建代码
 * 缺点：扩展产品需要修改静态工厂函数的源码
 
-## 原型模式(Prototype)
-![Prototype](images/Prototype.gif)
-
-* 将对象的创建与使用分离，避免将具体类型硬编码到客户代码中，扩展时只需要修改一处创建代码
-* 缺点：具体类型暴露给用户从而无法保证客户代码的正确的使用原型
-
 ## 工厂方法模式(Factory Method)
 ![FactoryMethod](images/FactoryMethod.jpg)
 
@@ -69,16 +63,16 @@
 * 工厂方法模式实现：可以隐藏具体产品类
 * 原型模式实现：动态配置工厂且减少类的创建
 
+## 原型模式(Prototype)
+![Prototype](images/Prototype.gif)
+
+* 将对象的创建与使用分离，避免将具体类型硬编码到客户代码中，扩展时只需要修改一处创建代码
+* 缺点：具体类型暴露给用户从而无法保证客户代码的正确的使用原型
+
 ## 建造者模式(Builer)
 ![Builder](images/Builder.jpg)
 
 * 面向Builder接口编程，分步构建复杂的对象
-
-## 桥接模式(Bridge)
-![Bridge](images/Bridge.jpg)
-
-* 将抽象部分（业务功能）与实现部分（平台实现）分离，使它们独立变化
-* 在C++中，对象属性（成员对象）存在与接口当中，利用桥接模式将其转移到实现当中
 
 ## 单例模式(Singleton)
 ![Singleton](images/Singleton.jpg)
@@ -141,6 +135,12 @@
 * 适用于对象结构包含很多对象且有不同的接口，或者对象中包含很多不相关的操作
 * 利用双分派技术使具体操作内容取决于visitor和element的类型
 * 缺点：添加元素时需要修改所有visitor对象
+
+## 桥接模式(Bridge)
+![Bridge](images/Bridge.jpg)
+
+* 将抽象部分（业务功能）与实现部分（平台实现）分离，使它们独立变化
+* 在C++中，对象属性（成员对象）存在与接口当中，利用桥接模式将其转移到实现当中
 
 ## 状态模式(State)
 ![State](images/state.png)
