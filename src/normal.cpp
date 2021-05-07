@@ -7,11 +7,11 @@ see::NormalBlk::NormalBlk()
     : see::MkdBlock{"normal"} {  }
 
 
-bool see::NormalBlk::match_begin(const std::string& oneline)
+bool see::NormalBlk::matchBegin(const std::string& oneline)
 {
-    auto [begin, end] = see::MkdHighlight::Instance().get_all_blocks();
+    auto [begin, end] = see::MkdHighlight::Instance().getAllBlocks();
     for( ; begin != end; ++begin ) {
-        if ( begin->first != "normal" && begin->second->match_begin(oneline) ) {
+        if ( begin->first != "normal" && begin->second->matchBegin(oneline) ) {
             return false;
         }
     }
@@ -19,7 +19,7 @@ bool see::NormalBlk::match_begin(const std::string& oneline)
 }
 
 
-bool see::NormalBlk::match_end(const std::string&)
+bool see::NormalBlk::matchEnd(const std::string&)
 {
     return true;
 }

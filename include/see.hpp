@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 29.04.2021
+ * Last Modified Date: 07.05.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -34,9 +34,14 @@ public:
     explicit MkdBlock(std::string name);
     virtual ~MkdBlock() =default;
 
-    virtual bool match_begin(const std::string& oneline) =0;
-    virtual bool match_end(const std::string& oneline) =0;
-    virtual std::string highlight(const std::string& text) =0;
+    virtual bool matchBegin(const std::string& oneline) =0;
+    virtual bool matchEnd(const std::string& oneline) =0;
+    virtual std::string& highlight(std::string& text) =0;
+
+    std::string highlight(std::string&& text)
+    {
+        return std::move(highlight(text));
+    }
 };
 
 
@@ -46,8 +51,16 @@ class WinSize
     winsize winsize_;
 public:
     WinSize();
-    int get_row() const noexcept;
-    int get_col() const noexcept;
+
+    int getRow() const noexcept
+    {
+        return winsize_.ws_row;
+    }
+
+    int getCol() const noexcept
+    {
+        return winsize_.ws_col;
+    }
 };
 
 
@@ -63,11 +76,19 @@ private:
     Register    blocks_;
 
 public:
-    int get_tty_row() const noexcept;
-    int get_tty_col() const noexcept;
+    int getTtyRow() const noexcept
+    {
+        return winsize_.getRow();
+    }
+
+    int getTtyCol() const noexcept
+    {
+        return winsize_.getCol();
+    }
+
     bool regist(std::string name, MkdBlock* block);
-    MkdBlock& get_block(const std::string& name);
-    AllBlocks get_all_blocks() const;
+    MkdBlock& getBlock(const std::string& name);
+    AllBlocks getAllBlocks() const;
     std::string& highlight(std::string& text);
 
     // Singleton Pattern: Singleton

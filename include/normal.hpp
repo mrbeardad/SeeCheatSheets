@@ -24,10 +24,10 @@ public:
     NormalBlk();
 
 
-    bool match_begin(const std::string& oneline);
+    bool matchBegin(const std::string& oneline);
 
 
-    bool match_end(const std::string&) override;
+    bool matchEnd(const std::string&) override;
 
 
     virtual std::string& highlight(std::string& text) override;

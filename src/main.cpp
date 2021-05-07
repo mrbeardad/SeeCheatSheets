@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 29.04.2021
+ * Last Modified Date: 07.05.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -22,26 +22,40 @@ int main(int argc, char* argv[])
 {
     auto& hilit = see::MkdHighlight::Instance();
 
-    auto [files, keys, disablePager] = see::parse_cmdline(argc, argv);
-    std::string text{};
+    std::vector<fs::path>       files{};
+    std::vector<std::string>    keys{};
+    bool                        disablePager{};
+    std::string                 text{};
 
     // 如果stdin被重定向到非终端文件则转而高亮之
-    if ( !isatty(STDIN_FILENO) ) {
+    if ( !::isatty(STDIN_FILENO) ) {
         text.assign(std::istreambuf_iterator<char>{std::cin}, std::istreambuf_iterator<char>{});
     } else {
-        text = see::search_entries(files, keys);
+        // 可能抛出异常，如命令行参数错误、文件无法访问等
+        try {
+            std::tie(files, keys, disablePager) = see::parse_cmdline(argc, argv);
+            text = see::search_entries(files, keys);
+        } catch (...) {
+            std::exit(1);
+        }
     }
 
     // 是否允许使用PAGER
-    if ( !disablePager && isatty(STDOUT_FILENO) ) {
+    if ( !disablePager && ::isatty(STDOUT_FILENO) ) {
         int row{1}, col{};
-        for ( size_t first{}, last{};  (last = text.find('\n', last)) != std::string::npos; ) {
+        for ( size_t first{}, last{}; ; ) {
+            last = text.find('\n', last);
+
+            if ( first >= text.size() )
+                break;
+
+            // 最后一行可能不存在，从而row比真实行数多1
             ++row;
             col = std::max(col, unicode::display_width(text.substr(first, last)));
             first = ++last;
         }
-        if ( (row > hilit.get_tty_row() || col > hilit.get_tty_col()) ) {
-            const auto* pager = getenv("PAGER");
+        if ( (row > hilit.getTtyRow() || col > hilit.getTtyCol()) ) {
+            const auto* pager = ::getenv("PAGER");
             pager = pager == nullptr ? "less" : pager;
             int fds[2];
             mine::handle(pipe(fds));

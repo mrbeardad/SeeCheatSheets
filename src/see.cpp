@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 30.04.2021
+ * Last Modified Date: 07.05.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -28,7 +28,9 @@ namespace see
 // 注册器：其子类仅需创建一个对象实例便自动向中介者(MkdHighlight)注册
 MkdBlock::MkdBlock(std::string name): registName_(std::move(name))
 {
-    if ( !MkdHighlight::Instance().regist(registName_, this) ) {
+    MkdHighlight& mkdHilit = MkdHighlight::Instance();
+
+    if ( !mkdHilit.regist(registName_, this) ) {
         throw std::logic_error{name + "regist error"};
     }
 }
@@ -39,8 +41,8 @@ MkdBlock::MkdBlock(std::string name): registName_(std::move(name))
 /*************************************************************************************************/
 WinSize::WinSize()
 {
-    if ( isatty(STDOUT_FILENO) ) {
-        mine::handle(ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize_));
+    if ( ::isatty(STDOUT_FILENO) ) {
+        mine::handle(::ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize_));
     } else {
         // 如果stdout非终端，则设置默认窗口大小供MkdBlock使用
         winsize_.ws_row = 30;
@@ -49,34 +51,10 @@ WinSize::WinSize()
 }
 
 
-int WinSize::get_row() const noexcept
-{
-    return winsize_.ws_row;
-}
-
-
-int WinSize::get_col() const noexcept
-{
-    return winsize_.ws_col;
-}
-
-
 /*************************************************************************************************/
 // MkdHighlight
 /*************************************************************************************************/
-MkdHighlight::MkdHighlight() {  }
-
-
-int MkdHighlight::get_tty_row() const noexcept
-{
-    return winsize_.get_row();
-}
-
-
-int MkdHighlight::get_tty_col() const noexcept
-{
-    return winsize_.get_col();
-}
+MkdHighlight::MkdHighlight() =default;
 
 
 bool MkdHighlight::regist(std::string name, MkdBlock* block)
@@ -86,13 +64,13 @@ bool MkdHighlight::regist(std::string name, MkdBlock* block)
 }
 
 
-MkdBlock& MkdHighlight::get_block(const std::string& name)
+MkdBlock& MkdHighlight::getBlock(const std::string& name)
 {
     return *blocks_.at(name);
 }
 
 
-MkdHighlight::AllBlocks MkdHighlight::get_all_blocks() const
+MkdHighlight::AllBlocks MkdHighlight::getAllBlocks() const
 {
     return {blocks_.begin(), blocks_.end()};
 }
@@ -101,29 +79,32 @@ MkdHighlight::AllBlocks MkdHighlight::get_all_blocks() const
 std::string& MkdHighlight::highlight(std::string& text)
 {
     auto origText = std::move(text);
-    mine::Split getLine{origText, '\n'};
     text.clear();
+    mine::Split getLine{origText, '\n', true};
 
-    for ( std::string_view oneline{}; getLine(oneline); ) {
+    for ( std::string_view onelineView{}; getLine(onelineView); ) {
+        std::string oneline{onelineView};
         MkdBlock* curBlk{};
-        for ( auto itr = blocks_.begin(); itr != blocks_.end(); ++itr ) {
-            if ( itr->second->match_begin(std::string{oneline}) ) {
-                curBlk = itr->second;
+        for ( auto iter = blocks_.begin(); iter != blocks_.end(); ++iter ) {
+            if ( iter->second->matchBegin(oneline) ) {
+                curBlk = iter->second;
                 if ( ::getenv("OUTPUT_DEBUG_LOG") != nullptr )
-                    std::cerr << "match: " << itr->first << ":" << oneline << '\n';
+                    std::cerr << "match: " << iter->first << ":" << oneline << '\n';
                 break;
             }
         }
+        if ( curBlk == nullptr )
+            throw std::logic_error{"this line didn't match ans block: " + oneline};
 
-        std::string blockText{oneline};
-        blockText << '\n';
-        for ( std::string_view nextline{}; getLine(nextline); ) {
-            if ( curBlk->match_end(std::string{nextline}) ) {
-                ssize_t offset = nextline.size() + text[getLine.seek(0, std::ios_base::cur) - 1] == '\n';
+        std::string& blockText = oneline;
+        for ( std::string_view nextlineView{}; getLine(nextlineView); ) {
+            std::string nextline{nextlineView};
+            // 若匹配到区块尾部，则将该行放回
+            if ( curBlk->matchEnd(nextline) ) {
+                ssize_t offset = -static_cast<ssize_t>(nextline.size());
                 getLine.seek(offset);
                 break;
             }
-            blockText << nextline << '\n';
         }
 
         text += curBlk->highlight(blockText);
@@ -146,11 +127,7 @@ MkdHighlight& MkdHighlight::Instance()
 std::tuple<std::vector<fs::path>, std::vector<std::string>, bool>
 parse_cmdline(int argc, char* argv[])
 {
-    // 从管道读取数据，仅用于渲染，不解析命令行参数
-    if ( !isatty(STDIN_FILENO) )
-        return {};
-
-    auto print_help_then_exit = [] () {
+    auto print_help_then_throw = [] () {
         std::cout <<
             "\033[32mDescription:\033[m\n"
             "    \033[33msee\033[m will find cheat-sheets among ~/.cheat/*.md.\n"
@@ -172,19 +149,20 @@ parse_cmdline(int argc, char* argv[])
             "    \033[36m-f\033[m <file-prefix>  : Specify file in ~/.cheat/ whoes file name prefix match <file-prefix> to search\n"
             "    \033[36m-p\033[m                : Disable to use Pager\n"
             << std::endl;
-        std::exit(1);
+        throw std::runtime_error{"bad command line parameters"};
     };
 
     std::vector<std::string> keys{}, filePrefix{};
     bool disablePager{};
     while ( true ) {
-        auto choice = getopt(argc, argv, "hpw:f:");
+        auto choice = ::getopt(argc, argv, "hpw:f:");
+
         if ( choice == -1 ) break;
 
         switch ( choice ) {
             case '?':
             case 'h':
-                print_help_then_exit();
+                print_help_then_throw();
                 break;
             case 'p':
                 disablePager = true;
@@ -205,37 +183,36 @@ parse_cmdline(int argc, char* argv[])
     // 处理参数无效的情况
     if ( keys.empty() ) {
         std::cerr << "\e[31m`see` Error:\e[0m Need entry-regex-keys" << std::endl;
-        print_help_then_exit();
+        print_help_then_throw();
     }
 
+    // 如果~/.cheat/目录不存在则抛出异常
     fs::path cheatDir{std::getenv("HOME")};
     cheatDir /= ".cheat";
-
-    // 如果~/.cheat/目录不存在则报错并退出
     if ( !fs::is_directory(cheatDir) ) {
         throw std::runtime_error{"Error: No such directory ~/.cheat/"};
     }
 
     std::vector<fs::path> files{};
     for ( const auto& thisDirEntry : fs::directory_iterator{cheatDir} ) {
-        if ( !fs::is_regular_file(thisDirEntry) || thisDirEntry.path().extension() != ".md" ) {
+        if ( !fs::is_regular_file(thisDirEntry) || thisDirEntry.path().extension() != ".md" )
             continue;
-        }
 
         if ( filePrefix.empty() ) {
             files.emplace_back(thisDirEntry.path());
         } else {
             std::string curFileName{thisDirEntry.path().filename()};
-
             for ( auto& thisFilePrefix : filePrefix ) {
                 // 确认文件名前缀是否与用户指定匹配
-                if ( curFileName.find(thisFilePrefix, 0) != std::string::npos )
+                if ( curFileName.starts_with(thisFilePrefix) ) {
                     files.emplace_back(thisDirEntry.path());
+                    break;
+                }
             }
         }
     }
 
-    return std::tuple{files, keys, disablePager};
+    return {files, keys, disablePager};
 }
 
 /*************************************************************************************************/
@@ -250,8 +227,8 @@ std::string search_entries(const std::vector<fs::path>& files, const std::vector
             throw std::runtime_error{"Error: Can not read file -- " + thisFile.string()};
         }
 
-        bool onceMatch{true}; // 用于提前打印文件名
-        bool inEntry{false};   // 用于判断当前匹配是否为某一entry内容
+        bool onceMatchInThisFile{true}; // 用于提前打印文件名
+        bool inEntry{false};            // 用于判断当前匹配是否为某一entry内容
 
         for ( std::string oneline{}; std::getline(fstrm, oneline); ) {
             // 若未在entry中且搜索到entryBegin则尝试进入该entry
@@ -268,9 +245,9 @@ std::string search_entries(const std::vector<fs::path>& files, const std::vector
                 }
 
                 if ( isMatch ) {
-                    if ( onceMatch ) {
+                    if ( onceMatchInThisFile ) {
                         entries << "# FILE: " << thisFile << "\n";
-                        onceMatch = false;
+                        onceMatchInThisFile = false;
                     }
                     inEntry = true;
                     entries << oneline << '\n';
@@ -298,12 +275,12 @@ class SeperatorBlk : public see::MkdBlock
 public:
     SeperatorBlk(): see::MkdBlock{"seperator"} {  }
 
-    bool match_begin(const std::string& oneline) override
+    bool matchBegin(const std::string& oneline) override
     {
         return std::regex_search(oneline, Seperator);
     }
 
-    bool match_end(const std::string&) override
+    bool matchEnd(const std::string&) override
     {
         return true;
     }
@@ -312,7 +289,7 @@ public:
     {
         std::string space(6, ' ');
         std::string hyphen{};
-        for ( int cnt{}; cnt < see::MkdHighlight::Instance().get_tty_col() - 12; ++cnt ) hyphen += "─";
+        for ( int cnt{}; cnt < see::MkdHighlight::Instance().getTtyCol() - 12; ++cnt ) hyphen += "─";
         return text = space + hyphen + space;
     }
 
@@ -329,19 +306,19 @@ class QuoteBlk : public see::MkdBlock
 public:
     QuoteBlk(): see::MkdBlock{"quote"} {  }
 
-    bool match_begin(const std::string& oneline) override
+    bool matchBegin(const std::string& oneline) override
     {
         return std::regex_search(oneline, Quote);
     }
 
-    bool match_end(const std::string& oneline) override
+    bool matchEnd(const std::string& oneline) override
     {
         return oneline.empty()
-            || see::MkdHighlight::Instance().get_block("header").match_end(oneline)
-            || see::MkdHighlight::Instance().get_block("seperator").match_end(oneline)
-            || see::MkdHighlight::Instance().get_block("list").match_end(oneline)
-            || see::MkdHighlight::Instance().get_block("code").match_end(oneline)
-            || see::MkdHighlight::Instance().get_block("comment").match_end(oneline);
+            || see::MkdHighlight::Instance().getBlock("header").matchEnd(oneline)
+            || see::MkdHighlight::Instance().getBlock("seperator").matchEnd(oneline)
+            || see::MkdHighlight::Instance().getBlock("list").matchEnd(oneline)
+            || see::MkdHighlight::Instance().getBlock("code").matchEnd(oneline)
+            || see::MkdHighlight::Instance().getBlock("comment").matchEnd(oneline);
     }
 
     std::string& highlight(std::string& text) override
@@ -351,7 +328,7 @@ public:
         for ( std::string oneline{}; std::getline(sstrm, oneline); ) {
             auto quote = std::regex_replace(oneline, Quote, "\033[48;5;235m\033[38;5;240m$1\033[m");
             auto normal = std::regex_replace(oneline, Quote, "$2");
-            auto& normalBlk = see::MkdHighlight::Instance().get_block("normal");
+            auto& normalBlk = see::MkdHighlight::Instance().getBlock("normal");
             dynamic_cast<NormalBlk&>(normalBlk).highlight(normal, "\033[38;5;245m");
             text += quote + normal + '\n';
         }
@@ -370,20 +347,20 @@ class ListBlk : public see::MkdBlock
 public:
     ListBlk(): see::MkdBlock{"list"} {  }
 
-    bool match_begin(const std::string& oneline) override
+    bool matchBegin(const std::string& oneline) override
     {
-        return std::regex_search(oneline, List) && !see::MkdHighlight::Instance().get_block("seperator").match_begin(oneline);
+        return std::regex_search(oneline, List) && !see::MkdHighlight::Instance().getBlock("seperator").matchBegin(oneline);
     }
 
-    bool match_end(const std::string &oneline) override
+    bool matchEnd(const std::string &oneline) override
     {
         return oneline.empty()
-            || see::MkdHighlight::Instance().get_block("header").match_end(oneline)
-            || see::MkdHighlight::Instance().get_block("seperator").match_end(oneline)
-            || see::MkdHighlight::Instance().get_block("list").match_end(oneline)
-            || see::MkdHighlight::Instance().get_block("quote").match_end(oneline)
-            || see::MkdHighlight::Instance().get_block("code").match_end(oneline)
-            || see::MkdHighlight::Instance().get_block("comment").match_end(oneline);
+            || see::MkdHighlight::Instance().getBlock("header").matchEnd(oneline)
+            || see::MkdHighlight::Instance().getBlock("seperator").matchEnd(oneline)
+            || see::MkdHighlight::Instance().getBlock("list").matchEnd(oneline)
+            || see::MkdHighlight::Instance().getBlock("quote").matchEnd(oneline)
+            || see::MkdHighlight::Instance().getBlock("code").matchEnd(oneline)
+            || see::MkdHighlight::Instance().getBlock("comment").matchEnd(oneline);
     }
 
     std::string& highlight(std::string& text) override
@@ -400,7 +377,7 @@ public:
             } else {
                 normal = oneline;
             }
-            see::MkdHighlight::Instance().get_block("normal").highlight(normal);
+            see::MkdHighlight::Instance().getBlock("normal").highlight(normal);
             text = head + normal + '\n';
         }
         return text;
@@ -418,12 +395,12 @@ class TableBlk : public see::MkdBlock
 public:
     TableBlk(): see::MkdBlock{"table"} {  }
 
-    bool match_begin(const std::string& oneline) override
+    bool matchBegin(const std::string& oneline) override
     {
         return std::regex_search(oneline, Table1st);
     }
 
-    bool match_end(const std::string& oneline) override
+    bool matchEnd(const std::string& oneline) override
     {
         return !std::regex_search(oneline, Table1st);
     }
@@ -459,7 +436,7 @@ public:
                 if ( *pos != '|' ) {
                     normal += *pos;
                 } else {
-                    text += see::MkdHighlight::Instance().get_block("normal").highlight(normal) + "│";
+                    text += see::MkdHighlight::Instance().getBlock("normal").highlight(normal) + "│";
                     normal.clear();
                 }
             }
@@ -468,13 +445,13 @@ public:
             sstrm.ignore(512, '\n');
             // 复用之前的line2nd
             for ( int cnt{}; std::getline(sstrm, line2nd); ++cnt ) {
-                auto& normalBlk = see::MkdHighlight::Instance().get_block("normal");
+                auto& normalBlk = see::MkdHighlight::Instance().getBlock("normal");
                 text += dynamic_cast<NormalBlk&>(normalBlk).highlight(line2nd,
                         cnt % 2 ? "\033[38;5;240m\033[48;2;94;175;220m" : "\033[38;5;240m\033[48;2;128;128;255m")
                     + "\033[m\n";
             }
         } else {
-            see::MkdHighlight::Instance().get_block("normal").highlight(text);
+            see::MkdHighlight::Instance().getBlock("normal").highlight(text);
         }
         return text;
     }
@@ -493,12 +470,12 @@ class CodeBlk : public see::MkdBlock
 public:
     CodeBlk(): see::MkdBlock{"code"}, needHilit_{true} {  }
 
-    bool match_begin(const std::string& oneline) override
+    bool matchBegin(const std::string& oneline) override
     {
         return std::regex_search(oneline, CodeBegin);
     }
 
-    bool match_end(const std::string &oneline) override
+    bool matchEnd(const std::string &oneline) override
     {
         if ( !needHilit_ ) return true;
         return std::regex_search(oneline, CodeEnd);
@@ -573,12 +550,12 @@ class CommentBlk : public MkdBlock
 public:
     CommentBlk(): MkdBlock{"comment"} {  }
 
-    bool match_begin(const std::string& oneline) override
+    bool matchBegin(const std::string& oneline) override
     {
         return std::regex_search(oneline, Comment);
     }
 
-    bool match_end(const std::string&) override
+    bool matchEnd(const std::string&) override
     {
         return true;
     }

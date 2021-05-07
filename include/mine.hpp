@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 06.03.2021
- * Last Modified Date: 05.05.2021
+ * Last Modified Date: 07.05.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -185,15 +185,18 @@ class Split
     const std::string*  view_;
     size_t              curIdx_;
     char                sep_;
+    bool                keepSep_;
 public:
-    explicit Split(const std::string& str, char sep=-1)
-        : view_{&str}, curIdx_{}, sep_{sep} {  }
+    // 如果sep等于-1则忽略keepSep
+    explicit Split(const std::string& str, char sep=-1, bool keepSep=false)
+        : view_{&str}, curIdx_{}, sep_{sep}, keepSep_{keepSep} {  }
 
-    const std::string& reset(const std::string& newView, char sep=-1)
+    const std::string& reset(const std::string& newView, char sep=-1, bool keepSep=false)
     {
         curIdx_ = 0;
         sep_ = sep;
-        auto ret = view_;
+        keepSep_ = keepSep;
+        auto* ret = view_;
         view_ = &newView;
         return *ret;
     }
@@ -225,7 +228,8 @@ public:
 
         auto sepPos = view_->find(sep_, curIdx_);
         if ( sepPos != std::string::npos ) {
-            oneline = std::string_view{view_->data() + curIdx_, sepPos - curIdx_};
+            size_t len{keepSep_ ? sepPos - curIdx_ + 1 : sepPos - curIdx_};
+            oneline = std::string_view{view_->data() + curIdx_, len};
             curIdx_ = sepPos + 1;
             return true;
         } else if ( curIdx_ < view_->size() ) {
@@ -233,6 +237,7 @@ public:
             curIdx_ = sepPos;
             return true;
         } else {
+            oneline = std::string_view{view_->data() + view_->size(), 0};
             return false;
         }
     }

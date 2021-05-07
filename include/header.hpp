@@ -16,9 +16,9 @@ class HeaderBlk : public see::MkdBlock
 public:
     HeaderBlk();
 
-    virtual bool match_begin(const std::string& oneline) override;
+    virtual bool matchBegin(const std::string& oneline) override;
 
-    virtual bool match_end(const std::string&) override;
+    virtual bool matchEnd(const std::string&) override;
 
     virtual std::string& highlight(std::string& text) override;
 
