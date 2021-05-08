@@ -8,7 +8,8 @@
   - [静态变量](#静态变量)
     - [local static](#local-static)
     - [non-local static](#non-local-static)
-    - [inline语义](#inline语义)
+    - [关于链接](#关于链接)
+    - [关于inline语义](#关于inline语义)
   - [函数](#函数)
     - [关键字](#关键字)
     - [默认实参](#默认实参)
@@ -101,6 +102,8 @@
     * `__has_include(" ")`
 * 错误指令
     * `#error 错误消息`
+* 头文件保护
+    * `#pragma once`
 * 编译器预定义宏
     * 通用信息：`__func__`、`__LINE__`、`__FILE__`、`__TIME__`、`__DATE__`
     * 操作系统：`_WIN32`、`__linux__`、`TARGET_OS_MAC`
@@ -117,27 +120,11 @@
 <!-- entry begin: 属性 attribution -->
 * `[[deprecated]]`或`[[deprecated(解释弃用的理由并/或提议代替用实体的文本)]]`
 
-    | 目标                      | 实例                                                             |
-    |---------------------------|------------------------------------------------------------------|
-    | class/struct/union        | `struct [[deprecated]] S;`                                       |
-    | typedef名，也包括别名声明 | `[[deprecated]] typedef S* PS;`、`using PS [[deprecated]] = S*;` |
-    | 变量，包括静态数据成员    | `[[deprecated]] int x;`                                          |
-    | 非静态数据成员            | `union U { [[deprecated]] int n; };`                             |
-    | 函数                      | `[[deprecated]] void f();`                                       |
-    | 命名空间                  | `namespace [[deprecated]] NS { int x;}`                          |
-    | 枚举                      | `enum [[deprecated]] E {};`                                      |
-    | 枚举项                    | `enum { A [[deprecated]], B [[deprecated]] = 42 };`              |
-    | 模板特化                  | `template<> struct [[deprecated]] X<int> {};`                    |
-
 *  `[[fallthrough]]`
     > 仅可应用到switch语句中的空语句以创建直落语句： `[[fallthrough]];`
 
 * `[[likely]]`与`[[unlikely]]`
-
-    | 目标        | 实例                                        |
-    |-------------|---------------------------------------------|
-    | switch语句  | `switch (i) {[[likely]] case 1: return 1;}` |
-    | if-else语句 | `if ( i < 0 ) [[unlikely]] {return 0;}`     |
+    > 用于提醒编译器switch与if-else语句中更可能执行的分支语句
 
 * `[[nodiscard]]`或`[[nodiscard(解释结果不应被舍弃的理由的文本)]]`
     > 若从并非转型到 void 的弃值表达式中，
@@ -149,16 +136,6 @@
 * `[[maybe_unused]]`
     > 抑制针对未使用实体的警告
 
-    | 目标                  | 实例                                                               |
-    |-----------------------|--------------------------------------------------------------------|
-    | class/struct/union    | `struct [[maybe_unused]] S;`                                       |
-    | typedef 包括别名声明  | `[[maybe_unused]] typedef S* PS;，using PS [[maybe_unused]] = S*;` |
-    | 变量 包括静态数据成员 | `[[maybe_unused]] int x;`                                          |
-    | 非静态数据成员        | `union U { [[maybe_unused]] int n; };`                             |
-    | 函数                  | `[[maybe_unused]] void f();`                                       |
-    | 枚举                  | `enum [[maybe_unused]] E {};`                                      |
-    | 枚举项                | `enum { A [[maybe_unused]], B [[maybe_unused]] = 42 };`            |
-
 * `[[no_unique_address]]`
     > 空类空间优化：`struct [[no_unique_address]] X {int i_m; Empty e1_m, e2_m;};`
 <!-- entry end -->
@@ -169,10 +146,10 @@
     * 第一次声明为定义，以后为打开
 
 * 嵌套命名空间
-    > 在命名空间中使用`#include`要注意嵌套错误，可在进入命名空间前提前`#include`从而利用头文件保护宏来避免嵌套
     * 在全局命名空间中声明：`namespace A::B {  }`
         > 外层命名空间不用提前声明
-    * 在外层命名空间中声明：`namespace A { namespace B{  } }`
+    * 在外层命名空间中声明：`namespace A { namespace B {  } }`
+        > 需要手动声明或打开外层命名空间
 
 * 内联命名空间
     > `inline namespace std_v1 {  }`
@@ -207,7 +184,6 @@ namespace std { /* ... */}
 ## 静态变量
 ### local static
 local static对象即声明在函数内部的静态声明周期变量，它们一样存在与目标文件数据段，但一般只随着函数的引用而被引用。
-local static对象的构造发生在初次调用该函数时，且构造过程为线程安全的。
 几乎任何时候需要使用静态变量的地方，都可以用**static reference return**技术来取代，优点如下：
 * 延迟构造：在第一次调用时才调用local-static对象构造函数，且保证线程安全，从而——
     * 不使用它就不会有性能开销
@@ -215,13 +191,11 @@ local static对象的构造发生在初次调用该函数时，且构造过程�
 * 利用函数包裹，实现可有更多操作空间
 
 ### non-local static
-全局对象的构造函数会在进入main函数前调用。
-当多文件编译时，有时希望利用全局变量的构造函数自动执行一些任务，
-这就需要你将该全局变量的定义所在源文件（或目标文件）纳入到最终目标的依赖中去。
+全局对象的构造函数会在进入main函数前调用，并在main函数结束后调用它们的析构函数。
+* 可利用全局变量的构造函数在程序启动前自动执行一些任务
+* 多文件编译时注意全局变量的构造顺序并未定义
 
-
-**关于链接**：
-
+### 关于链接
 * 无修饰的默认情况：
     * 无论是否对其初始化，都被当作定义
     * 符号定义对外可链接
@@ -229,19 +203,27 @@ local static对象的构造发生在初次调用该函数时，且构造过程�
 * static：
     * 无论是否对其初始化，都被当作定义
     * 符号定义不可对外链接
+    * 使用目的：只在本翻译单元中使用该符号而不暴露出去
 
 * extern：
-    * 未初始化则不会被当作定义，从而可以引用外部符号
+    * 未初始化则不会被当作定义从而可以引用外部符号
     * 符号定义对外可链接
+    * 使用目的：希望引用程序库中的符号
 
-* const与constexpr：
-    * 必须初始化，且被当作定义
-    * 符号定义默认不对外链接，可以使用**extern**强制对外
+* inline：
+    * 必须初始化且被当做定义
+    * 符号定义对外链接，且可多重定义
+    * 使用目的：在头文件中定义符号
+
+* const/constexpr：
+    * 必须初始化且被当作定义
+    * 符号定义默认不对外链接，可以使用extern强制对外
+    * 使用目的：提高程序性能
 
 * 类的static数据成员：
     * 若不在外部引用或定义它，甚至不会形成符号引用；除非使用inline语义
 
-### inline语义
+### 关于inline语义
 * 对函数：
     * 提示编译器内联展开以优化性能
     * 若展开失败则保证所有编译单元（TU）中的**同名inline函数**链接到同一定义
