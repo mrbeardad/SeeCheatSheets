@@ -1,4 +1,4 @@
-#if !defined(MRBEARDAD_SEE_CODE_HPP)
+#ifndef MRBEARDAD_SEE_CODE_HPP
 #define MRBEARDAD_SEE_CODE_HPP
 
 
@@ -20,4 +20,4 @@ public:
 inline CodeBlk CodeBlk::Instance_{};
 
 
-#endif // !defined(MRBEARDAD_SEE_CODE_HPP)
+#endif // MRBEARDAD_SEE_CODE_HPP

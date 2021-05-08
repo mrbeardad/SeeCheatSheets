@@ -1,4 +1,4 @@
-#if !defined(MRBEARDAD_SEE_QUOTE_HPP)
+#ifndef MRBEARDAD_SEE_QUOTE_HPP
 #define MRBEARDAD_SEE_QUOTE_HPP
 
 #include "normal.hpp"
@@ -17,4 +17,4 @@ public:
 inline QuoteBlk QuoteBlk::Instance_{};
 
 
-#endif // !defined(MRBEARDAD_SEE_QUOTE_HPP)
+#endif // MRBEARDAD_SEE_QUOTE_HPP

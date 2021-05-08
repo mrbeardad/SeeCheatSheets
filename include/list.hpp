@@ -1,4 +1,4 @@
-#if !defined(MRBEARDAD_SEE_LIST_HPP)
+#ifndef MRBEARDAD_SEE_LIST_HPP
 #define MRBEARDAD_SEE_LIST_HPP
 
 
@@ -18,4 +18,4 @@ public:
 inline ListBlk ListBlk::Instance_{};
 
 
-#endif // !defined(MRBEARDAD_SEE_LIST_HPP)
+#endif // MRBEARDAD_SEE_LIST_HPP

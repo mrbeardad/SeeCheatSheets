@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 06.03.2021
- * Last Modified Date: 07.05.2021
+ * Last Modified Date: 09.05.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -26,8 +26,8 @@ struct CloseSyncWithStdio
 };
 inline CloseSyncWithStdio CloseSyncWithStdio{};
 #endif // !defined(MRBEARDAD_MINE_HPP_CSWS) && !defined(DISABLE_CLOSE_SYNC_WITH_STDIO)
-// && (defined(_GLIBCXX_IOSTREAM) || defined(_IOSTREAM_))
-// && __cplusplus >= 201704L
+        // && (defined(_GLIBCXX_IOSTREAM) || defined(_IOSTREAM_))
+        // && __cplusplus >= 201704L
 
 
 /*************************************************************************************************/
@@ -92,6 +92,7 @@ operator""_rgx(const char* str, size_t len)
 {
     return std::regex{str, len};
 }
+
 inline std::wregex
 operator""_rgx(const wchar_t* str, size_t len)
 {
@@ -132,7 +133,7 @@ using udd = asio::local::datagram_protocol;
 /*************************************************************************************************/
 
 #ifndef MRBEARDAD_MINE_HPP
-#define MRBEARDAD_MINE_HPP 1
+#define MRBEARDAD_MINE_HPP
 
 
 #if __cplusplus >= 201703L
@@ -179,19 +180,20 @@ namespace mine
 
 #if __cplusplus >= 201703L
 
-// 默认以连续的空白符作为分隔符
-class Split
+template<typename CharT>
+class BasicSplit
 {
-    const std::string*  view_;
-    size_t              curIdx_;
-    char                sep_;
-    bool                keepSep_;
+    const std::basic_string<CharT>* view_;
+    size_t                          curIdx_;
+    char                            sep_;
+    bool                            keepSep_;
 public:
-    // 如果sep等于-1则忽略keepSep
-    explicit Split(const std::string& str, char sep=-1, bool keepSep=false)
+    // 默认以连续的空白符作为分隔符，如果sep等于-1则忽略keepSep
+    explicit BasicSplit(const std::basic_string<CharT>& str, CharT sep=-1, bool keepSep=false)
         : view_{&str}, curIdx_{}, sep_{sep}, keepSep_{keepSep} {  }
 
-    const std::string& reset(const std::string& newView, char sep=-1, bool keepSep=false)
+    const std::basic_string<CharT>&
+        reset(const std::basic_string<CharT>& newView, char sep=-1, bool keepSep=false)
     {
         curIdx_ = 0;
         sep_ = sep;
@@ -209,10 +211,10 @@ public:
             return curIdx_ = view_->size() + offset;
         if ( dir == std::ios_base::cur )
             return curIdx_ += offset;
-        return -1;
+        return std::basic_string<CharT>::npos;
     }
 
-    bool operator()(std::string_view& oneline)
+    bool operator()(std::basic_string_view<CharT>& oneline)
     {
         if ( sep_ == -1 ) {
             auto& viewStr = *view_;
@@ -221,27 +223,30 @@ public:
                 return false;
             size_t nextSpace{curIdx_};
             for ( ; nextSpace < viewStr.size() && !std::isspace(viewStr[nextSpace]); ++nextSpace );
-            oneline = std::string_view{viewStr.data() + curIdx_, nextSpace - curIdx_};
+            oneline = std::basic_string_view<CharT>{viewStr.data() + curIdx_, nextSpace - curIdx_};
             curIdx_ = nextSpace;
             return true;
         }
 
         auto sepPos = view_->find(sep_, curIdx_);
-        if ( sepPos != std::string::npos ) {
+        if ( sepPos != std::basic_string<CharT>::npos ) {
             size_t len{keepSep_ ? sepPos - curIdx_ + 1 : sepPos - curIdx_};
-            oneline = std::string_view{view_->data() + curIdx_, len};
+            oneline = std::basic_string_view<CharT>{view_->data() + curIdx_, len};
             curIdx_ = sepPos + 1;
             return true;
         } else if ( curIdx_ < view_->size() ) {
-            oneline = std::string_view{view_->data() + curIdx_, view_->size() - curIdx_};
+            oneline = std::basic_string_view<CharT>{view_->data() + curIdx_, view_->size() - curIdx_};
             curIdx_ = sepPos;
             return true;
         } else {
-            oneline = std::string_view{view_->data() + view_->size(), 0};
+            oneline = std::basic_string_view<CharT>{view_->data() + view_->size(), 0};
             return false;
         }
     }
 };
+
+using Split = BasicSplit<char>;
+using WSplit = BasicSplit<wchar_t>;
 
 #endif // __cplusplus >= 201703L
 

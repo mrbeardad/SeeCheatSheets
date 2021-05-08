@@ -1,4 +1,4 @@
-#if !defined(MRBEARDAD_SEE_HEADER_HPP)
+#ifndef MRBEARDAD_SEE_HEADER_HPP
 #define MRBEARDAD_SEE_HEADER_HPP
 
 
@@ -25,4 +25,4 @@ inline HeaderBlk HeaderBlk::Instance_{};
 } // namespace see
 
 
-#endif // defined(MRBEARDAD_SEE_HEADER_HPP)
+#endif // MRBEARDAD_SEE_HEADER_HPP

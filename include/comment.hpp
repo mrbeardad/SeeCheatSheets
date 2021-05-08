@@ -1,4 +1,4 @@
-#if !defined(MRBEARDAD_SEE_COMMENT_HPP)
+#ifndef MRBEARDAD_SEE_COMMENT_HPP
 #define MRBEARDAD_SEE_COMMENT_HPP
 
 
@@ -18,4 +18,4 @@ public:
 inline CommentBlk CommentBlk::Instance_{};
 
 
-#endif // !defined(MRBEARDAD_SEE_COMMENT_HPP)
+#endif // MRBEARDAD_SEE_COMMENT_HPP

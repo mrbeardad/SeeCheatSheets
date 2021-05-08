@@ -1,14 +1,4 @@
-/**
- * Copyright (c) 2020-2021 Heachen Bear & Contributors
- * File: normal.hpp
- * License: GPLv3
- * Author: Heachen Bear <mrbeardad@qq.com>
- * Date: 07.03.2021
- * Last Modified Date: 08.05.2021
- * Last Modified By: Heachen Bear <mrbeardad@qq.com>
- */
-
-#if !defined(MRBEARDAD_SEE_NORMAL_HPP)
+#ifndef MRBEARDAD_SEE_NORMAL_HPP
 #define MRBEARDAD_SEE_NORMAL_HPP
 
 
@@ -35,4 +25,4 @@ inline NormalBlk NormalBlk::Instance_{};
 } // namespace see
 
 
-#endif // !defined(MRBEARDAD_SEE_NORMAL_HPP)
+#endif // MRBEARDAD_SEE_NORMAL_HPP
