@@ -1,8 +1,10 @@
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+#include "mine.hpp"
+#include "unicode/display_width.hpp"
+
 #include "normal.hpp"
 #include "see.hpp"
 
-#include "mine.hpp"
 
 // std::string str("*italic*");
 // //                                                          区块边界恢复
@@ -13,9 +15,10 @@
 // //                               V   V                   V   V   V   V
 // EXPECT_EQ(hilit.highlight(str), "\e[m\e[3;38;5;255mitalic\e[m\e[m\e[m\e[m");
 
+#if 0
 TEST(TestNormal, testItalicBold)
 {
-    auto& hilit = see::MkdHighlight::Instance_.getBlock("normal");
+    auto& hilit = see::MkdHighlight::Instance().getBlock("normal");
 
     EXPECT_EQ(dynamic_cast<see::NormalBlk&>(hilit).highlight("**bold**", "\e[31m"), "\e[31m\e[1;38;5;255mbold\e[m\e[31m\e[m\e[31m");
     EXPECT_EQ(hilit.highlight("**bold**"), "\e[m\e[1;38;5;255mbold\e[m\e[m\e[m\e[m");
@@ -67,4 +70,69 @@ TEST(TestNormal, testLink)
     EXPECT_EQ(hilit.highlight("![link](https://example.org)"), "\e[m\e[33m![\e[m\e[mlink\e[33m](\e[m\e[4;34mhttps://example.org\e[m\e[33m)\e[m\e[m\e[m\e[m");
     EXPECT_EQ(hilit.highlight("[link] (https://example.org)"), "\e[m[link] (https://example.org)\e[m\e[m");
     EXPECT_EQ(hilit.highlight("[link](https://example.org"), "\e[m[link](https://example.org\e[m\e[m");
+}
+#endif
+
+TEST(TestList, matchBegin)
+{
+    auto& listBlk = see::MkdHighlight::Instance().getBlock("list");
+
+    EXPECT_TRUE(listBlk.matchBegin("- list"));
+    EXPECT_TRUE(listBlk.matchBegin("+ list"));
+    EXPECT_TRUE(listBlk.matchBegin("* list"));
+    EXPECT_FALSE(listBlk.matchBegin("-list-"));
+    EXPECT_FALSE(listBlk.matchBegin("+list+"));
+    EXPECT_FALSE(listBlk.matchBegin("*list*"));
+    EXPECT_TRUE(listBlk.matchBegin("- -list-"));
+    EXPECT_TRUE(listBlk.matchBegin("+ +list+"));
+    EXPECT_TRUE(listBlk.matchBegin("* *list*"));
+    EXPECT_FALSE(listBlk.matchBegin("*"));
+    EXPECT_TRUE(listBlk.matchBegin("* "));
+    EXPECT_TRUE(listBlk.matchBegin("* *"));
+    EXPECT_FALSE(listBlk.matchBegin("* * *"));
+    EXPECT_TRUE(listBlk.matchBegin("* * * * * *not list"));
+}
+
+TEST(TestList, matchEnd)
+{
+    auto& listBlk = see::MkdHighlight::Instance().getBlock("list");
+
+    EXPECT_TRUE(listBlk.matchEnd("# header"));
+    EXPECT_TRUE(listBlk.matchEnd("* * *"));
+    EXPECT_TRUE(listBlk.matchEnd("<!-- comment -->"));
+    EXPECT_TRUE(listBlk.matchEnd("> quote"));
+    EXPECT_TRUE(listBlk.matchEnd("```code"));
+    EXPECT_TRUE(listBlk.matchEnd(""));
+    EXPECT_FALSE(listBlk.matchEnd("* list"));
+}
+
+TEST(TestQuote, matchBegin)
+{
+    auto& quoteBlk = see::MkdHighlight::Instance().getBlock("quote");
+
+    EXPECT_TRUE(quoteBlk.matchBegin(">"));
+    EXPECT_TRUE(quoteBlk.matchBegin("> "));
+    EXPECT_TRUE(quoteBlk.matchBegin(">>"));
+    EXPECT_TRUE(quoteBlk.matchBegin(">> "));
+    EXPECT_TRUE(quoteBlk.matchBegin("> >"));
+    EXPECT_TRUE(quoteBlk.matchBegin("> > "));
+    EXPECT_TRUE(quoteBlk.matchBegin(">quote"));
+    EXPECT_TRUE(quoteBlk.matchBegin("> quote"));
+    EXPECT_TRUE(quoteBlk.matchBegin(">>quote"));
+    EXPECT_TRUE(quoteBlk.matchBegin(">> quote"));
+    EXPECT_TRUE(quoteBlk.matchBegin("> >quote"));
+    EXPECT_TRUE(quoteBlk.matchBegin("> > quote"));
+}
+
+TEST(TestQuote, matchEnd)
+{
+    auto& quoteBlk = see::MkdHighlight::Instance().getBlock("quote");
+
+    EXPECT_TRUE(quoteBlk.matchEnd("# header"));
+    EXPECT_TRUE(quoteBlk.matchEnd("* * *"));
+    EXPECT_TRUE(quoteBlk.matchEnd("<!-- comment -->"));
+    EXPECT_TRUE(quoteBlk.matchEnd("* list"));
+    EXPECT_TRUE(quoteBlk.matchEnd("```code"));
+    EXPECT_TRUE(quoteBlk.matchEnd(""));
+    EXPECT_FALSE(quoteBlk.matchEnd("> quote"));
 }

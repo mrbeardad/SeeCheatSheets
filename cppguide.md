@@ -23,8 +23,8 @@ GFM
     : !CWD
         ? T
         : W
-            ? T& -> T&&
-            : cT& -> T&  -> T&&
+            ? T&  -> T&&
+            : cT& -> T& -> T&&
 // 注：如果函数内部必定会copy一次形参，则可直接使用传值参数(T)
 ```
 * 修饰
@@ -33,7 +33,6 @@ GFM
     * noexcept
     * inline
     * constexpr
-    * auto return
     * =delete
 
 * 使用`temp T&&`时注意使用`std::decay_t<T>`与`std::forward<T>(t)`

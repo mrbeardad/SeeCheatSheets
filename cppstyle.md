@@ -63,13 +63,13 @@ class Demo
 {
     /* 成员类型 */
     /* 成员对象 */
+    /* 静态成员对象 */
 public:
     /* 析构函数 */
     /* 普通构造函数 */
     /* copy & move */
     /* operator */
     /* 成员函数 */
-    /* 静态成员对象 */
     /* 静态成员函数 */
 private:
     /* public段有需要private的移到此处 */

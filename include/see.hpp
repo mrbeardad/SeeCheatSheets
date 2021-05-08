@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 07.05.2021
+ * Last Modified Date: 08.05.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -25,42 +25,19 @@
 namespace see
 {
 
+class MkdHighlight;
 
 // interface of markdown block highlight
-class MkdBlock
+struct MkdBlock
 {
-    std::string registName_;
-public:
-    explicit MkdBlock(std::string name);
-    virtual ~MkdBlock() =default;
+    MkdHighlight& mediator_;
+
+    virtual ~MkdBlock();
+    explicit MkdBlock(const std::string& name);
 
     virtual bool matchBegin(const std::string& oneline) =0;
     virtual bool matchEnd(const std::string& oneline) =0;
     virtual std::string& highlight(std::string& text) =0;
-
-    std::string highlight(std::string&& text)
-    {
-        return std::move(highlight(text));
-    }
-};
-
-
-// catch the tty window size
-class WinSize
-{
-    winsize winsize_;
-public:
-    WinSize();
-
-    int getRow() const noexcept
-    {
-        return winsize_.ws_row;
-    }
-
-    int getCol() const noexcept
-    {
-        return winsize_.ws_col;
-    }
 };
 
 
@@ -72,26 +49,17 @@ public:
     using AllBlocks = std::pair<Register::const_iterator, Register::const_iterator>;
 
 private:
-    WinSize     winsize_;
+    winsize     winsize_;
     Register    blocks_;
 
 public:
-    int getTtyRow() const noexcept
-    {
-        return winsize_.getRow();
-    }
-
-    int getTtyCol() const noexcept
-    {
-        return winsize_.getCol();
-    }
-
-    bool regist(std::string name, MkdBlock* block);
+    int getTtyRow() const noexcept;
+    int getTtyCol() const noexcept;
+    bool regist(const std::string& name, MkdBlock* block);
     MkdBlock& getBlock(const std::string& name);
     AllBlocks getAllBlocks() const;
     std::string& highlight(std::string& text);
 
-    // Singleton Pattern: Singleton
     static MkdHighlight& Instance();
 
 private:
@@ -109,5 +77,5 @@ search_entries(const std::vector<fs::path>& files, const std::vector<std::string
 
 } // namespace see
 
-#endif // MRBEARDAD_SEE_HPP
 
+#endif // MRBEARDAD_SEE_HPP

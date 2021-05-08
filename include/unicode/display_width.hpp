@@ -334,11 +334,27 @@ inline std::string utf8_encode(const std::wstring& str) {
 
 inline int display_width(const std::string& input) {
   using namespace unicode::details;
-  return mk_wcswidth(utf8_decode(input).c_str(), input.size());
+  std::string removeEscape{};
+  for ( size_t idx{}; idx < input.size(); ) {
+      if ( input[idx] == '\e' ) {
+          for ( ; input[idx++] != 'm'; );
+      } else {
+          removeEscape.push_back(input[idx++]);
+      }
+  }
+  return mk_wcswidth(utf8_decode(removeEscape).c_str(), input.size());
 }
 
 inline int display_width(const std::wstring& input) {
-  return details::mk_wcswidth(input.c_str(), input.size());
+  std::wstring removeEscape{};
+  for ( size_t idx{}; idx < input.size(); ++idx ) {
+      if ( input[idx] == L'\e' ) {
+          for ( ; input[idx++] != L'm'; );
+      } else {
+          removeEscape.push_back(input[idx++]);
+      }
+  }
+  return details::mk_wcswidth(removeEscape.c_str(), input.size());
 }
 
 }

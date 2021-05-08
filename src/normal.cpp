@@ -1,6 +1,7 @@
-#include "normal.hpp"
 #include <array>
 #include <string.h>
+
+#include "normal.hpp"
 
 
 see::NormalBlk::NormalBlk()
@@ -9,7 +10,7 @@ see::NormalBlk::NormalBlk()
 
 bool see::NormalBlk::matchBegin(const std::string& oneline)
 {
-    auto [begin, end] = see::MkdHighlight::Instance().getAllBlocks();
+    auto [begin, end] = mediator_.getAllBlocks();
     for( ; begin != end; ++begin ) {
         if ( begin->first != "normal" && begin->second->matchBegin(oneline) ) {
             return false;
@@ -231,12 +232,6 @@ std::string& see::NormalBlk::highlight(std::string& text, const std::string& bgC
     }
 
     return text += "\e[m" + bgColor;
-}
-
-
-std::string see::NormalBlk::highlight(std::string&& text, const std::string& bgColor)
-{
-    return highlight(text, bgColor);
 }
 
 

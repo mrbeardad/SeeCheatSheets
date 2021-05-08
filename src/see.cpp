@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 07.05.2021
+ * Last Modified Date: 08.05.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -13,33 +13,42 @@
 #include <regex>
 #include <unistd.h>
 
-#include "header.hpp"
 #include "mine.hpp"
+
+#include "code.hpp"
+#include "comment.hpp"
+#include "header.hpp"
+#include "list.hpp"
 #include "normal.hpp"
+#include "quote.hpp"
 #include "see.hpp"
-#include "srchilite/sourcehighlight.h"
-#include "unicode/display_width.hpp"
+#include "seperator.hpp"
+#include "table.hpp"
+
 
 namespace see
 {
 /*************************************************************************************************/
 // MkdBlock
 /*************************************************************************************************/
-// 注册器：其子类仅需创建一个对象实例便自动向中介者(MkdHighlight)注册
-MkdBlock::MkdBlock(std::string name): registName_(std::move(name))
-{
-    MkdHighlight& mkdHilit = MkdHighlight::Instance();
+MkdBlock::~MkdBlock() =default;
 
-    if ( !mkdHilit.regist(registName_, this) ) {
+
+// 注册器：其子类仅需创建一个对象实例便自动向中介者(MkdHighlight)注册
+MkdBlock::MkdBlock(const std::string& name)
+    : mediator_{MkdHighlight::Instance()}
+{
+    if ( !mediator_.regist(name, this) ) {
         throw std::logic_error{name + "regist error"};
     }
 }
 
 
 /*************************************************************************************************/
-// WinSize
+// MkdHighlight
 /*************************************************************************************************/
-WinSize::WinSize()
+MkdHighlight::MkdHighlight()
+    : winsize_{}, blocks_{}
 {
     if ( ::isatty(STDOUT_FILENO) ) {
         mine::handle(::ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize_));
@@ -51,13 +60,19 @@ WinSize::WinSize()
 }
 
 
-/*************************************************************************************************/
-// MkdHighlight
-/*************************************************************************************************/
-MkdHighlight::MkdHighlight() =default;
+int MkdHighlight::getTtyRow() const noexcept
+{
+    return winsize_.ws_row;
+}
 
 
-bool MkdHighlight::regist(std::string name, MkdBlock* block)
+int MkdHighlight::getTtyCol() const noexcept
+{
+    return winsize_.ws_col;
+}
+
+
+bool MkdHighlight::regist(const std::string& name, MkdBlock* block)
 {
     auto [ignore, isOK] = blocks_.emplace(std::move(name), block);
     return isOK;
@@ -88,8 +103,8 @@ std::string& MkdHighlight::highlight(std::string& text)
         for ( auto iter = blocks_.begin(); iter != blocks_.end(); ++iter ) {
             if ( iter->second->matchBegin(oneline) ) {
                 curBlk = iter->second;
-                if ( ::getenv("OUTPUT_DEBUG_LOG") != nullptr )
-                    std::cerr << "match: " << iter->first << ":" << oneline << '\n';
+                if ( std::getenv("OUTPUT_DEBUG_LOG") != nullptr )
+                    std::cerr << "\e[32mmatch:\e[m " << iter->first << ":" << oneline;
                 break;
             }
         }
@@ -101,14 +116,21 @@ std::string& MkdHighlight::highlight(std::string& text)
             std::string nextline{nextlineView};
             // 若匹配到区块尾部，则将该行放回
             if ( curBlk->matchEnd(nextline) ) {
-                ssize_t offset = -static_cast<ssize_t>(nextline.size());
+                ssize_t offset = -static_cast<ssize_t>(nextlineView.size());
                 getLine.seek(offset);
                 break;
             }
+            blockText += nextline;
         }
 
+        if ( std::getenv("OUTPUT_DEBUG_LOG") != nullptr ) {
+            std::cerr << "============================================================\n";
+            std::cerr << blockText;
+            std::cerr << "============================================================\n\n";
+        }
         text += curBlk->highlight(blockText);
     }
+
 
     return text;
 }
@@ -267,310 +289,5 @@ std::string search_entries(const std::vector<fs::path>& files, const std::vector
     return entries;
 }
 
-/*************************************************************************************************/
-
-class SeperatorBlk : public see::MkdBlock
-{
-    static inline std::regex Seperator{R"(^(\s*\*\s*){3,}$)"};
-public:
-    SeperatorBlk(): see::MkdBlock{"seperator"} {  }
-
-    bool matchBegin(const std::string& oneline) override
-    {
-        return std::regex_search(oneline, Seperator);
-    }
-
-    bool matchEnd(const std::string&) override
-    {
-        return true;
-    }
-
-    std::string highlight(const std::string& text) override
-    {
-        std::string space(6, ' ');
-        std::string hyphen{};
-        for ( int cnt{}; cnt < see::MkdHighlight::Instance().getTtyCol() - 12; ++cnt ) hyphen += "─";
-        return text = space + hyphen + space;
-    }
-
-private:
-    static SeperatorBlk Instance_;
-};
-SeperatorBlk SeperatorBlk::Instance_{};
-
-
-/*************************************************************************************************/
-
-class QuoteBlk : public see::MkdBlock
-{
-public:
-    QuoteBlk(): see::MkdBlock{"quote"} {  }
-
-    bool matchBegin(const std::string& oneline) override
-    {
-        return std::regex_search(oneline, Quote);
-    }
-
-    bool matchEnd(const std::string& oneline) override
-    {
-        return oneline.empty()
-            || see::MkdHighlight::Instance().getBlock("header").matchEnd(oneline)
-            || see::MkdHighlight::Instance().getBlock("seperator").matchEnd(oneline)
-            || see::MkdHighlight::Instance().getBlock("list").matchEnd(oneline)
-            || see::MkdHighlight::Instance().getBlock("code").matchEnd(oneline)
-            || see::MkdHighlight::Instance().getBlock("comment").matchEnd(oneline);
-    }
-
-    std::string& highlight(std::string& text) override
-    {
-        std::stringstream sstrm{text};
-        text.clear();
-        for ( std::string oneline{}; std::getline(sstrm, oneline); ) {
-            auto quote = std::regex_replace(oneline, Quote, "\033[48;5;235m\033[38;5;240m$1\033[m");
-            auto normal = std::regex_replace(oneline, Quote, "$2");
-            auto& normalBlk = see::MkdHighlight::Instance().getBlock("normal");
-            dynamic_cast<NormalBlk&>(normalBlk).highlight(normal, "\033[38;5;245m");
-            text += quote + normal + '\n';
-        }
-        return text;
-    }
-private:
-    static inline std::regex Quote{R"(^(\s*>+)(\s+\S*))"};
-    static QuoteBlk Instance_;
-};
-QuoteBlk QuoteBlk::Instance_{};
-
-/*************************************************************************************************/
-
-class ListBlk : public see::MkdBlock
-{
-public:
-    ListBlk(): see::MkdBlock{"list"} {  }
-
-    bool matchBegin(const std::string& oneline) override
-    {
-        return std::regex_search(oneline, List) && !see::MkdHighlight::Instance().getBlock("seperator").matchBegin(oneline);
-    }
-
-    bool matchEnd(const std::string &oneline) override
-    {
-        return oneline.empty()
-            || see::MkdHighlight::Instance().getBlock("header").matchEnd(oneline)
-            || see::MkdHighlight::Instance().getBlock("seperator").matchEnd(oneline)
-            || see::MkdHighlight::Instance().getBlock("list").matchEnd(oneline)
-            || see::MkdHighlight::Instance().getBlock("quote").matchEnd(oneline)
-            || see::MkdHighlight::Instance().getBlock("code").matchEnd(oneline)
-            || see::MkdHighlight::Instance().getBlock("comment").matchEnd(oneline);
-    }
-
-    std::string& highlight(std::string& text) override
-    {
-        std::stringstream sstrm{text};
-        text.clear();
-        for ( std::string oneline{}; std::getline(sstrm, oneline); ) {
-            std::smatch headMatch{};
-            std::string head{};
-            std::string normal{};
-            if ( std::regex_search(oneline, headMatch, List) ) {
-                head = headMatch.format("\033[36m$1\033[m");
-                normal = headMatch.suffix().str();
-            } else {
-                normal = oneline;
-            }
-            see::MkdHighlight::Instance().getBlock("normal").highlight(normal);
-            text = head + normal + '\n';
-        }
-        return text;
-    }
-private:
-    static inline std::regex List{R"(^(\s*[-*+]\s+))"};
-    static ListBlk Instance_;
-};
-ListBlk ListBlk::Instance_{};
-
-/*************************************************************************************************/
-
-class TableBlk : public see::MkdBlock
-{
-public:
-    TableBlk(): see::MkdBlock{"table"} {  }
-
-    bool matchBegin(const std::string& oneline) override
-    {
-        return std::regex_search(oneline, Table1st);
-    }
-
-    bool matchEnd(const std::string& oneline) override
-    {
-        return !std::regex_search(oneline, Table1st);
-    }
-
-    std::string& highlight(std::string& text) override
-    {
-        auto line2ndBegin   = text.find('\n') + 1;
-        auto line2ndEnd     = text.find('\n', line2ndBegin);
-        auto line2nd        = text.substr(line2ndBegin, line2ndEnd - line2ndBegin);
-        if ( std::regex_search(line2nd, Table2nd) ) {
-            std::stringstream   sstrm{text};
-            std::string         newLine1st{"┌"};
-            std::string         newLine2nd{};
-            std::string         newLine3rd{"├"};
-
-            for ( auto pos = line2nd.begin() + 1, end = line2nd.end(); pos != end; ++pos ) {
-                if ( *pos == '|' ) {
-                    newLine1st += "┬";
-                    newLine3rd += "┼";
-                } else {    // '-'或':'
-                    newLine1st += "─";
-                    newLine3rd += "─";
-                }
-            }
-            newLine1st.replace(newLine1st.size() - 3, 3, "┐\n│");
-            newLine3rd.replace(newLine3rd.size() - 3, 3, "┤");
-
-            text = newLine1st;
-
-            std::getline(sstrm, newLine2nd);
-            std::string normal{};
-            for ( auto pos = newLine2nd.begin() + 1, end = newLine2nd.end(); pos != end; ++pos ) {
-                if ( *pos != '|' ) {
-                    normal += *pos;
-                } else {
-                    text += see::MkdHighlight::Instance().getBlock("normal").highlight(normal) + "│";
-                    normal.clear();
-                }
-            }
-            text += '\n' + newLine3rd + '\n';
-
-            sstrm.ignore(512, '\n');
-            // 复用之前的line2nd
-            for ( int cnt{}; std::getline(sstrm, line2nd); ++cnt ) {
-                auto& normalBlk = see::MkdHighlight::Instance().getBlock("normal");
-                text += dynamic_cast<NormalBlk&>(normalBlk).highlight(line2nd,
-                        cnt % 2 ? "\033[38;5;240m\033[48;2;94;175;220m" : "\033[38;5;240m\033[48;2;128;128;255m")
-                    + "\033[m\n";
-            }
-        } else {
-            see::MkdHighlight::Instance().getBlock("normal").highlight(text);
-        }
-        return text;
-    }
-private:
-    static inline std::regex Table1st{R"(^\s*(\|.*)+\|)"};
-    static inline std::regex Table2nd{R"(^\s*(\|[: -]+)+\|)"};
-    static TableBlk Instance_;
-};
-TableBlk TableBlk::Instance_{};
-
-/*************************************************************************************************/
-
-class CodeBlk : public see::MkdBlock
-{
-    bool needHilit_;
-public:
-    CodeBlk(): see::MkdBlock{"code"}, needHilit_{true} {  }
-
-    bool matchBegin(const std::string& oneline) override
-    {
-        return std::regex_search(oneline, CodeBegin);
-    }
-
-    bool matchEnd(const std::string &oneline) override
-    {
-        if ( !needHilit_ ) return true;
-        return std::regex_search(oneline, CodeEnd);
-    }
-
-    std::string& highlight(std::string& text) override
-    {
-        if ( needHilit_ ) needHilit_ = false;
-        else {
-            needHilit_ = true;
-            text.clear();
-            return text;
-        }
-        auto type = text.substr(0, text.find('\n') + 1);
-        // 同时去掉形如```cpp头部与形如```尾部
-        std::stringstream sstrm{text.substr(type.size(), text.find_last_not_of("`\n") + 2 - type.size())};
-        text.clear();
-        type = std::regex_replace(type, CodeBegin, "$1", std::regex_constants::format_no_copy);
-
-        // 当前版本unicode::display_wiwdth()不支持ANSI escape
-        std::vector<int> nCols{};
-        int maxCol{};
-        for ( std::string oneline{}; std::getline(sstrm, oneline); ) {
-            auto col = unicode::display_width(oneline);
-            nCols.emplace_back(col);
-            maxCol = std::max(maxCol, col);
-        }
-        sstrm.rdbuf()->pubseekpos(0);
-        sstrm.clear();
-
-        std::string hyphen{};
-        auto nHyphen = maxCol + 4 - static_cast<int>(type.size()) - 4;
-        nHyphen = nHyphen < 0 ? 0 : nHyphen / 2 + 1;
-        for ( int cnt{}; cnt < nHyphen; ++cnt )
-            hyphen += "─";
-        text = "\033[38;2;255;165;0m┌" + hyphen + " \033[32m" + type + "\033[38;2;255;165;0m " + hyphen + "┐\033[m\n";
-        maxCol = nHyphen * 2 + static_cast<int>(type.size()) + 4;
-
-        std::stringstream hilitStrm{};
-        try {
-            srchilite::SourceHighlight  codeHilit{"esc.outlang"};
-            codeHilit.highlight(sstrm, hilitStrm, type + ".lang");
-        } catch (std::exception& excep) {
-            hilitStrm.str(sstrm.str());
-        }
-
-        size_t idx{};
-        for ( std::string oneline{}; std::getline(hilitStrm, oneline); ) {
-            oneline = std::regex_replace(oneline, "\033\\[01;30m"_rgx, "\033[01;34m");
-            text += "\033[38;2;255;165;0m│\033[m "
-                + oneline
-                + std::string(maxCol - nCols.at(idx++) - 4, ' ')
-                + " \033[38;2;255;165;0m│\033[m\n";
-        }
-
-        text += "\033[38;2;255;165;0m└";
-        for ( int cnt{}; cnt < maxCol - 2; ++cnt ) text += "─";
-        text += "┘\033[m\n";
-
-        return text;
-    }
-private:
-    static inline std::regex CodeBegin{R"(^\s*`{3,}(.*))"};
-    static inline std::regex CodeEnd{R"(^\s*`{3,}$)"};
-    static CodeBlk Instance_;
-};
-CodeBlk CodeBlk::Instance_{};
-
-
-class CommentBlk : public MkdBlock
-{
-public:
-    CommentBlk(): MkdBlock{"comment"} {  }
-
-    bool matchBegin(const std::string& oneline) override
-    {
-        return std::regex_search(oneline, Comment);
-    }
-
-    bool matchEnd(const std::string&) override
-    {
-        return true;
-    }
-
-    virtual std::string& highlight(std::string& text) override
-    {
-        text.clear();
-        return text;
-    }
-
-private:
-    static inline std::regex Comment{R"(^<!--.*-->$)"};
-    static CommentBlk Instance_;
-};
-CommentBlk CommentBlk::Instance_{};
 
 } // namespace see
-

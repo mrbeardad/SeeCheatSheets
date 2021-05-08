@@ -3,8 +3,6 @@
 
 
 #include "see.hpp"
-#include <regex>
-#include "unicode/display_width.hpp"
 
 
 namespace see
@@ -13,17 +11,13 @@ namespace see
 
 class HeaderBlk : public see::MkdBlock
 {
+    static HeaderBlk Instance_;
+
 public:
     HeaderBlk();
-
     virtual bool matchBegin(const std::string& oneline) override;
-
     virtual bool matchEnd(const std::string&) override;
-
     virtual std::string& highlight(std::string& text) override;
-
-private:
-    static HeaderBlk Instance_;
 };
 inline HeaderBlk HeaderBlk::Instance_{};
 

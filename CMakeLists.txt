@@ -16,7 +16,8 @@ message("[34m===>[m Build Type: " ${CMAKE_BUILD_TYPE})
 
 # targets
 ###################################################################################################
-add_library(mkdhilit STATIC src/see.cpp src/normal.cpp src/header.cpp)
+add_library(mkdhilit STATIC src/see.cpp src/code.cpp src/comment.cpp src/header.cpp src/list.cpp
+    src/normal.cpp src/quote.cpp src/seperator.cpp src/table.cpp)
 add_executable(see src/main.cpp)
 add_executable(see_test test/test.cpp)
 
