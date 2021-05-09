@@ -6,6 +6,7 @@
 - [变量](#变量)
 - [语句](#语句)
 - [常用命令](#常用命令)
+  - [内建命令](#内建命令)
   - [文件信息](#文件信息)
   - [文件日期](#文件日期)
   - [目录文件](#目录文件)
@@ -276,6 +277,7 @@ esac
 <!-- entry end -->
 
 # 常用命令
+## 内建命令
 <!-- entry begin: bash builtin -->
 * bash部分内建命令
     * :             ：空白命令，返回零
@@ -654,8 +656,8 @@ esac
         * NF        ：字段数
         * OFMT      ：数字输出格式(默认%.6g)
         * IGNORECASE：为true则忽略大小写
-        * `$0`        ：整行内容
-        * `$N`        ：第N个字段
+        * `$0`      ：整行内容
+        * `$N`      ：第N个字段
 
 * 运算符
     * `+` `-` `*` `/` `%` `^`
@@ -665,8 +667,8 @@ esac
     * `空格`        ：字符连接
     * `in`          ：确认数组键值
     * `|`           ：管道连接符
-    * `"cmd" |`     ：管道连接，读取`cmd`输出
-    * `| "cmd"`     ：管道连接，输出到`cmd`
+        * `"cmd" |`     ：管道连接，读取`cmd`输出
+        * `| "cmd"`     ：管道连接，输出到`cmd`
 
 * 关键字
     * 输出
@@ -722,7 +724,7 @@ esac
 * 操作
     * s/pattern/replace/g
         * replace中&代表整个匹配到的字符串
-        * 替换标记：无g全部，Ng第N个
+        * 替换标记：默认第一个，g全部，Ng第N个
     * a或i      ：行后或行前添加字符串
     * c         ：会把所有匹配行转换成一个字符串
     * d         ：删除匹配行
@@ -745,38 +747,6 @@ esac
     * 特殊变量  ：scale，last，ibase，obase，支持^运算符求幂
 <!-- entry end -->
 
-<!-- entry begin: curl -->
-* curl
-    * -s        ：silent mode
-    * -S        ：打印错误消息，即使使用了`-s`
-    * -L        ：接受链接跳转
-    * -o        ：指定输出文件
-* curl -Lo File URL
-* curl -fsSL URL | bash
-* curl -fsSL URL | bash -s -- {-opt}
-* curl cheat.sh/`CMD`
-* curl cheat.sh/`LANG`/`SPECIFIC`
-    > [cheat.sh](https://github.com/chubin/cheat.sh)是github上一个nice的项目
-    * 空白用`+`代替
-    * `curl cheat.sh/~keyword`
-    * `curl cheat.sh/python/:list` 列出可选项
-<!-- entry end -->
-
-<!-- entry begin: sendEmail -->
-* sendEmail
-    * -s        ：SMTP服务器
-    * -f        ：发送者的邮箱
-    * -t        ：接收者的邮箱
-    * -cc       ：表示抄送发给谁
-    * -bcc      ：表示暗抄送给谁
-    * -xu       ：SMTP验证的用户名
-    * -xp       ：SMTP验证的密码
-    * -u        ：标题
-    * -m        ：内容
-    * -a        ：附件
-    * -o message-content-type=*html*/*text* ：邮件的格式
-    * -o message-charset=utf8               ：邮件的编码
-<!-- entry end -->
 
 # Test条件检测
 <!-- entry begin: test operator -->

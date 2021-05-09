@@ -2495,8 +2495,8 @@ int main(int argc, char* argv[]) {
 ```
 
 * 设置glog行为
-    > 可通过更改运行程序的环境变量，变量名前缀`GLOG_`。注意后缀就是小写
-    > 或者在代码中更改全局变量，变量名前缀`FLAGS_`，注意是赋值C++变量而非定义宏（再初始化glog之前）。
+    > 可通过更改运行程序的“环境变量”，前缀`GLOG_`
+    > 或者通过在代码中更改”全局变量“，前缀`FLAGS_`
     * `logtostderr=0`：是否输出到stderr代替输出到tmpfile
     * `stderrthreshold=2`：高于该等级的日志额外输出到stderr。
         INFO、WARNING、ERROR、FATAL分别为0、1、2、3

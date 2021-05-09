@@ -9,18 +9,17 @@
     - [BIOS](#bios)
     - [UEFI](#uefi)
   - [grub](#grub)
-    - [grub工作流程](#grub工作流程)
+    - [grub启动流程](#grub启动流程)
     - [grub配置](#grub配置)
-    - [grub-shell](#grub-shell)
-    - [grub选单](#grub选单)
+    - [grub脚本](#grub脚本)
+    - [grub安全](#grub安全)
   - [kernel](#kernel)
-    - [kernel工作流程](#kernel工作流程)
+    - [kernel启动流程](#kernel启动流程)
     - [kernel引导参数](#kernel引导参数)
   - [systemd](#systemd)
     - [systemd启动流程](#systemd启动流程)
-    - [systemctl命令](#systemctl命令)
-    - [systemd配置](#systemd配置)
-    - [unit配置](#unit配置)
+    - [systemd管理命令](#systemd管理命令)
+    - [systemd单元配置](#systemd单元配置)
       - [Unit小节](#unit小节)
       - [Install小节](#install小节)
       - [Service小节](#service小节)
@@ -29,16 +28,26 @@
 - [用户管理](#用户管理)
   - [用户资料文件](#用户资料文件)
   - [用户管理命令](#用户管理命令)
+- [日志管理](#日志管理)
+- [系统配置](#系统配置)
+  - [系统信息](#系统信息)
+  - [日期时间](#日期时间)
+  - [语系与字符集](#语系与字符集)
+  - [字体服务](#字体服务)
+  - [网络配置](#网络配置)
 - [硬盘管理](#硬盘管理)
   - [分区工具](#分区工具)
   - [逻辑卷管理](#逻辑卷管理)
-  - [硬盘文件系统](#硬盘文件系统)
-- [系统配置](#系统配置)
-  - [操作系统信息](#操作系统信息)
-  - [日期时间与时区](#日期时间与时区)
-  - [语系与字符集](#语系与字符集)
-  - [字体服务](#字体服务)
-- [日志管理](#日志管理)
+  - [磁盘文件系统](#磁盘文件系统)
+  - [归档包](#归档包)
+- [文件系统](#文件系统)
+  - [文件描述符](#文件描述符)
+  - [虚拟文件系统](#虚拟文件系统)
+  - [挂载命令](#挂载命令)
+  - [文件与目录](#文件与目录)
+  - [文件信息](#文件信息)
+  - [自主访问控制](#自主访问控制)
+  - [强制访问控制](#强制访问控制)
 - [进程管理](#进程管理)
   - [进程关系](#进程关系)
     - [会话](#会话)
@@ -46,28 +55,19 @@
     - [进程](#进程)
   - [进程环境](#进程环境)
   - [异常控制流](#异常控制流)
-    - [信号](#信号)
+    - [异常类型](#异常类型)
+    - [进程状态](#进程状态)
+    - [信号机制](#信号机制)
   - [资源限制](#资源限制)
+    - [进程调度](#进程调度)
+    - [CGroup机制](#cgroup机制)
+    - [ulimit机制](#ulimit机制)
   - [进程管理命令](#进程管理命令)
-- [虚拟文件系统](#虚拟文件系统)
-  - [文件描述符](#文件描述符)
-  - [内核文件缓存/缓冲区](#内核文件缓存缓冲区)
-  - [文件系统](#文件系统)
-  - [归档包](#归档包)
-  - [挂载命令](#挂载命令)
-  - [文件与目录](#文件与目录)
-  - [文件信息](#文件信息)
-  - [自主访问控制](#自主访问控制)
-    - [权限命令](#权限命令)
-  - [强制访问控制](#强制访问控制)
-  - [终端](#终端)
+- [终端](#终端)
     - [终端原理](#终端原理)
-    - [ANSI escape](#ansi-escape)
     - [作业控制](#作业控制)
     - [伪终端](#伪终端)
-- [网络管理](#网络管理)
-  - [网络配置](#网络配置)
-  - [网络命令](#网络命令)
+    - [ANSI escape](#ansi-escape)
 
 <!-- vim-markdown-toc -->
 ![unix-history](images/unix.jpeg)
@@ -143,7 +143,8 @@
 固件规范也基本分为两种，老式的BIOS与新式的UEFI。
 
 ### BIOS
-&emsp;BIOS与一般MBR配合，作为老式主板的固件。在MBR格式的硬盘分区中，除了MBR头部的引导区，每个分区头部都有一个引导区用于存放boot-loader。
+&emsp;BIOS与一般MBR配合，作为老式主板的固件。
+在MBR格式的硬盘分区中，除了MBR头部的引导区，每个分区头部都有一个引导区用于存放boot-loader。
 BIOS加载MBR头部的boot-loader，而后者便可以选择：
 * 加载操作系统镜像
 * 加载其他boot-loader
@@ -185,7 +186,7 @@ ESP是系统引导分区，供UEFI引导系统使用，支持EFI模式的电脑�
     * 不允许 自然人启用自定义模式，以及修改固件的信任密钥列表
 
 ## grub
-### grub工作流程
+### grub启动流程
 1. 加载bootx64.efi
 2. 定义变量`cmdpath` `prefix` `root`
 3. 加载normal.mod
@@ -210,9 +211,7 @@ ESP是系统引导分区，供UEFI引导系统使用，支持EFI模式的电脑�
     * 20_os-prober  ：确定其他OS选单
     * 40_custom     ：自定义选单
 
-* /boot/grub/grub.conf
-    > grub的直接配置文件
-
+* 配置完后使用命令工具使配置生效
 <!-- entry begin: grub-install grub-mkconfig -->
 ```sh
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
@@ -221,7 +220,11 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ```
 <!-- entry end -->
 
-### grub-shell
+* /boot/grub/grub.conf
+    > grub的直接配置文件，不建议直接修改
+
+
+### grub脚本
 * 模块：默认自动加载command.lst与crypto.lst
 
 * 文件命令规则
@@ -248,37 +251,30 @@ grub-mkconfig -o /boot/grub/grub.cfg
     * insmod/rmmod          ：加载/卸载模块
     * loopback dev isofile  ：建立loop设备，-d删除
     * halt/reboot           ：关机/重启
+    * menuentry             ：选单制作
 
-### grub选单
-* menuentry
-    * "title"    ：选单名
-    * --class    ：选单主题样式
-    * --id       ：赋值chosen，覆盖原来的"title"
-    * 语句块
-        * linux       ：加载内核
-        * initrd      ：加载内核映像
-        * boot        ：启动已加载的os或loader，选单结束时隐含
-        * chianloader ：链式加载文件
 
-* grub安全
-    * 设置超级用户：`set superusers="root"`
-        > 注 ：设置后只有超级用户才能修改选单
-    * 设置加密密码：`password_pbkdf2 root grub.pbkdf2.sha512...`
-        > 注 ：使用grub-mkpasswd-pbkdf2命令产生密码
-    * 设置明文密码：`password user ...`
-    * menuentry选项
-        * --unrestricted    ：所有人可执行
-        * --users ""        ：仅超级用户
-        * --users "user"    ：仅user与超级用户
+### grub安全
+* 设置超级用户：`set superusers="root"`
+    > 注 ：设置后只有超级用户才能修改选单
+* 设置加密密码：`password_pbkdf2 root grub.pbkdf2.sha512...`
+    > 注 ：使用grub-mkpasswd-pbkdf2命令产生密码
+* 设置明文密码：`password user ...`
+    > 注：不建议设置明文密码
+* 设置menuentry选项
+    * --unrestricted    ：所有人可执行
+    * --users ""        ：仅超级用户
+    * --users "user"    ：仅user与超级用户
 
 ## kernel
-### kernel工作流程
+### kernel启动流程
 1. 挂载initramfs模拟的`/ (根目录设备)`
     1. 加载模块
     2. 启动init程序(systemd)
     3. 启动initrd.target
 
 2. 挂载硬盘中真正`/ (根目录设备)`，并释放initramfs
+
 3. 准备启动磁盘上的default.target
 
 ### kernel引导参数
@@ -287,6 +283,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
     * 修改选单内核参数为`rd.break`，并`chroot`
         > 注 ：rd.break模式下无SELinux，修改密码会导致其安全上下文失效而导致无法登陆
     * 修改选单内核参数为`systemd-unit=rescu.target`
+
 * 禁用Nvidia开源驱动：`nouveau.modeset=0`
 <!-- entry end -->
 
@@ -327,48 +324,65 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 5. graphical.target
 
-### systemctl命令
-<!-- entry begin: systemctl systemd-analyze -->
-* systemctl
-    * 开机管理
-        * enable            ：加入开机启动，指定选项`--now`同时执行start
-        * disable           ：取消开机启动，指定选项`--now`同时执行stop
-        * static            ：只能作为依赖被启动
-        * mask              ：禁止启动（创建符号连接指向/dev/null）
-        * unmask            ：解除禁止启动
-    * 手动控制
-        * start
-        * stop
-        * restart
-        * reload
-    * 信息查看
-        * status
-        * show
-        * cat
-        * edit
-    * 单元查看
-        * -t                ：指定unit类型
-        * -a                ：所有
-        * list-dependencies [--reverse]
-    * 主机状态
-        * suspend
-        * hibernate
-        * rescue
-        * emergency
-    * 主机目标
-        * get-default
-        * set-default
-        * isolate
-    * 让systemd重新读取units
-        * daemon-reload
->
+### systemd管理命令
+<!-- entry begin: systemctl systemd -->
+```sh
+systemctl [OPTIONS...] COMMAND ...
+```
+* 开机自启
+| 子命令      | 描述                                       |
+|-------------|--------------------------------------------|
+| enable      | 加入开机启动，指定选项`--now`同时执行start |
+| disable     | 取消开机启动，指定选项`--now`同时执行stop  |
+| static      | 只能作为依赖被启动                         |
+| mask        | 禁止启动（创建符号连接指向/dev/null）      |
+| unmask      | 解除禁止启动                               |
+| get-default | 查看开机启动的default-target               |
+| set-default | 设置开机启动的default-target               |
+| isolate     | 切换当前启动的target                       |
 
-* systemd-analyze
-    * blame
-    * plot > plot.svg
+```sh
+// systemd启动流程分析
+systemd-analyze blame
+systemd-analyze plot > plot.svg
+```
+
+* 手动控制
+| 子命令  | 描述                                   |
+|---------|----------------------------------------|
+| start   | 立即启动                               |
+| stop    | 立即停止                               |
+| restart | 立即重启                               |
+| reload  | 立即重载配置（根据服务配置不一定有效） |
+
+* 信息查看
+| 子命令 | 描述                 |
+|--------|----------------------|
+| status | 查看单元启动状态     |
+| show   | 查看单元所有配置信息 |
+| cat    | 查看单元文件内容     |
+| edit   | 编辑单元文件内容     |
+
+| 选项或子命令                  | 描述               |
+|-------------------------------|--------------------|
+| -t 单元类型                   | 列出指定类型的单元 |
+| -a                            | 列出所有单元       |
+| list-dependencies [--reverse] | 列出指定单元的依赖 |
+
+* 主机状态
+| 子命令    | 描述                 |
+|-----------|----------------------|
+| suspend   | 休眠（低耗开机状态） |
+| hibernate | 冬眠（关机状态）     |
+| rescue    | 救援                 |
+| emergency | 紧急救援             |
+
+```sh
+// 注意配置完后让systemd重新读取配置
+systemctl daemon-reload
+```
 <!-- entry end -->
-
-### systemd配置
+### systemd单元配置
 * unit配置目录(优先级降序)
     > * systemd无法管理手动执行启动的服务
     > * 只有在配置目录的unit才在systemd视线里
@@ -389,22 +403,19 @@ grub-mkconfig -o /boot/grub/grub.cfg
     * slice         ：封装管理一组进程资源占用的控制组的 slice 单元。 此类单元是通过在 Linux cgroup(Control Group) 树中创建一个节点实现资源控制的
     * scope         ：仅能以编程的方式通过 systemd D-Bus 接口创建。范围单元用于管理 一组外部创建的进程， 它自身并不派生(fork)任何进程
     * target        ：一系列unit的集合
-        > 一般包括有：graphical，multi-user，basic，sysinit，rescue，emerge，shutdown，getty
+        > 一般包括有：graphical，multi-user，rescue，emerge，shutdown等
 
-### unit配置
-* 模板单元：命名`foo@.service`，配置中`%i`替换为实例`foo@bar.service`中的`bar`，`%I`替换为未转移的`bar`
-* 单元别名：通过在单元目录下创建符号链接即可形成单元别名
-* 依赖目录：单元目录下名如`foo.service.wants/`与`foo.service.required/`的目录中的单元文件会加入`foo.service`中的`Wants=`与`Requires=`依赖中
-* 额外配置：单元目录下名如`foo.service.d/`，当解析完主单元文件`foo.service`后会按字典序读取额外配置目录下的名如`*.conf`的文件
-    * 选项可重复设置，后面覆盖前面
-    * 对于`foo@bar.service`会优先读取`foo@bar.service.d/`，再读`foo@.service.d/`
-    * 对于`foo-bar.service`会优先读取`foo-.service`，再读`foo-bar.service`，且后者中的同名文件会覆盖前者
-
-注意：systemd的单元配置文件格式为ini，为了美观将注释（#后的文本）写在后面是不正确的，
-它会被当作变量内容，正确做法应该式#放在行首，其后直到换行符皆为注释
+* unit配置
+    * 模板单元：命名`foo@.service`，配置中`%i`替换为实例`foo@bar.service`中的`bar`，`%I`替换为未转移的`bar`
+    * 单元别名：通过在单元目录下创建符号链接即可形成单元别名
+    * 依赖目录：单元目录下名如`foo.service.wants/`与`foo.service.required/`的目录中的单元文件会加入`foo.service`中的`Wants=`与`Requires=`依赖中
+    * 额外配置：单元目录下名如`foo.service.d/`，当解析完主单元文件`foo.service`后会按字典序读取额外配置目录下的名如`*.conf`的文件
+        * 选项可重复设置，后面覆盖前面
+        * 对于`foo@bar.service`会优先读取`foo@bar.service.d/`，再读`foo@.service.d/`
+        * 对于`foo-bar.service`会优先读取`foo-.service`，再读`foo-bar.service`，且后者中的同名文件会覆盖前者
 
 #### Unit小节
-<!-- entry begin: [Unit] -->
+<!-- entry begin: systemd [Unit] -->
 ```ini
 [Unit]
 Description=            # 描述该服务的名词
@@ -421,7 +432,7 @@ Conflicts=              # 与这些单元不能同时存在
 <!-- entry end -->
 
 #### Install小节
-<!-- entry begin: [Install] -->
+<!-- entry begin: systemd [Install] -->
 ```ini
 [Install]
 WantedBy=               # enable时创建到指定的foo.service.wants/目录下的符号链接，disable时删除
@@ -433,7 +444,7 @@ DefaultInstance=        # 对于模板单元，设置默认实例，即直接启
 <!-- entry end -->
 
 #### Service小节
-<!-- entry begin: [Service] -->
+<!-- entry begin: systemd [Service] -->
 ```ini
 Type=
 # simple    表示当fork()返回时即算启动完成
@@ -469,7 +480,7 @@ RestartSec=             # 重启前暂停时间，需要指定单位
 <!-- entry end -->
 
 #### Timer小节
-<!-- entry begin: [Timer] -->
+<!-- entry begin: systemd [Timer] -->
 ```ini
 OnBootSec=              # 相对内核启动
 OnStartupSec=           # 相对systemd启动
@@ -501,6 +512,8 @@ Unit=                   # 指定匹配unit，默认同名.service
 5. systemd-logind调用exec加载shell，将`argv[0][0]`设置为`-`表示登录shell
 6. shell读取其配置文件
 
+
+
 # 用户管理
 &emsp;用户：系统中为区分不同的系统使用者而产生了用户的概念。
 用户身份是通过用户启动的进程来表达的，用户的第一个进程由login服务根据用户输入的用户名与密码来启动。
@@ -511,6 +524,7 @@ Unit=                   # 指定匹配unit，默认同名.service
 
 &emsp;当创建新用户时，一般会同时为该新用户创建一个同名的用户组，并将该用户加入该组。
 
+<!-- entry begin: 用户资料文件 passwd shadow -->
 ## 用户资料文件
 * /etc/passwd
     > `用户名:密码:UID:GID:描述信息:主目录:默认Shell`
@@ -523,11 +537,16 @@ Unit=                   # 指定匹配unit，默认同名.service
 * /etc/skel
     > 创建用户家目录时，复制该目录下的所有文件到新建的用户家目录中去
 
+&emsp;由上可知，
+* 用户名与密码对应，通过用户名判断真实用户
+* 用户名与UID对应，通过UID判断权限信息
+* 不同的用户名可使用同一个UID
+* 进程不携带用户名信息，utmp日志(w命令输出)将用户名与终端绑定，可通过进程终端判断用户名
+<!-- entry end -->
+
 ## 用户管理命令
 <!-- entry begin: whoami id groups -->
-* whoami        ：打印当前用户名
-* groups        ：打印当前用户参与的组的组名
-* id            ：打印当前用户的UID、GID、附属组ID等
+* id            ：打印当前用户的UID、GID、附属GID以及对应的名字
 <!-- entry end -->
 
 <!-- entry begin: useradd userdel usermod -->
@@ -593,6 +612,235 @@ Unit=                   # 指定匹配unit，默认同名.service
     * -d        ：移除用户
 <!-- entry end -->
 
+
+
+# 日志管理
+<!-- entry begin: logger syslog -->
+系统提供了一个套接字与系统的日志服务通讯：`/dev/log`
+
+| 代号  | 日志类型        | 说明                                                               |
+|-------|-----------------|--------------------------------------------------------------------|
+| 0     | kern(kernel)    | 内核日志，大都为硬件检测与内核功能加载                             |
+| 1     | user            | 用户层信息(如`logger -p user.info MSG`)                            |
+| 2     | mail            | 邮件服务有关                                                       |
+| 3     | daemon          | 系统服务(如systemd)                                                |
+| 4     | auth            | 认证与授权(如login,ssh,su)                                         |
+| 5     | syslog          | rsyslogd服务                                                       |
+| 6     | lpr             | 打印                                                               |
+| 7     | news            | 新闻组                                                             |
+| 8     | uucp            | 全名"Unix to Unix Copy Protocol"，早期用于unix系統间的程序资料交换 |
+| 9     | cron            | 计划任务(如cron,at)                                                |
+| 10    | authpriv        | 与auth类似，但记录较多账号私人信息，包括PAM模块                    |
+| 11    | ftp             | 与FTP协议有关                                                      |
+| 16~23 | local0 ~ local7 | 本地保留                                                           |
+
+| 代号 | 日志级别      | 说明                                                                 |
+|------|---------------|----------------------------------------------------------------------|
+| 7    | debug         | 除错                                                                 |
+| 6    | info          | 基本信息说明                                                         |
+| 5    | notice        | 正常通知                                                             |
+| 4    | warning(warn) | 警告，可能有问题但还不至与影响到daemon                               |
+| 3    | err (error)   | 错误，例如配置错误导致无法启动                                       |
+| 2    | crit          | 严重错误                                                             |
+| 1    | alert         | 警报                                                                 |
+| 0    | emerg(panic)  | 疼痛等級，意指系統几乎要死机，通常大概只有硬件出问题导致内核无法运行 |
+
+<!-- entry end -->
+
+<!-- entry begin: last lastlog lastb w journalctl -->
+**系统日志**
+* w         ：系统现在的登录情况
+    > /var/run/utmp
+* last      ：系统的启动与用户登陆日志
+    > /var/log/wtmp
+* lastlog   ：每个用户最后一次登陆时间
+    > /var/log/lastlog
+* lastb     ：上次错误登录记录
+    > /var/log/btmp
+* journalctl：系统管理日志
+    > /var/log/journal/*
+    * -b        ：开机启动日志
+    * -n        ：最近的几行日志
+    * -r        ：反向，由新到旧
+    * -f        ：监听
+    * -t        ：类型
+    * -p        ：级别
+    * -S、-U    ：since与until某时刻的日志(date格式时间)
+    * 指定范围：
+        * -u        ：指定unit
+        * `_PID=`
+        * `_UID=`
+        * `_COMM=`
+<!-- entry end -->
+
+
+# 系统配置
+## 系统信息
+Linux系统的全称应该叫**基于GNU/Linux内核的操作系统发行版**
+
+<!-- entry begin: uname screenfetch uname lsb_release hostnamectl lscpu lspci lsusb -->
+* screenfetch
+* uname -a
+* lsb_release -a
+* hostnamectl
+* lscpu
+* lsusb -t
+* lspci
+    * -s        ：显示指定设备
+    * -vv       ：显示详情
+<!-- entry end -->
+
+## 日期时间
+电脑主板有专门的硬件用于记录日期时间，其由电池供电。
+Linux提供两种系统时间方案：
+* 硬件记录UTC时间，然后由系统根据时区转换得到本地时间
+* 硬件记录本地时间，然后由系统根据时区转换得到UTC时间
+
+系统启动后一般就读取一次硬件时间，之后系统时间便与硬件时间无关了。
+利用NTP服务器校对时间后，记得将系统时间写入硬件。
+
+**命令：** 
+<!-- entry begin: timedatectl hwclock -->
+* timedatectl
+    * set-timezone
+    * set-local-rtc
+    * set-ntp
+
+* hwclock -w    ：将系统时间写入硬件
+<!-- entry end -->
+
+<!-- entry begin: date cal -->
+* date
+    * +timeformat           ：指定打印格式
+    * -d timeformat         ：指定时间
+    * -d @N                 ：指定时间为epoch之后N秒
+    * -d '19700101  Ndays'  ：指定时间为epoch之后N天
+
+* cal [MONTH] [YEAR]
+<!-- entry end -->
+
+## 语系与字符集
+语系关系到应用程序如何展示如时间、货币、消息等信息的格式以及自然语言的显示内容。  
+字符集关系到应用程序如何解析或存储系统字符信息（如文件）。
+
+**命令：** 
+<!-- entry begin: locale localectl -->
+* locale [-a]
+* localectl
+<!-- entry end -->
+
+## 字体服务
+图形窗口系统一般会提供统一的服务用于获取编码对应的字体以及字体渲染，
+若某个编码无对应字体，则回滚系统默认字体，默认字体也无对应则显示“方块乱码”
+<!-- entry begin: fontconfig mkfontdir mkfontscale fc-cache fc-list -->
+* fc-list       ：字体缓存查看
+
+> 以下三条命令为字体安装三部曲，需要先进入字体文件所在目录
+* mkfontdir
+* mkfontscale
+* fc-cache -f
+<!-- entry end -->
+
+## 网络配置
+| 配置文件         | 说明               |
+|------------------|--------------------|
+| /etc/services    | 服务名与端口对照   |
+| /etc/protocols   | 系统支持的网络协议 |
+| /etc/hosts       | 已知主机名         |
+| /etc/resolv.conf | DNS服务器          |
+
+**命令**
+<!-- entry begin: ip -->
+* ip [--color]
+    * link/l
+        * set IF up/down
+        * set name NAME
+        * set promisc
+    * addr/a
+        * add IP/MASK  broadcast +  dev IF
+        * del IP/MASK  dev IF
+    * route/r
+        * list table TBL_NAME|TBL_NR
+        * add IP/MASK  via GWIP  dev IF  src IP  metric 600
+        * add [throw|unreachable|prohibit|blackhole] IP/MA
+        * del IP/MASK  via GWIP  dev IF
+    * neigh/n
+        * add/del IP  lla MAC  dev IF
+<!-- entry end -->
+
+<!-- entry begin: nmcli nmtui -->
+* nmcli
+    * radio/r
+        * wifi on|off
+    * connection/c
+        * up  CON-NAME
+        * add type . ifname . ssid . con-name .
+        * del SSID
+        * reload
+    * device/d
+        * wifi
+        * dis IF
+        * wifi c SSID  password PASSWD  (hidden yes)
+* nmtui
+<!-- entry end -->
+
+<!-- entry begin: ss -->
+* ss
+    * -atp       ：TCP端口
+    * -atpn      ：TCP端口，指定端口号
+    * -aup       ：UDP端口
+    * -axp       ：UNIX类型socket
+<!-- entry end -->
+
+<!-- entry begin: nmap ping drill -->
+* drill
+* ping
+* nmap
+![图片来自网络](images/nmap.png)
+<!-- entry end -->
+
+<!-- entry begin: iptables -->
+![图片来自网络](images/netfilter.jpg)
+* iptables
+
+| 参数                                            | 解释                                                                                                                                                   |
+|-------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -t, --table table                               | 对指定的table进行操作，table必须是raw、nat、filter、mangle之一，默认为filter                                                                           |
+| -p                                              | 指定要匹配的数据包协议类型，如tcp、udp、icmp                                                                                                           |
+| --dport num                                     | 匹配目标端口号                                                                                                                                         |
+| --sport num                                     | 匹配来源端口号                                                                                                                                         |
+| -s, --source [!]address[/mask]                  | 把指定的一个或一组地址作为源地址，按此规则进行过滤。比如 192.168.1.1 与 192.168.1.0/255.255.255.0                                                      |
+| -d, --destination [!]address[/mask]             | 地址格式同上，但这里是指定地址为目的地址，按此进行过滤                                                                                                 |
+| -i, --in-interface [!]网络接口                  | 指定数据包的来自来自网络接口，比如最常见的eth0。注意它只对 INPUT、FORWARD、PREROUTING 这三个链起作用。如果没有指定此选项，说明可以来自任何一个网络接口 |
+| -o, --out-interface [!]网络接口                 | 指定数据包出去的网络接口。只对 OUTPUT、FORWARD、POSTROUTING 三个链起作用                                                                               |
+| -A, --append chain rule-specification           | 在指定链 chain 的末尾插入指定的规则，也就是说，这条规则会被放到最后，最后才会被执行。规则是由后面的匹配来指定。                                        |
+| -I, --insert chain [rulenum] rule-specification | 在链 chain 中的指定位置插入一条或多条规则。默认rulenum我1，表示在链的头部插入                                                                          |
+| -D, --delete chain rule-specification或rulenum  | 在指定的链 chain 中删除一个或多个指定规则。                                                                                                            |
+| -R num                                          | 替换/修改第几条规则                                                                                                                                    |
+| -P, --policy chain target                       | 为指定的链 chain 设置策略 target。注意，只有内置的链才允许有策略，用户自定义的是不允许的。                                                             |
+| -F, --flush [chain]                             | 清空指定链 chain 上面的所有规则。如果没有指定链，清空该表上所有链的所有规则。                                                                          |
+| -N, --new-chain chain                           | 用指定的名字创建一个新的链。                                                                                                                           |
+| -X, --delete-chain [chain]                      | 删除指定的链，这个链必须没有被其它任何规则引用，而且这条上必须没有任何规则。如果没有指定链名，则会删除该表中所有非内置的链。                           |
+| -E, --rename-chain old-chain new-chain          | 用指定的新名字去重命名指定的链。这并不会对链内部造成任何影响。                                                                                         |
+| -Z, --zero [chain]                              | 把指定链，或者表中的所有链上的所有计数器清零。                                                                                                         |
+| -j, --jump target                               | 即满足某条件时该执行什么样的动作。target 可以是内置的目标，比如 ACCEPT，也可以是用户自定义的链。                                                       |
+| -L, --list [chain]                              | 列出链 chain 上面的所有规则，如果没有指定链，列出表上所有链的所有规则                                                                                  |
+| -h                                              | 显示帮助信息                                                                                                                                           |
+
+选项`-j`的动作包括：
+* ACCEPT ：接收数据包。
+* DROP ：丢弃数据包。
+* REDIRECT ：重定向、映射、透明代理。
+* SNAT ：源地址转换。
+* DNAT ：目标地址转换。
+* MASQUERADE ：IP伪装（NAT），用于ADSL。
+* LOG ：日志记录。
+```sh
+iptables -t 表名 <-A/I/D/R> 规则链名 [规则号] <-i/o 网卡名> -p 协议名 <-s 源IP/源子网> --sport 源端口 <-d 目标IP/目标子网> --dport 目标端口 -j 动作
+```
+<!-- entry end -->
+
+
 # 硬盘管理
 ## 分区工具
 <!-- entry begin: gdisk parted 分区 -->
@@ -618,7 +866,7 @@ Unit=                   # 指定匹配unit，默认同名.service
         diag        Windows RE                  -
         msftres     Micorsoft reserved          -
 ```
-* partprobe：让内核重载硬盘信息
+* partprobe： **修改分区表后一定要让内核重载硬盘信息**
 <!-- entry end -->
 
 <!-- entry begin: lsblk blkid -->
@@ -626,7 +874,7 @@ Unit=                   # 指定匹配unit，默认同名.service
     * -f        ：显示文件系统类型
     * -m        ：权限及所有者
 
-* blkid [DEV]
+* sudo blkid [DEV]
     * 文件系统标签与类型
     * 文件系统UUID（fstab所用）
     * 分区标签
@@ -670,7 +918,24 @@ Unit=                   # 指定匹配unit，默认同名.service
     * lvremove  LV
 <!-- entry end -->
 
-## 硬盘文件系统
+## 磁盘文件系统
+* 结构：
+    * 分配组
+        * 超级块(只在第一个分配组)
+        * 空闲空间索引
+        * Inode索引
+    * Inodes
+    * Blocks
+    * Log
+    * Realtime
+
+* 特性：
+    * 分配组的并行性
+    * 日志与恢复
+    * 延迟分配
+    * 扩展属性
+    * 文件空洞优化
+
 <!-- entry begin: mkfs.xfs xfs_admin xfs_info xfs_growfs -->
 * mkfs.xfs  DEV
     * -f        ：强制
@@ -689,6 +954,7 @@ Unit=                   # 指定匹配unit，默认同名.service
 
 * xfs_info
 * xfs_growfs
+* resize2fs
 <!-- entry end -->
 
 <!-- entry begin: xfsdump xfsrestore -->
@@ -715,417 +981,63 @@ Unit=                   # 指定匹配unit，默认同名.service
     * -d        ：用于单用户模式强制恢复以ro挂载的/
 <!-- entry end -->
 
-# 系统配置
-## 操作系统信息
-Linux系统的全称应该叫**基于GNU/Linux内核的操作系统发行版**
+## 归档包
+归档包即一种特殊的文件系统格式
 
-<!-- entry begin: uname screenfetch hostnamectl lscpu lspci lsusb -->
-* screenfetch
-* uname -a
-* hostnamectl
-* lscpu
-* lspci
-    * -s        ：显示指定设备
-    * -vv       ：显示详情
-* lsusb -t
+<!-- entry begin: gzip bzip2 xz -->
+* gzip/bzip2/xz
+    * -[1-9]    ：压缩等级，越大压缩比越高
+    * -k        ：保存原文件不删除
+    * -l        ：查看压缩包信息
 <!-- entry end -->
 
-## 日期时间与时区
-电脑主板有专门的硬件用于记录日期时间，其由电池供电。
-Linux提供两种系统时间方案：
-* 硬件记录UTC时间，然后由系统根据时区转换得到本地时间
-* 硬件记录本地时间，然后由系统根据时区转换得到UTC时间
-
-系统启动后一般就读取一次硬件时间，之后系统时间便与硬件时间无关了。
-利用NTP服务器校对时间后，记得将系统时间写入硬件。
-
-**命令：** 
-<!-- entry begin: timedatectl -->
-* timedatectl
-    * set-timezone
-    * set-local-rtc
-    * set-ntp
-
-* hwclock -w    ：将系统时间写入硬件
+<!-- entry begin: tar -->
+* tar
+    * -[z|j|J]    ：gzip | bzip2 | xz
+    * -[c|x|t|u]  ：打包|解包|查询|更新
+    * --delete    ：删除
+    * -f          ：指定压缩文件名
+    * -v          ：详述
+    * -p          ：保留权限等信息
+    * --exlcude   ：排除，pattern
+    * -C          ：解包时指定路径
 <!-- entry end -->
 
-<!-- entry begin: date cal -->
-* date
-    * +timeformat           ：指定时间打印格式
-    * -d timeformat         ：指定时间
-    * -d @N                 ：指定时间为epoch之后N秒
-    * -d '19700101  Ndays'  ：指定时间为epoch之后N天
-
-* cal [MONTH] [YEAR]
+<!-- entry begin: zip -->
+* zip ZIPFILE  FILES
+    * -[1-9]        ：压缩等级，越大压缩比越高
+    * -r            ：打包目录时指定递归
+    * -e或-P密码    ：加密
+* unzip ZIPFILE [LIST]
+    > `LIST`指定提取ZIPFILE中的哪些文件
+    * -p            ：解压文件到stdout
 <!-- entry end -->
 
-## 语系与字符集
-语系关系到应用程序如何展示如时间、货币、消息等信息的格式和自然语言。  
-字符集关系到应用程序如何解析或存储系统字符信息（如文件）。
-
-**命令：** 
-<!-- entry begin: locale localectl -->
-* locale [-a]
-* localectl
+<!-- entry begin: dd -->
+* dd
+    * if=
+    * skip=
+    * of=
+    * seek=
+    * bs=
+    * count=
+    * conv=
+        * lcase      ：小写
+        * ucase      ：大写
+        * notrunc    ：不截断，覆盖
+> 例：dd if=*manjaro.iso* of=*usb-dev* bs=8M oflag=sync status=progress
 <!-- entry end -->
 
-## 字体服务
-<!-- entry begin: fontconfig mkfontdir mkfontscale fc-cache fc-list -->
-* fc-list       ：字体缓存查看
-
-> 以下三条命令为字体安装三部曲
-* mkfontdir
-* mkfontscale
-* fc-cache -f
-<!-- entry end -->
-
-# 日志管理
-系统提供了一个套接字与系统的日志服务通讯：`/dev/log`
-
-<!-- entry begin: logger -->
-| 代号  | 日志类型        | 说明                                                               |
-|-------|-----------------|--------------------------------------------------------------------|
-| 0     | kern(kernel)    | 内核日志，大都为硬件检测与内核功能加载                             |
-| 1     | user            | 用户层信息(如logger)                                               |
-| 2     | mail            | 邮件服务有关                                                       |
-| 3     | daemon          | 系统服务(如systemd)                                                |
-| 4     | auth            | 认证与授权(如login,ssh,su)                                         |
-| 5     | syslog          | rsyslogd服务                                                       |
-| 6     | lpr             | 打印                                                               |
-| 7     | news            | 新闻组                                                             |
-| 8     | uucp            | 全名"Unix to Unix Copy Protocol"，早期用于unix系統间的程序资料交换 |
-| 9     | cron            | 计划任务(如cron,at)                                                |
-| 10    | authpriv        | 与auth类似，但记录较多账号私人信息，包括PAM模块                    |
-| 11    | ftp             | 与FTP协议有关                                                      |
-| 16~23 | local0 ~ local7 | 本地保留                                                           |
-
-| 代号 | 日志级别      | 说明                                                                 |
-|------|---------------|----------------------------------------------------------------------|
-| 7    | debug         | 除错                                                                 |
-| 6    | info          | 基本信息说明                                                         |
-| 5    | notice        | 正常通知                                                             |
-| 4    | warning(warn) | 警告，可能有问题但还不至与影响到daemon                               |
-| 3    | err (error)   | 错误，例如配置错误导致无法启动                                       |
-| 2    | crit          | 严重错误                                                             |
-| 1    | alert         | 警报                                                                 |
-| 0    | emerg(panic)  | 疼痛等級，意指系統几乎要死机，通常大概只有硬件出问题导致内核无法运行 |
-
-* logger -p user.info MSG
-<!-- entry end -->
-
-<!-- entry begin: last lastlog lastb w journalctl -->
-**系统日志**
-* w         ：系统现在的登录情况
-    > /var/run/utmp
-* last      ：系统的启动与用户登陆日志
-    > /var/log/wtmp
-* lastlog   ：每个用户最后一次登陆时间
-    > /var/log/lastlog
-* lastb     ：上次错误登录记录
-    > /var/log/btmp
-* journalctl：系统管理日志
-    > /var/log/journal/*
-    * -b        ：开机启动日志
-    * -n        ：最近的几行日志
-    * -r        ：反向，由新到旧
-    * -f        ：监听
-    * -t        ：类型
-    * -p        ：级别
-    * -S、-U    ：since与until某时刻的日志(date格式时间)
-    * 指定范围：
-        * -u        ：指定unit
-        * `_PID=`
-        * `_UID=`
-        * `_COMM=`
-<!-- entry end -->
-
-# 进程管理
-## 进程关系
-### 会话
-会话是进程组的集合。
-
-新建会话的作用：
-* **新建** 或 **切断** 与终端的关联，从而与原来的作业控制机制隔离
-    > 关联后该终端成为该会话中所有进程的控制终端(`/dev/tty`)。
-
-会话首进程的特点：
-* 进程组组长不能调用`setsid()`
-* 会话首进程未以`O_NOCTTY`作oflag调用`open()`打开第一个尚未关联会话的终端会将本会话与该终端关联
-* 终端挂断时终端驱动会发射信号`SIGHUP`给与该终端关联的会话的会话首进程
-* 会话首进程退出会发射信号`SIGHUP`给该会话前台进程
-
-<!-- entry begin: daemon -->
-&emsp;那些不与终端联系，不属于用户会话的进程，即被称为Daemon（守护进程）。
-以下是编写Daemon时的一般流程：
-* 调用`fork()`后，子进程调用`setsid()`创建新会话并成为会话首进程
-    > 因为调用`setsid()`的进程不能时进程组组长，所以要先调用`fork()`以保证其子进程必定非进程组组长。
-* 接下来新的会话首进程有4种选择：
-    * 不退出父进程，则新会话仍可通过父进程与旧会话进行某种关联
-    * 退出父进程，彻底成为一支Daemon
-    * 选择连接新的控制终端
-    * 调用`fork()`后退出会话首进程进程，以保证该会话无法连接新的控制终端
-* 更改cwd到根目录，防止占用而不能卸载文件系统
-* 关闭从父进程继承而来的文件描述符
-* 调用syslog报告日志
-<!-- entry end -->
-
-### 进程组
-进程组是进程的集合
-
-进程组的作用：
-* 方便使用信号来管理整个进程组中的进程，尤其是作业控制机制中的前台进程组与后台进程组
-
-以下常见操作形成的进程的进程组相同：
-* fork出的子进程与父进程同组
-* shell中使用管道符连接的多个进程也同属一个进程组（因为不会发生终端竞争）
-* 非交互模式执行shell脚本时，shell与命令进程同属一个进程组
-
-### 进程
-进程即是程序的运行实例，进程通常通过`fork`与`exec`函数产生
-
-父进程：
-* 可为子进程调用`setpgid()`
-* 可调用`wait`函数获取子进程状态
-* 退出可形成孤儿进程：某进程的父进程终止后，该进程成为孤儿进程，由init进程收养
-* 退出可形成孤儿进程组：某进程组中的所有进程的父进程，没有一个是同会话中其他进程组的进程，表示该进程组与同会话中的其他进程组缺乏联系了。
-当孤儿进程组中有停止的进程时，内核向孤儿进程组发送信号`SIGHUP`与`SIGCONT`
-
-## 进程环境
-标注为(线程n)表示同一进程中每个线程的有独立的该类信息，
-n为0表示线程启动时清除该信息；n为1表示继承启动该线程的线程的该信息
-
-| 进程信息           | 说明                         | fork子进程继承信息 | exec保留信息                                   |
-|--------------------|------------------------------|--------------------|------------------------------------------------|
-| UID, GID           | 进程的实际用户、用户组       | 1                  | 1                                              |
-| EUID, EGID         | 进程的有效用户、有效用户组   | 1                  | 0 (依赖执行文件SUID与SGID)                     |
-| SUID, SGID         | 进程的保留用户、保留用户组   | 1                  | 0 (依赖EUID与EGID)                             |
-| 附属GID            | 进程有效用户加入的附属组     | 1                  | 1                                              |
-| PID                | 进程ID                       | 0 (产生新进程)     | 1                                              |
-| PPID               | 父进程ID                     | 0 (产生新进程)     | 1                                              |
-| PGID               | 进程组ID                     | 1                  | 1                                              |
-| SID                | 会话ID                       | 1                  | 1                                              |
-| CWD                | 进程当前所在目录             | 1                  | 1                                              |
-| RTD                | 进程所见的“根目录”           | 1                  | 1                                              |
-| UMASK              | 进程的文件权限掩码           | 1                  | 1                                              |
-| LIMITS             | ulimit资源限制               | 1                  | 1                                              |
-| NICE(线程1)        | 调度优先级，越低越优先       | 1                  | 1                                              |
-| FD                 | 打开的文件描述符             | 1                  | 0 (依赖文件描述符FD_CLOEXEC)                   |
-| ENV                | 进程的环境表（环境变量）     | 1                  | 0 (依赖exec参数)                               |
-| VMEM               | 虚拟内存                     | 1                  | 0 (exec重新加载执行程序)                       |
-| SIGNAL_HANDLE      | 信号处理（默认、忽略、捕获） | 1                  | 0 (设置了处理函数的信号恢复默认，其余设置不变) |
-| SIGNAL_MASK(线程1) | 信号阻塞集                   | 1                  | 1                                              |
-| SIGNAL_SET         | 信号接收集                   | 0 (产生新进程)     | 1                                              |
-| ALARM              | alarm定时闹钟                | 0 (产生新进程)     | 1                                              |
-| TIME(线程0)        | 进程的cpu_time与sys_time     | 0 (产生新进程)     | 1                                              |
-| LOCK               | 文件锁                       | 0 (产生新进程)     | 1                                              |
-
-## 异常控制流
-**异常类型**
-* 中断  ：来自外设的I/O信号，返回下条指令
-    > 如键盘的输入、网络数据包的到达、硬盘的读取、时钟滴答等等
-* 陷入  ：程序指令的有意结果，返回下条指令
-    > 最重要的用途便是进行系统调用
-* 故障  ：若能修正则返回当前指令，否则终止程序
-    > 如算数除零、段错误等
-* 终止  ：不可回复的致命错误，直接终止程序
-    > 一般由一般硬件错误引发
-
-由此产生不同的进程状态：
-* 运行(R)           ：该进程在调度队列中
-* 可中断睡眠(S)     ：该进程在相应事件等待队列中
-* 不可中断睡眠(D)   ：该进程不响应异步信号，以保护控制流不被打断
-* 停止或跟踪(T)     ：停止就是进程被暂停，跟踪还不能响应SIGCONT
-* 僵尸(Z)           ：进程已经终止但还未被父进程回收
-* 退出(X)           ：进程马上将要销毁
-
-### 信号
-&emsp;CPU的异常控制流由操作系统内核进行处理，表现到用户层时分为两种形式：系统调用与信号
-
-&emsp;信号中断对于用户态进程是可见的（不同于CPU中断），
-若捕获了某信号，则对该信号的处理会占用当前进程中的一个线程控制流。
-若该信号与硬件故障有关，则定向占用引起该事件的线程；否则随机占用一个线程。
-
-&emsp;由于信号是异步产生的，所以信号处理函数也会异步调用，由此产生异步安全问题。
-与线程的异步安全问题不同，线程加锁阻塞后，总会有一个线程解锁并启动阻塞的线程；
-而信号是占用的线程的控制流，若使用互斥锁机制，则可能锁可能一直将信号处理程序锁住，
-而无法返回到上锁的那个线程，形成死锁。
-
-&emsp;信号的处理流程：
-* 信号发射
-    > 对于普通用户，信号只能发射给同一用户的进程，即发射进程的UID或EUID要与接收进程的UID或EUID相同。
-    > 特殊地，SIGCONT可以发射给同一会话中的任一进程
-* 未决信号
-    > 进程已经接收到信号但还未处理，可能只是没“反应”过来，也可能信号被阻塞了
-* 信号递送（信号处理）
-    > 3中处理方式：默认（终止、停止、继续、忽略）、主动忽略、主动处理。
-
-<!-- entry begin: signal -->
-| 信号编号 | 信号名称          | 信号描述                   | 备注                                                         | 默认处理方式     |
-|----------|-------------------|----------------------------|--------------------------------------------------------------|------------------|
-| 1        | SIGHUP            | 会话挂断                   | 连接断开时发射给会话首进程、会话首进程终止时发射给前台进程组 | 终止             |
-| 2        | SIGINT            | 终端中断                   | 一般由`Ctrl+C`发射给前台进程组                               | 终止             |
-| 3        | SIGQUIT           | 终端退出                   | 一般由`Ctrl+\`发射给前台进程组                               | 终止、core dump  |
-| 4        | SIGILL            | 非法指令                   | 执行非执行页中指令、堆栈溢出                                 | 终止、core dump  |
-| 5        | SIGTRAP           | 跟踪陷入                   | 一般用来将控制转移至调试程序                                 | 终止、core dump  |
-| 6        | SIGABRT           | 异常终止(abort)            | 异常终止                                                     | 终止、core dump  |
-| 7        | SIGBUS            | 非法地址                   | 地址对齐问题                                                 | 终止、core dump  |
-| 8        | SIGFPE            | 算术异常                   | 如除以0、浮点溢出等                                          | 终止、core dump  |
-| 9        | SIGKILL           | 强制终止进程               | 不可捕获                                                     | 终止             |
-| 10       | SIGUSR1           | 用户自定义信号1            |                                                              | 终止             |
-| 11       | SIGSEGV           | 无效内存引用（段错误）     | 访问未分配的地址                                             | 终止、core dump  |
-| 12       | SIGUSR2           | 用户自定义信号2            |                                                              | 终止             |
-| 13       | SIGPIPE           | 写至无读进程的管道         |                                                              | 终止             |
-| 14       | SIGALRM           | 定时器超时(alarm)          | 调用alarm函数发射此信号给调用进程                            | 终止             |
-| 15       | SIGTERM           | 终止进程                   | 正常终止进程                                                 | 终止             |
-| 16       | SIGSTKFLT         | 协处理器栈故障             |                                                              | 终止             |
-| 17       | SIGCHLD           | 子进程停止或终止           | 与wait函数相互独立，若忽略该信号则不产生僵尸进程             | 忽略             |
-| 18       | SIGCONT           | 使暂停进程继续             | 可发送给同一会话的任一进程而无视UID与EUID的匹配              | 若停止则继续执行 |
-| 19       | SIGSTOP           | 强制停止进程               | 不可捕获                                                     | 暂停执行         |
-| 20       | SIGTSTP           | 终端停止                   | 一般由`Ctrl+Z`发射给前台进程组                               | 暂停执行         |
-| 21       | SIGTTIN           | 后台读取                   | 后台进程试图读取终端输入                                     | 暂停执行         |
-| 22       | SIGTTOU           | 后台写入                   | 后台进程试图进行终端输出                                     | 暂停执行         |
-| 23       | SIGURG            | 紧急IO数据                 | out-of-band数据到达socket时产生                              | 忽略             |
-| 24       | SIGXCPU           | 突破对cpu时间的限制        |                                                              | 终止、core dump  |
-| 25       | SIGXFSZ           | 突破对文件大小的限制       |                                                              | 终止、core dump  |
-| 26       | SIGVTALRM         | 虚拟定时器超时(setitimer)  |                                                              | 终止             |
-| 27       | SIGPROF           | 性能分析定时器超时（弃用） |                                                              | 终止             |
-| 28       | SIGWINCH          | 终端窗口尺寸发生变化       |                                                              | 忽略             |
-| 29       | SIGIO             | 异步I/O                    | 文件描述符准备就绪                                           | 终止             |
-| 30       | SIGPWR            | 电量行将耗尽               |                                                              | 终止             |
-| 31       | SIGSYS            | 错误的系统调用             |                                                              | 终止、core dump  |
-| 34~64    | SIGRTMIN~SIGRTMAX | 实时信号                   |                                                              | 终止             |
-<!-- entry end -->
-与作业控制有关的信号详见[作业控制](#作业控制)
-
-## 资源限制
-**CGroup**
-
-<!-- entry begin: cgroup -->
-* 基础组件：
-    * hierarchy     ：/sys/fs/cgroup/*
-    * cgroup        ：/sys/fs/cgroup/*/**/*
-* 接口文件：
-    * cgroup.clone_children ：是否继承父cgroup（默认0）
-    * cgroup.procs          ：加入该cgroup的PID
-        > 子进程继承父进程CGroups（跨fork()与execv()）
-
-系统创建hierarchy后，所有进程都会加入该hierarchy的根cgroup；  
-同一进程可同时加入多个不同hierarchy中的cgroup；  
-新建的cgroup可以继承父cgroup的配置；
-<!-- entry end -->
-
-* * * * * * * * * *
-
-<!-- entry begin: ulimit -->
-* ulimit  -a -HS
-    > /etc/security/ulimits.d/
-    * -v    ：进程虚拟内存最大长度
-    * -l    ：进程调用mlock()能锁住的最大内存 
-    * -l    ：进程最大驻留内存长度
-    * -d    ：进程数据段最大长度
-    * -s    ：进程栈的最大值
-    * -f    ：进程写入文件的最大长度
-    * -c    ：进程core文件最大长度
-    * -q    ：进程POSIX消息队列最大长度
-    * -i    ：进程可排队信号的最大数量
-    * -n    ：进程同时打开文件最大数量
-    * -t    ：进程CPU时间最大秒数
-    * -u    ：实际用户可拥有的最大进程数
-<!-- entry end -->
-
-<!-- entry begin: nice renice -->
-* nice -n NI CMD
-* renice -n NI PID
-<!-- entry end -->
-
-**进程优先级**
-* PRI(Priority)与NI(Nice)
-    * PRI (最终值) = PRI (原始值) + NI
-    * PRI值是由内核动态调整的，用户不能直接修改，只能通过修改 NI 值来影响 PRI 值，间接地调整进程优先级
-* NI 值越小，进程的 PRI 就会降低，该进程就越优先被 CPU 处理
-* NI 范围是 -20~19。
-* 普通用户调整 NI 值的范围是 0~19，只能调整自己的进程，只能调高 NI 值，而不能降低
-* 只有 root 用户才能设定进程 NI 值为负值，而且可以调整任何用户的进程
-
-**CPU使用时间**
-* real：运行期间流逝的时间
-* sy  ：内核进程
-* us  ：用户进程(un-niced)
-* ni  ：用户进程(niced)
-* id  ：空闲资源
-* wa  ：等待I/O
-* hi  ：硬中断请求服务
-* si  ：软中断请求服务
-* st  ：虚拟机偷取的时间，即虚拟CPU等待实际CPU
-
-## 进程管理命令
-<!-- entry begin: ps pstree -->
-* ps
-    * -l        ：只显示当前shell的进程
-    * -le       ：显示所有进程
-* pstree -Uup
-<!-- entry end -->
-
-<!-- entry begin: kill killall pkill -->
-* kill -(signal) PID
-    PID为负，表示其绝对值为进程组号
-* killall -(signal) Pname
-    * -I        ：忽略大小写
-* pkill (-signal)
-    * -ce       ：显示匹配进程的数量并显示每个进程信息
-    * -u        ：EUID
-    * -U        ：UID
-    * -G        ：GID
-    * -P        ：PPID
-    * -s        ：PSID
-    * -t        ：TTY
-<!-- entry end -->
-
-<!-- entry begin: top -->
-* top
-    * -bn       ：指定刷新次数并手动重定向到文件
-    * -d        ：指定刷新周期
-    * -u        ：指定监视用户
-    * -p        ：指定监视PID
-<!-- entry end -->
-
-<!-- entry begin: free -->
-* free
-    * -wh       ：人性化输出
-    * -s        ：刷新周期
-    * -c        ：刷新次数
-<!-- entry end -->
-
-<!-- entry begin: vmstat -w -->
-* vmstat -w  [周期]  [次数]
-<!-- entry end -->
-
-<!-- entry begin: iostat -h -->
-* iostat -h
-<!-- entry end -->
-
-<!-- entry begin: nohup -->
-* nohup CMD [&]
-<!-- entry end -->
-
-<!-- entry begin: lsof -->
-* lsof
-    > 列出打开的文件
-    * -i        ：打开的端口
-    * -a        ：and条件逻辑
-    * -u        ：UID
-    * -p        ：PID
-    * -c        ：指定进程cmd的开头字符串
-    * +d        ：列出目录下被打开的文件，+D递归
-<!-- entry end -->
-
-<!-- entry begin: fuser -->
-* fuser -uv FILE/DIR
-    > 列出打开目标文件的进程
+<!-- entry begin: losetup -->
+* losetup */dev/loop0*  *loopfile*
+    > 制作loop设备
+* losetup -d */dev/loop0*
+    > 解除loop设备
 <!-- entry end -->
 
 
-# 虚拟文件系统
+
+# 文件系统
 ## 文件描述符
 ![fd](images/fd.jpg)
 * 文件描述符（进程唯一）
@@ -1142,7 +1054,7 @@ n为0表示线程启动时清除该信息；n为1表示继承启动该线程的�
 文件系统中有一个特别的目录`/dev/fd/`，在Linux中它为一指向`/proc/self/fd/`的符号链接，
 而该目录下又有多个符号链接指向当前进程的文件描述符所指向的文件。
 
-## 内核文件缓存/缓冲区
+## 虚拟文件系统
 &emsp;当进程陷入系统调用读取文件时，内核会先搜索文件缓存/缓冲区，若未找到则调用驱动程序加载文件。  
 &emsp;内核为进程提供了一层称作 **虚拟文件系统(VFS)** 的抽象，这也是 **“UNIX哲学：一切皆文件”** 的由来。
 进程可以通过它来一致性地访问不同挂载位置、不同类型的文件：
@@ -1167,97 +1079,13 @@ n为0表示线程启动时清除该信息；n为1表示继承启动该线程的�
 * 区分读写fd
 * 不能反复读取相同内容
 
-而存储在硬盘上的普通文件缓冲区的特点是：
-* 不区分读写fd
-* 可以移动文件位置以读取相同位置的内容
-
 还有如socket的缓冲区的特点是：
 * 不区分读写fd，但区分读写端（即此端可读可写，但需从另一端进行写和读）
 * 不能反复读取相同内容
 
-## 文件系统
-&emsp;此处“文件系统”与上述“虚拟文件系统”不同，在此描述的是硬盘上组织存储块来存储文件的一种特殊的“数据结构”。
-还有一处叫做“文件系统”的地方是“根文件系统”。  
-&emsp;我们通常会将硬盘上“文件系统”挂载到“根文件系统”或其下的一个目录上，
-于是该硬盘“文件系统”中的所有文件便暴露在“虚拟文件系统”这层接口（或称为命名空间）中，
-然后进程就可以通过这个接口来访问文件了。
-而这个接口通过文件描述符能访问的文件可能并不出现在“根文件系统”中，如无名管道pipe。  
-&emsp;为消除歧义，若为特殊说明，“文件系统”指根文件系统，
-“硬盘文件系统”指硬盘上组织文件的数据结构，
-“虚拟文件系统”即内核提供的访问文件的抽象层（接口）。
-
-* 结构：
-    * 分配组
-        * 超级块(只在第一个分配组)
-        * 空闲空间索引
-        * Inode索引
-    * Inodes
-    * Blocks
-    * Log
-    * Realtime
-
-* 特性：
-    * 分配组的并行性
-    * 日志与恢复
-    * 延迟分配
-    * 扩展属性
-    * 文件空洞优化
-
-## 归档包
-归档包即一种特殊的文件系统
-
-制作归档包时，应该让解包出来的文件都在一个目录中，故一般在要打包的目录的父目录进行操作从而将整个目录打包
-
-<!-- entry begin: zip -->
-* zip ZIPFILE  FILES
-    * -[1-9]        ：压缩等级，越大压缩比越高
-    * -r            ：打包目录时指定递归
-    * -e或-P密码    ：加密
-* unzip ZIPFILE [LIST]
-    > `LIST`指定提取ZIPFILE中的哪些文件
-    * -p            ：解压文件到stdout
-<!-- entry end -->
-
-<!-- entry begin: gzip bzip2 xz -->
-* gzip/bzip2/xz
-    * -[1-9]    ：压缩等级，越大压缩比越高
-    * -k        ：保存原文件不删除
-    * -l        ：查看压缩包信息
-<!-- entry end -->
-
-<!-- entry begin: tar -->
-* tar
-    * -[z|j|J]    ：gzip | bzip2 | xz
-    * -[c|x|t|u]  ：打包|解包|查询|更新
-    * --delete    ：删除
-    * -f          ：指定压缩文件名
-    * -v          ：详述
-    * -p          ：保留权限等信息
-    * --exlcude   ：排除，pattern
-    * -C          ：解包时指定路径
-<!-- entry end -->
-
-<!-- entry begin: dd -->
-* dd
-    * if=
-    * skip=
-    * of=
-    * seek=
-    * bs=
-    * count=
-    * conv=
-        * lcase      ：小写
-        * ucase      ：大写
-        * notrunc    ：不截断，覆盖
-> 例：dd if=*manjaro.iso* of=*usb-dev* bs=8M oflag=sync status=progress
-<!-- entry end -->
-
-<!-- entry begin: losetup -->
-* losetup */dev/loop0*  *loopfile*
-    > 制作loop设备
-* losetup -d */dev/loop0*
-    > 解除loop设备
-<!-- entry end -->
+而存储在硬盘上的普通文件缓冲区的特点是：
+* 不区分读写fd
+* 可以移动文件位置以读取相同位置的内容
 
 ## 挂载命令
 <!-- entry begin: df -->
@@ -1389,7 +1217,7 @@ Change: 2020-11-07 13:53:39.060000000 +0800
 
 **权限的设置** ：
 * 对于符号链接，一般权限为`777`且无法更改
-* 每个进程有个umask标识表示权限掩码，除了chmod函数外，其他函数设置的权限皆受影响
+* 每个进程有个umask标识，表示创建文件时的默认权限掩码
 * 当非root进程写一个普通文件时，自动清除其SUID与SGID
 
 **文件的所有者** ：
@@ -1400,7 +1228,7 @@ Change: 2020-11-07 13:53:39.060000000 +0800
     * 普通用户只能修改文件UID为进程EUID，且EUID必须等于UID，超级用户随意修改
     * 普通用户只能修改文件GID为进程EGID或附属GID之一，超级用户随意修改
 
-### 权限命令
+**命令**
 
 <!-- entry begin: setfacl getfacl -->
 * ACL权限
@@ -1428,20 +1256,16 @@ Change: 2020-11-07 13:53:39.060000000 +0800
     * -u        ：使用目标用户权限(仅root可用)
     * -l        ：列出本用户sudo信息
     * -b        ：后台执行
-<!-- entry end -->
 
-<!-- entry begin: su -->
-* su
-    * `-`         ：转为root
-    * `- user`    ：转为user
-    * `-c`        ：用对应目标用户执行一条命令
-<!-- entry end -->
-
-<!-- entry begin: visudo -->
 * visudo
     > /etc/sudoers与/etc/sudoers.d  
     > user host=(root) cmd，!cmd  
     > %grp host=(%root) NOPASSWD:ALL
+
+* su
+    * `-`         ：转为root
+    * `- user`    ：转为user
+    * `-c`        ：用对应目标用户执行一条命令
 <!-- entry end -->
 
 <!-- entry begin: umask chmod -->
@@ -1458,8 +1282,303 @@ Change: 2020-11-07 13:53:39.060000000 +0800
 而**强制访问控制**是通过进程的“强制访问特殊标识”（如SELinux标识）来限制进程对系统资源的访问。  
 &emsp;如此一来，对各个程序进程限制，可以有效防止滥用、误用超级权限。
 
-## 终端
-一个终端通常会与一个进程会话相关联，并能辨别其中的前台进程组。
+# 进程管理
+## 进程关系
+### 会话
+***会话是进程组的集合***
+
+新建会话的作用：
+* **新建** 或 **切断** 与终端的关联，从而与原来的作业控制机制隔离
+    > 关联后该终端成为该会话中所有进程的控制终端(`/dev/tty`)。
+
+会话首进程的特点：
+* 进程组组长不能调用`setsid()`
+* 会话首进程未以`O_NOCTTY`作oflag调用`open()`打开第一个尚未关联会话的终端会将本会话与该终端关联
+* 终端挂断时终端驱动会发射信号`SIGHUP`给与该终端关联的会话的会话首进程
+* 会话首进程退出会发射信号`SIGHUP`给该会话前台进程
+
+<!-- entry begin: daemon -->
+&emsp;那些不与终端联系，不属于用户会话的进程，即被称为Daemon（守护进程）。
+以下是编写Daemon时的一般流程：
+* 调用`fork()`后，子进程调用`setsid()`创建新会话并成为会话首进程
+    > 因为调用`setsid()`的进程不能时进程组组长，所以要先调用`fork()`以保证其子进程必定非进程组组长。
+* 接下来新的会话首进程有4种选择：
+    * 不退出父进程，则新会话仍可通过父进程与旧会话进行某种关联
+    * 退出父进程，彻底成为一支Daemon
+    * 选择连接新的控制终端
+    * 调用`fork()`后退出会话首进程进程，以保证该会话无法连接新的控制终端
+* 更改cwd到根目录，防止占用而不能卸载文件系统
+* 关闭从父进程继承而来的文件描述符
+* 调用syslog报告日志
+* 对于单例进程，利用文件锁机制确认系统中是否已存在进程副本
+<!-- entry end -->
+
+### 进程组
+***进程组是进程的集合***
+
+进程组的作用：
+* 方便使用信号来管理整个进程组中的进程，尤其是作业控制机制中的前台进程组与后台进程组
+
+以下常见操作形成的进程的进程组相同：
+* fork出的子进程与父进程同组
+* shell中使用管道符连接的多个进程也同属一个进程组（因为不会发生终端竞争）
+* 非交互模式执行shell脚本时，shell与命令进程同属一个进程组
+
+### 进程
+***进程即是程序的运行实例***
+
+父进程：
+* 可为子进程调用`setpgid()`
+* 可调用`wait`函数获取子进程状态
+* 退出可形成孤儿进程：某进程的父进程终止后，该进程成为孤儿进程，由init进程收养
+* 退出可形成孤儿进程组：某进程组中的所有进程的父进程，没有一个是同会话中其他进程组的进程，表示该进程组与同会话中的其他进程组缺乏联系了。
+当孤儿进程组中有停止的进程时，内核向孤儿进程组发送信号`SIGHUP`与`SIGCONT`
+
+## 进程环境
+标注为(线程n)表示同一进程中每个线程的有独立的该类信息，
+n为0表示线程启动时清除该信息；n为1表示继承启动该线程的线程的该信息
+
+| 进程信息           | 说明                         | fork子进程继承信息 | exec保留信息                                   |
+|--------------------|------------------------------|--------------------|------------------------------------------------|
+| UID, GID           | 进程的实际用户、用户组       | 1                  | 1                                              |
+| EUID, EGID         | 进程的有效用户、有效用户组   | 1                  | 0 (依赖执行文件SUID与SGID)                     |
+| SUID, SGID         | 进程的保留用户、保留用户组   | 1                  | 0 (依赖EUID与EGID)                             |
+| 附属GID            | 进程有效用户加入的附属组     | 1                  | 1                                              |
+| PID                | 进程ID                       | 0 (产生新进程)     | 1                                              |
+| PPID               | 父进程ID                     | 0 (产生新进程)     | 1                                              |
+| PGID               | 进程组ID                     | 1                  | 1                                              |
+| SID                | 会话ID                       | 1                  | 1                                              |
+| CWD                | 进程当前所在目录             | 1                  | 1                                              |
+| RTD                | 进程所见的“根目录”           | 1                  | 1                                              |
+| UMASK              | 进程的文件权限掩码           | 1                  | 1                                              |
+| LIMITS             | ulimit资源限制               | 1                  | 1                                              |
+| NICE(线程1)        | 调度优先级，越低越优先       | 1                  | 1                                              |
+| FD                 | 打开的文件描述符             | 1                  | 0 (依赖文件描述符FD_CLOEXEC)                   |
+| ENV                | 进程的环境表（环境变量）     | 1                  | 0 (依赖exec参数)                               |
+| VMEM               | 虚拟内存                     | 1                  | 0 (exec重新加载执行程序)                       |
+| SIGNAL_HANDLE      | 信号处理（默认、忽略、捕获） | 1                  | 0 (设置了处理函数的信号恢复默认，其余设置不变) |
+| SIGNAL_MASK(线程1) | 信号阻塞集                   | 1                  | 1                                              |
+| SIGNAL_SET         | 信号接收集                   | 0 (产生新进程)     | 1                                              |
+| ALARM              | alarm定时闹钟                | 0 (产生新进程)     | 1                                              |
+| TIME(线程0)        | 进程的cpu_time与sys_time     | 0 (产生新进程)     | 1                                              |
+| LOCK               | 文件锁                       | 0 (产生新进程)     | 1                                              |
+
+## 异常控制流
+### 异常类型
+**异常类型**
+* 中断  ：来自外设的I/O信号，返回下条指令
+    > 如键盘的输入、网络数据包的到达、硬盘的读取、时钟滴答等等
+* 陷入  ：程序指令的有意结果，返回下条指令
+    > 最重要的用途便是进行系统调用
+* 故障  ：若能修正则返回当前指令，否则终止程序
+    > 如算数除零、段错误等
+* 终止  ：不可回复的致命错误，直接终止程序
+    > 一般由一般硬件错误引发
+
+### 进程状态
+由此产生不同的进程状态：
+* 运行(R)           ：该进程在调度队列中
+* 可中断睡眠(S)     ：该进程在相应事件等待队列中
+* 不可中断睡眠(D)   ：该进程不响应异步信号，以保护控制流不被打断
+* 停止或跟踪(T)     ：停止就是进程被暂停，跟踪还不能响应SIGCONT
+* 退出(X)           ：进程马上将要销毁
+* 僵尸(Z)           ：进程已经终止但还未被父进程回收
+
+### 信号机制
+&emsp;CPU的异常控制流由操作系统内核进行处理，表现到用户层时分为两种形式：系统调用与信号
+
+&emsp;信号中断对于用户态进程是可见的（不同于CPU中断），
+若捕获了某信号，则对该信号的处理会占用当前进程中的一个线程控制流。
+若该信号与硬件故障有关，则定向占用引起该事件的线程；否则随机占用一个线程。
+
+&emsp;由于信号是异步产生的，所以信号处理函数也会异步调用，由此产生异步安全问题。
+与线程的异步安全问题不同，线程加锁阻塞后，总会有一个线程解锁并启动阻塞的线程；
+而信号是占用的线程的控制流，若使用互斥锁机制，则可能锁可能一直将信号处理程序锁住，
+而无法返回到上锁的那个线程，形成死锁。
+
+&emsp;信号的处理流程：
+* 信号发射
+    > 对于普通用户，信号只能发射给同一用户的进程，即发射进程的UID或EUID要与接收进程的UID或EUID相同。
+    > 特殊地，SIGCONT可以发射给同一会话中的任一进程
+* 未决信号
+    > 进程已经接收到信号但还未处理，可能只是没“反应”过来，也可能信号被阻塞了
+* 信号递送（信号处理）
+    > 3中处理方式：默认（终止、停止、继续、忽略）、主动忽略、主动处理。
+
+<!-- entry begin: signal -->
+| 编号  | 名称              | 描述                                                                                    | 默认行为 |
+|-------|-------------------|-----------------------------------------------------------------------------------------|----------|
+| 1     | SIGHUP            | 会话挂断，终端连接断开时发射给会话首进程                                                | T        |
+| 2     | SIGINT            | 终端中断，一般由按键`Ctrl+C`发射给前台进程组，若进程阻塞或忽略该信号则不发送            | T        |
+| 3     | SIGQUIT           | 终端退出，一般由按键`Ctrl+\`发射给前台进程组，若进程阻塞或忽略该信号则不发送            | A        |
+| 4     | SIGILL            | 非法指令，执行非执行页中指令或堆栈溢出                                                  | A        |
+| 5     | SIGTRAP           | 跟踪陷入，一般用来将控制转移至调试程序                                                  | A        |
+| 6     | SIGABRT           | 异常终止，一般由程序自己引发                                                            | A        |
+| 7     | SIGBUS            | 非法地址，地址对齐问题                                                                  | A        |
+| 8     | SIGFPE            | 算术异常，如整数除零                                                                    | A        |
+| 9     | SIGKILL           | 强制终止进程，不可捕获                                                                  | T        |
+| 10    | SIGUSR1           | 用户自定义信号1                                                                         | T        |
+| 11    | SIGSEGV           | 段错误，无效内存引用即访问未分配的地址                                                  | A        |
+| 12    | SIGUSR2           | 用户自定义信号2                                                                         | T        |
+| 13    | SIGPIPE           | 写至无读进程的管道                                                                      | T        |
+| 14    | SIGALRM           | 定时器超时，一般由程序调用alarm函数来作异步计时器                                       | T        |
+| 15    | SIGTERM           | 终止进程                                                                                | T        |
+| 16    | SIGSTKFLT         | 协处理器栈故障                                                                          | T        |
+| 17    | SIGCHLD           | 子进程停止或终止，与wait函数相互独立，若忽略该信号则不产生僵尸进程                      | I        |
+| 18    | SIGCONT           | 使暂停进程继续，可发送给同一会话的任一进程而无视UID与EUID的匹配                         | C        |
+| 19    | SIGSTOP           | 强制停止进程，不可捕获                                                                  | S        |
+| 20    | SIGTSTP           | 终端停止，一般由`Ctrl+Z`发射给前台进程组，若进程阻塞或忽略该信号则不发送                | S        |
+| 21    | SIGTTIN           | 后台读取，后台进程试图读取终端输入，若进程阻塞或忽略该信号则不发送，但read函数调用失败  | S        |
+| 22    | SIGTTOU           | 后台写入，后台进程试图进行终端输出，若进程阻塞或忽略该信号则不发送，write函数仍调用成功 | S        |
+| 23    | SIGURG            | 紧急IO数据，out-of-band数据到达socket时产生                                             | I        |
+| 24    | SIGXCPU           | 突破对cpu时间的限制                                                                     | A        |
+| 25    | SIGXFSZ           | 突破对文件大小的限制                                                                    | A        |
+| 26    | SIGVTALRM         | 虚拟定时器超时(setitimer)                                                               | T        |
+| 27    | SIGPROF           | 性能分析定时器超时（弃用）                                                              | T        |
+| 28    | SIGWINCH          | 终端窗口尺寸发生变化                                                                    | I        |
+| 29    | SIGIO             | 异步I/O，文件描述符准备就绪                                                             | T        |
+| 30    | SIGPWR            | 电量行将耗尽                                                                            | T        |
+| 31    | SIGSYS            | 错误的系统调用                                                                          | A        |
+| 34~64 | SIGRTMIN~SIGRTMAX | 实时信号                                                                                | T        |
+
+| 默认行为 | 描述               |
+|----------|--------------------|
+| T        | 终止               |
+| A        | 终止并产生coredump |
+| S        | 暂停               |
+| C        | 继续               |
+| I        | 忽略               |
+<!-- entry end -->
+
+## 资源限制
+### 进程调度
+**命令** 
+<!-- entry begin: nice renice -->
+* nice -n NI CMD
+* renice -n NI PID
+<!-- entry end -->
+
+**进程优先级**
+* PRI(Priority)与NI(Nice)
+    * PRI (最终值) = PRI (原始值) + NI
+    * PRI值是由内核动态调整的，用户不能直接修改，只能通过修改 NI 值来影响 PRI 值，间接地调整进程优先级
+* NI 值越小，进程的 PRI 就会降低，该进程就越优先被 CPU 处理
+* NI 范围是 -20~19。
+* 普通用户调整 NI 值的范围是 0~19，只能调整自己的进程，只能调高 NI 值，而不能降低
+* 只有 root 用户才能设定进程 NI 值为负值，而且可以调整任何用户的进程
+
+**CPU使用时间**
+* real：运行期间流逝的时间
+* sy  ：内核进程
+* us  ：用户进程(un-niced)
+* ni  ：用户进程(niced)
+* id  ：空闲资源
+* wa  ：等待I/O
+* hi  ：硬中断请求服务
+* si  ：软中断请求服务
+* st  ：虚拟机偷取的时间，即虚拟CPU等待实际CPU
+
+### CGroup机制
+
+<!-- entry begin: cgroup -->
+* 基础组件：
+    * hierarchy     ：/sys/fs/cgroup/*
+    * cgroup        ：/sys/fs/cgroup/*/**/*
+* 接口文件：
+    * cgroup.clone_children ：是否继承父cgroup（默认0）
+    * cgroup.procs          ：加入该cgroup的PID
+        > 子进程继承父进程CGroups（跨fork()与execv()）
+
+系统创建hierarchy后，所有进程都会加入该hierarchy的根cgroup；  
+同一进程可同时加入多个不同hierarchy中的cgroup；  
+新建的cgroup可以继承父cgroup的配置；
+<!-- entry end -->
+
+### ulimit机制
+<!-- entry begin: ulimit -->
+* ulimit  -a -HS
+    > /etc/security/ulimits.d/
+    * -v    ：进程虚拟内存最大长度
+    * -l    ：进程调用mlock()能锁住的最大内存 
+    * -l    ：进程最大驻留内存长度
+    * -d    ：进程数据段最大长度
+    * -s    ：进程栈的最大值
+    * -f    ：进程写入文件的最大长度
+    * -c    ：进程core文件最大长度
+    * -q    ：进程POSIX消息队列最大长度
+    * -i    ：进程可排队信号的最大数量
+    * -n    ：进程同时打开文件最大数量
+    * -t    ：进程CPU时间最大秒数
+    * -u    ：实际用户可拥有的最大进程数
+<!-- entry end -->
+
+
+## 进程管理命令
+<!-- entry begin: ps pstree top -->
+* ps
+    * -l        ：只显示当前shell的进程
+    * -le       ：显示所有进程
+* top
+    * -bn       ：指定刷新次数并手动重定向到文件
+    * -d        ：指定刷新周期
+    * -u        ：指定监视用户
+    * -p        ：指定监视PID
+<!-- entry end -->
+
+<!-- entry end -->
+
+<!-- entry begin: kill killall pkill -->
+* kill -SIG PID
+    > PID为负，表示其绝对值为进程组号
+* killall -SIG Pname
+    * -I        ：忽略大小写
+* pkill -SIG
+    * -ce       ：显示匹配进程的数量并显示每个进程信息
+    * -u        ：EUID
+    * -U        ：UID
+    * -G        ：GID
+    * -P        ：PPID
+    * -s        ：PSID
+    * -t        ：TTY
+<!-- entry end -->
+
+<!-- entry begin: free -->
+* free
+    * -wh       ：人性化输出
+    * -s        ：刷新周期
+    * -c        ：刷新次数
+<!-- entry end -->
+
+<!-- entry begin: vmstat -w -->
+* vmstat -w  [周期]  [次数]
+<!-- entry end -->
+
+<!-- entry begin: iostat -h -->
+* iostat -h
+<!-- entry end -->
+
+<!-- entry begin: nohup -->
+* nohup CMD [&]
+<!-- entry end -->
+
+<!-- entry begin: lsof -->
+* lsof
+    > 列出打开的文件
+    * -i        ：打开的端口
+    * -a        ：and条件逻辑
+    * -u        ：UID
+    * -p        ：PID
+    * -c        ：指定进程cmd的开头字符串
+    * +d        ：列出目录下被打开的文件，+D递归
+<!-- entry end -->
+
+<!-- entry begin: fuser -->
+* fuser -uv FILE/DIR
+    > 列出打开目标文件的进程
+<!-- entry end -->
+
+# 终端
+终端在文件系统中表现为一个字符文件
 
 ### 终端原理
 **终端的结构：**
@@ -1468,18 +1587,67 @@ Change: 2020-11-07 13:53:39.060000000 +0800
     * 接收行规程回传的字符流，根据ANSI规范将字符流渲染成图形画面（字体、颜色等），再送给屏幕打印。
 
 * 行规程(line discipline)：
-    * 接收、处理输入字符流，并将其加入输入缓冲队列(I)供进程读取；  
+    * 接收、处理输入字符流后，并将其加入输入缓冲队列(I)供前台进程读取；  
     当输入流中有特殊字符则进行特殊处理（如发射信号）；  
     若设置了终端回显，则会将输入字符处理后送给终端驱动程序打印。
 
     * 接收并处理存放进程的输出的缓冲队列(O)，处理后送给终端驱动程序打印。
 
-> 终端行规程到设置核心问题便是：
-> * 正常回显Unicode字符
-> * 正常删除Unicode字符并回显删除过程
-> * 正常回显控制字符
-> * 特殊字符映射
-> * 缓存冲刷时机
+终端行规程到设置核心问题便是：
+* 正常回显Unicode字符
+* 正常删除Unicode字符并回显删除过程
+* 正常回显控制字符
+* 特殊字符映射
+* 缓存冲刷时机
+
+### 作业控制
+在作业控制概念中，将连接到终端的用户会话中的进程组分为两部分，前台进程组与后台进程组。
+前台进程组能输出到终端从而打印字符到屏幕，也能从终端读取用户输入。
+而后台进程一般不能输出到终端也不能从终端读取输入。
+
+| 信号名   | 说明                                                                                                                                    |
+|----------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| SIGINT   | 一般按键`^C`，发射给前台进程组，若进程阻塞或忽略该信号则不发送                                                                          |
+| SIGQUIT  | 一般按键为`^\`，发射给前台进程组，若进程阻塞或忽略该信号则不发送                                                                        |
+| SIGTSTP  | 一般按键为`^Z`，发射给前台进程组，若进程阻塞或忽略该信号则不发送                                                                        |
+| SIGTTIN  | 后台进程组中进程试图读取终端，发射该信号给该后台进程组，若进程阻塞或忽略该信号则不发送，但会使本次read调用失败。SIGPIPE有类似机制       |
+| SIGTTOU  | 后台进程组中进程试图输出到终端，发射该信号给该后台进程组，若进程阻塞或忽略该信号则不发送，且write调用仍可成功                           |
+| SIGWINCH | 终端窗口尺寸发生变化，发射给前台进程组                                                                                                  |
+| SIGHUP   | 连接断开时发射给会话首进程、会话首进程终止时发射给前台进程组                                                                            |
+| SIGCONT  | 当对进程产生停止信号（SIGTSTP、SIGSTOP、SIGTTIN、SIGTTOU）时，清除该进程未决的SIGCONT；反之亦然。捕获该信号并不会取消其“继续运行”的功能 |
+
+作业控制命令：
+<!-- entry begin: jobs fg bg -->
+* jobs
+    * -l        ：显示PID
+    * -r        ：显示running jobs
+    * -s        ：显示suspended jobs
+
+* fg/bg  *%JID*
+<!-- entry end -->
+
+
+### 伪终端
+&emsp;伪终端的的结构与物理终端类似，不过终端驱动程序拆分为了主设备与从设备。
+写到主设备的数据可从从设备读出，反之亦然，就像套接字一样。  
+&emsp;当进程打开文件`/dev/ptmx`时，内核产生与之配对的从设备`/dev/pts/N`(N为数字)。
+于是当两个进程打开配对的终端主设备与终端从设备时，就可以进行通讯了，故伪终端技术也可当作一种IPC技术。
+&emsp;但与pipe、socket之类的正统IPC不同，使用伪终端的目的主要是使用其**终端行规程**！
+
+伪终端用途：
+* 进程间通讯，对等进程的输入与输出针对终端会有特殊处理
+* 进程间通讯，强制对等进程程使用的标准流进程行缓冲（相对管道为全缓冲而可能导致死锁）
+* 终端模拟器
+* 远程终端
+
+<!-- entry begin: stty -->
+* stty
+    * -a    ：查看标准输入连接的终端的所有设置，可通过重定向更改查看的终端
+    * -flag ：关闭终端标识flag
+    * flag  ：开启终端标识flag
+<!-- entry end -->
+
+更多终端信息见[Linux系统接口](https://github.com/mrbeardad/SeeCheatSheets/blob/master/apue.md#%E7%BB%88%E7%AB%AF)
 
 ### ANSI escape
 <!-- entry begin: ansi color -->
@@ -1529,150 +1697,4 @@ Change: 2020-11-07 13:53:39.060000000 +0800
 | `\e[?25l` |  隐藏光标  |
 <!-- entry end -->
 
-### 作业控制
-在作业控制概念中，将连接到终端的用户会话中的进程组分为两部分，前台进程组与后台进程组。
-前台进程组能输出到终端从而打印字符到屏幕，也能从终端读取用户输入。
-而后台进程一般不能输出到终端也不能从终端读取输入。
 
-| 信号名   | 说明                                                                                                                                    |
-|----------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| SIGINT   | 一般按键`^C`，发射给前台进程组，若进程阻塞或忽略该信号则不发送                                                                          |
-| SIGTSTP  | 一般按键为`^Z`，发射给前台进程组，若进程阻塞或忽略该信号则不发送                                                                        |
-| SIGQUIT  | 一般按键为`^\`，发射给前台进程组，若进程阻塞或忽略该信号则不发送                                                                        |
-| SIGTTIN  | 后台进程组中进程试图读取终端，发射该信号给该后台进程组，若进程阻塞或忽略该信号则不发送，但会使本次read调用失败。SIGPIPE有类似机制       |
-| SIGTTOU  | 后台进程组中进程试图输出到终端，发射该信号给该后台进程组，若进程阻塞或忽略该信号则不发送，且write调用仍可成功                           |
-| SIGWINCH | 终端窗口尺寸发生变化，发射给前台进程组                                                                                                  |
-| SIGHUP   | 连接断开时发射给会话首进程、会话首进程终止时发射给前台进程组                                                                            |
-| SIGCONT  | 当对进程产生停止信号（SIGTSTP、SIGSTOP、SIGTTIN、SIGTTOU）时，清除该进程未决的SIGCONT；反之亦然。捕获该信号并不会取消其“继续运行”的功能 |
-
-作业控制命令：
-<!-- entry begin: jobs fg bg -->
-* jobs
-    * -l        ：显示PID
-    * -r        ：显示running jobs
-    * -s        ：显示suspended jobs
-
-* fg/bg  *%JID*
-<!-- entry end -->
-
-
-### 伪终端
-&emsp;伪终端的的结构与物理终端类似，不过终端驱动程序拆分为了主设备与从设备。
-写到主设备的数据可从从设备读出，反之亦然，就像套接字一样。  
-&emsp;当进程打开文件`/dev/ptmx`时，内核产生与之配对的从设备`/dev/pts/N`(N为数字)。
-于是当两个进程打开配对的终端主设备与终端从设备时，就可以进行通讯了，故伪终端技术也可当作一种IPC技术。
-&emsp;但与pipe、socket之类的正统IPC不同，使用伪终端的目的主要是使用其**终端行规程**！
-
-伪终端用途：
-* 进程间通讯，对等进程的输入与输出针对终端会有特殊处理
-* 进程间通讯，强制对等进程程使用的标准流进程行缓冲（相对管道为全缓冲而可能导致死锁）
-* 终端模拟器
-* 远程终端
-
-<!-- entry begin: stty -->
-* stty
-    * -a    ：查看标准输入连接的终端的所有设置，可通过重定向更改查看的终端
-    * -flag ：关闭终端标识flag
-    * flag  ：开启终端标识flag
-<!-- entry end -->
-
-更多终端信息见[Linux系统接口](https://github.com/mrbeardad/SeeCheatSheets/blob/master/apue.md#%E7%BB%88%E7%AB%AF)
-
-# 网络管理
-详见[计算机网络](network.md)
-## 网络配置
-| 配置文件         | 说明               |
-|------------------|--------------------|
-| /etc/services    | 服务名与端口对照   |
-| /etc/protocols   | 系统支持的网络协议 |
-| /etc/hosts       | 已知主机名         |
-| /etc/resolv.conf | DNS服务器          |
-
-## 网络命令
-<!-- entry begin: ip -->
-* ip [--color]
-    * link/l
-        * set IF up/down
-        * set name NAME
-        * set promisc
-    * addr/a
-        * add IP/MASK  broadcast +  dev IF
-        * del IP/MASK  dev IF
-    * route/r
-        * list table TBL_NAME|TBL_NR
-        * add IP/MASK  via GWIP  dev IF  src IP  metric 600
-        * add [throw|unreachable|prohibit|blackhole] IP/MA
-        * del IP/MASK  via GWIP  dev IF
-    * neigh/n
-        * add/del IP  lla MAC  dev IF
-<!-- entry end -->
-
-<!-- entry begin: nmcli nmtui -->
-* nmcli
-    * radio/r
-        * wifi on|off
-    * connection/c
-        * up  CON-NAME
-        * add type . ifname . ssid . con-name .
-        * del SSID
-        * reload
-    * device/d
-        * wifi
-        * dis IF
-        * wifi c SSID  password PASSWD  (hidden yes)
-* nmtui
-<!-- entry end -->
-
-<!-- entry begin: ss -->
-* ss
-    * -atp       ：TCP端口
-    * -atpn      ：TCP端口，指定端口号
-    * -aup       ：UDP端口
-    * -axp       ：UNIX类型socket
-<!-- entry end -->
-
-<!-- entry begin: nmap ping -->
-* ping
-* nmap
-![图片来自网络](images/nmap.png)
-<!-- entry end -->
-
-<!-- entry begin: iptables -->
-![图片来自网络](images/netfilter.jpg)
-* iptables
-
-| 参数                                            | 解释                                                                                                                                                   |
-|-------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| -t, --table table                               | 对指定的table进行操作，table必须是raw、nat、filter、mangle之一，默认为filter                                                                           |
-| -p                                              | 指定要匹配的数据包协议类型，如tcp、udp、icmp                                                                                                           |
-| --dport num                                     | 匹配目标端口号                                                                                                                                         |
-| --sport num                                     | 匹配来源端口号                                                                                                                                         |
-| -s, --source [!]address[/mask]                  | 把指定的一个或一组地址作为源地址，按此规则进行过滤。比如 192.168.1.1 与 192.168.1.0/255.255.255.0                                                      |
-| -d, --destination [!]address[/mask]             | 地址格式同上，但这里是指定地址为目的地址，按此进行过滤                                                                                                 |
-| -i, --in-interface [!]网络接口                  | 指定数据包的来自来自网络接口，比如最常见的eth0。注意它只对 INPUT、FORWARD、PREROUTING 这三个链起作用。如果没有指定此选项，说明可以来自任何一个网络接口 |
-| -o, --out-interface [!]网络接口                 | 指定数据包出去的网络接口。只对 OUTPUT、FORWARD、POSTROUTING 三个链起作用                                                                               |
-| -A, --append chain rule-specification           | 在指定链 chain 的末尾插入指定的规则，也就是说，这条规则会被放到最后，最后才会被执行。规则是由后面的匹配来指定。                                        |
-| -I, --insert chain [rulenum] rule-specification | 在链 chain 中的指定位置插入一条或多条规则。默认rulenum我1，表示在链的头部插入                                                                          |
-| -D, --delete chain rule-specification或rulenum  | 在指定的链 chain 中删除一个或多个指定规则。                                                                                                            |
-| -R num                                          | 替换/修改第几条规则                                                                                                                                    |
-| -P, --policy chain target                       | 为指定的链 chain 设置策略 target。注意，只有内置的链才允许有策略，用户自定义的是不允许的。                                                             |
-| -F, --flush [chain]                             | 清空指定链 chain 上面的所有规则。如果没有指定链，清空该表上所有链的所有规则。                                                                          |
-| -N, --new-chain chain                           | 用指定的名字创建一个新的链。                                                                                                                           |
-| -X, --delete-chain [chain]                      | 删除指定的链，这个链必须没有被其它任何规则引用，而且这条上必须没有任何规则。如果没有指定链名，则会删除该表中所有非内置的链。                           |
-| -E, --rename-chain old-chain new-chain          | 用指定的新名字去重命名指定的链。这并不会对链内部造成任何影响。                                                                                         |
-| -Z, --zero [chain]                              | 把指定链，或者表中的所有链上的所有计数器清零。                                                                                                         |
-| -j, --jump target                               | 即满足某条件时该执行什么样的动作。target 可以是内置的目标，比如 ACCEPT，也可以是用户自定义的链。                                                       |
-| -L, --list [chain]                              | 列出链 chain 上面的所有规则，如果没有指定链，列出表上所有链的所有规则                                                                                  |
-| -h                                              | 显示帮助信息                                                                                                                                           |
-
-选项`-j`的动作包括：
-* ACCEPT ：接收数据包。
-* DROP ：丢弃数据包。
-* REDIRECT ：重定向、映射、透明代理。
-* SNAT ：源地址转换。
-* DNAT ：目标地址转换。
-* MASQUERADE ：IP伪装（NAT），用于ADSL。
-* LOG ：日志记录。
-
-`iptables -t 表名 <-A/I/D/R> 规则链名 [规则号] <-i/o 网卡名> -p 协议名 <-s 源IP/源子网> --sport 源端口 <-d 目标IP/目标子网> --dport 目标端口 -j 动作`
-<!-- entry end -->

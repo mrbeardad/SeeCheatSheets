@@ -2,11 +2,12 @@
 <!-- vim-markdown-toc GFM -->
 
 - [安装](#安装)
-- [Python](#python)
+- [编程之道](#编程之道)
 - [C++](#c)
-- [编程](#编程)
-- [技术](#技术)
+- [Python](#python)
 - [Linux](#linux)
+- [数据库](#数据库)
+- [操作系统](#操作系统)
 - [网络](#网络)
 - [底层](#底层)
 - [其它](#其它)
@@ -36,9 +37,17 @@ cmake --install .
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")  
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
-# Python
-* [Python基础](python.md):star:
-    > 基础语法与内置类型操作
+# 编程之道
+* [设计模式](dspt.md):star:
+    > 应用框架的设计套路
+* [编码经验](quick_logic.md):star:
+    > 解题技巧，编码经验
+* [数据结构与算法](dsaa.md)
+    > 基础数据结构与算法
+* [逻辑表达与简化](logic.md)
+    > 代码的基本逻辑表达方式
+* [正则表达式](regex.md)
+    > 目前包含的正则语法版本有egrep、Vim、C++
 
 # C++
 * [C++语法特性](cpp.md):star:
@@ -52,35 +61,33 @@ cmake --install .
 * [CMake构建系统](cmake.md)
     > CMake系统构建工具语法
 
-# 编程
-* [设计模式](dspt.md):star:
-    > 应用框架的设计套路
-* [编码经验](quick_logic.md):star:
-    > 解题技巧，编码经验
-* [数据结构与算法](dsaa.md)
-    > 基础数据结构与算法
-* [逻辑表达与简化](logic.md)
-    > 代码的基本逻辑表达方式
-* [正则表达式](regex.md)
-    > 目前包含的正则语法版本有egrep、Vim、C++
-
-# 技术
-* [Docker](docker.md)
-    > 容器，用于组建微服务架构
-* [MySQL](mysql.md)
-    > 关系型数据库，存储于磁盘
+# Python
+* [Python基础](python.md):star:
+    > 基础语法与内置类型操作
 
 # Linux
-* [Linux系统架构](linux.md):star:
-    > Linux的开机流程，以及整个系统的内核态与用户态架构
-* [Linux系统接口](apue.md):star:
-    > 大部分都符合POSIX、XSI或USU规范
 * [Shell脚本](bash.md)
     > bash语法、内置命令以及一些linux基础命令
 * [开发者工具](devtool.md)
     > 包含gcc、gdb、openssh、openssl、tmux、zsh、git、pacman等工具使用
 * [Vim使用手册](vim.md)
     > 此为[mrbeardad/SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
+* [Docker](docker.md)
+    > 容器，用于组建微服务架构
+
+# 数据库
+* [SQL语句](sql.md)
+    > 关系型数据库查询语句
+* [数据库原理](innodb.md)
+    > MySQL的设计架构，包括索引与事务原理
+
+# 操作系统
+* [Linux系统接口](apue.md):star:
+    > 大部分都符合POSIX、XSI或USU规范
+* [Linux知识体系](linux.md):star:
+    > Linux的开机流程，以及整个系统知识体系
+* [操作系统原理](os.md)
+    > 链接、异常控制流、虚拟内存
 
 # 网络
 * [计算机网络](network.md)
@@ -97,10 +104,8 @@ cmake --install .
     > x86-64汇编语言
 * [处理器设计](cpu.md)
     > 逻辑电路与处理器设计，以及CPU高速缓存机制
-* [计算机组成](bus.md)
+* [总线接口](bus.md)
     > 主要是总线接口与存储技术，还有显卡与显示屏工作原理
-* [操作系统](os.md)
-    > 链接、异常控制流、虚拟内存
 
 # 其它
 * [Markdown](markdown.md)

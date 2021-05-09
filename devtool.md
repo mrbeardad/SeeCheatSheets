@@ -17,8 +17,7 @@
 - [zsh](#zsh)
   - [Some Alias](#some-alias)
   - [Some Tools](#some-tools)
-- [包管理器](#包管理器)
-  - [pacman](#pacman)
+- [网络工具](#网络工具)
 - [git](#git)
   - [git概念](#git概念)
   - [git命令](#git命令)
@@ -425,8 +424,7 @@ alias dok='docker'
     * `pl`          ：为复制的文件创建软链接
 <!-- entry end -->
 
-# 包管理器
-## pacman
+# 网络工具
 <!-- entry begin: pacman -->
 * pacman
     * 更新数据库
@@ -464,6 +462,23 @@ alias dok='docker'
         Server = file:///mnt/iso/arch/pkg' | sudo tee /etc/pacman.conf
         pacman  -Sy
         ```
+<!-- entry end -->
+
+<!-- entry begin: curl -->
+* curl
+    * -s        ：silent mode
+    * -S        ：打印错误消息，即使使用了`-s`
+    * -L        ：接受链接跳转
+    * -o        ：指定输出文件
+* curl -Lo File URL
+* curl -fsSL URL | bash
+* curl -fsSL URL | bash -s -- {-opt}
+* curl cheat.sh/`CMD`
+* curl cheat.sh/`LANG`/`SPECIFIC`
+    > [cheat.sh](https://github.com/chubin/cheat.sh)是github上一个nice的项目
+    * 空白用`+`代替
+    * `curl cheat.sh/~keyword`
+    * `curl cheat.sh/python/:list` 列出可选项
 <!-- entry end -->
 
 # git

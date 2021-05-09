@@ -2,33 +2,32 @@
 <!-- vim-markdown-toc GFM -->
 
 - [基础知识](#基础知识)
-  - [UNIX体系结构](#unix体系结构)
-  - [位运算技巧](#位运算技巧)
-  - [阻塞](#阻塞)
-- [标准与限制](#标准与限制)
-- [错误处理](#错误处理)
+  - [UNIX架构](#unix架构)
+  - [线程阻塞](#线程阻塞)
+  - [标准与限制](#标准与限制)
+  - [错误处理](#错误处理)
 - [用户信息](#用户信息)
   - [passwd](#passwd)
   - [shadow](#shadow)
   - [group](#group)
-- [系统信息](#系统信息)
-  - [操作系统信息](#操作系统信息)
-  - [日期时间](#日期时间)
-  - [语系与字符集](#语系与字符集)
 - [日志系统](#日志系统)
+- [系统信息](#系统信息)
+  - [主机信息](#主机信息)
+  - [日期时间](#日期时间)
 - [进程管理](#进程管理)
   - [选项参数](#选项参数)
   - [进程环境](#进程环境)
+  - [运行时间](#运行时间)
   - [进程控制](#进程控制)
   - [线程管理](#线程管理)
   - [信号处理](#信号处理)
   - [资源限制](#资源限制)
+  - [动态链接](#动态链接)
 - [虚拟文件系统](#虚拟文件系统)
-  - [文件系统结构](#文件系统结构)
-    - [硬链接](#硬链接)
-    - [文件信息](#文件信息)
+  - [文件信息](#文件信息)
   - [文件日期](#文件日期)
-  - [权限](#权限)
+  - [文件权限](#文件权限)
+  - [文件操作](#文件操作)
   - [文件类型](#文件类型)
     - [目录](#目录)
     - [符号链接](#符号链接)
@@ -44,34 +43,29 @@
     - [异步I/O](#异步io)
     - [分段I/O](#分段io)
     - [内存映射](#内存映射)
-    - [动态链接](#动态链接)
 
 <!-- vim-markdown-toc -->
 # 基础知识
 
-## UNIX体系结构
+## UNIX架构
 ![unix](images/unixarch.png)
 
-## 位运算技巧
-* 取值：`flag & mask`
-* 置位：`flag | bit`
-* 清除：`flag & ~bit`
-
-## 阻塞
+## 线程阻塞
 <!-- entry begin: 阻塞 block -->
 * 有些文件并非立即可用，需要等待，期间调用**线程**（而非进程）会阻塞。
 * 互斥锁机制（文件记录锁、线程同步锁）也会使线程阻塞
 * 当等待某些异步事件发生时，如调用`wait`、`sleep`、`pause`、`sigsuspend`、`sigwait`也会主动进入阻塞状态
 <!-- entry end -->
 
-# 标准与限制
+## 标准与限制
+* 有些函数需要将结果返回至参数指针所指对象中，有些参数要求为non-null，由编译器属性指出
 * 若未特殊说明，则出错时返回-1，标记为(NOE)表示无出错返回值
 * 若未特殊说明，则文件处理函数一般都会跟随符号链接
 * 若未特殊说明，则at后缀函数支持参数`flag=AT_SYMLINK_NOFOLLOW`；否则仅支持特殊说明的flag
 * 若未特殊说明，则at后缀函数支持参数`fd=AT_FDCWD`
 * 若未特殊说明，则返回数据指针的函数都可能指向local-static对象
 
-`ISO C`、`IEEE POSIX`、`USU`标准规范了系统接口，通过C头文件的形式供程序调用
+`ISO C`、`IEEE POSIX`、`USU`标准规范了系统接口
 
 UNIX系统实现了许多常量对系统的行为进行可移植性的标准化，包括：
 * 编译时限制
@@ -89,7 +83,7 @@ long fpathconf(int fd, int name);               // 返回对应限制值
 ```
 <!-- entry end -->
 
-# 错误处理
+## 错误处理
 <!-- entry begin: strerror perror -->
 `errno`两条重要规则：
 * 若未出错则其值不会被清除
@@ -178,112 +172,6 @@ int         getgroups(int bufsize, gid_t gidlist[]);    // 返回存入的组的
 ```
 <!-- entry end -->
 
-# 系统信息
-## 操作系统信息
-<!-- entry begin: uname gethostname -->
-| 限制宏        | 说明           |
-|---------------|----------------|
-| HOST_NAME_MAX | 主机名最大长度 |
-```c
-#include <sys/utsname.h>
-struct utsname
-{
-    char sysname[];     // 系统内核
-    char nodename[];    // 主机名称
-    char release[];     // 内核版本
-    char version[];     // 发布时间
-    char machine[];     // 机器架构
-}
-int uname(utsname* name);                   // 返回非负
-
-#include <unistd.h>
-int gethostname(char* name, int namelen);   // 返回0
-```
-<!-- entry end -->
-
-## 日期时间
-<!-- entry begin: time gmtime localtime strftime strftime_l mktime tms times clock_gettime clock_settime clock_getres -->
-| 限制宏      | 说明           |
-|-------------|----------------|
-| _SC_CLK_TCK | 每秒时钟滴答数 |
-```c
-/* 日期时间 */
-#include <time.h>
-time_t  time(time_t* calptr);                                                                       // 返回时间值。calptr若不为NULL则也会返回时间值于此
-tm*     gmtime(const time_t* calptr);                                                               // 返回UTC的`tm*`
-tm*     localtime(const time_t* calptr);                                                            // 返回本地时区的`tm*`
-size_t  strftime(char* buf, size_t maxsize, const char* format, const tm* tmptr);                   // 返回buf字符数
-size_t  strftime_l(char* buf, size_t maxsize, const char* format, const tm* tmptr, locale_t locale);// 返回buf字符数
-char*   strptime(const char* buf, const char* format, tm* tmptr);                                   // 返回下次解析位置的指针
-time_t  mktime(tm* tmptr);                                                                          // 返回本地时区的`tm*`对应time_t
-
-/* 单调时间、细致进程时间 */
-#include <sys/time.h>
-struct tms
-{
-    clock_t tms_utime;      // 用户态CPU时间
-    clock_t tms_stime;      // 内核态CPU时间
-    clock_t tms_cutime;     // 用户态CPU时间（已终止子进程）
-    clock_t tms_cstime;     // 内核态CPU时间（已终止子进程）
-};
-clock_t times(tms* buf);    // 返回单调时间（除以每秒时钟滴答数即得秒数）。
-
-/* 日期时间、单调时间、粗略进程时间、粗略线程时间 */
-#include <sys/time.h>
-struct timespec { time_t tv_sec; long tv_nsec; };
-
-int     clock_gettime(clockid_t clock_id, timespec* tsp);    // 返回0
-int     clock_getres(clockid_t clock_id, timespec* tsp);     // 返回0
-int     clock_settime(clockid_t clock_id, timespec* tsp);    // 返回0
-```
-<!-- entry end -->
-
-<!-- entry begin: clock_gettime clock_settime clock_getres  -->
-| clock_id                 | 说明                           |
-|--------------------------|--------------------------------|
-| CLOCK_REALTIME           | 系统日期时间计时器（系统时间） |
-| CLOCK_MONOTONIC          | 系统开机时间计时器（单调时间） |
-| CLOCK_PROCESS_CPUTIME_ID | 进程CPU时间                    |
-| CLOCK_THREAD_CPUTIME_ID  | 线程CPU时间                    |
-<!-- entry end -->
-
-<!-- entry begin: strftime format date -->
-| strftime format | 说明            | Thu Jan 19 21:24:52 EST 2012 |
-|-----------------|-----------------|------------------------------|
-| %C              | 年前两位        | 20                           |
-| %y              | 年后两位        | 12                           |
-| %Y              | 年              | 2012                         |
-| %b、%h          | 月名缩写        | Jan                          |
-| %B              | 月名            | January                      |
-| %m              | 月(01-12)       | 01                           |
-| %j              | 日(年)(001-366) | 019                          |
-| %d              | 日(月)(01-31)   | 19                           |
-| %e              | 日(月)( 1-31)   | 19                           |
-| %a              | 周名缩写        | Thu                          |
-| %A              | 周名            | Thursday                     |
-| %w              | 周几(0-6)       | 4                            |
-| %p              | AM/PM           | PM                           |
-| %I              | 时(00-12)       | 01                           |
-| %H              | 时(00-23)       | 21                           |
-| %M              | 分(00-59)       | 24                           |
-| %S              | 秒(00-60)       | 52                           |
-| %F              | 日期            | 2012-01-19                   |
-| %X              | 时间            | 21:24:52                     |
-| %r              | 时间            | 09:24:52 PM                  |
-| %Z              | 时区            | EST                          |
-| %%              | 转义`%`         |                              |
-| %t              | 转义`\t`        |                              |
-| %n              | 转义`\n`        |                              |
-<!-- entry end -->
-
-## 语系与字符集
-<!-- entry begin: setlocale -->
-```c
-#include <locale.h>
-char*   setlocale(int category, const char* locale);            // 返回locale字符串。category一般为LC_ALL；locale为NULL返回"C"；locale为""返回系统locale
-```
-<!-- entry end -->
-
 # 日志系统
 <!-- entry begin: openlog syslog closelog setlogmask -->
 ```c
@@ -341,6 +229,67 @@ int     LOGMASK(int priority);                                  // 返回将pri�
 | LOG_EMERG   | 系统不可使用的情况 |
 <!-- entry end -->
 
+# 系统信息
+## 主机信息
+<!-- entry begin: uname gethostname -->
+```c
+#include <sys/utsname.h>
+struct utsname
+{
+    char sysname[];     // 系统内核
+    char nodename[];    // 主机名称
+    char release[];     // 内核版本
+    char version[];     // 发布时间
+    char machine[];     // 机器架构
+}
+int uname(utsname* name);                   // 返回非负
+```
+<!-- entry end -->
+
+## 日期时间
+<!-- entry begin: time gmtime localtime strftime strftime_l mktime tms times clock_gettime clock_settime clock_getres -->
+```c
+/* 日期时间 */
+#include <time.h>
+time_t  time(time_t* calptr);                                                                       // 返回时间值。calptr若不为NULL则也会返回时间值于此
+tm*     gmtime(const time_t* calptr);                                                               // 返回UTC的`tm*`
+tm*     localtime(const time_t* calptr);                                                            // 返回本地时区的`tm*`
+size_t  strftime(char* buf, size_t maxsize, const char* format, const tm* tmptr);                   // 返回buf字符数
+size_t  strftime_l(char* buf, size_t maxsize, const char* format, const tm* tmptr, locale_t locale);// 返回buf字符数
+char*   strptime(const char* buf, const char* format, tm* tmptr);                                   // 返回下次解析位置的指针
+time_t  mktime(tm* tmptr);                                                                          // 返回本地时区的`tm*`对应time_t
+```
+
+<!-- entry begin: strftime format date -->
+| strftime format | 说明            | Thu Jan 19 21:24:52 EST 2012 |
+|-----------------|-----------------|------------------------------|
+| %C              | 年前两位        | 20                           |
+| %y              | 年后两位        | 12                           |
+| %Y              | 年              | 2012                         |
+| %b、%h          | 月名缩写        | Jan                          |
+| %B              | 月名            | January                      |
+| %m              | 月(01-12)       | 01                           |
+| %j              | 日(年)(001-366) | 019                          |
+| %d              | 日(月)(01-31)   | 19                           |
+| %e              | 日(月)( 1-31)   | 19                           |
+| %a              | 周名缩写        | Thu                          |
+| %A              | 周名            | Thursday                     |
+| %w              | 周几(0-6)       | 4                            |
+| %p              | AM/PM           | PM                           |
+| %I              | 时(00-12)       | 01                           |
+| %H              | 时(00-23)       | 21                           |
+| %M              | 分(00-59)       | 24                           |
+| %S              | 秒(00-60)       | 52                           |
+| %F              | 日期            | 2012-01-19                   |
+| %X              | 时间            | 21:24:52                     |
+| %r              | 时间            | 09:24:52 PM                  |
+| %Z              | 时区            | EST                          |
+| %%              | 转义`%`         |                              |
+| %t              | 转义`\t`        |                              |
+| %n              | 转义`\n`        |                              |
+<!-- entry end -->
+
+
 # 进程管理
 ## 选项参数
 <!-- entry begin: getopt -->
@@ -352,12 +301,12 @@ int getopt(int argc, char* const argv[], const char* optstring);
 // * 选项          ：即以`-`开头的命令行参数。选项分为三种类型，`-o`单选项、`-opt`多选项（`o`与`p`选项必须为无参选项）、`-tfile`选项`t`及其参数`file`
 // * 选项参数      ：若某选项必有或可能有参数，则跟在该选项后面的同一命令行参数的字符，或下个命令行参数即为该选项的参数，见上
 // * 命令参数      ：不属于上面三种情况的命令行参数，作为该命令本身的主要参数。**getopt会将所有命令参数保持顺序的移动到`argv`数组的尾部**。
-// 特殊的，`-`被视作命令参数，`--`之后的所有命令行参数被视作命令参数
+// 特殊的，`-`被视作命令参数一般表示从stdin读取，`--`之后的所有命令行参数被视作命令参数
 ```
 * optstring
     * `:o`      ：开头`:`表示开启silent-mode，默认为print-mode
-    * `o`       ：代表选项`o`没有参数  
-    * `o:`      ：代表选项`o`必有参数, 紧跟`-oarg`或间隔`-o arg`中的`arg`都被视为`-o`的参数  
+    * `o`       ：代表选项`o`没有参数
+    * `o:`      ：代表选项`o`必有参数, 紧跟`-oarg`或间隔`-o arg`中的`arg`都被视为`-o`的参数
     * `o::`     ：代表选项`o`可选参数, 只识别紧跟`-oarg`
 * 全局变量
     * `optarg`  ：类型为`char*`，指向当前选项的参数，无则为NULL
@@ -415,24 +364,64 @@ int     setsid(void);                   // 返回新SID。调用进程不能是�
 int     tcsetpgrp(int fd, pid_t pgid);  // 返回0。pgid必须属于同会话。若由后台进程组调用且其未忽略或阻塞SIGTTOU，则会发送SIGTTOU给该后台进程组
 ```
 <!-- entry end -->
+
 <!-- entry begin: getlogin getuid geteuid getgid getegid setuid seteuid setgid setegid  -->
 ```c
 #include <unistd.h>
-char*   getlogin(void);                 // 返回登录名。原理是通过ttyname(STDIN_FILENO)后再与utmp日志对比
+char*   getlogin(void);                 // 返回登录名。原理是调用ttyname(STDIN_FILENO)后再与utmp日志对比
 uid_t   getuid(void);                   // 返回UID
 uid_t   geteuid(void);                  // 返回EUID
 gid_t   getgid(void);                   // 返回GID
 gid_t   getegid(void);                  // 返回EGID
 
 /*
- * 超级用户调用setuid()会更改UID、EUID、SUID，普通用户调用则只更改UID，且只能更改为UID、EUID、SUID之一。setgid()同理
- * 超级用户调用seteuid()只更改EUID；普通用户调用则也只更改EUID，且只能更改为UID、EUID、SUID之一。setegid()同理
+ * 超级用户调用setuid()会更改UID、EUID、SUID，用于让进程完全成为指定uid的进程
+ * 普通用户调用setuid()只更改EUID为UID或SUID之一，用于普通用户恢复原本所具有的权限
+ *
+ * 超级用户调用seteuid()只更改EUID，用于让进程暂时降级为指定uid的进程
+ * 普通用户调用seteuid()只更改EUID为UID或SUID之一，同setuid()，用于普通用户恢复原本所具有的权限
+ *
+ * UID意味着该进程真正的主人，普通用户当然不能随便更改
+ * EUID意味着该进程当前拥有的权限
+ * SUID意味着该进程可以拥有的权限，可以在以后恢复
 */
 int     setuid(uid_t uid);              // 返回0
 int     setgid(gid_t gid);              // 返回0
 int     seteuid(uid_t uid);             // 返回0
 int     setegid(gid_t gid);             // 返回0
 ```
+<!-- entry end -->
+
+## 运行时间
+```c
+/* 单调时间、细致进程时间 */
+#include <sys/times.h>
+struct tms
+{
+    clock_t tms_utime;      // 用户态CPU时间（当前进程）
+    clock_t tms_stime;      // 内核态CPU时间（当前进程）
+    clock_t tms_cutime;     // 用户态CPU时间（**已终止**子进程）
+    clock_t tms_cstime;     // 内核态CPU时间（**已终止**子进程）
+};
+clock_t times(tms* buf);    // 返回单调时间（除以每秒时钟滴答数_SC_CLK_TCK 即得秒数）。
+
+/* 日期时间、单调时间、粗略进程时间、粗略线程时间 */
+#include <sys/times.h>
+struct timespec { time_t tv_sec; long tv_nsec; };
+
+int     clock_gettime(clockid_t clock_id, timespec* tsp);    // 返回0
+int     clock_getres(clockid_t clock_id, timespec* tsp);     // 返回0
+int     clock_settime(clockid_t clock_id, timespec* tsp);    // 返回0
+```
+<!-- entry end -->
+
+<!-- entry begin: clock_gettime clock_settime clock_getres  -->
+| clock_id                 | 说明                           |
+|--------------------------|--------------------------------|
+| CLOCK_REALTIME           | 系统日期时间计时器（系统时间） |
+| CLOCK_MONOTONIC          | 系统开机时间计时器（单调时间） |
+| CLOCK_PROCESS_CPUTIME_ID | 进程CPU时间                    |
+| CLOCK_THREAD_CPUTIME_ID  | 线程CPU时间                    |
 <!-- entry end -->
 
 ## 进程控制
@@ -454,6 +443,7 @@ void    exit(int status);                                                   // �
 int     atexit(void (*func)(void));                                         // 返回0，若出错返回非0。只在main返回与调用exit时有效，而由signal终止无效
 ```
 <!-- entry end -->
+
 <!-- entry begin: wait waitpid waitid -->
 ```c
 #include <sys/wait.h>
@@ -574,9 +564,9 @@ int         pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*c
 <!-- entry begin: signal_names strsignal sigemptyset sigfillset sigaddset sigdelset sigismember kill raise sigqueue pthread_kill sigqueue pthread_kill sigpending sigprocmask pthread_sigmask signal sigaction -->
 安全处理信号：
 * 阻塞所有信号
+* 循环处理不排队的信号表示的事件
 * 保存和恢复errno
 * 只调用异步安全函数
-* 多次处理不排队的信号
 * `volatile sig_atomic_t`设置标识即返回
 ```c
 #include <string.h>
@@ -588,8 +578,8 @@ char*   signal_names[NSIG + 4];                                         // 信�
 void    (*signal(int signo, void (*func)(int)))(int);                   // 返回之前的Handler
 int     sigaction(int signo, const sigaction* act, sigaction* oldact);  // 返回0
 
-int     kill(pid_t pid, int signo);                                     // 返回0。普通用户一般只能发送给UID或EUID等于其UID或EUID的进程
 int     raise(int signo);                                               // 返回0
+int     kill(pid_t pid, int signo);                                     // 返回0。普通用户一般只能发送给UID或EUID等于其UID或EUID的进程
 int     sigqueue(pid_t pid, int signo, const union sigval value);       // 返回0。实时信号必须由该函数发送，但处理时sigaction中两种处理函数都可
 int     pthread_kill(pthread_t tid, int signo);                         // 返回0，错误返回errno
 
@@ -702,23 +692,22 @@ int     setpriority(int which, id_t who, int value);    // 返回0。
 | PRIO_USER         | 指定who为SID                  |
 <!-- entry end -->
 
-# 虚拟文件系统
-## 文件系统结构
-### 硬链接
-<!-- entry begin: link linkat unlink unlinkat remove rename frenameat -->
+## 动态链接
+<!-- entry begin: dlopen dlsum dlclose dlerror -->
 ```c
-#include <unistd.h>
-int link(const char* existingpath, const char* newpath);                                    // 返回0。若epath为符号链接则创建指向最终目标的符号链接
-int linkat(int efd, const char* existingpath, int nfd, const char* newpath, int flag);      // 返回0。若epath为符号链接则创建指向最终目标的符号链接；支持flag=AT_SYMLINK_FOLLOW表示创建指向最终目标的硬链接
-int unlink(const char* pathname);                                                           // 返回0。不跟随符号链接
-int unlinkat(int fd, const char* pathname, int flag);                                       // 返回0。不跟随符号链接，支持flag=AT_REMOVEDIR表示删除空目录
-int remove(const char* pathname);                                                           // 返回0。不跟随符号链接
-int rename(const char* oldname, const char* newname);                                       // 返回0。不跟随符号链接
-int frenameat(int oldfd, const char* pathname, int newfd, const char* newname);             // 返回0。不跟随符号链接
+#include <dlfcn.h>                                  // 链接参数-ldl
+void*   dlopen(const char* filename, int flag);     // 返回加载的动态库的句柄，若出错返回NULL
+void*   dlsym(void* handle, const char* symbol);    // 未找到目标符号则返回NULL。dlsym还会去handle的依赖库中搜索符号(BFS)
+int     dlclose(void* handle);                      // 成功返回0，出错返回非0
+char*   dlerror(void);                              // 返回上面三个函数出错信息，若无错则返回NULL
 ```
+| dlopen flag | 解释                                        |
+|-------------|---------------------------------------------|
+| RTLD_LAZY   | 过程引用延迟绑定（变量引用仍立即解析）      |
+| RTLD_NOW    | 立即绑定（环境变量LD_BIND_NOW非空也是如此） |
 <!-- entry end -->
-
-### 文件信息
+# 虚拟文件系统
+## 文件信息
 <!-- entry begin: stat lstat fstat fstatat ft -->
 ```c
 #include <sys/stat.h>
@@ -773,7 +762,7 @@ times[2]说明：
 * 若times非空指针，且无一`tv_nsec`为`UTIME_OMIT`或`UTIME_NOW`，则设置为指定时间。需要权限：owner | root
 <!-- entry end -->
 
-## 权限
+## 文件权限
 <!-- entry begin: access faccessat umask chmod fchmod fchmodat chown lchown fchown fchowat -->
 ```c
 #include <unistd.h>
@@ -823,6 +812,20 @@ int     fchownat(int fd, const char* pathname, uid_t owner, gid_t group, int fla
 | S_IXOTH    | 0001 |
 <!-- entry end -->
 
+## 文件操作
+<!-- entry begin: link linkat unlink unlinkat remove rename frenameat -->
+```c
+#include <unistd.h>
+int link(const char* existingpath, const char* newpath);                                    // 返回0。
+int linkat(int efd, const char* existingpath, int nfd, const char* newpath, int flag);      // 返回0。支持flag=AT_SYMLINK_FOLLOW表示创建指向最终目标的硬链接
+int unlink(const char* pathname);                                                           // 返回0。不跟随符号链接
+int unlinkat(int fd, const char* pathname, int flag);                                       // 返回0。不跟随符号链接，支持flag=AT_REMOVEDIR表示删除空目录
+int remove(const char* pathname);                                                           // 返回0。不跟随符号链接
+int rename(const char* oldname, const char* newname);                                       // 返回0。不跟随符号链接
+int frenameat(int oldfd, const char* pathname, int newfd, const char* newname);             // 返回0。不跟随符号链接
+```
+<!-- entry end -->
+
 ## 文件类型
 ### 目录
 <!-- entry begin: mkdir mkdirat rmdir chdir fchdir getcwd chroot -->
@@ -839,6 +842,7 @@ int     rmdir(const char* pathname);                            // 返回0
 int     chdir(const char* pathname);                            // 返回0
 int     fchdir(int fd);                                         // 返回0
 char*   getcwd(char* buf, size_t size);                         // 返回工作目录的真实绝对路径。原理即通过`..`层层向上递归到根来获取
+
 int     chroot(const char* pathname);                           // 返回0。切换RTD（默认为系统`/`），只能由root调用，调用后该进程及其子进程则再无法恢复`/`了（因为隔离后根本无法指定原来的目录）
 ```
 <!-- entry end -->
@@ -879,7 +883,7 @@ int     mkstemp(char* template);                                        // 返�
 int     fileno(FILE* file);                                             // 返回流相关的文件描述符(NOE)
 
 #include <fcntl.h>
-int     open(const char* path, int oflag, mode_t mode...);              // 返回文件描述符
+int     open(const char* path, int oflag, mode_t mode...);              // 返回文件描述符，mode表示创建文件时默认权限
 int     openat(int fd, const char* path, int oflag, mode_t mode);       // 返回文件描述符
 int     creat(const char* path, mode_t mode);                           // 相当于open(path, O_WRONLY|O_CREAT|O_TRUNC, mode)
 int     fcntl(int fd, int cmd, int arg...);                             // 返回值依赖cmd
@@ -1238,10 +1242,10 @@ struct winsize                                              // 获取winsize：i
 | MIN      | 非规范模式最小读取字节数  | VMIN     |                    |           |
 
 对于非规范模式的设置：
-| 属性      |                    MIN > 0                   |               MIN == 0              |
-|-----------|:--------------------------------------------:|:-----------------------------------:|
-| TIME > 0  | 若未超时则读取[MIN, n]；若超时则读取[1, MIN] | 若未超时则读取[1, n]；若超时则读取0 |
-| TIME == 0 |                 读取[MIN, n]                 |              读取[0, n]             |
+| 属性      |                            MIN > 0                           |               MIN == 0              |
+|-----------|:------------------------------------------------------------:|:-----------------------------------:|
+| TIME > 0  | 若未超时则读取[MIN, n]；若超时则可能无限期阻塞地读取[1, MIN] | 若未超时则读取[1, n]；若超时则读取0 |
+| TIME == 0 |                 可能无限期阻塞地读取[MIN, n]                 |              读取[0, n]             |
 <!-- entry end -->
 
 <!-- entry begin: pty posix_openpt grantpt unlockpt ptsname openpty forkpty -->
@@ -1522,17 +1526,3 @@ int shmdt(const void* addr);                        // 返回0。引用计数减
 | SHM_RND    | 使指定的共享段的映射地址向下取SHMLBA倍数 |
 <!-- entry end -->
 
-### 动态链接
-<!-- entry begin: dlopen dlsum dlclose dlerror -->
-```c
-#include <dlfcn.h>                                  // 链接参数-ldl
-void*   dlopen(const char* filename, int flag);     // 返回加载的动态库的句柄，若出错返回NULL
-void*   dlsym(void* handle, const char* symbol);    // 未找到目标符号则返回NULL。dlsym还会去handle的依赖库中搜索符号(BFS)
-int     dlclose(void* handle);                      // 成功返回0，出错返回非0
-char*   dlerror(void);                              // 返回上面三个函数出错信息，若无错则返回NULL
-```
-| dlopen flag | 解释                                        |
-|-------------|---------------------------------------------|
-| RTLD_LAZY   | 过程引用延迟绑定（变量引用仍立即解析）      |
-| RTLD_NOW    | 立即绑定（环境变量LD_BIND_NOW非空也是如此） |
-<!-- entry end -->

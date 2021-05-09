@@ -1,352 +1,38 @@
-# 安装与使用
-<!-- entry begin: mysql mysqld initialize install -->
-**初始化mysql**
-* `mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
-* `mysqld --initialize --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
+# 目录
+<!-- vim-markdown-toc GFM -->
 
-**连接mysql**
-* `mysql -h 主机名 -P 端口号 -D 数据库名 -u 用户名 -p密码`
-<!-- entry end -->
+- [系统架构](#系统架构)
+- [存储引擎架构](#存储引擎架构)
+  - [内存结构](#内存结构)
+    - [缓冲池](#缓冲池)
+    - [更改缓冲区](#更改缓冲区)
+    - [自适应哈希索引](#自适应哈希索引)
+    - [日志缓冲区](#日志缓冲区)
+  - [磁盘结构](#磁盘结构)
+    - [表空间结构](#表空间结构)
+      - [行记录结构](#行记录结构)
+      - [数据页结构](#数据页结构)
+      - [区、段、组](#区段组)
+    - [双写缓冲区](#双写缓冲区)
+    - [Redo日志](#redo日志)
+- [索引](#索引)
+  - [B+Tree索引](#btree索引)
+- [事务](#事务)
 
-# MySQL基础
-## 系统信息
-<!-- entry begin: sql variable status engines charset collation names -->
-```sql
--- 默认变量作用域为SESSION
-SET  [SESSION|GLOBAL] var = val;
-SHOW [SESSION|GLOBAL] VARAIABLES [LIKE 'pattern'];
-SHOW [SESSION|GLOBAL] STATUS     [LIKE 'pattern'];
-SHOW PROCESSLIST;
-SHOW ENGINES    [LIKE 'pattern'];
-SHOW CHARSET    [LIKE 'pattern'];
-SHOW COLLATION  [LIKE 'pattern'];
-SET  NAMES charset;
--- SET character_set_client     = charset;  -- 客户端使用的字符集
--- SET character_set_connection = charset;  -- 服务器处理请求时使用的字符集
--- SET character_set_results    = charset;  -- 回传给客户端时使用的字符集
-```
-<!-- entry end -->
+<!-- vim-markdown-toc -->
 
-## 用户管理
-<!-- entry begin: sql user password grant -->
-```sql
-SELECT user, host, password FROM mysql.user;    -- 查询用户
-CREATE USER username [IDENTIFIED BY 'passwd'];  -- 创建用户
-DROP   USER username;                           -- 删除用户
-SET PASSWORD FOR username = PASSWORD('passwd'); -- 修改密码
-GRANT  privcode ON db_name.tbl_name TO username;-- 授权用户
-FLUSH  PRIVILEGES;                              -- 刷新权限
-    -- 权限码包括：
-    -- ALL PRIVILEGES
-    -- SELECT
-    -- INSERT
-    -- 等等...
-```
-<!-- entry end -->
-
-## 数据库
-<!-- entry begin: sql database db -->
-```sql
-SHOW   DATABASES [LIKE 'pattern'];          -- 查询已有数据库
-SHOW   CREATE DATABASE           db_name;   -- 查询数据库详情
-CREATE DATABASE  [IF NOT EXISTS] db_name;   -- 创建数据库
-DROP   DATABASE  [IF EXISTS]     db_name;   -- 删除数据库
-```
-<!-- entry end -->
-
-## 数据表
-```sql
-SHOW   TABLES [FROM db_name | LIKE 'pattern'];  -- 查询已有数据表
-SHOW   CREATE TABLE tbl_name;                   -- 查询数据表详情
-CREATE TABLE tbl_name (                         -- 创建数据表
-    fd_name type [const],
-    ...,
-    [PRIMARY KEY (fd_name),]
-    [KEY         (fd_name),]
-    [FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name),]
-    [CHECK       (clause)]
-) ENGINE=engine CHARSET=charset ROW_FORMAT=format;
-
-DROP  TABLE tbl_name;                           -- 删除数据表
-ALTER TABLE tbl_name RENAME TO new_tbl_name;    -- 修改数据表
-
--- 视图
-CREATE VIEW <view_name> AS SELECT 语句;
-DROP VIEW <view_name>;
-
--- 导入与导出
-LOAD DATA LOCAL INFILE '<file_name>' INTO TABLE tbl_name;
-
-SELECT * FROM tbl_name INTO OUTFILE '<file_name>';
-```
-<!-- entry end -->
-
-## 数据列
-<!-- entry begin: sql table index metadata -->
-* 操作元数据
-```sql
--- field
-SHOW COLUMNS FROM tbl_name;
-ALTER TABLE tbl_name ADD fd_name <type> [<const>] [FIRST| AFTER fd_name];
-ALTER TABLE tbl_name DROP fd_name;
-ALTER TABLE tbl_name CHANGE fd_name <new_fd_name> <type> [<const>];
-
--- index
-SHOW INDEX FROM tbl_name;
-ALTER TABLE tbl_name ADD INDEX <idx_name>(fd_name);
-ALTER TABLE tbl_name DROP INDEX <idx_name>;
-
--- PRIMARY KEY
-    -- 目标域必须为`NOT NULL UNIQUE`
-ALTER TABLE tbl_name ADD PRIMARY KEY (fd_name);
-ALTER TABLE tbl_name DROP PRIMARY KEY;
-
--- FOREIGN KEY
-    -- 两域类型必须相同，且被引用的域必须为`UNIQUE`
-ALTER TABLE tbl_name ADD CONSTRAINT <fk_name> FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name);
-ALTER TABLE tbl_name DROP FOREIGN KEY <fk_name>;
-
--- CHECK
-ALTER TABLE tbl_name ADD CONSTRAINT <ck_name> CHECK (<Clause>);
-ALTER TABLE tbl_name DROP CHECK <ck_name>;
-```
-<!-- entry end -->
-
-## 行记录
-<!-- entry begin: sql insert delete 事务 -->
-* 操作行数据
-```sql
--- 插入
-INSERT INTO tbl_name [(fd_name, ...)] VALUES    -- 外键列需要指定为该键所指向的列中已存在的值以进行关联
-(<value>, ...), ... ;                               -- 若类型为字符串或日期时间，则`value`必须使用单引号
-
--- 复制
-INSERT INTO tbl_name (fd_name, ...)
-SELECT 语句 ;                            -- 两语句中的fd_name部分两两对应
-
--- 删除
-DELETE FROM tbl_name
-[WHERE <Clause>] ;                      -- 默认删除所有数据
-
--- 修改
-UPDATE tbl_name SET fd_name=<value>, ...
-[WHERE <Clause>] ;                      -- 默认修改所有行
-
--- 事务
-BEGIN;                                  -- 开启事务
-...
-SAVEPOINT <point>;                      -- 设置保存点
-...
-RELEASE SAVEPOINT <point>;              -- 删除保存点
-...
-ROLLBACK TO <point>;                    -- 撤销至保存点
-...
-COMMIT; 或 ROLLBACK;                    -- 提交事务 或 撤销此次事务
-```
-<!-- entry end -->
-## 数据类型
-### 整数类型
-> * 支持在其后添加`(N)`，指定十进制显示时的最小显示位数，最大255（不影响存储与计算） **deprecated** 
-* 支持在其后添加`UNSIGNED`，指定为无符型整数
-* 计算时统一使用`BIGINT`类型
-
-| 类型      | 字节 |
-|-----------|------|
-| TINYINT   | 1    |
-| SMALLINT  | 2    |
-| MEDIUMINT | 3    |
-| INT       | 4    |
-| BIGINT    | 8    |
-
-### 实数类型
-> * 对于FLOAT与DOUBLE，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（影响存储大小限制） **deprecated** 
-* 对于DECIMAL，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（默认`(10, 0)`）
-* 计算时统一使用`DOUBLE`类型
-
-| 类型    | 字节 |
-|---------|------|
-| FLOAT   | 4    |
-| DOUBLE  | 8    |
-| DECIMAL | ∞    |
-
-### 时间日期
-* 对于TIMESTAMP
-    * 存储格林尼治时间而显示服务器或客户端本地时间
-    * 默认`NOT NULL`
-    * 默认插入或更新时会更新第一个TIMESTAMP列
-* 除DATE外，其余类型支持在其后添加`(fps)`表示秒级小数位数
-
-| 类型      | 字节 | 格式                |
-|-----------|------|---------------------|
-| DATE      | 3    | YYYY-mm-dd          |
-| TIME      | 3    | HH:MM:SS            |
-| TIMESTAMP | 4    | YYYY-mm-dd HH:MM:SS |
-| DATETIME  | 8    | YYYY-mm-dd HH:MM:SS |
-
-### 字符类型
-* 对于CHAR，支持在其后添加`(N)`，指定固定字符数（字节数最小为N）
-* 对于VARCHAY，支持在其后添加`(N)`，指定最大字符数
-* 对于BINARY，支持在其后添加`(N)`，指定固定字节数
-* 对于VARBINAY，支持在其后添加`(N)`，指定最大字节数
-* 对于TEXT族与BLOB族，排序时仅比较前`max_sort_length`字节，且可能使用外部空间存储数据而在表中存储指针
-
-| 类型            | 长度             | 说明                                 |
-|-----------------|------------------|--------------------------------------|
-| CHAR            | 0~255       字符 | 固定字符数，忽略输入的尾后空格       |
-| VARCHAR         | 0~65535     字节 | 可变字符数                           |
-| BINARY          | 0~255       字节 | 类似CHAR，但用`\0`填充且索引时不忽略 |
-| VARBINARY       | 0~65535     字节 | 类似VARCHAR                          |
-| TINYTEXT        | 0~255       字符 | 大字符串数据                         |
-| SMALLTEXT(TEXT) | 0~65535     字符 | 大字符串数据                         |
-| MEDIUMTEXT      | 0~16777215  字符 | 大字符串数据                         |
-| LONGTEXT        | 0~4294967286字符 | 大字符串数据                         |
-| TINYBLOB        | 0~255       字节 | 大二进制数据                         |
-| SMALLBLOB(BLOB) | 0~65535     字节 | 大二进制数据                         |
-| MEDIUMBLOB      | 0~16777215  字节 | 大二进制数据                         |
-| LONGBLOB        | 0~4294967286字节 | 大二进制数据                         |
-
-### 枚举类型
-* 支持在其后添加`('str1', 'str2')`来设置枚举字符
-    * 对于ENUM，枚举字符映射为1个整数
-    * 对于SET，枚举字符映射为1个bit
-* 对于ENUM，存储、计算、索引时使用数字，显示时使用映射的字符。
-特别注意排序时也是按数字大小来，所以最好映射的字符顺序与数字顺序相对应
-
-| 类型 | 说明                       |
-|------|----------------------------|
-| ENUM | 数字与字符串间的双射       |
-| SET  | 给每一位取个可读性高的名称 |
-
-### 位类型
-> **deprecated**
-> * 对于BIT，字面量语法位`b'1010'`。根据上下文语境可转换位字符或数字
-> * 对于BIT，InnoDB默认使用最小的可以完整表示位的整数表示，故无法节省空间
-> * 对于BIT，支持在其后添加`(N)`表示位数
-
-
-## 类型约束
-| 约束             | 说明         | 备注                                           |
-|------------------|--------------|------------------------------------------------|
-| `NOT NULL`       | 不能为空     | PRIMARY KEY的必要条件                          |
-| `UNIQUE`         | 不能重复     | PRIMARY KEY的必要条件，UNIQUE KEY的充分条件    |
-| `AUTO_INCREMENT` | 自动增加数值 | 其后可选添加`=n`设置初始值，默认为1，每次递增1 |
-| `DEFAULT val`    | 设置默认值   |                                                |
-
-
-# SQL基础
-## 基础语法
-**用户名**
-* user              ：默认host为`'%'`
-* user@host
-    * '%'           ：允许从任意主机登录
-    * localhost     ：只允许本机登录
-    * 192.168.0.1   ：只允许从指定IP的主机登录
-
-**库表列名**
-* 库：
-    * `db_name`
-    * `*`
-* 表：
-    * `db_name.tbl_name`
-    * `*.*`
-    * `tbl_name`
-    * `*`
-* 列：
-    * `db_name.tbl_name.fd_name`
-    * `tbl_name.fd_name`
-    * `fd_name`
-    * `*`
-
-
-## 查询语句
-<!-- entry begin: sql select group order -->
-```sql
--- 出现tbl_name、列表`(v1,v2)`的地方，一般都可用(SELECT语句)代替
-SELECT [DISTINCT] fd_name或expression [AS fd_alias], ... FROM tbl_name [tbl_alias], ...
-[[INNER|LEFT|RIGHT] JOIN tbl_name [tbl_alias]]  -- 连接多表，与在上一行中指定多表区别在于此处可外连接
-[ON fd_name = fd_name]                          -- 类似WHERE，但对于外连接不会过滤掉驱动表的行
-[WHERE Clause]                                  -- WHERE子句，用于条件过滤
-[GROUP BY fd_name                               -- 将指定列相等的列聚合为一行，查询结果中非聚合函数的列为NULL
-[WITH ROLLUP]]                                  -- 会将所有聚合后的行再聚合成一行并添加到最后
-[HAVING (Clause)]                               -- 类似WHERR，可使用聚合函数
-[ORDER BY fd_name [DESC], ...]                  -- 按指定顺序的列进行（升序）排序，DESC指定该列按降序排列
-[LIMIT N]
-[OFFSET M]
-UNION [ALL]                                     -- 合并两查询结果（上下连接）。ALL表示允许重复，默认删掉重复值
-SELECT 语句 ;
-;
-```
-![JOIN](https://www.runoob.com/wp-content/uploads/2019/01/sql-join.png)
-<!-- entry end -->
-
-
-## WHERE语句
-<!-- entry begin: sql where 条件 -->
-* where语句
-    * `WHERE fd_name <OP> <value>`
-    * `WHERE fd_name [NOT] REGEXP 'regex_pattern'`
-    * `WHERE fd_name [NOT] BETWEEN <value> AND <value>`
-    * `WHERE fd_name [NOT] IN (<value>, ...)`
-<!-- entry end -->
-
-## 运算符
-<!-- entry begin: sql operator -->
-* sql运算符
-    * 逻辑：`NOT` `AND`、`OR`、`XOR`        ：可以用`()`来改变优先级
-    * 算术：`+` `-` `*` `/` `%`
-    * 比较：
-        * `=` `!=` `<` `<=` `>` `=>`        ：若有一边为NULL则会返回false
-        * `<=>`                             ：当两边相等或均为NULL返回true
-    * 关系：
-        * `IS [NOT] NULL <value>`
-        * `[NOT] REGEXP '<pattern>'`
-        * `[NOT] BETWEEN <value1> AND <value2>`
-        * `[NOT] IN (SELECT 语句)`
-        * `[NOT] EXISTS (SELECT 语句)`
-        * `<OP> ALL (SELECT 语句)`          ：列表中所有行都符合`<OP>`
-        * `<OP> ANY (SELECT 语句)`          ：列表中有一行符合`<OP>`
-<!-- entry end -->
-
-## 函数
-<!-- entry begin: sql function -->
-* SQL Aggregate 函数计算从完整的列中取得的所有值，返回一个单一的值
-
-| 函数    | 描述           |
-|---------|----------------|
-| SUM()   | 返回总和       |
-| AVG()   | 返回平均值     |
-| COUNT() | 返回行数       |
-| FIRST() | 返回第一个值   |
-| LAST()  | 返回最后一个值 |
-| MAX()   | 返回最大值     |
-| MIN()   | 返回最小值     |
-
-* 用于blob的函数
-
-| 函数                  | 描述                 |
-|-----------------------|----------------------|
-| HEX()                 | 输出十六进制底层数据 |
-| SUBSTRING(fd,beg,len) | 截取字节，beg从1开始 |
-| CONCAT(s, s)          | 拼接两数据           |
-| CONV(s,hex,dec)       | 十六进制转十进制     |
-| LOAD_FILE(str)        | 返回文件内容         |
-
-* [其它sql函数](https://www.runoob.com/mysql/mysql-functions.html)
-<!-- entry end -->
-
-# 数据库原理
-## 系统架构
+# 系统架构
 ![mysql](images/mysql_arch.png)
 
 * 连接与线程管理
 * 语法解析与查询优化
 * 存储引擎
 
-## 存储引擎架构
+# 存储引擎架构
 ![ibplru](images/innodb-architecture.png)
 
-### 内存结构
-#### 缓冲池
+## 内存结构
+### 缓冲池
 缓冲池是主内存中的一个区域，在InnoDB访问表和索引数据时会在其中进行 高速缓存。
 缓冲池允许直接从内存访问经常使用的数据，从而加快了处理速度。
 为了提高大容量读取操作的效率，缓冲池被划分为多个页面，这些页面可以潜在地容纳多行。
@@ -367,7 +53,7 @@ SELECT 语句 ;
 * 访问yuong子列表中的热点数据时，为减少链表调整频率，仅当访问young后1/4的数据才会将其调整到young子列表头部
 * 冲刷脏页时的两种途径：后台线程定时冲刷flush链表；冲刷Old子列表中的冷数据
 
-#### 更改缓冲区
+### 更改缓冲区
 当对表执行INSERT、UPDATE和DELETE操作时，索引列的值(尤其是辅助键的值)通常是无序的，需要大量的 I/O 才能使辅助索引保持最新状态。
 当相关的页面不在缓冲池中时，更改缓冲区缓存对辅助索引条目的更改，从而通过不立即从磁盘读取页面来避免昂贵的 I/O 操作。
 当页面加载到缓冲池中时，缓冲的更改将合并，更新的页面随后将刷新到磁盘。
@@ -377,20 +63,20 @@ InnoDB主线程在服务器接近空闲时和slow shutdown期间合并缓冲的�
 如果工作集几乎适合缓冲池，或者表具有相对较少的二级索引，则禁用更改缓冲可能很有用。
 如果工作数据集完全适合缓冲池，则更改缓冲不会带来额外的开销，因为它仅适用于不在缓冲池中的页面。
 
-#### 自适应哈希索引
+### 自适应哈希索引
 当注意到某些索引值被非常频繁的使用时，会在内存中基于B+Tree索引上再创建一个哈希索引；
 这样就让B+Tree索引具有一些哈希索引的优点，比如快速的哈希查找。
 
-#### 日志缓冲区
+### 日志缓冲区
 将日志冲刷到磁盘RedoLog中去；
 缓冲区大小由`innodb_log_buffer_size`控制，默认16M；
 冲刷方式由`innodb_flush_log_at_trx_commit`控制；
 冲刷频率由`innodb_flush_log_at_timeout`控制；
 
 
-### 磁盘结构
-#### 表空间结构
-##### 行记录结构
+## 磁盘结构
+### 表空间结构
+#### 行记录结构
 ![row](images/mysql_row.png)
 
 **行溢出处理**：  
@@ -411,7 +97,7 @@ InnoDB主线程在服务器接近空闲时和slow shutdown期间合并缓冲的�
     > 相对Dynamic，使用压缩算法压缩页数据
 
 
-##### 数据页结构
+#### 数据页结构
 ![page](images/mysql_page.png)
 
 | 名称               | 中文名      | 简单描述                                                         |
@@ -452,7 +138,7 @@ InnoDB主线程在服务器接近空闲时和slow shutdown期间合并缓冲的�
 若页面空间申请失败，则观察 **空闲空间大小**是否满足插入记录，满足则重整页面以消除碎片，
 否则进行页分裂；
 
-##### 区、段、组
+#### 区、段、组
 * 每连续的 64个页划分为1个区(1M)，当数据量大的时候，就会以区为单位给索引分配空间来较少随机I/O；
 * 每连续的256个区划分为1个组(256M)，每组的第一个区中的头几页会存储区相关元数据，第一组第一区第一页还会存储表相关元数据；
 * 功能相同的“区”组成一个逻辑段，如：非叶节点段、叶节点段、回滚段、等等；
@@ -478,7 +164,7 @@ InnoDB主线程在服务器接近空闲时和slow shutdown期间合并缓冲的�
     * 撤销表空间
 
 
-#### 双写缓冲区
+### 双写缓冲区
 在冲刷缓冲池中页面到磁盘适当位置前，需要先将数据拷贝一份到双写缓冲区中，
 当系统崩溃时，可从双写缓冲区中找到良好的数据副本；
 虽然数据写了两次，但是磁盘I/O开销并非翻倍，
@@ -487,11 +173,11 @@ InnoDB主线程在服务器接近空闲时和slow shutdown期间合并缓冲的�
 如果没有双写缓冲区，则系统崩溃时可能仅冲刷非完整的页到磁盘，导致FileTrailer校验失败；
 redo log恢复事务操作需要完整的页面，只冲刷了一半的页面是无法恢复的；
 
-#### Redo日志
+### Redo日志
 为满足事务的持久性，在事务提交会先将redo log（很小的数据量）写入磁盘，而页数据由缓冲池适时冲刷。
 
-## 索引
-### B+Tree索引
+# 索引
+## B+Tree索引
 **索引构建**
 1. 每创建一个B+Tree索引，便为此创建一个根节点（页面）
 2. 初始时根节点（页面）为空，随后向其中插入用户记录
@@ -574,7 +260,7 @@ redo log恢复事务操作需要完整的页面，只冲刷了一半的页面是
 
 ![trx](images/trx_cache.png)
 
-## 事务
+# 事务
 * 原子性：整个事务中的操作要么全部提交成功，要么全部失败回滚（Undo Log）
 * 一致性：未成功提交的事务中所做的修改不会保存至数据库      （Undo Log）
 * 隔离性：一个事务在最终提交前其修改对其他事务的可见性      （MVCC）
@@ -639,12 +325,3 @@ redo log恢复事务操作需要完整的页面，只冲刷了一半的页面是
     * 若无适当历史版本则这条记录对当前事务不可见
     * 范围搜索时还会给范围加上间隙锁，避免出现幻行
 
-<!--
-缓冲机制：buffer pool & change buffer
-索引结构：row & page & extent & segment
-事    务：
-    持久性（redo log与double write buffer）
-    原子性（undo log）
-    一致性（undo log）
-    隔离性（undo log与MVCC与Lock）
--->
