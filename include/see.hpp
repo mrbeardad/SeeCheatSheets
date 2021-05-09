@@ -4,7 +4,7 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 08.05.2021
+ * Last Modified Date: 09.05.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
@@ -68,11 +68,11 @@ private:
 
 
 std::tuple<std::vector<fs::path>, std::vector<std::string>, bool>
-parse_cmdline(int argc, char* argv[]);
+    parse_cmdline(int argc, char* argv[]);
 
 
 std::string
-search_entries(const std::vector<fs::path>& files, const std::vector<std::string>& keys);
+    search_entries(const std::vector<fs::path>& files, const std::vector<std::string>& keys);
 
 
 } // namespace see

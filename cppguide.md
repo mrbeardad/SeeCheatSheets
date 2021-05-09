@@ -18,13 +18,13 @@
 ```
 GFM
     ? W
-        ? tempT&&
+        ?       tempT&&
         : const tempT&
     : !CWD
         ? T
         : W
-            ? T&  -> T&&
-            : cT& -> T& -> T&&
+            ?       T& -> T&&
+            : const T& -> T& -> T&&
 // 注：如果函数内部必定会copy一次形参，则可直接使用传值参数(T)
 ```
 * 修饰
