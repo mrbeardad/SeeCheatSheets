@@ -122,6 +122,7 @@ echo "$HOME/Coredumps/%e.%p.coredump" | sudo tee /proc/sys/kernel/core_pattern
 * until     u   ：`line-num`
 * return    ret ：`ret-val`
 * finish    f
+* frame         ：`stack-nr`
 * backtrace bt
 
 **打印与篡改**
