@@ -1040,14 +1040,14 @@ void    reserve(bnum)
 <!-- entry begin: l 链表 -->
 ### 链表容器
 ```cpp
-ers_num remove(v)
-ers_num remove_if(uOp)
-void    reverse()
 void    sort(cmp = less)
 void    unique(cmp = less)
 void    merge(srcL, cmp = less)             // 需要先排序
+void    reverse()
 void    splice(pos, srcL, srcPos)
 void    splice(pos, srcL, srcBeg, srcEnd)   // 注意pos不能在[srcBeg, srcEnd)中
+ers_num remove(v)
+ers_num remove_if(uOp)
 ```
 <!-- entry end -->
 

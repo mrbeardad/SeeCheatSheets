@@ -44,8 +44,8 @@ GFM
 # 类的设计
 * 取消友元
 * 数据成员
-    * handle
     * private
+    * pImpl
     * 顺序  & 对齐
     * const & 引用
     * static ? reference-return : inline
@@ -100,7 +100,7 @@ GFM
         * 其他任何时候使用指针
             * 注意任何时候使用裸指针意味着持有者（接收者）无需在意其生命周期
 * 形式
-    > 内置类型统一使用`T t{}`
+    > 算术类型统一使用`T t{}`
     * `auto  t = initializer`
     * `auto* t = initializer`
     * `auto& t = initializer`

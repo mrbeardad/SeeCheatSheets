@@ -6,9 +6,8 @@
 - [C++](#c)
 - [Python](#python)
 - [Linux](#linux)
-- [操作系统](#操作系统)
-- [网络](#网络)
 - [数据库](#数据库)
+- [网络](#网络)
 - [底层](#底层)
 - [其它](#其它)
 
@@ -64,22 +63,24 @@ cmake --install .
     > 基础语法与内置类型操作
 
 # Linux
+* [Linux知识体系](linux.md):star:
+    > Linux的开机流程，以及整个系统知识体系
+* [Linux系统接口](apue.md):star:
+    > 大部分都符合POSIX、XSI或USU规范
 * [Shell脚本](bash.md)
-    > bash语法、内置命令以及一些linux基础命令
+    > bash语法、内置命令以及一些unix环境基础命令
 * [开发者工具](devtool.md)
     > 包含gcc、gdb、openssh、openssl、tmux、zsh、git、pacman等工具使用
 * [Vim使用手册](vim.md)
     > 此为[mrbeardad/SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
-* [Docker](docker.md)
-    > 容器，用于组建微服务架构
+* [Docker容器](docker.md)
+    > 用于组建微服务架构
 
-# 操作系统
-* [Linux系统接口](apue.md):star:
-    > 大部分都符合POSIX、XSI或USU规范
-* [Linux知识体系](linux.md):star:
-    > Linux的开机流程，以及整个系统知识体系
-* [操作系统原理](os.md)
-    > 链接、异常控制流、虚拟内存
+# 数据库
+* [SQL语句](sql.md)
+    > 关系型数据库查询语句
+* [数据库原理](innodb.md)
+    > MySQL的设计架构，包括索引与事务原理
 
 # 网络
 * [计算机网络](network.md)
@@ -88,12 +89,6 @@ cmake --install .
     > 这些技术在网络中有重要应用
 * [比特币系统](bitcoin.md)
     > 理解大名顶顶的比特币
-
-# 数据库
-* [SQL语句](sql.md)
-    > 关系型数据库查询语句
-* [数据库原理](innodb.md)
-    > MySQL的设计架构，包括索引与事务原理
 
 # 底层
 * [信息编码](code.md)
@@ -104,6 +99,8 @@ cmake --install .
     > 逻辑电路与处理器设计，以及CPU高速缓存机制
 * [计算机组成](bus.md)
     > 主要是总线接口与存储技术，还有显卡与显示屏工作原理
+* [操作系统](os.md)
+    > 链接、异常控制流、虚拟内存
 
 # 其它
 * [Markdown](markdown.md)
