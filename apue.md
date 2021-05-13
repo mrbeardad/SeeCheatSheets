@@ -567,7 +567,7 @@ int         pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*c
 * 循环处理不排队的信号表示的事件
 * 保存和恢复errno
 * 只调用异步安全函数
-* `volatile sig_atomic_t`设置标识即返回
+* `volatile sig_atomic_t`修饰共享变量
 ```c
 #include <string.h>
 char*   strsignal(int signo);                                           // 返回解释该信号的字符串
@@ -589,12 +589,17 @@ int     sigaddset(sigset_t* set, int signo);                            // 返�
 int     sigdelset(sigset_t* set, int signo);                            // 返回0
 int     sigismember(const sigset_t* set, int signo);                    // 若signo再set中则返回非0
 int     sigpending(sigset_t* set);                                      // 返回0
-int     sigprocmask(int how, const sigset_t* set, sigset_t* oldset);    // 返回0。how可以为SIG_BLOCK、SIG_UNBLOCK、SIG_SETMASK之一
-int     pthread_sigmask(int how, const sigset_t* set, sigset_t* oleset);// 返回0，错误返回errno
+int     sigprocmask(int how, const sigset_t* set, sigset_t* oldset);    // 返回0。现在与pthread_sigmask等价
+int     pthread_sigmask(int how, const sigset_t* set, sigset_t* oleset);// 返回0。how可以为SIG_BLOCK、SIG_UNBLOCK、SIG_SETMASK之一，错误返回errno
 
 /* 其他与信号有关的函数 */
 int             sigwait(const sigset_t* set, int* signop);              // 返回0
-int             sigsuspend(const sigset_t* sigmask);                    // 返回0
+int             sigsuspend(const sigset_t* mask);                       // 返回0。
+// 等价于原子版本的
+// sigprocmask(SIG_SETMASK, &mask, &old); pause(); sigprocmask(SIG_SETMASK, &old, NULL);
+// 类似线程同步技术：
+// 把sigprocmask()当互斥锁，阻塞目标信号
+// 把sigsuspend()当条件变量，解除阻塞信号并阻塞线程
 
 #include <unistd.h>
 int             pause(void)                                             // 返回-1且errno置为EINTR。只有执行信号处理返回时返回
