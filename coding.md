@@ -231,10 +231,32 @@ qsort(begin, end) {
 ```
 
 ## 堆排序
-* 子节点下标为`idx * 2 + 1`，父节点下标为`(idx + 1) / 2 - 1`
-* 建堆时，从最后节点的父节点开始下沉
-* 排序时，交换首尾元素然后下沉
-* 下沉函数：将根节点下沉直至`root >= max_child`
+```cpp
+// 下滤
+percolate_down(begin, end, root) {
+    for ( ; (child = begin + (root - begin) * 2 + 1) < end; ) { // 父节点下标 = (child + 1) / 2 - 1
+        if ( child + 1 < end && *(child + 1) > *root )
+            ++child;
+        if ( *child > *root ) {
+            swap(*child, *root);
+            root = child;
+        } else {
+            break;
+        }
+    }
+}
+hsort(begin, end) {
+// 建堆
+    for ( pos = begin + (end - begin) / 2 - 1; pos >= begin; --pos ) {  // 子节点下标 = root * 2 - 1
+        percolate_down(begin, end, pos);
+    }
+// 堆排
+    for ( last = end - 1; last > begin; --last ) {
+        swap(*begin, *last);
+        percolate_down(begin, last, begin);
+    }
+}
+```
 
 # topK算法
 | 数据结构 | 描述                                           | 动态/静态 |
