@@ -2119,11 +2119,11 @@ std::string                 between(str, to_charset, from_charset);
 
 ![Proactor](images/proactor.png)
 
-* Initiator
+* 引发器(Initiator)
     > 如socket
-    1. 启动异步操作，如低速IO、计时器等等，以非阻塞调用的形式（利用系统调用或多线程）保证快速完成返回
+    1. 启动异步操作，如低速IO、计时器等等，利用系统调用或多线程实现异步，保证快速完成返回
     2. 注册该异步事件，同时记录其回调函数
-* AOP & AED
+* 前摄器(Proactor)
     > 如io_context
     * 如果完成事件队列中存在任务则取出（线程安全）
         1. 执行其回调函数
@@ -2152,7 +2152,7 @@ std::string                 between(str, to_charset, from_charset);
 class io_context {
     // 构造函数
     io_context()
-    io_context(int concurrency_hint);   // 若传入1则会跳过所有锁机制
+    io_context(int concurrency_hint);// 若传入1则会跳过所有锁机制
     // 成员函数
 
     // 等待事件完成-分发执行句柄-调用回调函数-重回等待状态。handler只在调用下列函数的线程中被调用
@@ -2344,11 +2344,11 @@ class ssl::context {
     // 构造函数
     context(method);                // method一般为ssl::sslv23
 
-    // 一般由Server调用的成员函数（被验证）
-    void    set_options(opts);      // opts一般为 ssl::context::default_workarounds
+    void    set_options(opts);      // ssl::context::default_workarounds
     void    clear_options(opts);
-    // callback：string(size_t max_len, int password_purpose);
-    // 其第二参数可能是ssl::context::{for_reading, for_writing}
+
+    // 被验证方：
+    // callback：string(size_t max_len, int password_purpose); 第二参数ssl::context::{for_reading, for_writing}
     void    set_password_callback(callback);
     // format为ssl::context::{pem, asn1}
     void    use_certificate(buffer, format);
@@ -2356,14 +2356,15 @@ class ssl::context {
     void    use_certificate_file(file, format);
     void    use_private_key_file(file, format);
 
+    // 验证方：
     // callback为bool(bool preverified, ssl::verify_context&);  其中利用可OpenSSL API来获取证书信息
     void    set_verify_callback(callback);
     void    set_default_verify_paths();
-    void    add_certificate_authority(buffer);
     void    add_verify_path(path);
+    void    add_certificate_authority(buffer);
     void    load_verify_file(file);
 
-    // 一般由Client调用的成员函数（验证对方）
+    // 设置验证方式
     void    set_verify_mode(verify_mode);
     // verify_mode包括ssl::{
     //  verify_none,                 // 不验证对方证书
