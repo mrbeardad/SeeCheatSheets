@@ -79,12 +79,6 @@
     * Xn + 距离
 
 # 解题思路
-## 逆向思维
-* 求起点的终点转为求终点的起点
-* 对多个元素进行操作，相当于对其他元素进行相对逆操作
-* 由结论出发，向所求条件逆推
-
-
 ## 栈
 **关键字**：层级、递归、后进先出
 
@@ -108,15 +102,18 @@
 **关键字**：滑动窗口最值
 
 
-
 ## 链表
+* 哑节点，简化边界
+    > 反转链表时，哑节点为nullptr
 * 双指针，一前一后
     > 迭代更新prev指针时，最好使用prev=cur，如此一来无论是否删除节点都适用
 * 双指针，一快一慢
     > fast先行两步，若成功则slow后行一步，如此一来slow会在奇数时停在中点，偶数时停在较小中点
 * 双指针，间隔距离
-* 哑节点，简化边界
-    > 反转链表时，哑节点为nullptr
+    > fast先行从而与slow间隔固定距离
+* 插入节点：`prev->next_ = new ListNode{val}; prev->next_->next_ = cur;`
+* 删除节点：`prev->next_ = cur->next_; delete cur;`
+* 反转链表：`ListNode* next = cur->next_; cur->next_ = prev; prev = cur; cur = next;`
 
 
 ## 二叉树
@@ -127,6 +124,163 @@
     > 中序遍历也即二叉搜索树的有序遍历；注意其下个节点的搜索算法
 
 **广度优先搜索(BFS)**
+
+
+## 二分搜索
+**关键字**：搜索有序序列
+```cpp
+// 步骤一：设置循环条件检测
+while ( left <= right ) {       // left <= right可以保证当right一直未移动时能检测到right
+    mid = left + (right - left) / 2
+// 步骤二：检测目标语义
+    if ( check(mid) )
+        return mid;
+// 步骤三：折半缩减搜索范围
+    else if ( ifTargetInLeftHalf(mid) )
+        right = mid - 1;        // 因为这一句则当left,right为下标时应该使用ssize_t而非size_t
+    else
+        left = mid + 1;
+}
+// 没有在循环中return说明未找到语义点
+```
+
+## 快速排序
+```cpp
+// 参数选择用[begin, end)而非[begin, last]从而可表示空集合
+template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
+void quick_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
+{
+// 递归基准
+    if ( end - begin < 2 )      // 快排核心算法必须满足范围[begin, end)长度至少为2
+        return;
+// 选取枢纽点
+    auto mid = begin + (end - begin) / 2, last = end - 1;
+    if ( comp(*begin, *last) )  // 将较小值放尾部
+        swap(*begin, *end);
+    if ( comp(*mid, *last) )    // 将最小值放尾部
+        swap(*mid, *last);
+    if ( comp(*mid, *begin) )   // 将中指放首位
+        swap(*mid, *begin);
+    swap(*begin, *last);        // 最终使最小值在首位，中指在尾部；如此间接放置的原因是当只有两个元素时依然可行
+    auto& piovt = *last;
+// 划分区间
+    left = begin;
+    right = last;
+    for ( ; ; ) {
+        for ( ; comp(*++left, pivot); );     // 尾部元素为中指，不会越界
+        for ( ; comp(pivot, *--right); );    // 首位元素为小值，不会越界
+        if ( left < right )
+            swap(*left, *right);
+        else
+            break;
+    }
+// 递归调用
+    quick_sort(begin, left);
+    quick_sort(left + 1, end);
+}
+```
+
+## 堆排序
+```cpp
+// 下滤
+template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
+void percolate_down(RandomIter begin, RandomIter end, RandomIter root, Compare comp=Compare{})
+{
+    for ( RandomIter child{}; (child = begin + (root - begin) * 2 + 1) < end; ) { // 父节点下标 = (child + 1) / 2 - 1
+        if ( child + 1 < end && comp*(*root, child + 1) )
+            ++child;
+        if ( comp(*root, *child) ) {
+            swap(*child, *root);
+            root = child;
+        } else {
+            break;
+        }
+    }
+}
+
+template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
+void heap_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
+{
+// 建堆
+    for ( auto pos = begin + (end - begin) / 2 - 1; pos >= begin; --pos ) {  // 子节点下标 = root * 2 - 1
+        percolate_down(begin, end, pos, comp);
+    }
+// 堆排
+    for ( last = end - 1; last > begin; --last ) {
+        swap(*begin, *last);
+        percolate_down(begin, last, begin, comp);
+    }
+}
+```
+
+## 归并排序
+```cpp
+template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
+void merge_sort(RandomIter begin, RandomIter end, RandomIter tmpBegin, RandomIter tmpEnd, Compare comp=Compare{})
+{
+    if ( end - begin < 2 )
+        return;
+    auto mid = begin + (end - begin) / 2;
+    auto tmpMid = tmpBegin + (tmpEnd - tmpBegin) / 2;
+    merge_sort(begin, mid, tmpBegin, tmpMid);
+    merge_sort(mid, end, tmpMid, tmpEnd);
+    auto left = begin, right = mid, tmpTail = tmpBegin;
+    for ( ; left < mid && right < end; ) {
+        if ( comp(*left, *right) ) {
+            *tmpTail++ = *left++;
+        } else {
+            *tmpTail++ = *right++;
+        }
+    }
+    for ( ; left < mid; ) {
+        *tmpTail++ = *left++;
+    }
+    for ( ; right < end; ) {
+        *tmpTail++ = *right++;
+    }
+    copy(tmpBegin, tmpEnd, begin);
+}
+
+template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
+void merge_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
+{
+    vector<typename RandomIter::value_type> tmpBuffer(end - begin);
+    merge_sort(begin, end, tmpBuffer.begin(), tmpBuffer.end(), comp);
+}
+```
+
+
+## 滑动窗口
+**关键字**：子数组、跳跃遍历、滑动窗口  
+**细节**：辅助表类型：覆盖型、叠加型、抵消型、语义型
+
+
+## 回溯算法
+**关键字**：路径搜索、路径染色、回溯算法  
+**细节**：注意返回前是否需要清除染色或弹出路径节点：每次都弹，全都不弹，成功则不弹
+
+
+## 动态规划
+**“所有的DP问题，本质上都是有限集中的最值问题”——闫氏DP分析法**
+
+将问题模型化为：求有限集S中满足限制条件C的结果max/min/count
+
+* 状态表示：写出一个函数形式如`f(i, j)`用来表示一个子集合的结果
+    * 集合：满足某些条件的子集合，如范围限制、长度限制、数值限制
+    * 结果：通常为题解如max/min/count
+
+* 状态计算：写出状态表示函数的定义，即递推方程
+    * 将当前集合不遗漏地划分为若干子部分求解
+        * max/min即各部分max/min值的max/min（子部分划分可部分重叠）
+        * count即各部分count的和（子部分划分不可重叠）
+
+* 时间优化与空间优化：都是对代码中公式的恒等变换
+
+
+## 逆向思维
+* 求起点的终点转为求终点的起点
+* 对多个元素进行操作，相当于对其他元素进行相对逆操作
+* 由结论出发，向所求条件逆推
 
 
 ## 位运算
@@ -152,111 +306,6 @@
     * 截位取值（字符转数字从前往后，数字转字符串从后往前）
     * 数值回环
 
-## 滑动窗口
-**关键字**：子数组、跳跃遍历、滑动窗口  
-**细节**：辅助表类型：覆盖型、叠加型、抵消型、语义型
-
-## 回溯算法
-**关键字**：路径搜索、路径染色、回溯算法  
-**细节**：注意返回前是否需要清除染色或弹出路径节点：每次都弹，全都不弹，成功则不弹
-
-
-## 动态规划
-**“所有的DP问题，本质上都是有限集中的最值问题”——闫氏DP分析法**
-
-将问题模型化为：求有限集S中满足限制条件C的结果max/min/count
-
-* 状态表示：写出一个函数形式如`f(i, j)`用来表示一个子集合的结果
-    * 集合：满足某些条件的子集合，如范围限制、长度限制、数值限制
-    * 结果：通常为题解如max/min/count
-
-* 状态计算：写出状态表示函数的定义，即递推方程
-    * 将当前集合不遗漏地划分为若干子部分求解
-        * max/min即各部分max/min值的max/min（子部分划分可部分重叠）
-        * count即各部分count的和（子部分划分不可重叠）
-
-* 时间优化与空间优化：都是对代码中公式的恒等变换
-
-
-## 二分搜索
-**关键字**：搜索有序序列
-```cpp
-// 步骤一：设置循环条件检测
-while ( left <= right ) {       // left <= right可以保证当right一直未移动时能检测到right
-    mid = (left + right) / 2
-// 步骤二：检测目标语义
-    if ( check(mid) )
-        return mid;
-// 步骤三：折半缩减搜索范围
-    else if ( ifTargetInLeftHalf(mid) )
-        right = mid - 1;        // 因为这一句则当left,right为下标时应该使用ssize_t而非size_t
-    else
-        left = mid + 1;
-}
-// 没有在循环中return说明未找到语义点
-```
-
-## 快速排序
-```cpp
-// 参数选择用[begin, end)而非[begin, last]从而可表示空集合
-qsort(begin, end) {
-// 递归基准
-    if ( end - begin <= 1 ) // 快排核心算法必须满足范围[begin, end)长度至少为2
-        return;
-// 选取枢纽点
-    mid = begin + (end - begin) / 2;
-    if ( *begin < *(end - 1) )  // 将较小值放尾部
-        swap(*begin, *end);
-    if ( *mid < *(end - 1) )    // 将最小值放尾部
-        swap(*mid, *(end - 1));
-    if ( *mid < *begin )        // 将中指放首位
-        swap(mid, begin);
-    swap(*begin, *(end - 1));   // 最终使最小值在首位，中指在尾部；如此间接放置的原因是当只有两个元素时依然可行
-    piovt = *(end - 1);
-// 划分区间
-    left = begin;
-    right = end - 1
-    for ( ; ; ) {
-        for ( ; *++left < pivot; );     // 尾部元素为中指，不会越界
-        for ( ; *--right < pivot; );    // 首位元素为小值，不会越界
-        if ( left < right )
-            swap(*left, *right);
-        else
-            break;
-    }
-// 递归调用
-    qsort(begin, left);
-    qsort(left + 1, end);
-}
-```
-
-## 堆排序
-```cpp
-// 下滤
-percolate_down(begin, end, root) {
-    for ( ; (child = begin + (root - begin) * 2 + 1) < end; ) { // 父节点下标 = (child + 1) / 2 - 1
-        if ( child + 1 < end && *(child + 1) > *root )
-            ++child;
-        if ( *child > *root ) {
-            swap(*child, *root);
-            root = child;
-        } else {
-            break;
-        }
-    }
-}
-hsort(begin, end) {
-// 建堆
-    for ( pos = begin + (end - begin) / 2 - 1; pos >= begin; --pos ) {  // 子节点下标 = root * 2 - 1
-        percolate_down(begin, end, pos);
-    }
-// 堆排
-    for ( last = end - 1; last > begin; --last ) {
-        swap(*begin, *last);
-        percolate_down(begin, last, begin);
-    }
-}
-```
 
 # topK算法
 | 数据结构 | 描述                                           | 动态/静态 |
