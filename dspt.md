@@ -21,10 +21,10 @@
   - [解释器模式(Interpreter)](#解释器模式interpreter)
   - [迭代器模式(Iterator)](#迭代器模式iterator)
   - [备忘录模式(Memento)](#备忘录模式memento)
+  - [命令模式(Command)](#命令模式command)
   - [责任链模式(Chain of Responsibility)](#责任链模式chain-of-responsibility)
   - [观察者模式(Observer)](#观察者模式observer)
   - [中介者模式(Mediator)](#中介者模式mediator)
-  - [命令模式(Command)](#命令模式command)
   - [状态模式(State)](#状态模式state)
   - [策略模式(Strategy)](#策略模式strategy)
   - [模板方法模式(Template Method)](#模板方法模式template-method)
@@ -197,6 +197,16 @@ auto& StaticRef   = ConcreteType::StaticMem_;
 * 在外部存储内部状态以届时恢复
 
 
+## 命令模式(Command)
+![Command](images/command.png)
+（隔离性）
+* 将请求的调用与实现分离，从而可以实现：
+    * 请求排队
+    * 请求日志
+    * 撤销与恢复(结合Memento)
+    * 宏命令(结合Composite)
+
+
 ## 责任链模式(Chain of Responsibility)
 ![chain_of_responsibility](images/chain_of_responsibility.png)
 （隔离性）
@@ -215,16 +225,6 @@ auto& StaticRef   = ConcreteType::StaticMem_;
 （隔离性）
 * 利用中介对象来隔离一系列对象的复杂交互，使各对象无需显示相互引用
     > C++中中介者持有shared_ptr，同事类持有weak_ptr
-
-
-## 命令模式(Command)
-![Command](images/command.png)
-（隔离性）
-* 将请求的调用与实现分离，从而可以实现：
-    * 请求排队
-    * 请求日志
-    * 撤销与恢复(结合Memento)
-    * 宏命令(结合Composite)
 
 
 ## 状态模式(State)

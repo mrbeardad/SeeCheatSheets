@@ -1288,8 +1288,8 @@ void    sort_heap(b, e, bOp=less)                       // 将最大堆进行序
 bool    equal(b, e, cmpB, bOp = equal_to)
 bool    lexicographical_compare(b1, e1, b2, e2, op=less)// 比较两区间字典序
 bool    is_permutation(b1, e1, b2, bOp=equal_to)        // 检测两个区间的所有元素是否为同一个集合，即不考虑顺序
-bool    next_permutation(b, e, op=less)                 // 当元素为完全升序时返回false
-bool    prev_permutation(b, e, op=less)                 // 当元素为完全降序时返回false
+bool    next_permutation(b, e, op=less)                 // 当元素为完全降序时返回false
+bool    prev_permutation(b, e, op=less)                 // 当元素为完全升序时返回false
 
 void    reverse(b, e)
 destE   reverse_copy(b, e, destB)
