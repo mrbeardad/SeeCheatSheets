@@ -128,7 +128,7 @@
 * 插入算法：利用引用语义传入父节点的子节点指针`TreeNode*& root`
     从而简化递归基准为为`if ( root == nullptr ) { root = new TreeNode{val}; return; }`
 
-* 删除算法：若两个子节点则用右子树的最左节点替换该节点，否则`root = root->left ? root->left : root->right;`；
+* 删除算法：若有两个子节点则用右子树的最左节点替换该节点，否则`root = root->left ? root->left : root->right;`；
     若预期删除次数不多则可以使用“懒惰删除”从而提高性能
 
 
@@ -264,7 +264,7 @@ void merge_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
 
 ## 回溯算法
 **关键字**：路径搜索、路径染色、回溯算法  
-**细节**：剪枝大法；注意返回前是否需要清除染色或弹出路径节点：每次都弹，全都不弹，成功则不弹
+**细节**：注意剪枝大法；注意返回前是否需要清除染色或弹出路径节点：每次都弹，全都不弹，成功则不弹
 
 
 ## 动态规划

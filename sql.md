@@ -2,7 +2,7 @@
 <!-- vim-markdown-toc GFM -->
 
 - [安装与使用](#安装与使用)
-- [MySQL基础](#mysql基础)
+- [SQL基础](#sql基础)
   - [系统信息](#系统信息)
   - [用户管理](#用户管理)
   - [数据库](#数据库)
@@ -17,10 +17,9 @@
     - [枚举类型](#枚举类型)
     - [位类型](#位类型)
   - [类型约束](#类型约束)
-- [SQL基础](#sql基础)
+- [SQL查询](#sql查询)
   - [基础语法](#基础语法)
   - [查询语句](#查询语句)
-  - [WHERE语句](#where语句)
   - [运算符](#运算符)
   - [函数](#函数)
 
@@ -35,18 +34,19 @@
 * `mysql -h 主机名 -P 端口号 -D 数据库名 -u 用户名 -p密码`
 <!-- entry end -->
 
-# MySQL基础
+# SQL基础
 ## 系统信息
 <!-- entry begin: sql variable status engines charset collation names -->
 ```sql
 -- 默认变量作用域为SESSION
-SET  [SESSION|GLOBAL] var = val;
-SHOW [SESSION|GLOBAL] VARAIABLES [LIKE 'pattern'];
-SHOW [SESSION|GLOBAL] STATUS     [LIKE 'pattern'];
+SET  [GLOBAL] var = val;
+SHOW [GLOBAL] VARAIABLES [LIKE 'pattern'];
+SHOW [GLOBAL] STATUS     [LIKE 'pattern'];
 SHOW PROCESSLIST;
 SHOW ENGINES    [LIKE 'pattern'];
 SHOW CHARSET    [LIKE 'pattern'];
 SHOW COLLATION  [LIKE 'pattern'];
+
 SET  NAMES charset;
 -- SET character_set_client     = charset;  -- 客户端使用的字符集
 -- SET character_set_connection = charset;  -- 服务器处理请求时使用的字符集
@@ -57,10 +57,12 @@ SET  NAMES charset;
 ## 用户管理
 <!-- entry begin: sql user password grant -->
 ```sql
-SELECT user, host, password FROM mysql.user;    -- 查询用户
+SELECT * FROM mysql.user;                       -- 查询用户
 CREATE USER username [IDENTIFIED BY 'passwd'];  -- 创建用户
 DROP   USER username;                           -- 删除用户
 SET PASSWORD FOR username = PASSWORD('passwd'); -- 修改密码
+
+SHOW GRANTS                                     -- 查询授权
 GRANT  privcode ON db_name.tbl_name TO username;-- 授权用户
 FLUSH  PRIVILEGES;                              -- 刷新权限
     -- 权限码包括：
@@ -75,7 +77,7 @@ FLUSH  PRIVILEGES;                              -- 刷新权限
 <!-- entry begin: sql database db -->
 ```sql
 SHOW   DATABASES [LIKE 'pattern'];          -- 查询已有数据库
-SHOW   CREATE DATABASE           db_name;   -- 查询数据库详情
+SHOW   CREATE    DATABASE        db_name;   -- 查询数据库详情
 CREATE DATABASE  [IF NOT EXISTS] db_name;   -- 创建数据库
 DROP   DATABASE  [IF EXISTS]     db_name;   -- 删除数据库
 ```
@@ -83,23 +85,22 @@ DROP   DATABASE  [IF EXISTS]     db_name;   -- 删除数据库
 
 ## 数据表
 ```sql
-SHOW   TABLES [FROM db_name | LIKE 'pattern'];  -- 查询已有数据表
+SHOW   TABLES [FROM db_name ] [LIKE 'pattern']; -- 查询已有数据表
 SHOW   CREATE TABLE tbl_name;                   -- 查询数据表详情
 CREATE TABLE tbl_name (                         -- 创建数据表
-    fd_name type [const],
-    ...,
-    [PRIMARY KEY (fd_name),]
-    [KEY         (fd_name),]
-    [FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name),]
-    [CHECK       (clause)]
-) ENGINE=engine CHARSET=charset ROW_FORMAT=format;
-
+        fd_name type [const],
+        ...,
+        [PRIMARY KEY (fd_name),]
+        [KEY         (fd_name),]
+        [FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name),]
+        [CHECK       (clause)]
+    ) ENGINE=engine CHARSET=charset ROW_FORMAT=format;
 DROP  TABLE tbl_name;                           -- 删除数据表
 ALTER TABLE tbl_name RENAME TO new_tbl_name;    -- 修改数据表
 
 -- 视图
-CREATE VIEW <view_name> AS SELECT 语句;
-DROP VIEW <view_name>;
+CREATE VIEW view_name AS SELECT 语句;
+DROP   VIEW view_name;
 
 -- 导入与导出
 LOAD DATA LOCAL INFILE '<file_name>' INTO TABLE tbl_name;
@@ -119,7 +120,7 @@ ALTER TABLE tbl_name DROP fd_name;
 ALTER TABLE tbl_name CHANGE fd_name <new_fd_name> <type> [<const>];
 
 -- index
-SHOW INDEX FROM tbl_name;
+SHOW  INDEX FROM tbl_name;
 ALTER TABLE tbl_name ADD INDEX <idx_name>(fd_name);
 ALTER TABLE tbl_name DROP INDEX <idx_name>;
 
@@ -145,7 +146,7 @@ ALTER TABLE tbl_name DROP CHECK <ck_name>;
 ```sql
 -- 插入
 INSERT INTO tbl_name [(fd_name, ...)] VALUES    -- 外键列需要指定为该键所指向的列中已存在的值以进行关联
-(<value>, ...), ... ;                               -- 若类型为字符串或日期时间，则`value`必须使用单引号
+(value, ...), ... ;                             -- 若类型为字符串或日期时间，则`value`必须使用单引号
 
 -- 复制
 INSERT INTO tbl_name (fd_name, ...)
@@ -260,24 +261,21 @@ COMMIT; 或 ROLLBACK;                    -- 提交事务 或 撤销此次事务
 | `DEFAULT val`    | 设置默认值   |                                                |
 
 
-# SQL基础
+# SQL查询
 ## 基础语法
-**用户名**
-* user              ：默认host为`'%'`
-* user@host
-    * '%'           ：允许从任意主机登录
-    * localhost     ：只允许本机登录
-    * 192.168.0.1   ：只允许从指定IP的主机登录
-
-**库表列名**
-* 库：
+* 用户名
+    * `user`                ：默认host为`'%'`
+    * `user@'%'`            ：允许从任意主机登录
+    * `user@localhost`      ：只允许本机登录
+    * `user@192.168.0.1`    ：只允许从指定IP的主机登录
+* 库名
+    * `*`
     * `db_name`
-    * `*`
 * 表：
-    * `db_name.tbl_name`
     * `*.*`
-    * `tbl_name`
+    * `db_name.tbl_name`
     * `*`
+    * `tbl_name`
 * 列：
     * `db_name.tbl_name.fd_name`
     * `tbl_name.fd_name`
@@ -289,84 +287,101 @@ COMMIT; 或 ROLLBACK;                    -- 提交事务 或 撤销此次事务
 <!-- entry begin: sql select group order -->
 ```sql
 -- 出现tbl_name、列表`(v1,v2)`的地方，一般都可用(SELECT语句)代替
-SELECT [DISTINCT] fd_name或expression [AS fd_alias], ... FROM tbl_name [tbl_alias], ...
+SELECT [DISTINCT] expression [AS fd_alias], ...
+[FROM tbl_name [tbl_alias], ...]
+
 [[INNER|LEFT|RIGHT] JOIN tbl_name [tbl_alias]]  -- 连接多表，与在上一行中指定多表区别在于此处可外连接
 [ON fd_name = fd_name]                          -- 类似WHERE，但对于外连接不会过滤掉驱动表的行
 [WHERE Clause]                                  -- WHERE子句，用于条件过滤
+
 [GROUP BY fd_name                               -- 将指定列相等的列聚合为一行，查询结果中非聚合函数的列为NULL
 [WITH ROLLUP]]                                  -- 会将所有聚合后的行再聚合成一行并添加到最后
 [HAVING (Clause)]                               -- 类似WHERR，可使用聚合函数
+
 [ORDER BY fd_name [DESC], ...]                  -- 按指定顺序的列进行（升序）排序，DESC指定该列按降序排列
 [LIMIT N]
 [OFFSET M]
+
 UNION [ALL]                                     -- 合并两查询结果（上下连接）。ALL表示允许重复，默认删掉重复值
 SELECT 语句 ;
-;
 ```
 ![JOIN](https://www.runoob.com/wp-content/uploads/2019/01/sql-join.png)
 <!-- entry end -->
 
 
-## WHERE语句
-<!-- entry begin: sql where 条件 -->
-* where语句
-    * `WHERE fd_name <OP> <value>`
-    * `WHERE fd_name [NOT] REGEXP 'regex_pattern'`
-    * `WHERE fd_name [NOT] BETWEEN <value> AND <value>`
-    * `WHERE fd_name [NOT] IN (<value>, ...)`
-<!-- entry end -->
-
 ## 运算符
 <!-- entry begin: sql operator -->
 * sql运算符
-    * 逻辑：`NOT` `AND`、`OR`、`XOR`        ：可以用`()`来改变优先级
-    * 算术：`+` `-` `*` `/` `%`
+    * 逻辑：`NOT` `AND` `OR` `XOR`          ：注意运算符优先级问题
+    * 算术：`+` `-` `*` `/` `%`             ：可以用`()`来改变优先级
     * 比较：
         * `=` `!=` `<` `<=` `>` `=>`        ：若有一边为NULL则会返回false
         * `<=>`                             ：当两边相等或均为NULL返回true
+        * `IS [NOT] NULL value`
     * 关系：
-        * `IS [NOT] NULL <value>`
-        * `[NOT] REGEXP '<pattern>'`
-        * `[NOT] BETWEEN <value1> AND <value2>`
-        * `[NOT] IN (SELECT 语句)`
+        * `[NOT] BETWEEN value1 AND value2`
+        * `[NOT] LIKE   'wildchar'`         ：支持通配符`_`和`%`，匹配完整字符串
+        * `[NOT] REGEXP 'pattern'`          ：转义序列使用类似`\\.`，匹配子串
+        * `[NOT] IN     (SELECT 语句)`
         * `[NOT] EXISTS (SELECT 语句)`
-        * `<OP> ALL (SELECT 语句)`          ：列表中所有行都符合`<OP>`
-        * `<OP> ANY (SELECT 语句)`          ：列表中有一行符合`<OP>`
+        * `<OP> ALL     (SELECT 语句)`      ：列表中所有行都符合`<OP>`
+        * `<OP> ANY     (SELECT 语句)`      ：列表中有一行符合`<OP>`
 <!-- entry end -->
 
 ## 函数
 <!-- entry begin: sql function -->
-* SQL Aggregate 函数计算从完整的列中取得的所有值，返回一个单一的值
+| 字符处理函数             | 描述                |
+|--------------------------|---------------------|
+| CONCAT(s, s)             | 拼接两数据          |
+| LEFT(s, l)               | 左边l个字符         |
+| RIGHT(s, l)              | 右边l个字符         |
+| SUBSTRING(s, i, l)       | 返回子串，下标1开始 |
+| LOCATE(substr, s[, pos]) | 返回子串起始下标    |
+| LENGTH(s)                | 返回字符串长度      |
+| UPPER(s)                 | 转为大写            |
+| LOWER(s)                 | 转为小写            |
+| LTRIM(s)                 | 删除左侧空白符      |
+| RTRIM(s)                 | 删除右侧空白符      |
+| TRIM(s)                  | 删除两侧空白符      |
 
-| 函数    | 描述           |
-|---------|----------------|
-| SUM()   | 返回总和       |
-| AVG()   | 返回平均值     |
-| COUNT() | 返回行数       |
-| FIRST() | 返回第一个值   |
-| LAST()  | 返回最后一个值 |
-| MAX()   | 返回最大值     |
-| MIN()   | 返回最小值     |
+| 时间处理函数                     | 描述                   |
+|----------------------------------|------------------------|
+| NOW()                            | 返回当前日期时间       |
+| CURDATE()                        | 返回当前日期           |
+| CURTIME()                        | 返回当前时间           |
+| DATE(date)                       | 返回对应日期           |
+| YEAR(date)                       | 返回对应年份           |
+| MONTH(date)                      | 返回对应月份           |
+| DAY(date)                        | 返回对应天数           |
+| DAYOFWEEK(date)                  | 返回对应礼拜           |
+| TIME(time)                       | 返回对应时间           |
+| HOUR(time)                       | 返回对应小时           |
+| MINUTE(time)                     | 返回对应分钟           |
+| SECOND(time)                     | 返回对应秒数           |
+| DATE_ADD(dt, INTERVAL expr UNIT) | 增加指定日期/时间      |
+| DATE_SUB(dt, INTERVAL expr UNIT) | 增加指定日期/时间      |
+| DATE_FORMAT(dt, format)          | 按指定格式打印日期时间 |
 
-* 用于blob的函数
+| 数值处理函数 | 描述   |
+|--------------|--------|
+| ABS(v)       | 绝对值 |
+| SIN(v)       | 正弦   |
+| COS(v)       | 余弦   |
+| TAN(v)       | 正切   |
+| SQRT(v)      | 平方根 |
+| EXP(b, e)    | 幂     |
+| Rand()       | 随机数 |
+| PI()         | 圆周率 |
 
-| 函数                  | 描述                 |
-|-----------------------|----------------------|
-| HEX()                 | 输出十六进制底层数据 |
-| SUBSTRING(fd,beg,len) | 截取字节，beg从1开始 |
-| CONCAT(s, s)          | 拼接两数据           |
-| CONV(s,hex,dec)       | 十六进制转十进制     |
-| LOAD_FILE(str)        | 返回文件内容         |
+| 聚合函数 | 描述           |
+|----------|----------------|
+| FIRST(f) | 返回第一个值   |
+| LAST(f)  | 返回最后一个值 |
+| MAX(f)   | 返回最大值     |
+| MIN(f)   | 返回最小值     |
+| SUM(f)   | 返回总和       |
+| COUNT(f) | 返回行数       |
+| AVG(f)   | 返回平均值     |
 
-* [其它sql函数](https://www.runoob.com/mysql/mysql-functions.html)
 <!-- entry end -->
 
-<!--
-缓冲机制：buffer pool & change buffer
-索引结构：row & page & extent & segment
-事    务：
-    持久性（redo log与double write buffer）
-    原子性（undo log）
-    一致性（undo log）
-    隔离性（undo log与MVCC与Lock）
--->
