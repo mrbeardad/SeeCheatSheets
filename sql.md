@@ -18,7 +18,6 @@
     - [位类型](#位类型)
   - [类型约束](#类型约束)
 - [SQL查询](#sql查询)
-  - [基础语法](#基础语法)
   - [查询语句](#查询语句)
   - [运算符](#运算符)
   - [函数](#函数)
@@ -56,6 +55,11 @@ SET  NAMES charset;
 
 ## 用户管理
 <!-- entry begin: sql user password grant -->
+* 用户名
+    * `user`                ：默认host为`'%'`
+    * `user@'%'`            ：允许从任意主机登录
+    * `user@localhost`      ：只允许本机登录
+    * `user@192.168.0.1`    ：只允许从指定IP的主机登录
 ```sql
 SELECT * FROM mysql.user;                       -- 查询用户
 CREATE USER username [IDENTIFIED BY 'passwd'];  -- 创建用户
@@ -262,50 +266,42 @@ COMMIT; 或 ROLLBACK;                    -- 提交事务 或 撤销此次事务
 
 
 # SQL查询
-## 基础语法
-* 用户名
-    * `user`                ：默认host为`'%'`
-    * `user@'%'`            ：允许从任意主机登录
-    * `user@localhost`      ：只允许本机登录
-    * `user@192.168.0.1`    ：只允许从指定IP的主机登录
-* 库名
-    * `*`
-    * `db_name`
-* 表：
-    * `*.*`
-    * `db_name.tbl_name`
-    * `*`
-    * `tbl_name`
-* 列：
-    * `db_name.tbl_name.fd_name`
-    * `tbl_name.fd_name`
-    * `fd_name`
-    * `*`
-
-
 ## 查询语句
 <!-- entry begin: sql select group order -->
 ```sql
--- 出现tbl_name、列表`(v1,v2)`的地方，一般都可用(SELECT语句)代替
-SELECT [DISTINCT] expression [AS fd_alias], ...
-[FROM tbl_name [tbl_alias], ...]
+SELECT [DISTINCT] expression [AS fd_alias], ... -- expression表示选择列或表达式列
+[FROM tbl_name [AS tbl_alias], ...]             -- 若有多个表则expression中列名必须加上表名
 
-[[INNER|LEFT|RIGHT] JOIN tbl_name [tbl_alias]]  -- 连接多表，与在上一行中指定多表区别在于此处可外连接
+[[INNER|LEFT|RIGHT] JOIN tbl_name [tbl_alias]]  -- 连接多表，与在FROM子句中指定多表区别在于此处可外连接，首选INNER JOIN而非FROM联结
 [ON fd_name = fd_name]                          -- 类似WHERE，但对于外连接不会过滤掉驱动表的行
-[WHERE Clause]                                  -- WHERE子句，用于条件过滤
 
-[GROUP BY fd_name                               -- 将指定列相等的列聚合为一行，查询结果中非聚合函数的列为NULL
-[WITH ROLLUP]]                                  -- 会将所有聚合后的行再聚合成一行并添加到最后
-[HAVING (Clause)]                               -- 类似WHERR，可使用聚合函数
+[WHERE clause]                                  -- WHERE子句，用于条件过滤索引
 
-[ORDER BY fd_name [DESC], ...]                  -- 按指定顺序的列进行（升序）排序，DESC指定该列按降序排列
-[LIMIT N]
-[OFFSET M]
+[GROUP BY expression, ...]                      -- 将指定expression相等的列聚合为一行，且SELECT后的选择列只能使用此处出现过的
+[WITH ROLLUP]                                   -- 会将所有聚合后的行再聚合成一行并添加到最后
+[HAVING clause]                                 -- 类似WHERR，但可使用聚合函数，在分组后进行过滤
+
+[ORDER BY expression [DESC], ...]               -- 按指定顺序的列进行（升序）排序，DESC指定该列按降序排列，可使用fd_alias
+
+[LIMIT N] [OFFSET M]
 
 UNION [ALL]                                     -- 合并两查询结果（上下连接）。ALL表示允许重复，默认删掉重复值
-SELECT 语句 ;
+SELECT 语句;                                    -- 列数要相同，且类型可互相转换。组合查询仅能在最后一条SELECT语句有ORDER BY子句
 ```
 ![JOIN](https://www.runoob.com/wp-content/uploads/2019/01/sql-join.png)
+
+```sql
+-- 嵌套子查询 --
+
+SELECT (SELECT语句) AS expr
+
+WHERE fd_name IN (SELECT 语句)
+
+-- 自联结 --
+SELECT ...
+FROM tbl AS t1, tbl AS t2
+WHERE t1.id = t2.id AND t2.grade > 60   -- 查询grade大于60的id对应的信息
+```
 <!-- entry end -->
 
 
@@ -322,10 +318,10 @@ SELECT 语句 ;
         * `[NOT] BETWEEN value1 AND value2`
         * `[NOT] LIKE   'wildchar'`         ：支持通配符`_`和`%`，匹配完整字符串
         * `[NOT] REGEXP 'pattern'`          ：转义序列使用类似`\\.`，匹配子串
-        * `[NOT] IN     (SELECT 语句)`
-        * `[NOT] EXISTS (SELECT 语句)`
-        * `<OP> ALL     (SELECT 语句)`      ：列表中所有行都符合`<OP>`
-        * `<OP> ANY     (SELECT 语句)`      ：列表中有一行符合`<OP>`
+        * `[NOT] IN     (val, ...)`
+        * `[NOT] EXISTS (val, ...)`
+        * `<OP> ALL     (val, ...)`         ：列表中所有行都符合`<OP>`
+        * `<OP> ANY     (val, ...)`         ：列表中有一行符合`<OP>`
 <!-- entry end -->
 
 ## 函数
@@ -373,15 +369,15 @@ SELECT 语句 ;
 | Rand()       | 随机数 |
 | PI()         | 圆周率 |
 
-| 聚合函数 | 描述           |
-|----------|----------------|
-| FIRST(f) | 返回第一个值   |
-| LAST(f)  | 返回最后一个值 |
-| MAX(f)   | 返回最大值     |
-| MIN(f)   | 返回最小值     |
-| SUM(f)   | 返回总和       |
-| COUNT(f) | 返回行数       |
-| AVG(f)   | 返回平均值     |
+| 聚合函数 | 描述                      |
+|----------|---------------------------|
+| FIRST(f) | 返回第一个值              |
+| LAST(f)  | 返回最后一个值            |
+| MAX(f)   | 返回最大值                |
+| MIN(f)   | 返回最小值                |
+| SUM(f)   | 返回总和                  |
+| COUNT(f) | 返回行数，`*`会计算NULL行 |
+| AVG(f)   | 返回平均值                |
 
 <!-- entry end -->
 

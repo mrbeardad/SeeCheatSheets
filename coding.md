@@ -158,8 +158,12 @@ template<typename RandomIter, typename Compare=less<typename RandomIter::value_t
 void quick_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
 {
 // 递归基准
-    if ( end - begin < 2 )      // 快排核心算法必须满足范围[begin, end)长度至少为2
+    if ( end - begin < 16 ) {   // 注意快排核心算法必须满足范围[begin, end)长度至少为2
+        for ( auto pos = next(begin); pos < end; ++pos )
+            for ( auto swapPos = pos; swapPos > begin && comp(*swapPos, *prev(swapPos)); )
+                swap(*swapPos, *--swapPos);
         return;
+    }
 // 选取枢纽点
     auto mid = begin + (end - begin) / 2, last = end - 1;
     if ( comp(*begin, *last) )  // 将较小值放尾部
