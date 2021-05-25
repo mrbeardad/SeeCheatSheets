@@ -17,12 +17,18 @@
     - [枚举类型](#枚举类型)
     - [位类型](#位类型)
   - [类型约束](#类型约束)
-- [SQL查询](#sql查询)
-  - [查询语句](#查询语句)
   - [运算符](#运算符)
   - [函数](#函数)
+- [SQL查询](#sql查询)
+  - [查询语句](#查询语句)
+  - [联结查询](#联结查询)
+  - [嵌套查询](#嵌套查询)
+  - [全文查询](#全文查询)
+- [存储过程](#存储过程)
+- [其他操作](#其他操作)
 
 <!-- vim-markdown-toc -->
+
 # 安装与使用
 <!-- entry begin: mysql mysqld initialize install -->
 **初始化mysql**
@@ -33,23 +39,23 @@
 * `mysql -h 主机名 -P 端口号 -D 数据库名 -u 用户名 -p密码`
 <!-- entry end -->
 
+
 # SQL基础
 ## 系统信息
 <!-- entry begin: sql variable status engines charset collation names -->
 ```sql
 -- 默认变量作用域为SESSION
-SET  [GLOBAL] var = val;
-SHOW [GLOBAL] VARAIABLES [LIKE 'pattern'];
-SHOW [GLOBAL] STATUS     [LIKE 'pattern'];
+SET  var = val;
+SHOW VARAIABLES [LIKE 'pattern'];
+SHOW STATUS     [LIKE 'pattern'];
 SHOW PROCESSLIST;
 SHOW ENGINES    [LIKE 'pattern'];
 SHOW CHARSET    [LIKE 'pattern'];
 SHOW COLLATION  [LIKE 'pattern'];
-
 SET  NAMES charset;
--- SET character_set_client     = charset;  -- 客户端使用的字符集
--- SET character_set_connection = charset;  -- 服务器处理请求时使用的字符集
--- SET character_set_results    = charset;  -- 回传给客户端时使用的字符集
+    -- SET character_set_client     = charset;  -- 客户端使用的字符集
+    -- SET character_set_connection = charset;  -- 服务器处理请求时使用的字符集
+    -- SET character_set_results    = charset;  -- 回传给客户端时使用的字符集
 ```
 <!-- entry end -->
 
@@ -98,59 +104,43 @@ CREATE TABLE tbl_name (                         -- 创建数据表
         [KEY         (fd_name),]
         [FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name),]
         [CHECK       (clause)]
-    ) ENGINE=engine CHARSET=charset ROW_FORMAT=format;
-DROP  TABLE tbl_name;                           -- 删除数据表
-ALTER TABLE tbl_name RENAME TO new_tbl_name;    -- 修改数据表
-
--- 视图
-CREATE VIEW view_name AS SELECT 语句;
-DROP   VIEW view_name;
-
--- 导入与导出
-LOAD DATA LOCAL INFILE '<file_name>' INTO TABLE tbl_name;
-
-SELECT * FROM tbl_name INTO OUTFILE '<file_name>';
+    ) ENGINE=engine CHARSET=charset;
+DROP    TABLE tbl_name;                                 -- 删除数据表
+ALTER   TABLE tbl_name option=val;                      -- 修改表选项
+RENAME  TABLE tbl_name TO [new_db_name.]new_tbl_name;   -- 修改表名
 ```
 <!-- entry end -->
 
 ## 数据列
 <!-- entry begin: sql table index metadata -->
-* 操作元数据
 ```sql
 -- field
 SHOW COLUMNS FROM tbl_name;
-ALTER TABLE tbl_name ADD fd_name <type> [<const>] [FIRST| AFTER fd_name];
-ALTER TABLE tbl_name DROP fd_name;
-ALTER TABLE tbl_name CHANGE fd_name <new_fd_name> <type> [<const>];
+ALTER TABLE tbl_name ADD    fd_name type [const] [FIRST| AFTER fd_name];
+ALTER TABLE tbl_name DROP   fd_name;
+ALTER TABLE tbl_name CHANGE fd_name new_fd_name type [const];
 
 -- index
 SHOW  INDEX FROM tbl_name;
-ALTER TABLE tbl_name ADD INDEX <idx_name>(fd_name);
-ALTER TABLE tbl_name DROP INDEX <idx_name>;
+ALTER TABLE tbl_name ADD  INDEX idx_name(fd_name);
+ALTER TABLE tbl_name DROP INDEX idx_name;
 
--- PRIMARY KEY
-    -- 目标域必须为`NOT NULL UNIQUE`
-ALTER TABLE tbl_name ADD PRIMARY KEY (fd_name);
-ALTER TABLE tbl_name DROP PRIMARY KEY;
-
--- FOREIGN KEY
-    -- 两域类型必须相同，且被引用的域必须为`UNIQUE`
-ALTER TABLE tbl_name ADD CONSTRAINT <fk_name> FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name);
-ALTER TABLE tbl_name DROP FOREIGN KEY <fk_name>;
+-- FOREIGN KEY：两域类型必须相同，且被引用的域必须为`UNIQUE`
+ALTER TABLE tbl_name ADD  FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name);
+ALTER TABLE tbl_name DROP FOREIGN KEY fk_name;
 
 -- CHECK
-ALTER TABLE tbl_name ADD CONSTRAINT <ck_name> CHECK (<Clause>);
-ALTER TABLE tbl_name DROP CHECK <ck_name>;
+ALTER TABLE tbl_name ADD CONSTRAINT ck_name CHECK (clause);
+ALTER TABLE tbl_name DROP CHECK ck_name;
 ```
 <!-- entry end -->
 
 ## 行记录
 <!-- entry begin: sql insert delete 事务 -->
-* 操作行数据
 ```sql
 -- 插入
-INSERT INTO tbl_name [(fd_name, ...)] VALUES    -- 外键列需要指定为该键所指向的列中已存在的值以进行关联
-(value, ...), ... ;                             -- 若类型为字符串或日期时间，则`value`必须使用单引号
+INSERT INTO tbl_name [(fd_name, ...)]   -- 外键列需要指定为该键所指向的列中已存在的值以进行关联
+VALUES (value, ...), ... ;              -- 若类型为字符串或日期时间，则`value`必须使用单引号
 
 -- 复制
 INSERT INTO tbl_name (fd_name, ...)
@@ -158,24 +148,15 @@ SELECT 语句 ;                            -- 两语句中的fd_name部分两两
 
 -- 删除
 DELETE FROM tbl_name
-[WHERE <Clause>] ;                      -- 默认删除所有数据
+[WHERE clause] ;                        -- 默认删除所有数据
 
 -- 修改
-UPDATE tbl_name SET fd_name=<value>, ...
-[WHERE <Clause>] ;                      -- 默认修改所有行
-
--- 事务
-BEGIN;                                  -- 开启事务
-...
-SAVEPOINT <point>;                      -- 设置保存点
-...
-RELEASE SAVEPOINT <point>;              -- 删除保存点
-...
-ROLLBACK TO <point>;                    -- 撤销至保存点
-...
-COMMIT; 或 ROLLBACK;                    -- 提交事务 或 撤销此次事务
+UPDATE [IGNORE] tbl_name                -- IGNORE表示失败时不回滚而继续更改
+SET fd_name=value, ...
+[WHERE clause] ;                        -- 默认修改所有行
 ```
 <!-- entry end -->
+
 ## 数据类型
 ### 整数类型
 > * 支持在其后添加`(N)`，指定十进制显示时的最小显示位数，最大255（不影响存储与计算） **deprecated** 
@@ -212,8 +193,8 @@ COMMIT; 或 ROLLBACK;                    -- 提交事务 或 撤销此次事务
 |-----------|------|---------------------|
 | DATE      | 3    | YYYY-mm-dd          |
 | TIME      | 3    | HH:MM:SS            |
-| TIMESTAMP | 4    | YYYY-mm-dd HH:MM:SS |
 | DATETIME  | 8    | YYYY-mm-dd HH:MM:SS |
+| TIMESTAMP | 4    | YYYY-mm-dd HH:MM:SS |
 
 ### 字符类型
 * 对于CHAR，支持在其后添加`(N)`，指定固定字符数（字节数最小为N）
@@ -257,52 +238,12 @@ COMMIT; 或 ROLLBACK;                    -- 提交事务 或 撤销此次事务
 
 
 ## 类型约束
-| 约束             | 说明         | 备注                                           |
-|------------------|--------------|------------------------------------------------|
-| `NOT NULL`       | 不能为空     | PRIMARY KEY的必要条件                          |
-| `UNIQUE`         | 不能重复     | PRIMARY KEY的必要条件，UNIQUE KEY的充分条件    |
-| `AUTO_INCREMENT` | 自动增加数值 | 其后可选添加`=n`设置初始值，默认为1，每次递增1 |
-| `DEFAULT val`    | 设置默认值   |                                                |
-
-
-# SQL查询
-## 查询语句
-<!-- entry begin: sql select group order -->
-```sql
-SELECT [DISTINCT] expression [AS fd_alias], ... -- expression表示选择列或表达式列
-[FROM tbl_name [AS tbl_alias], ...]             -- 若有多个表则expression中列名必须加上表名
-
-[[INNER|LEFT|RIGHT] JOIN tbl_name [tbl_alias]]  -- 连接多表，与在FROM子句中指定多表区别在于此处可外连接，首选INNER JOIN而非FROM联结
-[ON fd_name = fd_name]                          -- 类似WHERE，但对于外连接不会过滤掉驱动表的行
-
-[WHERE clause]                                  -- WHERE子句，用于条件过滤索引
-
-[GROUP BY expression, ...]                      -- 将指定expression相等的列聚合为一行，且SELECT后的选择列只能使用此处出现过的
-[WITH ROLLUP]                                   -- 会将所有聚合后的行再聚合成一行并添加到最后
-[HAVING clause]                                 -- 类似WHERR，但可使用聚合函数，在分组后进行过滤
-
-[ORDER BY expression [DESC], ...]               -- 按指定顺序的列进行（升序）排序，DESC指定该列按降序排列，可使用fd_alias
-
-[LIMIT N] [OFFSET M]
-
-UNION [ALL]                                     -- 合并两查询结果（上下连接）。ALL表示允许重复，默认删掉重复值
-SELECT 语句;                                    -- 列数要相同，且类型可互相转换。组合查询仅能在最后一条SELECT语句有ORDER BY子句
-```
-![JOIN](https://www.runoob.com/wp-content/uploads/2019/01/sql-join.png)
-
-```sql
--- 嵌套子查询 --
-
-SELECT (SELECT语句) AS expr
-
-WHERE fd_name IN (SELECT 语句)
-
--- 自联结 --
-SELECT ...
-FROM tbl AS t1, tbl AS t2
-WHERE t1.id = t2.id AND t2.grade > 60   -- 查询grade大于60的id对应的信息
-```
-<!-- entry end -->
+| 约束                 | 说明         | 备注                                                |
+|----------------------|--------------|-----------------------------------------------------|
+| `NOT NULL`           | 不能为空     | PRIMARY KEY的必要条件                               |
+| `UNIQUE`             | 不能重复     | PRIMARY KEY的必要条件，UNIQUE KEY的充分条件         |
+| `AUTO_INCREMENT[=1]` | 自动增加数值 | 隐含UNIQUE，一个表只能有一个列为该限制且必须作为key |
+| `DEFAULT val`        | 设置默认值   | 仅支持常量默认值                                    |
 
 
 ## 运算符
@@ -316,7 +257,7 @@ WHERE t1.id = t2.id AND t2.grade > 60   -- 查询grade大于60的id对应的信�
         * `IS [NOT] NULL value`
     * 关系：
         * `[NOT] BETWEEN value1 AND value2`
-        * `[NOT] LIKE   'wildchar'`         ：支持通配符`_`和`%`，匹配完整字符串
+        * `[NOT] LIKE   'pattern'`          ：支持通配符`_`和`%`，匹配完整字符串
         * `[NOT] REGEXP 'pattern'`          ：转义序列使用类似`\\.`，匹配子串
         * `[NOT] IN     (val, ...)`
         * `[NOT] EXISTS (val, ...)`
@@ -381,3 +322,103 @@ WHERE t1.id = t2.id AND t2.grade > 60   -- 查询grade大于60的id对应的信�
 
 <!-- entry end -->
 
+# SQL查询
+## 查询语句
+<!-- entry begin: sql select -->
+```sql
+SELECT [DISTINCT] expr [AS fd_alias], ...       -- expr表示选择列或表达式列
+[FROM tbl_name [AS tbl_alias], ...]             -- 若有多个表则expr中列名必须加上表名
+
+[[INNER|LEFT|RIGHT] JOIN tbl_name[AS tbl_alias]]-- 连接多表，与在FROM子句中指定多表区别在于此处可外连接，首选INNER JOIN而非FROM联结
+[ON clause]                                     -- 类似WHERE，但对于外连接不会过滤掉驱动表的行
+
+[WHERE clause]                                  -- WHERE子句，用于条件过滤索引
+
+[GROUP BY expr, ...]                            -- 将指定expr相等的列聚合为一行，且SELECT后的选择列只能使用此处出现过的
+[WITH ROLLUP]                                   -- 会将所有聚合后的行再聚合成一行并添加到最后
+[HAVING clause]                                 -- 类似WHERR，但可使用聚合函数，在分组后进行过滤
+
+[ORDER BY expr [DESC], ...]                     -- 按指定顺序的列进行（升序）排序，DESC指定该列按降序排列，可使用fd_alias
+
+[LIMIT N] [OFFSET M]
+
+[UNION [ALL]]                                   -- 合并两查询结果（上下连接）。ALL表示允许重复，默认删掉重复值
+[SELECT 语句];                                  -- 列数要相同，且类型可互相转换。组合查询仅能在最后一条SELECT语句有ORDER BY子句
+```
+<!-- entry end -->
+
+## 联结查询
+![JOIN](https://www.runoob.com/wp-content/uploads/2019/01/sql-join.png)
+```sql
+-- 自联结 --
+SELECT ...
+FROM tbl AS t1, tbl AS t2
+WHERE t1.id = t2.id AND t2.grade > 60   -- 查询grade大于60的id对应的信息
+```
+
+## 嵌套查询
+```sql
+SELECT id, (SELECT 语句) AS expr
+FROM ...
+WHERE fd_name IN (SELECT 语句)
+```
+
+## 全文查询
+```sql
+-- 需要先设置全文索引
+SELECT ...
+FROM ...
+WHERE MATCH(fulltext) AGAINST('word1 word2' [WITH QUERY EXPANSION | IN BOOLEAN MODE])
+```
+
+# 存储过程
+```sql
+-- 查看
+SHOW PROCEDURE STATUS [LIKE 'pattern'];
+SHOW CREATE PROCEDURE func_name;
+
+-- 定义
+CREATE PROCEDURE func_name(IN arg1 type, OUT arg2 type, INOUT arg3 type)
+[COMMENT 'comments...']
+BEGIN
+    SELECT 语句 INTO arg2;
+END;
+
+-- 调用
+CALL func_name(val1, @arg2, @arg3);
+
+-- 访问变量
+SELECT @arg1, @arg2;
+
+-- 分支语句
+IF bool THEN
+    ...
+ELSEIF bool THEN
+    ...
+ELSE
+    ...
+END;
+```
+
+# 其他操作
+```sql
+-- 视图
+SHOW CREATE VIEW view_name;
+CREATE VIEW view_name AS SELECT 语句;
+DROP   VIEW view_name;
+
+-- 导入与导出
+LOAD DATA LOCAL INFILE 'file_name' INTO TABLE tbl_name;
+SELECT 语句 INTO OUTFILE 'file_name';
+
+-- 事务
+BEGIN;                                  -- 开启事务
+...
+SAVEPOINT <point>;                      -- 设置保存点
+...
+RELEASE SAVEPOINT <point>;              -- 删除保存点
+...
+ROLLBACK TO <point>;                    -- 撤销至保存点
+...
+COMMIT; 或 ROLLBACK;                    -- 提交事务 或 撤销此次事务
+```
