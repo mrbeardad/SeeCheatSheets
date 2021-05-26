@@ -6,8 +6,8 @@
   - [系统信息](#系统信息)
   - [用户管理](#用户管理)
   - [数据库](#数据库)
-  - [数据表](#数据表)
-  - [数据列](#数据列)
+  - [表](#表)
+  - [模式](#模式)
   - [行记录](#行记录)
   - [数据类型](#数据类型)
     - [整数类型](#整数类型)
@@ -15,7 +15,6 @@
     - [时间日期](#时间日期)
     - [字符类型](#字符类型)
     - [枚举类型](#枚举类型)
-    - [位类型](#位类型)
   - [类型约束](#类型约束)
   - [运算符](#运算符)
   - [函数](#函数)
@@ -24,8 +23,10 @@
   - [联结查询](#联结查询)
   - [嵌套查询](#嵌套查询)
   - [全文查询](#全文查询)
-- [存储过程](#存储过程)
-- [其他操作](#其他操作)
+- [编程](#编程)
+- [视图](#视图)
+- [事务](#事务)
+- [触发器](#触发器)
 
 <!-- vim-markdown-toc -->
 
@@ -42,13 +43,13 @@
 
 # SQL基础
 ## 系统信息
-<!-- entry begin: sql variable status engines charset collation names -->
+<!-- entry begin: sql variable status engines charset collation -->
 ```sql
 -- 默认变量作用域为SESSION
-SET  var = val;
 SHOW VARAIABLES [LIKE 'pattern'];
 SHOW STATUS     [LIKE 'pattern'];
 SHOW PROCESSLIST;
+
 SHOW ENGINES    [LIKE 'pattern'];
 SHOW CHARSET    [LIKE 'pattern'];
 SHOW COLLATION  [LIKE 'pattern'];
@@ -60,70 +61,75 @@ SET  NAMES charset;
 <!-- entry end -->
 
 ## 用户管理
-<!-- entry begin: sql user password grant -->
-* 用户名
-    * `user`                ：默认host为`'%'`
-    * `user@'%'`            ：允许从任意主机登录
-    * `user@localhost`      ：只允许本机登录
-    * `user@192.168.0.1`    ：只允许从指定IP的主机登录
+<!-- entry begin: sql user grant -->
 ```sql
-SELECT * FROM mysql.user;                       -- 查询用户
-CREATE USER username [IDENTIFIED BY 'passwd'];  -- 创建用户
-DROP   USER username;                           -- 删除用户
-SET PASSWORD FOR username = PASSWORD('passwd'); -- 修改密码
+CREATE USER username [IDENTIFIED BY [PASSWORD] 'passwd'];   -- 创建用户
+DROP   USER username;                                       -- 删除用户
+SELECT * FROM mysql.user;                                   -- 查询用户
+RENAME USER username TO new_username;                       -- 重命名
+SET PASSWORD FOR username = PASSWORD('passwd');             -- 修改密码
 
-SHOW GRANTS                                     -- 查询授权
-GRANT  privcode ON db_name.tbl_name TO username;-- 授权用户
-FLUSH  PRIVILEGES;                              -- 刷新权限
-    -- 权限码包括：
-    -- ALL PRIVILEGES
+SHOW GRANTS [FOR username]                                  -- 查询授权
+GRANT|REVOKE privcode, ... ON db_name.tbl_name TO username; -- 授权|撤销
+FLUSH PRIVILEGES;                                          -- 刷新权限
+
+-- 用户名(username)
+    -- user                ：默认host为'%'
+    -- user@%              ：允许从任意主机登录
+    -- user@localhost      ：只允许本机登录
+    -- user@192.168.0.1    ：只允许从指定IP的主机登录
+
+-- 权限码(privcode)：
+    -- ALL
+    -- USAGE
     -- SELECT
-    -- INSERT
-    -- 等等...
+    -- ...
 ```
 <!-- entry end -->
 
 ## 数据库
 <!-- entry begin: sql database db -->
 ```sql
-SHOW   DATABASES [LIKE 'pattern'];          -- 查询已有数据库
-SHOW   CREATE    DATABASE        db_name;   -- 查询数据库详情
-CREATE DATABASE  [IF NOT EXISTS] db_name;   -- 创建数据库
+CREATE DATABASE  [IF NOT EXISTS] db_name
+    [CHARSET=charset] [COLLATE=collate];    -- 创建数据库
 DROP   DATABASE  [IF EXISTS]     db_name;   -- 删除数据库
+SHOW   DATABASES [LIKE 'pattern'];          -- 查询已有数据库
+SHOW   CREATE    DATABASE db_name;          -- 查询数据库详情
+ALTER  DATABASE  db_name option
 ```
 <!-- entry end -->
 
-## 数据表
+## 表
 ```sql
-SHOW   TABLES [FROM db_name ] [LIKE 'pattern']; -- 查询已有数据表
-SHOW   CREATE TABLE tbl_name;                   -- 查询数据表详情
-CREATE TABLE tbl_name (                         -- 创建数据表
+CREATE [TEMPORARY] TABLE [db_name.]tbl_name (           -- 创建数据表
         fd_name type [const],
         ...,
         [PRIMARY KEY (fd_name),]
         [KEY         (fd_name),]
         [FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name),]
         [CHECK       (clause)]
-    ) ENGINE=engine CHARSET=charset;
+    ) [ENGINE=engine] [CHARSET=charset] [COLLATE=collate];
 DROP    TABLE tbl_name;                                 -- 删除数据表
+SHOW   TABLES [FROM db_name ] [LIKE 'pattern'];         -- 查询已有数据表
+SHOW   CREATE TABLE tbl_name;                           -- 查询数据表详情
 ALTER   TABLE tbl_name option=val;                      -- 修改表选项
 RENAME  TABLE tbl_name TO [new_db_name.]new_tbl_name;   -- 修改表名
 ```
 <!-- entry end -->
 
-## 数据列
+## 模式
 <!-- entry begin: sql table index metadata -->
 ```sql
 -- field
-SHOW COLUMNS FROM tbl_name;
 ALTER TABLE tbl_name ADD    fd_name type [const] [FIRST| AFTER fd_name];
 ALTER TABLE tbl_name DROP   fd_name;
+SHOW COLUMNS FROM tbl_name;
 ALTER TABLE tbl_name CHANGE fd_name new_fd_name type [const];
 
 -- index
-SHOW  INDEX FROM tbl_name;
 ALTER TABLE tbl_name ADD  INDEX idx_name(fd_name);
 ALTER TABLE tbl_name DROP INDEX idx_name;
+SHOW  INDEX FROM tbl_name;
 
 -- FOREIGN KEY：两域类型必须相同，且被引用的域必须为`UNIQUE`
 ALTER TABLE tbl_name ADD  FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name);
@@ -229,12 +235,6 @@ SET fd_name=value, ...
 |------|----------------------------|
 | ENUM | 数字与字符串间的双射       |
 | SET  | 给每一位取个可读性高的名称 |
-
-### 位类型
-> **deprecated**
-> * 对于BIT，字面量语法位`b'1010'`。根据上下文语境可转换位字符或数字
-> * 对于BIT，InnoDB默认使用最小的可以完整表示位的整数表示，故无法节省空间
-> * 对于BIT，支持在其后添加`(N)`表示位数
 
 
 ## 类型约束
@@ -371,24 +371,23 @@ FROM ...
 WHERE MATCH(fulltext) AGAINST('word1 word2' [WITH QUERY EXPANSION | IN BOOLEAN MODE])
 ```
 
-# 存储过程
+# 编程
 ```sql
--- 查看
+-- 存储过程
+CREATE PROCEDURE func_name(IN arg1 type, OUT arg2 type, INOUT arg3 type)
+    [COMMENT 'comments...']
+    BEGIN
+        ...
+    END;
+DROP PROCEDURE func_name;
 SHOW PROCEDURE STATUS [LIKE 'pattern'];
 SHOW CREATE PROCEDURE func_name;
-
--- 定义
-CREATE PROCEDURE func_name(IN arg1 type, OUT arg2 type, INOUT arg3 type)
-[COMMENT 'comments...']
-BEGIN
-    SELECT 语句 INTO arg2;
-END;
-
--- 调用
 CALL func_name(val1, @arg2, @arg3);
 
--- 访问变量
-SELECT @arg1, @arg2;
+-- 变量访问
+DECLARE variable type [default val];    -- 声明局部变量，退出函数销毁
+SET @variable = val;                    -- 声明全局变量，退出会话销毁
+SELECT 语句 INTO variable;              -- SELECT赋值
 
 -- 分支语句
 IF bool THEN
@@ -400,25 +399,32 @@ ELSE
 END;
 ```
 
-# 其他操作
+# 视图
 ```sql
--- 视图
-SHOW CREATE VIEW view_name;
 CREATE VIEW view_name AS SELECT 语句;
 DROP   VIEW view_name;
+SHOW CREATE VIEW view_name;
+```
 
--- 导入与导出
-LOAD DATA LOCAL INFILE 'file_name' INTO TABLE tbl_name;
-SELECT 语句 INTO OUTFILE 'file_name';
-
--- 事务
+# 事务
+```sql
 BEGIN;                                  -- 开启事务
 ...
-SAVEPOINT <point>;                      -- 设置保存点
+SAVEPOINT point;                        -- 设置保存点
 ...
-RELEASE SAVEPOINT <point>;              -- 删除保存点
+RELEASE SAVEPOINT point;                -- 删除保存点
 ...
-ROLLBACK TO <point>;                    -- 撤销至保存点
+ROLLBACK TO point;                      -- 撤销至保存点
 ...
-COMMIT; 或 ROLLBACK;                    -- 提交事务 或 撤销此次事务
+COMMIT 或 ROLLBACK ;                    -- 提交事务 或 撤销此次事务
+```
+
+# 触发器
+```sql
+CREATE TRIGGER trigger_name BEFORE|AFTER INSERT|DELETE|UPDATE ON tbl_name
+    FOR EACH ROW [statement; |
+    BEGIN
+        statement;
+    END;]
+DROP TRIGGER trigger_name [tbl_name.]trigger_name;
 ```
