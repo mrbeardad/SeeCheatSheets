@@ -23,10 +23,11 @@
   - [联结查询](#联结查询)
   - [嵌套查询](#嵌套查询)
   - [全文查询](#全文查询)
-- [编程](#编程)
 - [视图](#视图)
+- [分区](#分区)
 - [事务](#事务)
 - [触发器](#触发器)
+- [编程](#编程)
 
 <!-- vim-markdown-toc -->
 
@@ -101,6 +102,9 @@ ALTER  DATABASE  db_name option
 
 ## 表
 ```sql
+-- 临时表只在单个连接中可见，断开连接时销毁；
+-- 临时表可能使用Memory引擎或MyISAM引擎
+-- Memory引擎不支持TEXT族和BLOB族类型数据，故这类临时表只能使用磁盘MyISAM
 CREATE [TEMPORARY] TABLE [db_name.]tbl_name (           -- 创建数据表
         fd_name type [const],
         ...,
@@ -109,8 +113,9 @@ CREATE [TEMPORARY] TABLE [db_name.]tbl_name (           -- 创建数据表
         [FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name),]
         [CHECK       (clause)]
     ) [ENGINE=engine] [CHARSET=charset] [COLLATE=collate];
-DROP    TABLE tbl_name;                                 -- 删除数据表
+DROP   TABLE  tbl_name;                                 -- 删除数据表
 SHOW   TABLES [FROM db_name ] [LIKE 'pattern'];         -- 查询已有数据表
+SHOW   TABLE  STATUS [LIKE 'pattern']                   --
 SHOW   CREATE TABLE tbl_name;                           -- 查询数据表详情
 ALTER   TABLE tbl_name option=val;                      -- 修改表选项
 RENAME  TABLE tbl_name TO [new_db_name.]new_tbl_name;   -- 修改表名
@@ -125,6 +130,7 @@ ALTER TABLE tbl_name ADD    fd_name type [const] [FIRST| AFTER fd_name];
 ALTER TABLE tbl_name DROP   fd_name;
 SHOW COLUMNS FROM tbl_name;
 ALTER TABLE tbl_name CHANGE fd_name new_fd_name type [const];
+ALTER TABLE tbl_name MODIFY fd_name type [const];
 
 -- index
 ALTER TABLE tbl_name ADD  INDEX idx_name(fd_name);
@@ -189,8 +195,8 @@ SET fd_name=value, ...
 | DECIMAL | ∞    |
 
 ### 时间日期
-* 对于TIMESTAMP
-    * 存储格林尼治时间而显示服务器或客户端本地时间
+* 尽量选择TIMESTAMP
+    * 存储UTC而根据时区显示对应RTC
     * 默认`NOT NULL`
     * 默认插入或更新时会更新第一个TIMESTAMP列
 * 除DATE外，其余类型支持在其后添加`(fps)`表示秒级小数位数
@@ -228,13 +234,13 @@ SET fd_name=value, ...
 * 支持在其后添加`('str1', 'str2')`来设置枚举字符
     * 对于ENUM，枚举字符映射为1个整数
     * 对于SET，枚举字符映射为1个bit
-* 对于ENUM，存储、计算、索引时使用数字，显示时使用映射的字符。
+* 对于ENUM，存储、计算、比较、索引时使用数字，显示时使用映射的字符。
 特别注意排序时也是按数字大小来，所以最好映射的字符顺序与数字顺序相对应
 
-| 类型 | 说明                       |
-|------|----------------------------|
-| ENUM | 数字与字符串间的双射       |
-| SET  | 给每一位取个可读性高的名称 |
+| 类型 | 说明                                       |
+|------|--------------------------------------------|
+| ENUM | 数字与字符串间的双射，尽量使用整数代替枚举 |
+| SET  | 给每一位取个可读性高的名称                 |
 
 
 ## 类型约束
@@ -260,7 +266,7 @@ SET fd_name=value, ...
         * `[NOT] LIKE   'pattern'`          ：支持通配符`_`和`%`，匹配完整字符串
         * `[NOT] REGEXP 'pattern'`          ：转义序列使用类似`\\.`，匹配子串
         * `[NOT] IN     (val, ...)`
-        * `[NOT] EXISTS (val, ...)`
+        * `[NOT] EXISTS (SELECT 语句)`      ：判断子查询是否检索出数据
         * `<OP> ALL     (val, ...)`         ：列表中所有行都符合`<OP>`
         * `<OP> ANY     (val, ...)`         ：列表中有一行符合`<OP>`
 <!-- entry end -->
@@ -371,6 +377,51 @@ FROM ...
 WHERE MATCH(fulltext) AGAINST('word1 word2' [WITH QUERY EXPANSION | IN BOOLEAN MODE])
 ```
 
+# 视图
+```sql
+CREATE VIEW view_name AS SELECT 语句;
+DROP   VIEW view_name;
+SHOW CREATE VIEW view_name;
+```
+
+# 分区
+```sql
+CREATE TABLE ( ... )
+    [PARTITION BY RANGE (expr) (PARTITION part_name VALUES LESS THAN (val|MAXVALUE), ...)]  -- 仅支持单列的整数比较
+    [PARTITION BY RANGE COLUMNS (fd_name,...) (PARTITION part_name VALUES LESS THAN (val|MAXVALUE), ...)]   -- 支持多列多类型比较，但不支持表达式
+    [PARTITION BY LIST  (expr) (PARTITION part_name VALUES IN (val,...), ...)]              -- 仅只支持单列的整数比较
+    [PARTITION BY LIST  COLUMNS (fd_name,...) (PARTITION part_name VALUES IN (val,...), ...)]               -- 支持多类型比较，但不支持表达式
+    [PARTITION BY HASH  (expr) PARTITIONS size]
+    ;
+ALTER TABLE tbl_name ADD  PARTITION (PARTITION part_name VALUES ...)
+ALTER TABLE tbl_name DROP PARTITION part_name;
+ALTER TABLE tbl_name REORGANIZE PARTITION part_name,... into(
+    PARTITION part_name VALUES ...);
+SELECT ... FROM tbl_name PARTITION (part_name);
+```
+
+# 事务
+```sql
+BEGIN;                                  -- 开启事务
+...
+SAVEPOINT point;                        -- 设置保存点
+...
+RELEASE SAVEPOINT point;                -- 删除保存点
+...
+ROLLBACK TO point;                      -- 撤销至保存点
+...
+COMMIT 或 ROLLBACK ;                    -- 提交事务 或 撤销此次事务
+```
+
+# 触发器
+```sql
+CREATE TRIGGER trigger_name BEFORE|AFTER INSERT|DELETE|UPDATE ON tbl_name
+    FOR EACH ROW [statement; |
+    BEGIN
+        statement;
+    END;]
+DROP TRIGGER trigger_name [tbl_name.]trigger_name;
+```
 # 编程
 ```sql
 -- 存储过程
@@ -399,32 +450,3 @@ ELSE
 END;
 ```
 
-# 视图
-```sql
-CREATE VIEW view_name AS SELECT 语句;
-DROP   VIEW view_name;
-SHOW CREATE VIEW view_name;
-```
-
-# 事务
-```sql
-BEGIN;                                  -- 开启事务
-...
-SAVEPOINT point;                        -- 设置保存点
-...
-RELEASE SAVEPOINT point;                -- 删除保存点
-...
-ROLLBACK TO point;                      -- 撤销至保存点
-...
-COMMIT 或 ROLLBACK ;                    -- 提交事务 或 撤销此次事务
-```
-
-# 触发器
-```sql
-CREATE TRIGGER trigger_name BEFORE|AFTER INSERT|DELETE|UPDATE ON tbl_name
-    FOR EACH ROW [statement; |
-    BEGIN
-        statement;
-    END;]
-DROP TRIGGER trigger_name [tbl_name.]trigger_name;
-```
