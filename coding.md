@@ -180,10 +180,9 @@ void quick_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
     for ( ; ; ) {
         for ( ; comp(*++left, pivot); );     // 尾部元素为中指，不会越界
         for ( ; comp(pivot, *--right); );    // 首位元素为小值，不会越界
-        if ( left < right )
-            swap(*left, *right);
-        else
+        if ( left >= right )
             break;
+        swap(*left, *right);
     }
 // 递归调用
     quick_sort(begin, left);
@@ -197,7 +196,7 @@ void quick_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
 template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
 void percolate_down(RandomIter begin, RandomIter end, RandomIter root, Compare comp=Compare{})
 {
-    for ( RandomIter child{}; (child = begin + (root - begin) * 2 + 1) < end; ) { // 父节点下标 = (child + 1) / 2 - 1
+    for ( RandomIter child{}; (child = begin + (root - begin) * 2 + 1) < end; ) { // 子节点下标 = root * 2 - 1
         if ( child + 1 < end && comp*(*root, child + 1) )
             ++child;
         if ( comp(*root, *child) ) {
@@ -213,7 +212,7 @@ template<typename RandomIter, typename Compare=less<typename RandomIter::value_t
 void heap_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
 {
 // 建堆
-    for ( auto pos = begin + (end - begin) / 2 - 1; pos >= begin; --pos ) {  // 子节点下标 = root * 2 - 1
+    for ( auto pos = begin + (end - begin) / 2 - 1; pos >= begin; --pos ) { // 父节点下标 = (child + 1) / 2 - 1
         percolate_down(begin, end, pos, comp);
     }
 // 堆排
@@ -231,6 +230,7 @@ void merge_sort(RandomIter begin, RandomIter end, RandomIter tmpBegin, RandomIte
 {
     if ( end - begin < 2 )
         return;
+
     auto mid = begin + (end - begin) / 2;
     auto tmpMid = tmpBegin + (tmpEnd - tmpBegin) / 2;
     merge_sort(begin, mid, tmpBegin, tmpMid);
@@ -243,12 +243,10 @@ void merge_sort(RandomIter begin, RandomIter end, RandomIter tmpBegin, RandomIte
             *tmpTail++ = *right++;
         }
     }
-    for ( ; left < mid; ) {
+    for ( ; left < mid; )
         *tmpTail++ = *left++;
-    }
-    for ( ; right < end; ) {
+    for ( ; right < end; )
         *tmpTail++ = *right++;
-    }
     copy(tmpBegin, tmpEnd, begin);
 }
 
@@ -268,7 +266,7 @@ void merge_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
 
 ## 回溯算法
 **关键字**：路径搜索、路径染色、回溯算法  
-**细节**：注意剪枝大法；注意返回前是否需要清除染色或弹出路径节点：每次都弹，全都不弹，成功则不弹
+**细节**：注意剪枝；注意返回前是否需要清除染色或弹出路径节点：每次都弹，全都不弹，成功则不弹
 
 
 ## 动态规划
