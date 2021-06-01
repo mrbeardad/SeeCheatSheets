@@ -77,7 +77,7 @@ cmake --install .
     > 用于组建微服务架构
 
 # 数据库
-* [SQL语句](sql.md)
+* [SQL语句](sql.md):star:
     > 关系型数据库查询语句
 * [数据库原理](innodb.md)
     > MySQL的设计架构，包括索引与事务原理

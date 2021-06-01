@@ -38,9 +38,9 @@
     - [终端](#终端)
   - [高级I/O](#高级io)
     - [非阻塞I/O](#非阻塞io)
-    - [记录锁](#记录锁)
-    - [I/O多路复用](#io多路复用)
     - [异步I/O](#异步io)
+    - [I/O多路复用](#io多路复用)
+    - [记录锁](#记录锁)
     - [分段I/O](#分段io)
     - [内存映射](#内存映射)
 
@@ -1286,13 +1286,55 @@ pid_t   forkpty(int* master, char* name, const termios* termp, const winsize* wi
 * 对于硬盘文件无效，因为对硬盘的读写并非低速I/O
 * 对于管道、套接字、终端有效
 
-### 记录锁
-[见fcntl](#普通文件)
-* 记录锁即进程间读写同步锁，与PID关联
-* 关闭文件描述符时即会释放对应文件的记录锁，不管该文件描述符是否还有其他副本
-* 记录锁不会阻塞本进程获取锁，转而直接替换锁
-* 建议性锁需要调用记录锁接口才有用，强制性锁对所有进程强制限制读写（需要`mount -o mand`）
+### 异步I/O
+<!-- aiocb sigevent  aio_read aio_write aio_fsync aio_error aio_return aio_cancel aio_suspend aio_listio  -->
+| 限制               | 描述                                |
+|--------------------|-------------------------------------|
+| AIO_LISTIO_MAX     | 单个列表I/O调用中最大操作数         |
+| AIO_MAX            | 未完成的异步I/O操作的最大数目       |
+| AIO_PRIO_DELTA_MAX | 进程可减少的其异步I/O优先级的最大值 |
+```c
+#include <aio.h>
+struct aiocb {
+    int         aio_fildes;     // 文件描述符
+    off_t       aio_offset;     // 文件偏移量。若oflag设置了O_APPEND则忽略该字段
+    void*       aio_buf;        // 缓冲区在异步I/O完成前始终合法且不能不用
+    size_t      aio_nbytes;     // 读写长度
+    int         aio_reqprio;
+    sigevent    aio_sigevent;
+    int         aio_lio_opcode; // LIO_READ、LIO_WRITE、LIO_NOP
+};
+struct sigevent {
+    int             sigev_notify;   // SIGEV_NONE、SIGEV_SIGNAL、SIGEV_THREAD
+    int             sigev_signo;    // 指定异步I/O完成后的通知信号
+    union sigval    sigev_value;
+    void            (*sigev_notify_function)(union sigval);
+    pthread_attr_t* sigev_notify_attributes;
+};
+// SIGEV_NONE表示请求完成后不通知进程
+// SIGEV_SIGNAL表示请求完成后用sigev_signo指代的信号通知，并将sigev_value写入siginfo_t（若支持的话）
+// SIGEV_THREAD表示请求完成后在单独的detach线程中调用`sigev_notify_function(sigev_value)`（除非sigev_notify_attributes指定了另一个线程）
+int     aio_read(aiocb* aiocb);             // 返回0
+int     aio_write(aiocb* aiocb);            // 返回0
+int     aio_fsync(int op, aiocb* aiocb);    // 返回0。op为O_SYNC或O_DSYNC
+int     aio_error(const aiocb* aiocb);      // 返回0表示异步操作成功，-1表示aio_error调用失败，EINPROGRESS表示仍在等待，其他表示异步操作返回错误码
+ssize_t aio_return(const aiocb* aiocb);     // 返回前3个函数调用成功时的返回值。返回值后释放资源，每个异步操作只能调用一次
+int     aio_cancel(int fd, aiocb* aiocb);   // 返回值见下。若aiocb为NULL则取消所有fd相关的异步操作，否则目标由aiocb指定。
+int     aio_suspend(const aiocb* const list[], int nent, const timespec* timeout);  // 全部完成返回0，超时、信号打断返回-1。阻塞等待所有异步操作完成。
+int     aio_listio(int mode, aiocb* const list[], int nent, sigevent* sigev);       // 成功返回0。sigev为额外另加的sigev，在全部操作完成后调用，可为NULL
+```
+| aio_cancel return | 解释                     |
+|-------------------|--------------------------|
+| AIO_ALLDONE       | 所有操作均已在尝试前完成 |
+| AIO_CANCELED      | 所有操作均已取消         |
+| AIO_NOTCANCELED   | 至少有一个未被取消       |
+| -1                | aio_cancel调用失败       |
 
+| aio_listio mode | 解释     |
+|-----------------|----------|
+| AIO_WAIT        | 同步调用 |
+| AIO_NOWAIT      | 异步调用 |
+<!-- entry end -->
 ### I/O多路复用
 <!-- entry begin: select pselect -->
 ```c
@@ -1385,55 +1427,14 @@ int epoll_pwait(
 | EPOLLONESHOT       | 只监听一次事件，当监听完这次事件之后，如果还需要继续监听这个socket的话，需要再次把这个socket加入到EPOLL队列里 |
 <!-- entry end -->
 
-### 异步I/O
-<!-- aiocb sigevent  aio_read aio_write aio_fsync aio_error aio_return aio_cancel aio_suspend aio_listio  -->
-| 限制               | 描述                                |
-|--------------------|-------------------------------------|
-| AIO_LISTIO_MAX     | 单个列表I/O调用中最大操作数         |
-| AIO_MAX            | 未完成的异步I/O操作的最大数目       |
-| AIO_PRIO_DELTA_MAX | 进程可减少的其异步I/O优先级的最大值 |
-```c
-#include <aio.h>
-struct aiocb {
-    int         aio_fildes;     // 文件描述符
-    off_t       aio_offset;     // 文件偏移量。若oflag设置了O_APPEND则忽略该字段
-    void*       aio_buf;        // 缓冲区在异步I/O完成前始终合法且不能不用
-    size_t      aio_nbytes;     // 读写长度
-    int         aio_reqprio;
-    sigevent    aio_sigevent;
-    int         aio_lio_opcode; // LIO_READ、LIO_WRITE、LIO_NOP
-};
-struct sigevent {
-    int             sigev_notify;   // SIGEV_NONE、SIGEV_SIGNAL、SIGEV_THREAD
-    int             sigev_signo;    // 指定异步I/O完成后的通知信号
-    union sigval    sigev_value;
-    void            (*sigev_notify_function)(union sigval);
-    pthread_attr_t* sigev_notify_attributes;
-};
-// SIGEV_NONE表示请求完成后不通知进程
-// SIGEV_SIGNAL表示请求完成后用sigev_signo指代的信号通知，并将sigev_value写入siginfo_t（若支持的话）
-// SIGEV_THREAD表示请求完成后在单独的detach线程中调用`sigev_notify_function(sigev_value)`（除非sigev_notify_attributes指定了另一个线程）
-int     aio_read(aiocb* aiocb);             // 返回0
-int     aio_write(aiocb* aiocb);            // 返回0
-int     aio_fsync(int op, aiocb* aiocb);    // 返回0。op为O_SYNC或O_DSYNC
-int     aio_error(const aiocb* aiocb);      // 返回0表示异步操作成功，-1表示aio_error调用失败，EINPROGRESS表示仍在等待，其他表示异步操作返回错误码
-ssize_t aio_return(const aiocb* aiocb);     // 返回前3个函数调用成功时的返回值。返回值后释放资源，每个异步操作只能调用一次
-int     aio_cancel(int fd, aiocb* aiocb);   // 返回值见下。若aiocb为NULL则取消所有fd相关的异步操作，否则目标由aiocb指定。
-int     aio_suspend(const aiocb* const list[], int nent, const timespec* timeout);  // 全部完成返回0，超时、信号打断返回-1。阻塞等待所有异步操作完成。
-int     aio_listio(int mode, aiocb* const list[], int nent, sigevent* sigev);       // 成功返回0。sigev为额外另加的sigev，在全部操作完成后调用，可为NULL
-```
-| aio_cancel return | 解释                     |
-|-------------------|--------------------------|
-| AIO_ALLDONE       | 所有操作均已在尝试前完成 |
-| AIO_CANCELED      | 所有操作均已取消         |
-| AIO_NOTCANCELED   | 至少有一个未被取消       |
-| -1                | aio_cancel调用失败       |
 
-| aio_listio mode | 解释     |
-|-----------------|----------|
-| AIO_WAIT        | 同步调用 |
-| AIO_NOWAIT      | 异步调用 |
-<!-- entry end -->
+### 记录锁
+[见fcntl](#普通文件)
+* 记录锁即进程间读写同步锁，与PID关联
+* 关闭文件描述符时即会释放对应文件的记录锁，不管该文件描述符是否还有其他副本
+* 记录锁不会阻塞本进程获取锁，转而直接替换锁
+* 建议性锁需要调用记录锁接口才有用，强制性锁对所有进程强制限制读写（需要`mount -o mand`）
+
 ### 分段I/O
 <!-- entry begin: readv writev iovec -->
 | 限制宏  | 说明                |

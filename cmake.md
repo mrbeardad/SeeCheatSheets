@@ -1,3 +1,26 @@
+# 系统构建
+* 模块
+    * 一系列类、函数的集合，一个头文件（接口）和一个实现文件（实现）
+    * 模块名即文件名
+* 库
+    * 一系列模块的集合，文件系统中表现为一系列头文件和一个静态/动态库
+* 程序入口
+    * 包含`main`函数的一个实现文件，该`main`函数即程序入口，而该文件则集成各模块功能实现业务程序
+```txt
+src/
+    main.cpp~
+    modA.cpp
+    modB.cpp
+    submod1.cpp
+    submod2.cpp
+include/
+    modA.hpp
+    modB.hpp
+    detail/ # 封装
+        submod1.hpp
+        submod2.hpp
+```
+
 # cmake命令
 <!-- entry begin: cmake -->
 ```sh

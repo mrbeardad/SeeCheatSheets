@@ -286,7 +286,7 @@ SpaceVim在2018年立项，我也在立项不久就接触SpaceVim。
     * 根节点为黑色
     * 红色节点的子节点必须是黑色
     * 从一个节点到一个null指针的每一条路径必须包含相同数目的黑色节点
-    * 特点：红黑树的高度最多是2log(N+1)，相对AVL树是在树的高度平衡与增删操作性能之间的折衷
+    * 特点：红黑树的高度最多是2*log(N+1)，相对AVL树是在树的高度平衡与增删操作性能之间的折衷
 * B+树
     * M叉搜索树
     * 除了根外，所有非叶节点的儿子数在M/2与M之间，防止M叉树退化
@@ -310,15 +310,16 @@ SpaceVim在2018年立项，我也在立项不久就接触SpaceVim。
         * 双散列：性能开销较大
 
 * 无锁队列
-    > 并发问题的核心：一个线程读/写一个可能同时会被其他线程修改的共享数据时，会产生竞争问题
-    * 链表结构：保持head为上次被删除的节点（哑节点）
+    > 并发问题的核心：一个线程读/写一个可能同时会被其他线程修改的共享数据时，会产生竞争条件。
+    * 本质：我还专门去看过无锁队列的那篇论文，这个无锁队列算法利用CAS原子操作来实现“乐观锁”，从而让线程无阻塞的运行
+    * 链表结构：维护head指向上次被删除的节点（哑节点），维护tail指向队列最后一个节点，前开后闭区间，如此可表示空集
     * enqueue操作的核心原子操作：`CAS(tail->next, NULL, new_tail)`和`CAS(tail, read_tail, new_tail)`
     * dequeue操作的核心原子操作：`CAS(head, read_head, read_head->next)`
     * dequeue操作的ABA问题解决：
         > 问题描述：head可能在CAS之前被修改多次，但因内存重用而致最后一次修改时将head重新改回了read_head，
         > 导致当前线程误以为head与read_head有效匹配
         * Double-CAS(指针，计数器)
-        * 引用计数，当没有线程持有read_head时才能销毁对应节点
+        * 引用计数，当没有线程持有read_head时才能销毁对应节点（避免内存重用）
         * 使用循环数组
 ```cpp
 void push(T val) {
@@ -326,30 +327,31 @@ void push(T val) {
     newTail->val_ = val;
     newTail->next_ = nullptr;
 #ifdef V1
+    while ( tail_->next_->compare_exchange_week(nullptr, newTail) );
+    tail_->exchange(newTail); // 缺点：如果此处更新失败会导致其他所有线程永久阻塞
+#elif V2
     for ( ; ; ) {
+        // 每次循环读取新的tail_
         Node* readTail = tail_;
         // 尝试更新tail_->next抢占enqueue权
-        if ( readTail->next_->compare_exchange_weak(nullptr, newTail) ) {
-            // 若抢占失败，则帮助占用者更新tail_
-            tail_->compare_exchange_weak(readTail, newTail);
+        if ( !readTail->next_->compare_exchange_week(nullptr, newTail) ) {
+            // 若抢占失败，则占用者可能处于中间态，尝试帮助其更新tail_
+            tail_->compare_exchange_week(readTail, readTail->next_);
         } else {
             // 若抢占成功，则此时处于中间态，接下来更新tail_
-            tail_->compare_exchange_strong(readTail, newTail); // 缺点：可能导致无效竞争
+            tail_->compare_exchange_week(readTail, newTail); // 缺点：后两个CAS操作可能导致无效竞争
             break;
         }
     }
-#elif V2
+#elif V3
     Node* readTail = tail_;
     Node* oldTail = readTail;
     do {
         // 把readTail看作是接近真正tail的一个节点，尝试移动至真正tail
-        while ( readTail->next_ ) // 缺点：遍历开销可能较大
+        while ( readTail->next_ ) // 缺点：遍历开销可能较大，p个并发量则最大需前进2p-1步
             readTail = readTail->next_;
     } while ( readTail->next_->compare_exchange_weak(nullptr, newTail) )
     tail_->compare_exchange_strong(oldTail, newTail);
-#elif V3
-    while ( tail_->next_->compare_exchange_weak(nullptr, newTail) );
-    tail_->exchange(newTail); // 缺点：如果此处更新失败会导致其他所有线程永久阻塞
 #endif
 }
 ```
@@ -487,12 +489,14 @@ void push(T val) {
 
 * 进程间通讯
     * 管道(pipe)
-        * 半双工通讯
-        * 只能在有亲缘关系的进程间使用，因为只能通过fork子进程来继承文件描述符
+        * 用于单向通讯
+        * 只能在有亲缘关系的进程间使用，因为pipe读写端的文件描述符只能通过fork子进程继承来传递
         * 缓冲区大小有限
-        * 应用程序一般默认全缓冲，若缓冲区未满且未读到EOF则会一直阻塞
+        * 应用程序stdin一般默认全缓冲，进程会循环阻塞直到缓冲区读满或者触发EOF，
+            如果管道用于双向通讯，很可能造成缓冲区未满而另一边又试图读取输出而非触发EOF，造成双方循环等待的死锁局面。
+            一般这种情况用伪终端来通讯，因为stdin对于终端都是行缓冲。
     * 套接字(socket)
-        * 全双工连接
+        * 用于双向通讯
         * 可以在任一两进程间使用，甚至两进程不必在同一系统上
         * 需要对传输的数据进行解析
     * D-Bus
@@ -502,14 +506,6 @@ void push(T val) {
     * 信号量
     * 信号
 
-* 多线程与多进程
-    * 创建、销毁、切换的开销，进程要大一点
-    * 同进程的线程间共享虚拟地址空间，通讯更方便，也更容易出错
-    * 一个线程挂掉可能导致整个进程挂掉
-        * 主线程退出
-        * 某线程调用exit函数
-        * 某线程接受信号而终止进程
-
 * 死锁必要条件
     > 简而言之，两线程互相请求对方已持有的互斥锁，导致两线程均阻塞等待对方解锁。
     > 可以通过以相同顺序加锁解决（破坏循环等待条件）
@@ -517,6 +513,42 @@ void push(T val) {
     * 不可抢占条件
     * 请求和保持条件
     * 循环等待条件
+
+* 多线程与多进程
+    * 进程的创建、销毁、切换的开销较大
+    * 同进程的线程间共享虚拟地址空间，通讯更方便，也更容易出错
+    * 一个线程挂掉可能导致整个进程挂掉
+        * 主线程退出
+        * 某线程调用exit函数
+        * 某线程接受信号而终止进程
+
+* （无栈）协程
+    * 两个栈帧
+        * 一个是分配在栈上的普通栈帧，存储返回地址、声明周期仅限于该线程片段的变量等，虽协程的恢复与暂停而产生和销毁
+        * 一个是分配在堆上的共享栈帧，存储协程句柄、伴随协程整个声明周期的变量等，在协程创建时产生，协程返回时销毁
+    * 协程的切换完全在用户态进行
+    * 利用协程编写异步事件驱动状态机，取代回调函数，可极大简化编程
+    * 一个线程可创建多个协程，即多个协程占用一个线程的控制流，无法并发来充分利用CPU，适用于IO密集型应用
+
+* ASIO的Proactor模型
+    > 利用gdb调试追踪调用栈，观察源码，可简化为两个组件
+    * 引发器(Initiator)
+        > 如socket
+        1. 启动异步操作，如低速IO、计时器等等，利用系统调用或多线程实现异步，保证快速完成返回
+        2. 注册该异步事件及其对应的回调函数
+    * 前摄器(Proactor)
+        > 如io_context
+        * 如果完成事件队列中存在任务则取出（线程安全）
+            1. 执行其回调函数
+            2. 若底层为Reactor模式实现，可能需要执行额外的流程（如读取执行数目的数据）
+            3. 回调函数作为Initiator再次启动异步操作、注册异步事件（进入下一个状态）
+        * 如果完成事件队列中无任务则阻塞
+            1. 利用操作系统接口（如epoll）实现多路复用阻塞监听
+            2. 当异步操作完成时，会触发监听事件，唤醒线程进入下一次循环（此时队列非空）
+    * 服务器一般存在3类状态机
+        * 连接状态机，负责与客户端通讯
+        * 监听状态机，负责与客户端建立连接状态机
+        * 多路复用状态机，负责运转其它状态机
 
 ## 网络
 * 三次握手的原理
