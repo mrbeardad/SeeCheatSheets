@@ -2,13 +2,13 @@
 #define MRBEARDAD_SEE_NORMAL_HPP
 
 
-#include "see.hpp"
-
-namespace see
-{
+#include "mkdblock.hpp"
 
 
-class NormalBlk : public see::MkdBlock
+namespace see {
+
+
+class NormalBlk : public MkdBlock
 {
     static NormalBlk Instance_;
 

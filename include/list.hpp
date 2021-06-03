@@ -2,10 +2,13 @@
 #define MRBEARDAD_SEE_LIST_HPP
 
 
-#include "see.hpp"
+#include "mkdblock.hpp"
 
 
-class ListBlk : public see::MkdBlock
+namespace see {
+
+
+class ListBlk : public MkdBlock
 {
     static ListBlk Instance_;
 
@@ -16,6 +19,9 @@ public:
     std::string& highlight(std::string& text) override;
 };
 inline ListBlk ListBlk::Instance_{};
+
+
+} // namespace see
 
 
 #endif // MRBEARDAD_SEE_LIST_HPP

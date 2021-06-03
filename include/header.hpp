@@ -2,14 +2,13 @@
 #define MRBEARDAD_SEE_HEADER_HPP
 
 
-#include "see.hpp"
+#include "mkdblock.hpp"
 
 
-namespace see
-{
+namespace see {
 
 
-class HeaderBlk : public see::MkdBlock
+class HeaderBlk : public MkdBlock
 {
     static HeaderBlk Instance_;
 

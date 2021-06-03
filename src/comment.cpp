@@ -1,6 +1,9 @@
 #include "comment.hpp"
 
 
+namespace see {
+
+
 CommentBlk::CommentBlk()
     : MkdBlock{"comment"} {  }
 
@@ -25,3 +28,6 @@ std::string& CommentBlk::highlight(std::string& text)
     text.clear();
     return text;
 }
+
+
+} // namespace see

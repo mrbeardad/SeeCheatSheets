@@ -2,10 +2,13 @@
 #define MRBEARDAD_SEE_COMMENT_HPP
 
 
-#include "see.hpp"
+#include "mkdblock.hpp"
 
 
-class CommentBlk : public see::MkdBlock
+namespace see {
+
+
+class CommentBlk : public MkdBlock
 {
     static CommentBlk Instance_;
 
@@ -16,6 +19,9 @@ public:
     std::string& highlight(std::string& text) override;
 };
 inline CommentBlk CommentBlk::Instance_{};
+
+
+} // namespace see
 
 
 #endif // MRBEARDAD_SEE_COMMENT_HPP

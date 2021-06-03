@@ -3,10 +3,12 @@
 
 
 #include "normal.hpp"
-#include "see.hpp"
 
 
-class TableBlk : public see::MkdBlock
+namespace see {
+
+
+class TableBlk : public MkdBlock
 {
     static TableBlk Instance_;
 
@@ -17,6 +19,9 @@ public:
     std::string& highlight(std::string& text) override;
 };
 inline TableBlk TableBlk::Instance_{};
+
+
+} // namespace see
 
 
 #endif // !defined(MRBEARDAD_SEE_TABLE_HPP)

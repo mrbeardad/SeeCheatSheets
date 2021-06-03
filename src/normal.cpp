@@ -2,13 +2,17 @@
 #include <string.h>
 
 #include "normal.hpp"
+#include "see.hpp"
 
 
-see::NormalBlk::NormalBlk()
-    : see::MkdBlock{"normal"} {  }
+namespace see {
 
 
-bool see::NormalBlk::matchBegin(const std::string& oneline)
+NormalBlk::NormalBlk()
+    : MkdBlock{"normal"} {  }
+
+
+bool NormalBlk::matchBegin(const std::string& oneline)
 {
     auto [begin, end] = mediator_.getAllBlocks();
     for( ; begin != end; ++begin ) {
@@ -20,19 +24,19 @@ bool see::NormalBlk::matchBegin(const std::string& oneline)
 }
 
 
-bool see::NormalBlk::matchEnd(const std::string&)
+bool NormalBlk::matchEnd(const std::string&)
 {
     return true;
 }
 
 
-std::string& see::NormalBlk::highlight(std::string& text)
+std::string& NormalBlk::highlight(std::string& text)
 {
     return highlight(text, "\e[m");
 }
 
 
-std::string& see::NormalBlk::highlight(std::string& text, const std::string& bgColor)
+std::string& NormalBlk::highlight(std::string& text, const std::string& bgColor)
 {
     std::vector<std::string> colorStack{bgColor};
     enum class Empha {NONE, ITL, BOLD, IBOLD, DEL, UND, KBD, CODE, CODE2, CMT, LINK, LINK2};
@@ -235,3 +239,4 @@ std::string& see::NormalBlk::highlight(std::string& text, const std::string& bgC
 }
 
 
+} // namespace see

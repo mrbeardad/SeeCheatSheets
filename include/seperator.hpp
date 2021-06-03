@@ -2,10 +2,13 @@
 #define MRBEARDAD_SEE_SEPERATOR_HPP
 
 
-#include "see.hpp"
+#include "mkdblock.hpp"
 
 
-class SeperatorBlk : public see::MkdBlock
+namespace see {
+
+
+class SeperatorBlk : public MkdBlock
 {
     static SeperatorBlk Instance_;
 
@@ -16,6 +19,9 @@ public:
     std::string& highlight(std::string& text) override;
 };
 inline SeperatorBlk SeperatorBlk::Instance_{};
+
+
+} // namespace see
 
 
 #endif // MRBEARDAD_SEE_SEPERATOR_HPP

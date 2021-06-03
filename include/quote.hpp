@@ -1,10 +1,14 @@
 #ifndef MRBEARDAD_SEE_QUOTE_HPP
 #define MRBEARDAD_SEE_QUOTE_HPP
 
-#include "normal.hpp"
-#include "see.hpp"
 
-class QuoteBlk : public see::MkdBlock
+#include "normal.hpp"
+
+
+namespace see {
+
+
+class QuoteBlk : public MkdBlock
 {
     static QuoteBlk Instance_;
 
@@ -15,6 +19,9 @@ public:
     std::string& highlight(std::string& text) override;
 };
 inline QuoteBlk QuoteBlk::Instance_{};
+
+
+} // namespace see
 
 
 #endif // MRBEARDAD_SEE_QUOTE_HPP

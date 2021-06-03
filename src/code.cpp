@@ -1,9 +1,13 @@
 #include <regex>
 
+#include "mine.hpp"
 #include "srchilite/sourcehighlight.h"
 #include "unicode/display_width.hpp"
 
 #include "code.hpp"
+
+
+namespace see {
 
 
 CodeBlk::CodeBlk()
@@ -92,3 +96,6 @@ std::string& CodeBlk::highlight(std::string& text)
 
     return text;
 }
+
+
+} // namespace see

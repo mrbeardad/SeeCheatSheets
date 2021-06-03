@@ -2,10 +2,13 @@
 #define MRBEARDAD_SEE_CODE_HPP
 
 
-#include "see.hpp"
+#include "mkdblock.hpp"
 
 
-class CodeBlk : public see::MkdBlock
+namespace see {
+
+
+class CodeBlk : public MkdBlock
 {
     bool matchedEnd_;
 
@@ -18,6 +21,9 @@ public:
     std::string& highlight(std::string& text) override;
 };
 inline CodeBlk CodeBlk::Instance_{};
+
+
+} // namespace see
 
 
 #endif // MRBEARDAD_SEE_CODE_HPP

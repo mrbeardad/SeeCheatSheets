@@ -4,12 +4,13 @@
  * License: GPLv3
  * Author: Heachen Bear <mrbeardad@qq.com>
  * Date: 09.02.2021
- * Last Modified Date: 09.05.2021
+ * Last Modified Date: 03.06.2021
  * Last Modified By: Heachen Bear <mrbeardad@qq.com>
  */
 
 #ifndef MRBEARDAD_SEE_HPP
 #define MRBEARDAD_SEE_HPP
+
 
 #include <sys/ioctl.h>
 
@@ -20,25 +21,13 @@
 #include <vector>
 
 #include "mine.hpp"
+#include "mkdblock.hpp"
 
 
-namespace see
-{
+namespace see {
+
 
 class MkdHighlight;
-
-// interface of markdown block highlight
-struct MkdBlock
-{
-    MkdHighlight& mediator_;
-
-    virtual ~MkdBlock();
-    explicit MkdBlock(const std::string& name);
-
-    virtual bool matchBegin(const std::string& oneline) =0;
-    virtual bool matchEnd(const std::string& oneline) =0;
-    virtual std::string& highlight(std::string& text) =0;
-};
 
 
 // Mediator Pattern: Mediator

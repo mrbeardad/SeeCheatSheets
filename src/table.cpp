@@ -1,6 +1,10 @@
 #include <regex>
 
+#include "see.hpp"
 #include "table.hpp"
+
+
+namespace see {
 
 
 static std::regex g_Table1st{R"(^\s*(\|.*)+\|)"};
@@ -9,7 +13,7 @@ static std::regex g_Table2nd{R"(^\s*(\|[: -]+)+\|)"};
 
 
 TableBlk::TableBlk()
-    : see::MkdBlock{"table"} {  }
+    : MkdBlock{"table"} {  }
 
 
 bool TableBlk::matchBegin(const std::string& oneline)
@@ -55,7 +59,7 @@ std::string& TableBlk::highlight(std::string& text)
             if ( *pos != '|' ) {
                 normal += *pos;
             } else {
-                text += see::MkdHighlight::Instance().getBlock("normal").highlight(normal) + "│";
+                text += MkdHighlight::Instance().getBlock("normal").highlight(normal) + "│";
                 normal.clear();
             }
         }
@@ -64,13 +68,16 @@ std::string& TableBlk::highlight(std::string& text)
         sstrm.ignore(512, '\n');
         // 复用之前的line2nd
         for ( int cnt{}; std::getline(sstrm, line2nd); ++cnt ) {
-            auto& normalBlk = see::MkdHighlight::Instance().getBlock("normal");
-            text += dynamic_cast<see::NormalBlk&>(normalBlk).highlight(line2nd,
+            auto& normalBlk = MkdHighlight::Instance().getBlock("normal");
+            text += dynamic_cast<NormalBlk&>(normalBlk).highlight(line2nd,
                     cnt % 2 ? "\033[38;5;240m\033[48;2;94;175;220m" : "\033[38;5;240m\033[48;2;128;128;255m")
                 + "\033[m\n";
         }
     } else {
-        see::MkdHighlight::Instance().getBlock("normal").highlight(text);
+        MkdHighlight::Instance().getBlock("normal").highlight(text);
     }
     return text;
 }
+
+
+} // namespace see

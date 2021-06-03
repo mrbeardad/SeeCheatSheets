@@ -1,22 +1,24 @@
-#include <codecvt>
-
 #include "unicode/display_width.hpp"
 
 #include "header.hpp"
 #include "normal.hpp"
+#include "see.hpp"
 
 
-see::HeaderBlk::HeaderBlk()
-    : see::MkdBlock{"header"} {  }
+namespace see {
 
 
-bool see::HeaderBlk::matchBegin(const std::string& oneline)
+HeaderBlk::HeaderBlk()
+    : MkdBlock{"header"} {  }
+
+
+bool HeaderBlk::matchBegin(const std::string& oneline)
 {
     return oneline.starts_with('#');
 }
 
 
-bool see::HeaderBlk::matchEnd(const std::string&)
+bool HeaderBlk::matchEnd(const std::string&)
 {
     return true;
 }
@@ -56,7 +58,7 @@ public:
 };
 
 
-std::string& see::HeaderBlk::highlight(std::string& text)
+std::string& HeaderBlk::highlight(std::string& text)
 {
     auto normal = text.substr(text.find_first_not_of("# "));
     normal.pop_back();  // 弹出换行符
@@ -85,7 +87,9 @@ std::string& see::HeaderBlk::highlight(std::string& text)
     auto* bgColor = "\e[34;42m";
     auto* fgColor = "\e[34m";
     return text << bgColor << hyphen << "\e[m" << fgColor << ' ' << hashs << ' '
-        <<  dynamic_cast<see::NormalBlk&>(mediator_.getBlock("normal")).highlight(normal, fgColor)
+        <<  dynamic_cast<NormalBlk&>(mediator_.getBlock("normal")).highlight(normal, fgColor)
         << ' ' << hashs << ' ' << bgColor << hyphen << "\e[m\n";
 }
 
+
+} // namespace see

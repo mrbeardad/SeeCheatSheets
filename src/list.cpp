@@ -1,4 +1,10 @@
+#include "mine.hpp"
+
 #include "list.hpp"
+#include "see.hpp"
+
+
+namespace see {
 
 
 ListBlk::ListBlk()
@@ -59,3 +65,6 @@ std::string& ListBlk::highlight(std::string& text)
     }
     return text;
 }
+
+
+} // namespace see

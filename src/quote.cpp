@@ -1,7 +1,14 @@
+#include "mine.hpp"
+
 #include "quote.hpp"
+#include "see.hpp"
+
+
+namespace see {
+
 
 QuoteBlk::QuoteBlk()
-    : see::MkdBlock{"quote"} {  }
+    : MkdBlock{"quote"} {  }
 
 
 bool QuoteBlk::matchBegin(const std::string& oneline)
@@ -24,7 +31,7 @@ bool QuoteBlk::matchEnd(const std::string& oneline)
 
 std::string& QuoteBlk::highlight(std::string& text)
 {
-    auto& normalBlk = dynamic_cast<see::NormalBlk&>(mediator_.getBlock("normal"));
+    auto& normalBlk = dynamic_cast<NormalBlk&>(mediator_.getBlock("normal"));
     auto origText = std::move(text);
     mine::Split getLine{origText, '\n', true};
 
@@ -45,3 +52,6 @@ std::string& QuoteBlk::highlight(std::string& text)
 
     return text;
 }
+
+
+} // namespace see

@@ -1,8 +1,12 @@
+#include "see.hpp"
 #include "seperator.hpp"
 
 
+namespace see {
+
+
 SeperatorBlk::SeperatorBlk()
-    : see::MkdBlock{"seperator"} {  }
+    : MkdBlock{"seperator"} {  }
 
 
 bool SeperatorBlk::matchBegin(const std::string& oneline)
@@ -34,3 +38,6 @@ std::string& SeperatorBlk::highlight(std::string& text)
     for ( int cnt{}; cnt < mediator_.getTtyCol() - 12; ++cnt ) hyphen += "─";
     return text = space + hyphen + space;
 }
+
+
+} // namespace see
