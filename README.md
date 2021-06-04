@@ -2,9 +2,10 @@
 <!-- vim-markdown-toc GFM -->
 
 - [安装](#安装)
-- [编程之道](#编程之道)
 - [C++](#c)
+- [Golang](#golang)
 - [Python](#python)
+- [编程之道](#编程之道)
 - [Linux](#linux)
 - [数据库](#数据库)
 - [网络](#网络)
@@ -36,6 +37,26 @@ cmake --install .
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")  
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
+# C++
+* [C++语法特性](cpp.md):star:
+    > 一份语法清单，适合有基础的同学
+* [C++程序库](cppman.md):star:
+    > C++标准库以及一些第三方库
+* [C++编程向导](cppguide.md):star:
+    > 编写高效健壮的C++代码
+* [C++编码风格](cppstyle.md)
+    > 对代码风格进行规范，拒绝选择困难症
+* [CMake构建系统](cmake.md)
+    > CMake系统构建工具语法
+
+# Golang
+* [Go语言基础](golang.md):star:
+    > 基础语法
+
+# Python
+* [Python基础](python.md):star:
+    > 基础语法与内置类型操作
+
 # 编程之道
 * [设计模式](dspt.md):star:
     > 应用框架系统的设计套路
@@ -45,22 +66,6 @@ cmake --install .
     > 基础数据结构与算法
 * [正则表达式](regex.md)
     > 目前包含的正则语法版本有egrep、Vim、C++
-
-# C++
-* [C++语法特性](cpp.md):star:
-    > 一份语法清单，适合有基础的同学
-* [C++程序库](cppman.md):star:
-    > C++标准库以及某些第三方库
-* [C++编程向导](cppguide.md):star:
-    > 编写高效健壮的C++代码
-* [C++编码风格](cppstyle.md)
-    > 对代码风格进行规范，拒绝选择困难症
-* [CMake构建系统](cmake.md)
-    > CMake系统构建工具语法
-
-# Python
-* [Python基础](python.md):star:
-    > 基础语法与内置类型操作
 
 # Linux
 * [Linux知识体系](linux.md):star:
