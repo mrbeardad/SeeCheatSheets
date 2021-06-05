@@ -50,7 +50,7 @@ cmake --install .
     > CMake系统构建工具语法
 
 # Golang
-* [Go语言基础](golang.md):star:
+* [Go语言基础](go.md):star:
     > 基础语法
 
 # Python

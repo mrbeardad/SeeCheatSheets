@@ -2,7 +2,7 @@
 <!-- vim-markdown-toc GFM -->
 
 - [C++ Style](#c-style)
-  - [名字](#名字)
+  - [命名](#命名)
   - [注释](#注释)
   - [顺序](#顺序)
   - [括号](#括号)
@@ -13,7 +13,7 @@
 # C++ Style
 风格部分参考自[HosseinYousefi/CompetitiveCPPManifesto](https://github.com/HosseinYousefi/CompetitiveCPPManifesto)
 
-## 名字
+## 命名
 | 内容                         | 规范                  | 举例                           |
 |------------------------------|-----------------------|--------------------------------|
 | 命名空间                     | 全部小写+下划线       | `example_name`                 |
@@ -31,10 +31,10 @@
 * 时间：`new`，`old`，`orig`，`before`，`after`，`cur`
 * 循环：`pos`，`idx`
 * 计数：`size`，`len`，`width`，`height`，`depth`，`num`，`nr`，`cnter`
-* 序数：`1st`，`2nd`，`3th`
+* 序数：`1st`，`2nd`，`3rd`，`last`
 * bool：`is`，`not`，`and`，`or`，`any`，`all`，`none`，`has`
 * 介词：`in`，`on`，`at`，`of`，`2`，`4`
-* 类型：`int`，`char`，`str`，`strm`，`ptr2`，`itr`
+* 类型：`int`，`char`，`str`，`strm`，`p`
 * 用途：`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`tag`
 
 
@@ -88,47 +88,30 @@ private:
 #   endif // NDEBUG
 #endif  // TEST
 ```
-* 命名空间内成员无需行首缩进
+* 命名空间内成员无需行首缩进，尾部加上注释`// namespace std`
+
 * 尖括号`<>`只与右边间隔空格，如`template<typename T>`
 * 嵌套模板参数的右括号`>`间隔空格，如`vector<vector<int> >`
 * 模板参数包`...`只与右边隔空格，如`<typename... T>`与`(T&&... args)`
 
-* 函数有关键字template、static、inline、constexpr应该分行写
-* 函数名与参数列表不间隔空格
-    ```cpp
-        template<typename T>
-        inline
-        int test_func(T&& t);
-    ```
-* operator与重载符号间不留空格，合在一起当作函数名并遵守上述规则
-    ```cpp
-        int operator()(int i);
-        int operator""_s(unsigned long long i);
-        // 非重载符号的例外
-        operator bool();
-        operator new();
-    ```
+* 函数签名过长或有关键字template、static、inline、constexpr应该分行写，尽量让返回类型与参数列表同行
 * 函数默认实参的等号两边都不隔空格`void f(int i=1)`
-* 用4个`<space>`代替`<tab>`
-* 指针与引用声明中，`*`与`&`应该与类型放在一起，从而引用和指针应该单独声明，如`int& r; double* p;`
+
 * 控制流语句关键字与括号隔空格，控制流语句的括号需内部空格，如`if ( get_bool() )`
 * else(catch)跟在if(try)语句块末端花括号后面
-    ```cpp
-        if ( get_bool() ) {
-            //statement
-        } else {
-            //statement
-        }
-    ```
+* 标签与访问控制后面的冒号只与右边隔空格，其他冒号两边都隔空格
+* lambda函数体语句与控制流语句内容超过1句时应该分行
+
+* 变量声明一律进行初始化`T t{}`
+* 变量初始化，若有初始化器则`auto var = init`，否则使用`T var{args}`
+* 指针与引用声明中，`*`与`&`应该与类型放在一起，且应该单独声明，如`int& ref{val}; double* ptr{};`
+
 * 一元运算符只隔一边空格，二元两边空格，三元全隔，`*x`、`x + y`、`x < y ? x : y`
 * 逗号与分号只与右边隔空格，`func(a, b, c)` `for ( init; condition; iterate )` `return 0;`
-* 标签与访问控制后面的冒号只与右边隔空格，其他地方两边都隔空格
-* lambda函数体语句与控制流语句内容超过1句时应该分行
+
 * 若本该在一行的内容过长，要有节奏的断行。
 * 断行时二元运算符（除了逗号）断到次行开端。
-* 断行发生在括号中时，右括号单独一行
-* 函数体、类作用域、命名空间的头尾不留空行
-* 各作用域和功能模块之间一般需要隔空行（特别是准备初始条件的代码与正式操作的代码）
-* 各函数定义、类定义、命名空间之间隔两行
-* 文件末尾加一空行
 
+* 函数体、类作用域、命名空间的头尾不留空行
+* 各变量、函数、类、命名空间的声明/定义之间隔两行
+* 各作用域和功能模块之间一般需要隔空行并添加适当注释
