@@ -41,8 +41,8 @@ package internal        // 仅能在该模块中访问
 // 路径可以为URL，如"github.com/user/repo/pkgA"
 // 路径也可为系统路径，前缀为$GOROOT/src/或$GOPATH/src
 import "path/to/pkg"
-import .  "path/to/pkg" // 直接导入包中导出的实体，无需额外添加包限定符
 import as "path/to/pkg"
+import .  "path/to/pkg" // 直接导入包中导出的实体，无需额外添加包限定符
 import _  "path/to/pkg" // 指明不会使用该包中的实体，仅利用导入该包的副作用(init函数)
 import (
     "path/to/pkg1"
@@ -57,8 +57,44 @@ type Base interface { Method(T) RetT }
 type Class struct { Mem Type }
 func (self *Class) Method(arg T) RetT {  }
 ```
+
+
+# 函数
+* 函数也算一种数据类型
 * 关于作用域，golang中全局作用域中的实体顺序无关，即可在实体定义语句的前面使用实体
 * 局部作用域中的实体一般无法在其外访问，除非函数返回局部变量指针
+```go
+// 一般函数示例
+func f(arg1 T1, arg2 T2) RetT {
+    return RetT{arg1 + arg2}
+}
+
+// 形参类型简写 + 多返回类型
+func f(arg1, arg2 T) (RetT1, RetT2) {
+    return RetT1{arg1}, RetT2{arg2}
+}
+
+// 具名返回值
+func f(arg1 T1, arg2 T2) (x RetT1, y RetT2) {
+    x = RetT1{}
+    y = RetT2{}
+    return
+}
+
+// 闭包，可隐式引用捕获闭包外的局部变量，一定要注意其并发问题
+// 解决方法：1. 外覆函数包装启动goroutine 2. 利用传递值拷贝参数代替引用捕获
+func counter(i int) func() int {
+    return func() int {
+        i++
+        return i
+    }
+}
+
+// 包初始化器，在当前文件所有变量初始化以及导入包的初始化都完成后才调用该文件init函数
+func init() {
+    /*...*/
+}
+```
 
 
 # 变量
@@ -99,46 +135,6 @@ const (
 
 ```
 
-# 函数
-```go
-// 一般函数示例
-func f(arg1 T1, arg2 T2) RetT {
-    return RetT{arg1 + arg2}
-}
-
-// 形参类型简写 + 多返回类型
-func f(arg1, arg2 T) (RetT1, RetT2) {
-    return RetT1{arg1}, RetT2{arg2}
-}
-
-// 具名返回值
-func f(arg1 T1, arg2 T2) (x RetT1, y RetT2) {
-    x = RetT1{}
-    y = RetT2{}
-    return
-}
-
-// 闭包
-func fibonacci() func() int {
-    im1, i := 0, 1
-    return func() int {
-        ret := im1
-        ip1 := im1 + i
-        im1 = i
-        i = ip1
-        return ret
-    }
-}
-
-// 包初始化器，在当前文件所有变量初始化以及导入包的初始化都完成后才调用该文件init函数
-func init() {
-    /*...*/
-}
-```
-* 关于指针与值类型的参数
-    * 传递指针从而函数可修改传递的变量本身
-    * 传递值防止函数修改变量本身
-
 
 # 语句
 * **分支**
@@ -151,27 +147,22 @@ func init() {
 
     }
 
-// init; 可省略，golang中并未限制label为整形常量
+// golang中并未限制label为整形常量，但variable与label的类型必须相同
     switch init; variable {
-    case label1:
-        break       // 退出switch语句
+    case label1:    // 每条分支中的变量独立
+        break
     case label2, label3:
-        fallthrough // 继续执行下个标签块
+        fallthrough
     default:
-        /* 若无匹配项则执行该段 */
+        switch variable {
+            // case label从上到下求值
+        }
     }
 
 // 一种if-elseif-else的简洁写法
     switch {
     case cond1:
     case cond2:
-    default:
-    }
-
-// 类型选择
-    switch t := t.(type) {
-    case RealType:
-    case OtherIF:
     default:
     }
 ```
@@ -186,34 +177,43 @@ func init() {
         }
     }
 
-    for idx, val := range array {
-        for idx := range array {
-            for key, val := range mapped {
-                for key := range mapped {
-                    break
-                }
-            }
+// 支持字符串、数组、数组指针、切片、映射、信道
+    for idxOrKey, val := range container { // 注意range表达式会对值进行一次拷贝，对于字符串与数组本身为值语义致迭代数组与原数组不同
+        for idxOrKey := range container  {
+            break
         }
     }
 ```
 
+
 * 延迟调用
 ```go
-// defer将函数地址及其参数（当场捕获）“压栈”，延迟到当前函数返回时按出栈顺序调用
-defer call_last()
-defer call_3rd()
-defer call_2nd()
-defer call_1st()
+// defer将函数地址及其参数（当场捕获）压栈，延迟到当前函数“返回前”按出栈顺序调用
+    defer func () {
+        retErr = recover()  // 平复恐慌（捕获异常）
+        panic(interface{}{})// 触发恐慌（抛出异常）
+    }()
+    defer call3rd()
+    defer call2nd()
+    defer call1st()
 ```
 
-* 并发模型
+* 异步并发
+    * 默认用户层代码都运行在一个线程中
+    * 设置环境变量`GOMAXPROCS=NCPU`或在程序中调用函数`runtime.GOMAXPROCS(runtime.NumCPU())`修改
 ```go
-func AsyncFunc(i int) {
-    cnt := 0
-
-}
-func main() {
-    go AsyncFunc(args)
+// 利用无缓冲信道同步goroutines
+func seq() {
+    sem := make(chan struct{})
+    for i := 0; i < 10; i++ {
+        go func() {
+            <-sem               // 抢占
+            println(i)
+            sem <- struct{}{}   // 唤醒
+        }()
+    }
+    sem <- struct{}{}           // 启动
+    <-sem                       // 等待
 }
 ```
 
@@ -225,15 +225,14 @@ func main() {
 type double = float64
 
 // 定义新类型
-type Int     int    // 只能使用潜在类型的构造方式：字面值构造、结构体构造
-type Integer int    // 潜在类型相同的类型变量之间可相互转换；潜在类型可以传递但不能复合，即[]Int与[]Integer的潜在类型不同
-// 利用类型转换模拟构造
-var i = Int(1)
-
+type Int     int    // 继承潜在类型的构造方式
+type Integer int    // 潜在类型相同的类型变量之间可相互转换，类型转换关系可传递，潜在类型可以传递但不能复合
 type Class struct { // 结构体为值语义
     ExportMem T     // 导出包外
     inlineMem T     // 只能在包内访问
 }
+// 利用类型转换模拟构造
+var i = Int(1.0)
 // 构造结构体
 var (
     obj1 = Type{}               // 默认构造为全零值
@@ -242,94 +241,112 @@ var (
     pObj = &Type{}              // 直接返回指针
 )
 
-// 访问属性
-obj.ExportMem
-(&obj).ExportMem
-
-// 方法定义，只能为同一“包”中的“类”定义方法
-func (self *Class) MethodA(arg T) RetT { // 引用语义
-    self.inlineMem = arg
-    self.ExportMem = arg
-    return RetT{"A"}
-}
-func (self Class) MethodB(arg T) RetT { // 值语义
+// 方法定义，只能为同一“包”中的自定义类型定义方法
+func (self Class) MethodVal(arg T) RetT {   // 值方法，值类型的方法集仅包含其值方法
     self.inlineMem = arg
     self.ExportMem = arg
     return RetT{"B"}
 }
+func (this *Class) MethodPtr(arg T) RetT {  // 指针方法，指针类型的方法集包含值方法和指针方法
+    self.inlineMem = arg
+    self.ExportMem = arg
+    return RetT{"A"}
+}
 
-// 调用方法
-obj.MethodA()       // 引用语义
-(&obj).MethodB()    // 引用语义
-obj.MethodA()       // 值语义
-(&obj).MethodB()    // 值语义
+// 调用方法，指针与值方法的调用区别可被隐藏
+obj.MethodPtr()     // 引用语义
+(&obj).MethodPtr()  // 引用语义
+obj.MethodVal()     // 值语义
+(&obj).MethodVal()  // 值语义
 ```
 
 
-* **继承**（内嵌）
+* **复用**（内嵌）
 ```go
-// Reader与Writer俩接口必须具有不相交的方法集
-type ReadWriter interface {
+// 接口组合
+type Reader interface {
+    Read() string
+}
+type Writer interface {
+    Write(string)
+}
+type ReadWriter interface { // 注意方法的“冲突”与“覆盖”
     Reader
     Writer
 }
 
-// 继承Reader与Writer的方法
-type ReaderWriter struct {
-    *Reader // 或值语义 Reader
-    *Writer // 或值语义 Writer
+// 结构嵌套
+type R struct {}    // 实现了Reader接口
+type W struct {}    // 实现了Writer接口
+type RW struct {    // 匿名字段的方法集会被加入外部类型的方法集
+    W               // 例外：RW不包含*R的方法集。
+    *R
 }
 ```
 
 
-* **多态**（接口）
-> 底层实现猜测：当把某类型变量传递给接口变量时，传递变量指针和方法表指针
+* **动态绑定**（接口）
 ```go
-// 任何完整实现了接口定义的方法的类对象/对象指针均可赋值给接口对象
+// 任何完整实现了接口定义的方法的类对象均可赋值给接口对象
 type Base interface {
     Method1(T) RetT
     Method1(T) RetT
 }
-var i Base          // 零值为nil
-i = &DerivedPtr{}   // DerivedPtr至少存在一个接口方法实现为引用语义
-i = DerivedVal{}    // DerivedVal所有接口方法均实现为值语义
+var i Base          // 零值为nil。接口对象实际存储为iface数据结构，存储“类型信息”与“动态值”
+i = DerivedVal{}    // 值类型的方法集仅包含其值方法
+i = &DerivedPtr{}   // 指针类型的方法集包含值方法和指针方法
 
-// 类型断言，i仅能成功转换为其真实类型或某个符合的接口类型
+// 类型断言（运行时），i仅能成功转换为其真实类型或某个符合的接口类型
 i     = i.(T)       // 尝试将接口类型i转换为T类型，若失败则触发恐慌
 i, ok = i.(T)       // 尝试将接口类型i转换为T类型，若失败则t为零值且ok为false
 
 // 类型选择
-switch t := t.(type) {
+switch t := i.(type) {
 case RealType:
 case OtherIF:
 default:
 }
 ```
 
+* 综合
+    * 方法一般实现为指针方法
+    * 匿名内嵌一般使用值内嵌
+    * 赋值接口一般使用指针
+
 
 # 基础类型
 * 所有类型都有确定的初始状态——零值，如`false`、`0`、`""`、`nil`
-* 指针在golang中的用途仅限于：
-    * 实现引用语义避免拷贝
-    * 传引用参数使被调用者函数可修改“实参”
+* golang中指针的用途：
+    * 避免拷贝参数
+    * 修改参数原值
+    * 引用共享数据
 * golang支持的静态类型转换仅限于：
-    * 数值类型之间
+    * 数字类型之间
     * 整型、`[]byte`、`[]rune`转换为`string`
     * `string`转换为`[]byte`、`[]rune`
     * 潜在类型相同的类
 
-## 数值类型
+## 指针类型
 ```go
+uintptr
+*Type
+```
+
+## 数字类型
+```go
+// 整型与浮点型字面量的类型会由编译器根据上下文进行定义
 bool
 int8  int16  int32  int64  int  // 根据机器字长int32或int64
 uint8 uint16 uint32 uint64 uint // 根据机器字长uint32或uint64
-byte // int8
-rune // int32
 float32
 float64
-string
+```
 
-*T      // 指针
+## 字符类型
+```go
+byte
+rune
+string
 ```
 
 
@@ -337,6 +354,7 @@ string
 * 值语义的固定长度数组
 ```go
 var array [128]int              // 元素值初始化为零值
+
 array = [128]int{0, 1, /*...*/} // 数组字面值
 array = [...]int{0, 1, /*...*/} // 由编译器自动推断长度
 
@@ -349,10 +367,13 @@ s = array[:]
 
 ## 切片
 * 引用语义的动态数组
+* 子数组视图
+* 共享数组
 ```go
-var slice []int                 // 零值为nil，无底层数组
-slice = []int{0, 1, /*...*/}    // 切片字面值
+var slice []int                 // 零值为nil
+
 slice = make([]int, len[, cap]) // 构建动态长度切片
+slice = []int{0, 1, /*...*/}    // 切片字面值
 slice = array[:]                // 数组切片
 
 v = slice[idx]
@@ -361,15 +382,17 @@ s = slice[beg:]
 s = slice[:end]
 s = slice[:]
 
-append(slice, newElem)
+slice = append(slice, newElem)
 ```
 
 ## 映射
 * 引用语义的哈希表
 ```go
+// 键类型不能为函数、切片、字典，数组元素或结构字段也不能为这三种类型
 var mapped map[Key]Val          // 零值为nil，无key且不能添加key
-mapped = map[Key]Val{key1: val1, /*...*/}
+
 mapped = make(map[Key]Val)      // 空map，无key但可以添加key
+mapped = map[Key]Val{key1: val1, /*...*/}
 
 mapped[key] = val
 delete(mapped, key)
@@ -378,10 +401,31 @@ val, ok = mapped[key]
 ```
 
 ## 信道
+* 引用语义
 ```go
-var ch chan
-ch = make(chan[, bufsize])
+var ch chan Type                // 零值为nil，不可写入
+// 单向信道的作用时限制代码行为，双向信道可隐式转换为单向信道
+var wc chan<-Type               // 单向只写信道
+var rc <-chan Type              // 单向只读信道
 
-read = <-ch
+ch = make(chan Type[, bufsize])
+
+ch <- Type{}        // 无缓冲信道写入时若无读端则阻塞，缓冲信道写入时会在缓冲区满时阻塞
+read     := <-ch    // 若无数据可读则阻塞
+read, ok := <-ch    // ok判断信道是否关闭，若关闭则read为零值，ok为false
+close(ch)
+
+select {
+case v, ok := <-ch1:
+    if !ok {
+        ch1 = nil
+    }
+case v, ok := <-ch2:
+    if !ok {
+        ch2 = nil
+    }
+default:
+    // 如果所有信道均阻塞，则执行此处代码；若无default则阻塞当前goroutine直到某一信道准备就绪
+}
 ```
 

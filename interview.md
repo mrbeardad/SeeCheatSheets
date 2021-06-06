@@ -309,52 +309,6 @@ SpaceVim在2018年立项，我也在立项不久就接触SpaceVim。
             * 缺点：当表的大小为素数且表至少有一半是空的，则必定能插入一个新元素，否则很可能插入失败
         * 双散列：性能开销较大
 
-* 无锁队列
-    > 并发问题的核心：一个线程读/写一个可能同时会被其他线程修改的共享数据时，会产生竞争条件。
-    * 本质：我还专门去看过无锁队列的那篇论文，这个无锁队列算法利用CAS原子操作来实现“乐观锁”，从而让线程无阻塞的运行
-    * 链表结构：维护head指向上次被删除的节点（哑节点），维护tail指向队列最后一个节点，前开后闭区间，如此可表示空集
-    * enqueue操作的核心原子操作：`CAS(tail->next, NULL, new_tail)`和`CAS(tail, read_tail, new_tail)`
-    * dequeue操作的核心原子操作：`CAS(head, read_head, read_head->next)`
-    * dequeue操作的ABA问题解决：
-        > 问题描述：head可能在CAS之前被修改多次，但因内存重用而致最后一次修改时将head重新改回了read_head，
-        > 导致当前线程误以为head与read_head有效匹配
-        * Double-CAS(指针，计数器)
-        * 引用计数，当没有线程持有read_head时才能销毁对应节点（避免内存重用）
-        * 使用循环数组
-```cpp
-void push(T val) {
-    Node* newTail = new Node{};
-    newTail->val_ = val;
-    newTail->next_ = nullptr;
-#ifdef V1
-    while ( tail_->next_->compare_exchange_week(nullptr, newTail) );
-    tail_->exchange(newTail); // 缺点：如果此处更新失败会导致其他所有线程永久阻塞
-#elif V2
-    for ( ; ; ) {
-        // 每次循环读取新的tail_
-        Node* readTail = tail_;
-        // 尝试更新tail_->next抢占enqueue权
-        if ( !readTail->next_->compare_exchange_week(nullptr, newTail) ) {
-            // 若抢占失败，则占用者可能处于中间态，尝试帮助其更新tail_
-            tail_->compare_exchange_week(readTail, readTail->next_);
-        } else {
-            // 若抢占成功，则此时处于中间态，接下来更新tail_
-            tail_->compare_exchange_week(readTail, newTail); // 缺点：后两个CAS操作可能导致无效竞争
-            break;
-        }
-    }
-#elif V3
-    Node* readTail = tail_;
-    Node* oldTail = readTail;
-    do {
-        // 把readTail看作是接近真正tail的一个节点，尝试移动至真正tail
-        while ( readTail->next_ ) // 缺点：遍历开销可能较大，p个并发量则最大需前进2p-1步
-            readTail = readTail->next_;
-    } while ( readTail->next_->compare_exchange_weak(nullptr, newTail) )
-    tail_->compare_exchange_strong(oldTail, newTail);
-#endif
-}
-```
 
 ## 操作系统
 * 加法器
@@ -535,13 +489,12 @@ void push(T val) {
     * 引发器(Initiator)
         > 如socket
         1. 启动异步操作，如低速IO、计时器等等，利用系统调用或多线程实现异步，保证快速完成返回
-        2. 注册该异步事件及其对应的回调函数
+        2. 注册该异步事件（对应的文件描述符）及其对应的回调函数
     * 前摄器(Proactor)
         > 如io_context
         * 如果完成事件队列中存在任务则取出（线程安全）
             1. 执行其回调函数
-            2. 若底层为Reactor模式实现，可能需要执行额外的流程（如读取执行数目的数据）
-            3. 回调函数作为Initiator再次启动异步操作、注册异步事件（进入下一个状态）
+            2. 回调函数作为Initiator再次启动异步操作、注册异步事件（进入下一个状态）
         * 如果完成事件队列中无任务则阻塞
             1. 利用操作系统接口（如epoll）实现多路复用阻塞监听
             2. 当异步操作完成时，会触发监听事件，唤醒线程进入下一次循环（此时队列非空）
@@ -549,6 +502,53 @@ void push(T val) {
         * 连接状态机，负责与客户端通讯
         * 监听状态机，负责与客户端建立连接状态机
         * 多路复用状态机，负责运转其它状态机
+
+* 无锁队列
+    > 并发问题的核心：一个线程读/写一个可能同时会被其他线程修改的共享数据时，会产生竞争条件。
+    * 本质：我还专门去看过无锁队列的那篇论文，这个无锁队列算法利用CAS原子操作来实现“乐观锁”，从而让线程无阻塞的运行
+    * 链表结构：维护head指向上次被删除的节点（哑节点），维护tail指向队列最后一个节点，前开后闭区间，如此可表示空集
+    * enqueue操作的核心原子操作：`CAS(tail->next, NULL, new_tail)`和`CAS(tail, read_tail, new_tail)`
+    * dequeue操作的核心原子操作：`CAS(head, read_head, read_head->next)`
+    * dequeue操作的ABA问题解决：
+        > 问题描述：head可能在CAS之前被修改多次，但因内存重用而致最后一次修改时将head重新改回了read_head，
+        > 导致当前线程误以为head与read_head有效匹配
+        * Double-CAS(指针，计数器)
+        * 引用计数，当没有线程持有read_head时才能销毁对应节点（避免内存重用）
+        * 使用循环数组
+```cpp
+void push(T val) {
+    Node* newTail = new Node{};
+    newTail->val_ = val;
+    newTail->next_ = nullptr;
+#ifdef V1
+    while ( tail_->next_->compare_exchange_week(nullptr, newTail) );
+    tail_->exchange(newTail); // 缺点：如果此处更新失败会导致其他所有线程永久阻塞
+#elif V2
+    for ( ; ; ) {
+        // 每次循环读取新的tail_
+        Node* readTail = tail_;
+        // 尝试更新tail_->next抢占enqueue权
+        if ( !readTail->next_->compare_exchange_week(nullptr, newTail) ) {
+            // 若抢占失败，则占用者可能处于中间态，尝试帮助其更新tail_
+            tail_->compare_exchange_week(readTail, readTail->next_);
+        } else {
+            // 若抢占成功，则此时处于中间态，接下来更新tail_
+            tail_->compare_exchange_week(readTail, newTail); // 缺点：后两个CAS操作可能导致无效竞争
+            break;
+        }
+    }
+#elif V3
+    Node* readTail = tail_;
+    Node* oldTail = readTail;
+    do {
+        // 把readTail看作是接近真正tail的一个节点，尝试移动至真正tail
+        while ( readTail->next_ ) // 缺点：遍历开销可能较大，p个并发量则最大需前进2p-1步
+            readTail = readTail->next_;
+    } while ( readTail->next_->compare_exchange_weak(nullptr, newTail) )
+    tail_->compare_exchange_strong(oldTail, newTail);
+#endif
+}
+```
 
 ## 网络
 * 三次握手的原理
