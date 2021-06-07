@@ -35,7 +35,7 @@
 * bool：`is`，`not`，`and`，`or`，`any`，`all`，`none`，`has`
 * 介词：`in`，`on`，`at`，`of`，`2`，`4`
 * 类型：`int`，`char`，`str`，`strm`，`p`
-* 用途：`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`tag`
+* 用途：`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`dst`
 
 
 ## 注释
