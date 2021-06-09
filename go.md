@@ -30,29 +30,38 @@ $GOBIN/
 ```
 
 # 模块
-* 模块时包的集合，是依赖版本管理和项目构建的基本单位
+* 模块是包的集合，是依赖版本管理和项目版本管理的基本单位
+<!-- entry begin: go -->
 ```sh
-go mod init MODULe              # 以当前目录作为模块根目录初始化模块信息，MODULE一般为项目URL
+# 模块依赖管理
+go mod init ModuleName          # 以当前目录作为模块根目录初始化模块信息，并指定模块名（一般为URL）
+go list [-m] all                # 列出当前模块的依赖包[或模块]
+go mod tidy -v                  # 重新整理整个模块的依赖信息
 
-go list -m all                  # 列出所有直接或间接依赖的模块
+go get                          # 下载、编译并安装当前目录包依赖
+go get example.com/pkg          # 下载、编译并安装依赖版本的包，初始化时下载最新版本
+go get example.com/pkg@latest   # 下载、编译并安装最新版本的包，并更新当前模块依赖
+go get example.com/pkg@none     # 下载、编译并安装最低要求版本的包，并更新当前模块依赖
+go get example.com/pkg@v1.0.0   # 下载、编译并安装指定版本的包，并更新当前模块依赖
+    -d      # 只下载不编译和安装依赖
+    -t      # 同时下载测试代码
+    -u      # 强制网络更新最新版本
+go install                      # 安装当前包及其依赖
 
 go env 
     -w GOPATH=$HOME/.local/go/  # 设置环境变量
     -u GOPATH                   # 设置或清除go运行环境变量GOPATH
 
-go mod tidy                     # 检查模块内所有包并安全删除不再依赖的包
-go get MODULE/to/pkg@latest     # 添加、更新、降级依赖
-
-go build [-x|-n]                # 编译当前目录包及其依赖
-go test
-go run
-
-go install                      # 安装到$GOBIN或$GOPATH
+go clean                        # 清除构建缓存
+go build [-o exe] [file.go]     # 编译当前目录包或指定文件及其依赖
+go test                         # 编译并测试当前目录下包的测试代码XXX_test.go
+go run [package|file.go]        # 编译并运行package或指定文件
 ```
+<!-- entry end -->
 
 
 # 包
-* 包是一个目录下源码文件的集合，按依赖和实现关系导入相应的包
+* 包是模块下的一个目录，按依赖和实现关系导入相应的包
 * 导入包的搜索路径
     * 当前模块
     * `$GOROOT/src/`
@@ -359,7 +368,7 @@ default:
     * V与T类型相同
     * x为nil，T为函数、接口、指针、切片、映射、通道
     * x为无类型常量且可重解释为T类型
-    * V与T底层类型相同且至少有一个为未定义类型（即V的底层类型是复合类型T）
+    * V与T底层类型相同且至少有一个为未定义类型（即其中一个是另一个的底层复合类型）
     * V实现了接口T
     * T是双向通道，且V与T的元素的类型相同
 * 显式类型转换`T(x)`：
@@ -411,7 +420,7 @@ f = 0x1p1       // 小数点可忽略，但指数部分不可忽略，基数为2
 ```go
 var b byte      // int8别名
 var r rune      // int32别名
-// 'a' 'ä' '文'
+// 'a' '文'
 // '\a' '\b' '\f' '\n' '\r' '\t' '\v' '\\' '\''
 // '\000' '\xff' '\u12e4' '\U00101234'
 
@@ -509,6 +518,7 @@ cap(ch)
     * 一对一异步事件信号（`make(chan struct{}, 1)`
     * 一对多异步事件信号（`close(done)`）
     * 多对一异步事件信号（`var wg sync.WaitGroup; wg.Add(N)`）
+    * 多对一异步事件信号采用首例（使用try一对一）
     * 异步定时器（`<-time.After(dur)`）
 
 ```go
