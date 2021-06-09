@@ -1,15 +1,5 @@
 # 系统构建
 ```txt
-src/
-└── path/to/mod/
-    ├── go.mod          # 模块依赖的版本信息
-    ├── go.sum          # 模块依赖的哈希校验
-    ├── executable.go   # pacagke main
-    └── otherPkg/
-        ├── file1.go    # package pkgA
-        ├── file2.go    # package pkgA
-        └── xxx_test.go # package pkgA
-
 $GOROOT/pkg/
 └── linux_amd64/
     └── path/to/pkgA/
@@ -23,10 +13,20 @@ $GOPATH/pkg/
     │   └── v2/         # 新版本子目录，后向兼容，增量迁移
     └── path/to/modB/
 
-$GOCACHE/
-
 $GOBIN/
 └── executable
+
+$GOCACHE/
+
+src/
+└── path/to/mod/
+    ├── go.mod          # 模块依赖的版本信息
+    ├── go.sum          # 模块依赖的哈希校验
+    ├── executable.go   # pacagke main
+    └── otherPkg/
+        ├── file1.go    # package pkgA
+        ├── file2.go    # package pkgA
+        └── xxx_test.go # package pkgA
 ```
 
 # 模块
@@ -48,7 +48,7 @@ go get example.com/pkg@v1.0.0   # 下载、编译并安装指定版本的包，�
     -u      # 强制网络更新最新版本
 go install                      # 安装当前包及其依赖
 
-go env 
+go env
     -w GOPATH=$HOME/.local/go/  # 设置环境变量
     -u GOPATH                   # 设置或清除go运行环境变量GOPATH
 
@@ -513,8 +513,9 @@ cap(ch)
 
 * 优雅的使用通道
     > 编写go代码时，可在心中延用经典的多线程模型，只是goroutine在CPU密集型效率更低而在IO密集型效率更高
-    * 并发安全数据管道，可限制并发量（`make(future T, MAXPARALLEL)`）
     * 串行化（`make(chan T)`）
+    * 异步安全数据管道（`make(chan Future, bufsize)`）
+    * 限制并发量（`make(chan struct{}, MAXPARALLEL)`、`maxChan <- struct{}{}; <-maxChan`）
     * 一对一异步事件信号（`make(chan struct{}, 1)`
     * 一对多异步事件信号（`close(done)`）
     * 多对一异步事件信号（`var wg sync.WaitGroup; wg.Add(N)`）
