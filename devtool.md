@@ -634,6 +634,12 @@ alias dok='docker'
     * gca!  ：`git commit --amend`
 <!-- entry end -->
 
+<!-- entry begin: git log -->
+* git log [FILE|COMMIT]
+    * glgga     ：提交历史可视化
+    * glola     ：提交历史精简可视化
+<!-- entry end -->
+
 <!-- entry begin: git tag -->
 * git tag   [COMMIT]
     * gt        ：`git tag`
@@ -644,12 +650,6 @@ alias dok='docker'
     git tag -f TAG-lw                   #强制轻量标签
     git tag -d TAG                      #删除标签
     ```
-<!-- entry end -->
-
-<!-- entry begin: git log -->
-* git log [FILE|COMMIT]
-    * glgga     ：提交历史可视化
-    * glola     ：提交历史精简可视化
 <!-- entry end -->
 
 <!-- entry begin: git diff patch -->
