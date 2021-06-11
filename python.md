@@ -13,7 +13,7 @@ pkg_src/
 * 在一个目录下创建名为`__init__.py`的文件即可形成一个package
 * 导入包前会执行`__init__.py`并将其中符号导入包命名空间
 ```python
-import package.module       # 可将其完全当做module来编写
+import package.module       # 可将其完全当做module来编写，见下
 from package import module  # 从指定的package中导入module
 from package import *       # 导入包 __init__.py 中由 类型为list[str]的全局变量 __all__ 中指定的模块
 ```
@@ -29,7 +29,7 @@ from module import *                                # 导入模块中所有符�
 ```
 * 当模块做脚本执行时`__name__ == '__main__'`
 * 包与模块搜索路径：
-    1. 脚本所在目录（若未指定脚本则搜索当前工作目录）
+    1. 执行脚本所在目录（若未指定脚本则搜索当前工作目录）
     2. `sys.path`中指定路径
 
 
@@ -37,6 +37,8 @@ from module import *                                # 导入模块中所有符�
 * 第一次给变量赋值即算变量声明
 * 变量类型可动态变化
 * 函数内局部变量作用域一直延续到声明所在函数退出，没有所谓块作用域
+* `nonlocal`指明声明的符号不在此局部中（局部中不能有同名变量），运行时检索符号表绑定
+* `global`指明声明的符号为全局符号，若当前模块之前无此全局符号则此处即作为全局符号声明
 
 # 语句
 注意：空语句体一定要使用`pass`语句
@@ -62,7 +64,7 @@ while cond:
 else:   # 若由break跳出循环则不执行else
     pass
 
-for key, value in Dict:
+for key, value in Dict: # 范围可动态变化
     for elem in Seq:
         for val1, val2 in Iter:
             continue
@@ -97,6 +99,31 @@ finally: # 无论异常是否产生、是否被捕获都会执行该段，若异
 with Expr as inst:
     pass
 ```
+
+# 表达式
+| 运算符                                                               | 描述               |
+|----------------------------------------------------------------------|--------------------|
+| `.` `()` `[]`                                                        | 成员、函数、下标   |
+| `**`                                                                 | 指数               |
+| `~` `+` `-`                                                          | 单目               |
+| `*` `/` `//` `%`                                                     | 乘除               |
+| `+` `-`                                                              | 加减               |
+| `>>` `<<`                                                            | 位移               |
+| `&`                                                                  | 位与               |
+| `^`                                                                  | 位异或             |
+| `\|`                                                                 | 位或               |
+| `<=` `<` `>` `>=`                                                    | 大小关系           |
+| `==` `!=`                                                            | 等值关系           |
+| `is`  `is not`                                                       | 身份运算符         |
+| `in` `not in`                                                        | 成员运算符         |
+| `not`                                                                | 逻辑非             |
+| `and`                                                                | 逻辑与             |
+| `or`                                                                 | 逻辑或             |
+
+* 赋值为语句而非表达式，且多重赋值`a = b = c`的意思是`a = c; b = c`而非`b = c; a = b`
+* 元组赋值`a, b = b, a`中，先计算等号右边产生副本，再将副本赋值给左边
+* 支持连续比较`a > b > c`即`a > b and b > c`
+* 浮点数支持`%`运算符
 
 # 函数
 ```python
@@ -155,96 +182,52 @@ f4(*Tuple)                      # 即使解包对象是动态长度，也无需�
 ##################################################
 # lambda闭包
 ##################################################
-lambda arg1, arg2: express
-
-##################################################
-# 函数属性
-##################################################
-func.__doc__
-func.__name__
-func.__module__
-func.__defaults__
-func.__kwdefaults__
-func.__annotations__
+lambda arg1, arg2: retExpr
 ```
 
 # 类
-python不存在真正的封装，所有属性均可动态增删改查，于是有了一些约定俗成的不成文法则
-* `_protected_mem`，单下划线开头来暗示其为private成员，再加以装饰器以模拟private访问控制
+python不存在真正的封装，所有属性均可动态增删改查
+
+## 封装
 ```python
-class MyClass(Base1, Base2):
+class Base:
     """Docstring starts with upper letter and ends with dot.
 
     If contains multi line, the second line should be blank.
     """
-##################################################
 # 定义静态属性，该属性在所有实例间共享
-##################################################
     PublicMember_ = []
     _PrivateMember_ = []
 
-##################################################
-# 定义方法，方法的第一个参数为该类实例self
-##################################################
-    # __init__方法在构造实例时自动调用，相当于构造函数
+# __init__方法在构造实例时自动调用，相当于构造函数
     def __init__(self, *args):
-        # 调用基类的构造函数，单继承可使用super()获取基类部分的实例
-        Base1.__init__()
-        Base2.__init__()
-
         # 为self实例添加属性
-        self._privateMember_ = args[0]
-        self.publicMember_ = args[1]
+        self.bool_ = args[0]
+        self.len_  = args[1]
+        self.str_  = args[2]
 
-    # 在需要将用户自定义类的实例转换为bool值时，
-    # 先尝试调用__nonzero__方法，若不存在则调用__len__，若都不存在则转换为True
-    def __nonzero__(self):
+# 所有方法的第一个实参都是类实例self
+    def __nonzero__(self):  # 转换bool值时尝试调用
         return self.bool_
 
-    def __len__(self):
+    def __len__(self):      # 转换bool值时尝试调用
         return self.len_
 
-    # 在需要将用户自定义类的实例转换为str时调用
-    def __str__(self):
+    def __str__(self):      # 转换str值时调用
         return self.str_
-
-##################################################
-# 定义静态方法
-##################################################
-    @staticmethod
-    def StaticMethod(args):
-        pass
-
-    # 利用装饰器定义类方法，第一个参数为该类cla
-    @classmethod
-    def ClassMethod(cls):
-        pass
-
-##################################################
-# 增强封装性
-##################################################
-    # 名称改写，以两个下划线开头的 __name 会被改写为 _classname__name，从而尽量避免与子类中的名称冲突
-    def __name(self):   # 改写为_MyClass__name
-        __mem = []      # 改写为_MyClass__mem
-
-    # 限制只能该类只能绑定如下属性
-    __slots__ = ('mem1_', 'mem2_')
-
-    # 利用装饰器设置只读属性或方法
-    @property
-    def mem(self):
-        return self.mem_
-
-    # 修改属性mem时会调用mem.setter。默认不能修改
-    @mem.setter
-    def mem(self, new):
-        self.mem_ = new
-
-    # 删除属性mem时会调用mem.deleter。默认不能删除
-    @mem.deleter
-    def mem(self):
-        del self.mem_
 ```
+
+## 继承
+```python
+class Derived(Base, Base2):
+    def __init__(self, *args):
+        Base1.__init__()
+        Base2.__init__()
+        self.mem = args
+```
+
+## 动态绑定
+* python中变量类型本身即可动态变化，动态绑定一般用于异常机制
 
 
 # 数值类型
@@ -252,7 +235,8 @@ class MyClass(Base1, Base2):
 * 字面值`True`或`False`
 * 字面值`None`视作`False`
 * 任何数值类型的`0`视作`False`
-* 任何`空`的集合视作`False`
+* 任何容器类型为空视作`False`
+* 自定义类型默认视作`True`
 
 
 <!-- entry begin: python int -->
@@ -265,7 +249,9 @@ class MyClass(Base1, Base2):
 19      # 十进制
 0x1F    # 十六进制
 10_000  # 支持用_来分割数字
-int([x])
+int(Int)
+int(Float)
+int(Str)
 
 # 底层表示
 Int.bit_length()            # 返回表示该整数所需最少的二进制位数
@@ -283,19 +269,15 @@ Int.from_bytes(bytes,
 <!-- entry begin: python float -->
 ## 浮点数
 * **浮点数一般使用IEEE双精度浮点数，存在精度问题**
-* 整数与浮点数混合运算结果为浮点数
 ```python
 # 构造
-1.
-.5
-1.5
-1.e1
-.5e1
-1.5e1
-1e1
-f = float([x])
+1.1         # 整数部分或小数部分之一可省略
+1e1         # 小数点或指数部分之一可省略，基数为10
+float(Int)
+float(Float)
+float(Str)  # 支持Inf、Nan
 
-# 其他
+# 整数转换
 Float.is_integer()          # 能不丢失精度得转换为整数
 Float.as_integer_ratio()    # 返回一对整数（分子/分母）
 ```
@@ -303,24 +285,21 @@ Float.as_integer_ratio()    # 返回一对整数（分子/分母）
 
 <!-- entry begin: python decimal -->
 ## 高精度浮点数
-* **利用字符串存储浮点值** 
+* **利用字符串存储浮点值**
 ```python
 from decimal import Decimal
 
 # 构造
-Decimal('3.14')
-Decimal('0')
-Decimal('-0')
-Decimal('inf')
-Decimal('-inf')
-Decimal('nan')
+Decimal(Int)
+Decimal(Float)
+Decimal(Str)        # 支持Inf与Nan
 
 # 上下文设置
 getcontext()        # 取得当前上下文。修改其数据属性.prec即可修改精度。精度只用于计算过程中，而不作用于存储时
 setcontext(context) # 设置当前上下文
+DefaultContext      # 精度28，舍入ROUND_HALF_EVEN，启用陷阱Overflow、InvalidOperation、DivisionByZero
 BasicContext        # 精度9，舍入ROUND_HALF_UP，启动所有陷阱
 ExtendedContext     # 精度9，舍入ROUND_HALF_EVEN，关闭所有陷阱
-DefaultContext      # 精度28，舍入ROUND_HALF_EVEN，启用陷阱Overflow、InvalidOperation、DivisionByZero
 ```
 <!-- entry end -->
 
@@ -330,45 +309,47 @@ DefaultContext      # 精度28，舍入ROUND_HALF_EVEN，启用陷阱Overflow、
 from fractions import Fraction
 
 Fraction(num=0, den=1)
+Fraction(Int)
 Fraction(Float)
 Fraction(Decimal)
-Fraction(string)    # "[sign] numerator [/ denominator]"
+Fraction(Str)       # 格式："[sign] numerator [/ denominator]"
 ```
 <!-- entry end -->
 
-<!-- entry begin: python sequence -->
+<!-- entry begin: python algorithm -->
 # 容器类型
 ```python
-all(itr)                    # 元素全为True
-any(itr)                    # 元素存在True
-sum(itr, /, start=0)        # 从第start个元素开始求和
-max(itr, *[, key, default]) # 返回范围中最大值。default为默认值（当范围为空时）
-max(arg1, arg2, *args[,key])# 返回范围中最大值。key返回元素比较键
-min(itr, *[, key, default]) # 返回范围中最小值。default为默认值（当范围为空时）
-min(arg1, arg2, *args[,key])# 返回范围中最小值。key返回元素比较键
+len(itr)                        # 返回元素数量
+enumerate(itr)                  # 返回元素为(idx, val)的迭代器
+range(N)                        # 返回元素范围[0, N)的迭代器
+range(begin, end, step=1)       # 返回元素范围[begin, end)且步长为step的迭代器
 
-len(itr)                    # 返回元素数量
-enumerate(itr)              # 返回元素为（索引，值）元组的迭代器
-range(N)                    # 返回列表[0, 1, ..., N-1]
-range(B, E, S=1)            # 返回列表[B, B+S, ..., E-S]
+all(itr)                        # 元素是否全为True
+any(itr)                        # 元素是否存在True
+sum(itr, /, start=0)            # 返回从第start个元素开始的和
+max(itr, [*, key, default])     # 返回范围中最大值。范围为空返回default
+min(itr, [*, key, default])     # 返回范围中最小值。范围为空返回default
+max(arg1, arg2, *args[, key])   # 返回范围中最大值。key(arg)返回元素比较键
+min(arg1, arg2, *args[, key])   # 返回范围中最小值。key(arg)返回元素比较键
 
-zip(*itr)                   # 返回链接各组元素后的迭代器
-filter(func, itr)           # 过滤出func(e)为True的元素，返回迭代器
-map(func, itr)              # 将每个元素经由func处理后装入返回的迭代器中
-reversed(itr)               # 返回反向的迭代器
-sorted(itr, *,              # 返回已排序列表
-    key=None, reverse=False)# key返回元素比较键，reverse表示反向排序
+sorted(itr, [*, key, reverse]   # 返回范围包含排序后的元素
+reversed(itr)                   # 返回范围包含逆序后的元素
+filter(func, itr)               # 返回范围包含func(elem)为True的元素
+map(func, itr)                  # 返回范围包含func(elem)返回值
+zip(*itr)                       # 返回各范围元素组合后的迭代器
 ```
 <!-- entry end -->
+* python中容器类型底层数据结构均为指针，指向“栈结构”，从而封装了内存重新分配（扩容与缩容）
 
 <!-- entry begin: python string -->
 ## 字符串
+* 字符串为只读类型，底层类型即使`byte[]`
 ```python
 # 构造
 '可直接包含""的字符串'
 "可直接包含''的字符串"
 R"可以直接包含\的字符串"
-F"可以使用{format语法}到字符串"
+F"可以使用{format syntax}到字符串"
 
 """多行
 字符串"""
@@ -382,24 +363,20 @@ F"可以使用{format语法}到字符串"
 "忽略之间空白符"
 "自动连接"
 
-Str = str(obj)
+Str = str([obj])
 Str = Str1 + Str2
 Str = Str * num
 
-
 # 访问与搜索
-Str[0]
-Str[-1]
-Str[begin:end[:step]]
-Str[::-1]
-subStr in Str
+Str[begin:[end[:step]]]     # 支持负数-n表示倒数第n个元素下标
+subs in Str
 Str.startswith(preffix)
 Str.endswith(suffix)
-Str.find(sub)           # find函数若未搜索到目标则静默处理，返回-1
-Str.rfind(sub)
-Str.index(sub[ i[,j]])  # index函数若未搜索到目标则引发异常
-Str.rindex(sub)
-Str.count(sub)
+Str.find(subs)              # 若未搜索到目标则返回-1
+Str.rfind(subs)
+Str.index(subs[, i[, j]])   # 若未搜索到目标则引发异常
+Str.rindex(subs)
+Str.count(subs)
 
 # 字符类
 Str.isalpha()       # Unicode Letter
@@ -420,26 +397,26 @@ Str.title()
 Str.upper()
 Str.lower()
 Str.swapcase()
-Str.replace(old, new [, count]) # 默认替换所有old为new
 Str.encode(encoding="utf-8")
 Str.expandtabs(tabsize=8)
 Str.center(width[, fill])
 Str.ljust(width[, fill])
 Str.rjust(width[, fill])
-Str.zfill(width)    # 用零填充左边至长度为width（若width小于len(Str)则忽略），若第一个字符为+或-则在其后添加0
+Str.zfill(width)                # 用零填充左边至长度为width（若width小于len(Str)则忽略），若第一个字符为+或-则在其后添加0
+Str.replace(old, new [, count]) # 默认替换所有old为new
 
-Str.lstrip([chars]) # 移除开头出现在chars中的字符，默认空白符
-Str.rstrip([chars]) # 移除结尾出现在chars中的字符，默认空白符
-Str.strip([chars])  # 移除两边出现在chars中的字符，默认空白符
+Str.lstrip([chars])             # 移除开头出现在chars中的字符，默认空白符
+Str.rstrip([chars])             # 移除结尾出现在chars中的字符，默认空白符
+Str.strip([chars])              # 移除两边出现在chars中的字符，默认空白符
 Str.removeprefix(p)
 Str.removesuffix(s)
 
-Str.join(itr)       # itr元素必须是str，连接符就是Str
-Str.partition(sep)  # 返回三元组（之前、分隔符、之后）
-Str.rpartition(sep) # 最后一次出现
-Str.split(sep=None  # 默认sep为空白符，最多分隔maxsplit
+Str.join(itr)                   # itr元素类型必须为str，连接符就是Str
+Str.partition(sep)              # 返回三元组（之前、分隔符、之后）
+Str.rpartition(sep)             # 从右边开始搜索sep
+Str.split(sep=None              # 默认sep为空白符
     maxsplit=-1)
-Str.rsplit(sep=None # 从右边开始分割
+Str.rsplit(sep=None             # 从右边开始分割
     maxsplit=-1)
 Str.splitlines(keepends=False)
 ```
@@ -447,7 +424,7 @@ Str.splitlines(keepends=False)
 
 <!-- entry begin: python tuple -->
 ## 元组
-* **元组虽也属于immutable对象，但其元素可以时mutable的，注意这点！**
+* 元组为只读类型
 ```python
 # 构造
 Tuple = tuple([itr])
@@ -463,13 +440,10 @@ T1, T2= e0, e1
 T1, T2= itr
 
 # 访问与搜索
-Tuple[0]
-Tuple[-1]
-Tuple[begin:end[:step]]
-Tuple[::-1]
-ele in Tuple
-Tuple.count(e)
-Tuple.index(e[,i[,j]])
+Tuple[beg:[end[:step]]] # 支持负数-n表示倒数第n个元素下标
+elem in Tuple
+Tuple.count(v)
+Tuple.index(v[, i[, j]])
 ```
 <!-- entry end -->
 
@@ -480,44 +454,29 @@ Tuple.index(e[,i[,j]])
 List = list([itr])
 List = []
 List = [e0, e1]
-List = [resultExpr for x in List if condition] # resultList.appen(resltExp)
+List = [result for x in itr if condition]
 List = List1 + List2
 List = List * num
 
 # 访问与搜索
-List[0]
-List[-1]
-List[begin:end[:step]]
-List[::-1]
-ele in List
-List.count(e)
-List.index(e[,i[,j]])
+List[beg:[end[:step]]]  # 支持负数-n表示倒数第n个元素下标
+elem in List
+List.count(v)
+List.index(v[, i[, j]])
 
 # 修改
-List[i] = e
+List[i] = v
 List[i:j] = itr
 List[i:j:k] = itr
 List.reverse()
-List.insert(i, e)   # List[i:i] = e
-List.append(e)      # List[len:len] = [e]
+List.insert(i, v)   # List[i:i] = e
+List.append(v)      # List[len:len] = [e]
 List.extend(itr)    # List[len:len] = itr
 List.pop([i])       # 若不存在则引发ValueError
-List.remove(e)
+List.remove(v)
 del s[i:j]
 del s[i:j:k]
 List.clear()
-
-# 堆算法
-import heapq
-heapq.heapify(List)
-heapq.heappush(heap, itm)
-heapq.heappop(heap)
-heapq.heappushpop(heap, itm)    # 将itm插入并弹出最小值（比分开操作更快速）
-heapq.heapreplace(heap, itm)    # 同上，但弹出的值可能会大于压入的itm
-heapq.merge(*itr, key=None, reverse=False)
-# 利用堆排序算法返回小值，若n太大则应使用sorted，若n==1则应使用max或min
-heapq.nlargest(n, itr, key=None)
-heapq.nsmallest(n, itr, key=None)
 ```
 <!-- entry end -->
 
@@ -528,7 +487,7 @@ heapq.nsmallest(n, itr, key=None)
 # 构造
 Set = set([itr])
 Set = {ex, ey, ez}
-Set = {resultExp for x in List if condition} # resultList.appen(resltExp)
+Set = {result for x in itr if condition}
 Set = Set1 + Set2
 Set = Set * num
 
@@ -537,9 +496,9 @@ ele in Set
 Set.copy()
 
 # 修改
-Set.add(e)
-Set.discard(e)
-Set.remove(e)   # 若不存在则引发KeyError
+Set.add(v)
+Set.discard(v)
+Set.remove(v)   # 若不存在则引发KeyError
 Set.clear()
 Set.update(itr)
 
@@ -566,15 +525,15 @@ Set ^=  Other
 # 构造
 Dict = dict([itr])      # itr元素为键值对元组
 Dict = {}
-Dict = {key: value, k: v}  # 键为不可变类型，如数值类型、字符串、元组
-Dict = {keyExp: valueExp for x in List if condition} # resultList.appen(keyExp, valueExp)
+Dict = {key: value}     # 键为不可变类型，如数值类型、字符串、元组
+Dict = {key: val for x in itr if condition}
 
 # 访问与搜索
-Dict.items()            # 元素为元组的列表
-Dict.keys()             # 元素为键的列表。dict作itr时其元素即dict的键
-Dict.values()           # 元素为值到列表
+Dict.items()            # 键值对范围
+Dict.keys()             # 键范围
+Dict.values()           # 值范围
 
-key in Dict             # for key, value in Dict
+key in Dict
 Dict[key]               # 若key不存在则仅在赋值时自动创建
 Dict.get(key[, default])# 不自动创建
 Dict.pop(key[, default])
@@ -586,51 +545,7 @@ Dict |= Other           # 合并两字典，Other的键值优先
 <!-- entry end -->
 
 
-# 运算符
-| 运算符                                                               | 描述                                       |
-|----------------------------------------------------------------------|--------------------------------------------|
-| `()`                                                                 | 函数调用、元组                             |
-| `[]` `[:]`                                                           | 下标，切片                                 |
-| `**`                                                                 | 指数（注意该二元运算符优先级高于单目运算符 |
-| `~` `+` `-`                                                          | 按位取反, 正负号                           |
-| `*` `/` `%` `//`                                                     | 乘，除，模（向下取整），整除（向下取整）   |
-| `+` `-`                                                              | 加，减                                     |
-| `>>` `<<`                                                            | 右移，左移                                 |
-| `&`                                                                  | 按位与                                     |
-| `^`                                                                  | 按位异或                                   |
-| `\|`                                                                 | 按位或                                     |
-| `<=` `<` `>` `>=`                                                    | 小于等于，小于，大于，大于等于             |
-| `==` `!=`                                                            | 等于，不等于                               |
-| `is`  `is not`                                                       | 身份运算符                                 |
-| `in` `not in`                                                        | 成员运算符                                 |
-| `not`                                                                | 逻辑非                                     |
-| `and`                                                                | 逻辑与                                     |
-| `or`                                                                 | 逻辑或                                     |
-| `=` `+=` `-=` `*=` `/=` `%=` `//=` `**=` `&=` `\|=` `^=` `>>=` `<<=` | （复合）赋值运算符                         |
-
-**注意**：
-* 多重赋值`a = b = c`的意思是`a = c; b = c`
-* 元组赋值`a, b = b, a`中，先计算等号右边形成右值，再将已固定的右值赋值给左边
-* 支持连续比较`a > b > c`
-
-# 语法杂项
-* 逻辑行即一条完整的语句
-* 物理行即两个换行符之间到内容
-* 多个逻辑行可显示或隐式的连接成一个逻辑行
-    * 显示：利用`\`转义行尾换行符
-    * 隐式：`()` `[]` `{}`内可自动转义行尾换行符
-* 逻辑行到缩进层级与结束利用 **单调栈** 来判断
-* 利用`nonlocal`与`global`调整变量到作用域
-* 变量生命周期会延长至语句局部作用域外，循环体中局部变量仍会跨越多次循环
-    > （静态语言中变量需要声明，从语法上就不可能跨越多次循环）
-* **Python中所有实际数据（包括字面量）都是对内存中对象的引用，`a = b`代表的不是将b赋值到a上，而是将a引用指向b引用的对象！**
-* **immutable对象的值不可更改，只能新建；mutable的对象则可通过一些方法修改原值而非新建对象**
-* **Python中的表达式并不行C/C++一样有严格的规律的（左右值、类型、返回值），在Python中对应操作就该使用对应语法糖**
-
-
-
-
-# 标准库
+# 内建函数
 ## 语言特性
 ```python
 dir(obj)                    # 返回obj的符号表
@@ -661,18 +576,14 @@ chr(i)      # 返回Unicode码点i对应的字符
 bin(i)      # 返回整数对应二进制字符串（`0b`开头）
 oct(i)      # 返回整数对应八进制字符串（`0o`开头）
 hex(i)      # 返回整数对应十六进制字符串（`0x`开头）
-repr(obj)       # 返回对象字符串
-eval(expr)      # 动态解析单个表达式并返回结果
-exec(code)      # 动态解析代码片段并仅产生其副作用而返回None
-
-import re
-re.findall(regex, string)   # 返回匹配子串的列表
-re.sub(regex, repl, string) # 替换，语法类似sed
+repr(obj)   # 返回对象字符串
+eval(expr)  # 动态解析单个表达式并返回结果
+exec(code)  # 动态解析代码片段并仅产生其副作用而返回None
 ```
 
 ## 输入输出
 ```python
-input([prompt])             # 遇换行停止
+input(prompt='')            # 遇换行停止
 
 print(*obj,
     sep=' ', end='\n'
@@ -687,42 +598,6 @@ open(file,                  # 返回file可用于for-in语句，每次循环处�
     newline=None,
     closefd=True,
     opener=None)
-
-import json
-json.dump(obj, File, *      # dict中的键会强制转换为字符串
-    skipkeys=False          # 若键不为bool、int、float、str、None则是否跳过而避免引发异常
-    indent=None             # 缩进宽度
-    sort_keys=False)        # 是否对dict排序
-
-json.dumps(obj, *           # 返回json字符串而非写入文件
-    skipkeys=False          # 若键不为bool、int、float、str、None则是否跳过而避免引发异常
-    indent=None             # 缩进宽度
-    sort_keys=False)        # 是否对dict排序
-
-json.load(File)
-json.loads(Str)
-```
-
-
-## 操作系统
-```python
-import os
-os.getcwd()
-os.chdir(path)
-os.system(cmd)
-
-import shutil
-shutil.copyfile(from, to)
-shutil.move(from, to)
-
-import glob
-glob.glob('*.py')   # 返回文件列表
-
-import sys
-sys.argv            # 返回命令行参数列表
-sys.stdin
-sys.stdout
-sys.stderr
 ```
 
 

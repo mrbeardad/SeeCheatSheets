@@ -787,8 +787,8 @@ class String {
     string& operator+=  (str) (cstr) (char)
     string& operator+   (str) (cstr) (char)
     string& insert      (pos, 目标)         // 目标除开(char)
-    string& replace     (pos, len, 目标)
     string& erase       (pos=0, len=npos)
+    string& replace     (pos, len, 目标)
     // 查找
     bool    starts_with (str) (cstr) (char)
     bool    end_with    (str) (cstr) (char)
@@ -874,8 +874,6 @@ class String_view {
     * 对浮点数：插入合适数位分隔符与底分隔符
     * 对bool：boolalpha
 * 类型
-    * `c`字符
-    * `s`字符串
     * 整数：
         * `b`与`B`：二进制
         * `o`：八进制
