@@ -34,11 +34,11 @@ from module import *                                # 导入模块中所有符�
 
 
 # 变量
+* 变量类型可动态变化，类型、类名都可动态获取
 * 第一次给变量赋值即算变量声明
-* 变量类型可动态变化
-* 函数内局部变量作用域一直延续到声明所在函数退出，没有所谓块作用域
-* `nonlocal`指明声明的符号不在此局部中（局部中不能有同名变量），运行时检索符号表绑定
-* `global`指明声明的符号为全局符号，若当前模块之前无此全局符号则此处即作为全局符号声明
+* 函数内局部变量作用域一直延续到声明所在函数退出，没有所谓语句块作用域
+* `nonlocal`指明声明的符号绑定到闭包外同名符号
+* `global`指明声明的符号绑定到同名全局符号
 
 # 语句
 注意：空语句体一定要使用`pass`语句
@@ -227,7 +227,7 @@ class Derived(Base, Base2):
 ```
 
 ## 动态绑定
-* python中变量类型本身即可动态变化，动态绑定一般用于异常机制
+* python中变量类型本身即可动态变化，动态绑定目的为复用
 
 
 # 数值类型
@@ -283,8 +283,21 @@ Float.as_integer_ratio()    # 返回一对整数（分子/分母）
 ```
 <!-- entry end -->
 
+<!-- entry begin: python fraction -->
+## 分数
+```python
+from fractions import Fraction
+
+Fraction(num=0, den=1)
+Fraction(Int)
+Fraction(Float)
+Fraction(Decimal)
+Fraction(Str)       # 格式："[sign] numerator [/ denominator]"
+```
+<!-- entry end -->
+
 <!-- entry begin: python decimal -->
-## 高精度浮点数
+## 高精度数字
 * **利用字符串存储浮点值**
 ```python
 from decimal import Decimal
@@ -303,18 +316,6 @@ ExtendedContext     # 精度9，舍入ROUND_HALF_EVEN，关闭所有陷阱
 ```
 <!-- entry end -->
 
-<!-- entry begin: python fraction -->
-## 分数
-```python
-from fractions import Fraction
-
-Fraction(num=0, den=1)
-Fraction(Int)
-Fraction(Float)
-Fraction(Decimal)
-Fraction(Str)       # 格式："[sign] numerator [/ denominator]"
-```
-<!-- entry end -->
 
 <!-- entry begin: python algorithm -->
 # 容器类型
