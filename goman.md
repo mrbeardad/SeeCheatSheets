@@ -1,39 +1,38 @@
-# 系统交互
 # 字符处理
 ## 格式化
 ```go
 import . "fmt"
 
 // 若两个操作数均非字符串，则中间添加空格
-Print(args...)                  (nbytes, err)
-Fprint(iow, args...)            (nbytes, err)
-Sprint(args...)                 string
+func Print(a ...interface{}) (n int, err error)
+func Fprint(w io.Writer, a ...interface{}) (n int, err error)
+func Sprint(a ...interface{}) string
 // 始终在两操作数中间添加空格，并在末尾添加换行
-Println(args...)                (nbytes, err)
-Fprintln(iow, args...)          (nbytes, err)
-Sprintln(args...)               string
+func Println(a ...interface{}) (n int, err error)
+func Fprintln(w io.Writer, a ...interface{}) (n int, err error)
+func Sprintln(a ...interface{}) string
 // 按格式化字符操作
-Printf(fmt, args...)            (nbytes, err)
-Fprintf(iow, fmt, args...)      (nbytes, err)
-Sprintf(string, fmt, args...)   string
-Errorf(fmt, args...)            error
+func Printf(format string, a ...interface{}) (n int, err error)
+func Fprintf(w io.Writer, format string, a ...interface{}) (n int, err error)
+func Sprintf(format string, a ...interface{}) string
+func Errorf(format string, a ...interface{}) error
 // 忽略空白符，扫描直到参数读取完毕或EOF
-Scan(args...)                   (n, err)
-Fscan(ior, args...)             (n, err)
-Sscan(string, args...)          string
+func Scan(a ...interface{}) (n int, err error)
+func Fscan(r io.Reader, a ...interface{}) (n int, err error)
+func Sscan(str string, a ...interface{}) (n int, err error)
 // 忽略空白符，扫描直到参数读取完毕或NL或EOF，若读取完毕时行尾仍有非空白符则算错误
-Scanln(args...)                 (n, err)
-Sscanln(string, args...)        string
-Fscanln(ior, args...)           (n, err)
-// fmt中的'\n'匹配`\s*\n`，与'\n'相邻的'\s'匹配'\s*'，不与'\n'相邻的'\s'匹配`\s+`
+func Scanln(a ...interface{}) (n int, err error)
+func Fscanln(r io.Reader, a ...interface{}) (n int, err error)
+func Sscanln(str string, a ...interface{}) (n int, err error)
+// fmt中的'\n'匹配`\s*\n`，与'\n'相邻的'\s'匹配'\s*'，不与'\n'相邻的'\s'匹配`\s+`，其它字符都必须精准匹配
 // 除%c外，其他操作都忽略开头空白符
-Scanf(fmt, args...)             (n, err)
-Sscanf(fmt, string, args...)    (n, err)
-Fscanf(fmt, ior, args...)       (n, err)
+func Scanf(format string, a ...interface{}) (n int, err error)
+func Fscanf(r io.Reader, format string, a ...interface{}) (n int, err error)
+func Sscanf(str string, format string, a ...interface{}) (n int, err error)
 
-"%对齐 符号 # 0 宽度.精度 [索引] 类型"
 // +对于结构会打印其字段名，#对于结构会打印其类型与字段名
 // 宽度与精度可替换为 [索引]* 从而用参数值替换
+"%对齐 符号 # 0 宽度.精度 [索引] 类型"
 ```
 | 格式  | 描述                 | 支持类型             |
 |-------|----------------------|----------------------|
@@ -55,3 +54,94 @@ Fscanf(fmt, ior, args...)       (n, err)
 | %q    | 打印引用后的字符串   | string               |
 | %p    | 打印十六进制指针值   | 指针                 |
 
+## 字符串
+```go
+// 比较
+func Compare(a, b string) int
+func EqualFold(s, t string) bool    // 忽略Unicode大小写
+// 搜索
+func Count(s, substr string) int
+func Contains(s, substr string) bool
+func ContainsRune(s string, r rune) bool
+func ContainsAny(s, chars string) bool
+func Index(s, substr string) int
+func IndexByte(s string, c byte) int
+func IndexRune(s string, r rune) int
+func IndexFunc(s string, f func(rune) bool) int
+func IndexAny(s, chars string) int
+func LastIndex(s, substr string) int
+func LastIndexByte(s string, c byte) int
+func LastIndexAny(s, chars string) int
+func LastIndexFunc(s string, f func(rune) bool) int
+func HasPrefix(s, prefix string) bool
+func HasSuffix(s, suffix string) bool
+// 切分，忽略空白符
+func Fields(s string) []string
+func FieldsFunc(s string, f func(rune) bool) []string
+// 切分
+func Split(s, sep string) []string
+func SplitN(s, sep string, n int) []string      // 返回切片长度最大为N
+func SplitAfter(s, sep string) []string
+func SplitAfterN(s, sep string, n int) []string
+// 连接
+func Join(elems []string, sep string) string
+// 重复
+func Repeat(s string, count int) string
+// 替换
+func Replace(s, old, new string, n int) string
+func ReplaceAll(s, old, new string) string
+func ToValidUTF8(s, replacement string) string
+func Map(mapping func(rune) rune, s string) string
+// 大小写转换
+func Title(s string) string
+func ToTitle(s string) string
+func ToTitleSpecial(c unicode.SpecialCase, s string) string
+func ToLower(s string) string
+func ToLowerSpecial(c unicode.SpecialCase, s string) string
+func ToUpper(s string) string
+func ToUpperSpecial(c unicode.SpecialCase, s string) string
+// 删除
+func Trim(s, cutset string) string
+func TrimSpace(s string) string
+func TrimFunc(s string, f func(rune) bool) string
+func TrimLeft(s, cutset string) string
+func TrimLeftFunc(s string, f func(rune) bool) string
+func TrimRight(s, cutset string) string
+func TrimRightFunc(s string, f func(rune) bool) string
+func TrimPrefix(s, prefix string) string
+func TrimSuffix(s, suffix string) string
+```
+
+## 正则表达式
+```go
+// 构造Regexp
+func Compile(expr string) (*Regexp, error)
+func MustCompile(str string) *Regexp
+func QuoteMeta(s string) string
+
+// 查看
+func (re *Regexp) String() string
+func (re *Regexp) NumSubexp() int
+func (re *Regexp) SubexpNames() []string
+func (re *Regexp) SubexpIndex(name string) int
+
+// 模式匹配：默认匹配到第一个就结束，搜索文本（参数）与匹配（返回）类型为byte[]，
+// All      表示返回切片，元素为多次匹配
+// Submatch 表示返回切片，元素为子匹配
+// Index    表示用int[]代替byte[]返回
+// String   表示用string代替byte[]参数与返回
+// Submatch与Index结合只会使返回值增加一维而非两维
+func (re *Regexp) Find(All)?(String)?(Submatch)?(Index)?
+func (re *Regexp) Match(b []byte) bool              // 匹配子串，全匹配利用^$
+func (re *Regexp) MatchString(s string) bool
+func (re *Regexp) MatchReader(r io.RuneReader) bool
+
+// 模式替换
+// 将src中匹配到的match按fmt替换后追加到dst中，返回新dst
+func (re *Regexp) Expand(dst []byte, fmt []byte, src []byte, match []int) []byte
+func (re *Regexp) ExpandString(dst []byte, fmt string, src string, match []int) []byte
+func (re *Regexp) ReplaceAll(Func)?(Literal)?(String)?
+
+// 切分
+func (re *Regexp) Split(s string, n int) []string
+```

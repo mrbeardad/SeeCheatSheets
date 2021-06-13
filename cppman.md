@@ -24,6 +24,7 @@
     - [字符串](#字符串)
     - [字符串视图](#字符串视图)
     - [格式化](#格式化)
+    - [正则表达式](#正则表达式)
   - [容器库](#容器库)
     - [构造](#构造)
     - [赋值](#赋值)
@@ -49,7 +50,6 @@
     - [变序算法](#变序算法)
     - [集合算法](#集合算法)
     - [极值算法](#极值算法)
-  - [正则表达式库](#正则表达式库)
   - [输入输出库](#输入输出库)
     - [组件总览](#组件总览)
     - [基础操作](#基础操作)
@@ -885,6 +885,125 @@ class String_view {
         * `g`与`G`：智能表示
 <!-- entry end -->
 
+### 正则表达式
+<!-- entry begin: cpp regex regex_contants regex_flag 正则表达式 -->
+```cpp
+#include <regex>
+namespace std::regex_contants {
+    // 即sflag，用于构造regex。默认为ECMAScript
+    icase;              // 忽略大小写
+    nosubs;             // 标记子表达式（(pat)）无效。同时影响regex::mark_contants()
+    optimize;           // 提示优化匹配速度。同时可能增大构造开销
+    collate;            // 形如 "[a-b]" 的字符范围将对本地环境敏感
+    ECMAScript;         // C++改进版的ECMAScript正则文法
+    // 即mflag，用于模式匹配。默认match_default
+    match_not_bol       // 行首（^pat）无效
+    match_not_eol       // 行尾（pat$）无效
+    match_not_bow       // 行首（\bpat）无效
+    match_not_eow       // 行尾（pat\b）无效
+    match_not_null      // 不匹配空字符序列
+    match_any           // 若多于一个匹配可行，则任何匹配都是可接受的结果
+    match_continuous    // 仅匹配始于 first 的子串
+    match_prev_avail    // --first 是合法的迭代位置。设置时导致 match_not_bol 和 match_not_bow 被忽略
+    // 即rflag，用于模式替换。默认format_default
+    format_default      // 使用ECMAScript规则进行模式替换
+    format_sed          // 使用sed规则进行模式替换
+    format_no_copy      // 不输出/返回不匹配的字符
+    format_first_only   // 只替换首个匹配
+}
+```
+<!-- entry end -->
+<!-- entry begin: regex wregex basic_regex -->
+```cpp
+class basic_regex<CharT> {  // regex wregex 
+    // 构造函数
+    basic_regex()
+    basic_regex(cstr, sflag)
+    basic_regex(cstr, len, sflag)
+    basic_regex(str, sflag)
+    basic_regex(b, e, sflag)
+    basic_regex(il, sflag)
+    // 成员函数
+    unsigned    mark_count()        // 标记的子表达式数目
+    flag        flags()
+    locale      getloc()
+    locale      imbue()             // 返回之前locale
+};
+```
+<!-- entry end -->
+<!-- entry begin: regex match_results cmatch wcmatch smatch wsmatch csub_match wcsub_match ssub_match wssub_match regex_iterator regex_token_iterator -->
+```cpp
+class match_results<BidirIt> {  // cmatch wcmatch smatch wsmatch
+    // 状态
+    bool        ready();
+    // 容量
+    bool        empty();
+    size_t      size();
+    size_t      max_size();
+    // 访问
+    sub_match   prefix();           // 返回当前匹配表达式相对整个目标的前缀的sub_match
+    sub_match   suffix();           // 返回当前匹配表达式相对整个目标的后缀的sub_match
+    sub_match   operator[](n);      // 返回第n个子表达式的sub_match
+    itr         begin();
+    itr         cbegin();
+    itr         end();
+    itr         cend();
+    String      str(n = 0);         // 返回第n个子表达式的字符串。n=0表示整个表达式
+    size_t      length(n = 0);      // 返回第n个子表达式的长度。n=0表示整个表达式
+    size_t      position(n = 0);    // 返回第n个子表达式的首字符在目标字符串的位置。n=0表示整个表达式
+    // 格式化替换
+    outItr      format(outItr, fmtStr, rflag);
+    outItr      format(outItr, fmrB, fmtE, rflag);
+    string      format(fmtStr, rflag);
+    string      format(fmrB, fmtE, rflag);
+};
+class sub_match<BidirIt> {  // csub_match wcsub_match ssub_match wssub_match
+    // 观察器
+    BidirIt     first;      // 子表达式开始
+    BidirIt     second;     // 子表达式尾后
+    String      str();
+    operator    String();
+};
+class regex_iterator<BidirIt> { // cregex_iterator wcregex_iterator sregex_iterator wsregex_iterator
+    // 构造函数
+    regex_iterator();                               // 默认构造为尾后迭代器
+    regex_iterator(b, e, regex, mflag);             // 迭代器在每个匹配区间停留，每次从上次末尾开始匹配（不重合）。禁止regex右值
+
+    match_results    operator*()                    // 返回match_results
+};
+class regex_token_iterator<BidirIt> {   // cregex_token_iterator wcregex_token_iteratorsregex_token_iterator wsregex_token_iterator
+    // 构造函数
+    regex_token_iterator();                         // 默认构造为尾后迭代器
+    regex_token_iterator(b, e, regex, il, mflag);   // il指定关注的regex中的子表达式，0表示全部，-1表示模式取反。禁止regex右值。
+    // 若有多个匹配组，则匹配组之间轮换
+
+    sub_match       operator*()                     // 返回sub_match
+};
+```
+<!-- entry end -->
+<!-- entry begin: regex regex_match regex_search regex_replace -->
+```cpp
+// 没搜索到则match为空，其prefix余suffix也为空
+bool    regex_match(str,  [match&,] regex, mflag);
+bool    regex_match(b, e, [match&,] regex, mflag);
+
+bool    regex_search(str,  [match&,] regex, mflag);
+bool    regex_search(b, e, [match&,] regex, mflag);
+
+outItr  regex_replace(outItr, str,  regex, fmt, rflag);  // 利用fmt替换掉每个匹配的regex
+outItr  regex_replace(outItr, b, e, regex, fmt, rflag);
+string  regex_replace(str,  regex, fmt, rflag);
+string  regex_replace(b, e, regex, fmt, rflag);
+// 替换格式化语法：
+// $&       替换为regex中整个表达式的匹配
+// $0       替换为regex中整个表达式的匹配
+// $1, ...  替换为regex中第1个子表达式的匹配
+// $`       替换为前缀
+// $'       替换为后缀
+// $$       转义$
+```
+<!-- entry end -->
+
 ## 容器库
 * a : array
 * s : string
@@ -1327,125 +1446,6 @@ T       minmax_element(b, e, bOp=less)  // 返回第一个最小值和最后一�
 ```
 <!-- entry end -->
 
-## 正则表达式库
-<!-- entry begin: cpp regex regex_contants regex_flag 正则表达式 -->
-```cpp
-#include <regex>
-namespace std::regex_contants {
-    // 即sflag，用于构造regex。默认为ECMAScript
-    icase;              // 忽略大小写
-    nosubs;             // 标记子表达式（(pat)）无效。同时影响regex::mark_contants()
-    optimize;           // 提示优化匹配速度。同时可能增大构造开销
-    collate;            // 形如 "[a-b]" 的字符范围将对本地环境敏感
-    ECMAScript;         // C++改进版的ECMAScript正则文法
-    // 即mflag，用于模式匹配。默认match_default
-    match_not_bol       // 行首（^pat）无效
-    match_not_eol       // 行尾（pat$）无效
-    match_not_bow       // 行首（\bpat）无效
-    match_not_eow       // 行尾（pat\b）无效
-    match_not_null      // 不匹配空字符序列
-    match_any           // 若多于一个匹配可行，则任何匹配都是可接受的结果
-    match_continuous    // 仅匹配始于 first 的子串
-    match_prev_avail    // --first 是合法的迭代位置。设置时导致 match_not_bol 和 match_not_bow 被忽略
-    // 即rflag，用于模式替换。默认format_default
-    format_default      // 使用ECMAScript规则进行模式替换
-    format_sed          // 使用sed规则进行模式替换
-    format_no_copy      // 不输出/返回不匹配的字符
-    format_first_only   // 只替换首个匹配
-}
-```
-<!-- entry end -->
-<!-- entry begin: regex wregex basic_regex -->
-```cpp
-class basic_regex<CharT> {  // regex wregex 
-    // 构造函数
-    basic_regex()
-    basic_regex(cstr, sflag)
-    basic_regex(cstr, len, sflag)
-    basic_regex(str, sflag)
-    basic_regex(b, e, sflag)
-    basic_regex(il, sflag)
-    // 成员函数
-    unsigned    mark_count()        // 标记的子表达式数目
-    flag        flags()
-    locale      getloc()
-    locale      imbue()             // 返回之前locale
-};
-```
-<!-- entry end -->
-<!-- entry begin: regex match_results cmatch wcmatch smatch wsmatch csub_match wcsub_match ssub_match wssub_match regex_iterator regex_token_iterator -->
-```cpp
-class match_results<BidirIt> {  // cmatch wcmatch smatch wsmatch
-    // 状态
-    bool        ready();
-    // 容量
-    bool        empty();
-    size_t      size();
-    size_t      max_size();
-    // 访问
-    sub_match   prefix();           // 返回当前匹配表达式相对整个目标的前缀的sub_match
-    sub_match   suffix();           // 返回当前匹配表达式相对整个目标的后缀的sub_match
-    sub_match   operator[](n);      // 返回第n个子表达式的sub_match
-    itr         begin();
-    itr         cbegin();
-    itr         end();
-    itr         cend();
-    String      str(n = 0);         // 返回第n个子表达式的字符串。n=0表示整个表达式
-    size_t      length(n = 0);      // 返回第n个子表达式的长度。n=0表示整个表达式
-    size_t      position(n = 0);    // 返回第n个子表达式的首字符在目标字符串的位置。n=0表示整个表达式
-    // 格式化替换
-    outItr      format(outItr, fmtStr, rflag);
-    outItr      format(outItr, fmrB, fmtE, rflag);
-    string      format(fmtStr, rflag);
-    string      format(fmrB, fmtE, rflag);
-};
-class sub_match<BidirIt> {  // csub_match wcsub_match ssub_match wssub_match
-    // 观察器
-    BidirIt     first;      // 子表达式开始
-    BidirIt     second;     // 子表达式尾后
-    String      str();
-    operator    String();
-};
-class regex_iterator<BidirIt> { // cregex_iterator wcregex_iterator sregex_iterator wsregex_iterator
-    // 构造函数
-    regex_iterator();                               // 默认构造为尾后迭代器
-    regex_iterator(b, e, regex, mflag);             // 迭代器在每个匹配区间停留，每次从上次末尾开始匹配（不重合）。禁止regex右值
-
-    match_results    operator*()                    // 返回match_results
-};
-class regex_token_iterator<BidirIt> {   // cregex_token_iterator wcregex_token_iteratorsregex_token_iterator wsregex_token_iterator
-    // 构造函数
-    regex_token_iterator();                         // 默认构造为尾后迭代器
-    regex_token_iterator(b, e, regex, il, mflag);   // il指定关注的regex中的子表达式，0表示全部，-1表示模式取反。禁止regex右值。
-    // 若有多个匹配组，则匹配组之间轮换
-
-    sub_match       operator*()                     // 返回sub_match
-};
-```
-<!-- entry end -->
-<!-- entry begin: regex regex_match regex_search regex_replace -->
-```cpp
-// 没搜索到则match为空，其prefix余suffix也为空
-bool    regex_match(str,  [match&,] regex, mflag);
-bool    regex_match(b, e, [match&,] regex, mflag);
-
-bool    regex_search(str,  [match&,] regex, mflag);
-bool    regex_search(b, e, [match&,] regex, mflag);
-
-outItr  regex_replace(outItr, str,  regex, fmt, rflag);  // 利用fmt替换掉每个匹配的regex
-outItr  regex_replace(outItr, b, e, regex, fmt, rflag);
-string  regex_replace(str,  regex, fmt, rflag);
-string  regex_replace(b, e, regex, fmt, rflag);
-// 替换格式化语法：
-// $&       替换为regex中整个表达式的匹配
-// $0       替换为regex中整个表达式的匹配
-// $1, ...  替换为regex中第1个子表达式的匹配
-// $`       替换为前缀
-// $'       替换为后缀
-// $$       转义$
-```
-<!-- entry end -->
-
 ## 输入输出库
 ### 组件总览
 <!-- entry begin: iostream iosfwd 组件总览 -->
@@ -1608,16 +1608,16 @@ class basic_iofstream { // 预定义有 fstream ifstream ofstream wfstream wifst
     // 构造函数
     basic_iofstream(filename, oflag)
     /*
-     * in              // 只读              （文件必须存在）
-     **** out          // 清空然后涂写      （有必要则创建）
-     * out|trunc       // 清空然后涂写      （有必要则创建）
-     * out|app         // 追加              （有必要则创建）
-     **** app          // 追加              （有必要则创建）
-     * in|out          // 读写，初始位置为0 （文件必须存在）
-     * in|out|trunc    // 清空然后读/写     （有必要则创建）
-     * in|out|app      // 读写，追加        （有必要则创建）
-     **** in|app       // 读写，追加        （有必要则创建）
-     * binary          // 不将`\r\n`替换为`\n`
+     * in               // 只读             （文件必须存在）
+     * out              // 截断             （有必要则创建）
+     * app              // 追加             （有必要则创建）
+     * out|trunc        // 截断             （有必要则创建）
+     * out|app          // 追加             （有必要则创建）
+     * in|out           // 读写             （文件必须存在）
+     * in|out|trunc     // 读写，截断       （有必要则创建）
+     * in|out|app       // 读写，追加       （有必要则创建）
+     * in|app           // 读写，追加       （有必要则创建）
+     * binary           // 不将`\r\n`替换为`\n`
     */
     // 特有成员函数
     bool    is_open()

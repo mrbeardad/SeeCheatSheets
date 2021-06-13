@@ -120,8 +120,10 @@ with Expr as inst:
 | `and`                                                                | 逻辑与             |
 | `or`                                                                 | 逻辑或             |
 
-* 赋值为语句而非表达式，且多重赋值`a = b = c`的意思是`a = c; b = c`而非`b = c; a = b`
-* 元组赋值`a, b = b, a`中，先计算等号右边产生副本，再将副本赋值给左边
+* 赋值为语句而非表达式
+    * 连续赋值`a = b = c`的意思是`a = c; b = c`而非`b = c; a = b`
+    * 多元赋值`a, b = b, a`中，先计算等号右边产生副本，再将副本赋值给左边
+    * 解包赋值`a, b = itr`赋值itr中的元素给a, b，itr中元素数量必须刚好
 * 支持连续比较`a > b > c`即`a > b and b > c`
 * 浮点数支持`%`运算符
 
@@ -186,7 +188,8 @@ lambda arg1, arg2: retExpr
 ```
 
 # 类
-python不存在真正的封装，所有属性均可动态增删改查
+* python不存在真正的封装，所有属性均可动态增删改查
+* 自定义类型也是引用语义
 
 ## 封装
 ```python
@@ -344,7 +347,7 @@ zip(*itr)                       # 返回各范围元素组合后的迭代器
 
 <!-- entry begin: python string -->
 ## 字符串
-* 字符串为只读类型，底层类型即使`byte[]`
+* 字符串为只读类型，底层类型即码点数组，可转换为`byte`
 ```python
 # 构造
 '可直接包含""的字符串'
@@ -398,13 +401,13 @@ Str.title()
 Str.upper()
 Str.lower()
 Str.swapcase()
-Str.encode(encoding="utf-8")
-Str.expandtabs(tabsize=8)
 Str.center(width[, fill])
 Str.ljust(width[, fill])
 Str.rjust(width[, fill])
 Str.zfill(width)                # 用零填充左边至长度为width（若width小于len(Str)则忽略），若第一个字符为+或-则在其后添加0
 Str.replace(old, new [, count]) # 默认替换所有old为new
+Str.encode(encoding="utf-8")    # 返回byte，Byte.decode(encoding="utf-8")返回str
+Str.expandtabs(tabsize=8)
 
 Str.lstrip([chars])             # 移除开头出现在chars中的字符，默认空白符
 Str.rstrip([chars])             # 移除结尾出现在chars中的字符，默认空白符
@@ -432,13 +435,8 @@ Tuple = tuple([itr])
 Tuple = ()
 Tuple = (e0, )      # 括号在一定情况下可省略
 Tuple = (e0, e1)    # 括号在一定情况下可省略
-Tuple = e0,
-Tuple = e0, e1
 Tuple = Tuple1 + Tuple2
 Tuple = Tuple * num
-
-T1, T2= e0, e1
-T1, T2= itr
 
 # 访问与搜索
 Tuple[beg:[end[:step]]] # 支持负数-n表示倒数第n个元素下标
@@ -586,19 +584,10 @@ exec(code)  # 动态解析代码片段并仅产生其副作用而返回None
 ```python
 input(prompt='')            # 遇换行停止
 
-print(*obj,
-    sep=' ', end='\n'
-    file=sys.stdout,
-    flush=False)
+print(*obj, sep=' ', end='\n')
 
 open(file,                  # 返回file可用于for-in语句，每次循环处理一行（包含换行符）
-    mode='r',               # 只读'r'、截断'w'、追加'a'、读写'+'、排它'x'、二进制'b'、文本't'）
+    mode='r',               # 只读r、截断w、追加a；读写+、二进制b、文本t、文件已存在则失败x
     buffering=-1,           # 关闭缓冲0（仅二进制）、行缓冲1（仅文本）、指定缓冲区大小>1
-    encoding=None,
-    errors=None,
-    newline=None,
-    closefd=True,
-    opener=None)
+    encoding=None)          # 编码为系统默认编码
 ```
-
-
