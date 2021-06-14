@@ -140,7 +140,7 @@ func (re *Regexp) MatchReader(r io.RuneReader) bool
 // 将src中匹配到的match按fmt替换后追加到dst中，返回新dst
 func (re *Regexp) Expand(dst []byte, fmt []byte, src []byte, match []int) []byte
 func (re *Regexp) ExpandString(dst []byte, fmt string, src string, match []int) []byte
-func (re *Regexp) ReplaceAll(Func)?(Literal)?(String)?
+func (re *Regexp) ReplaceAll(Func|Literal)?(String)?
 
 // 切分
 func (re *Regexp) Split(s string, n int) []string

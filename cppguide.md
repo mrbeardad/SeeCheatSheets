@@ -21,13 +21,13 @@
 
 * 形式
     > 默认初始化意味着该变量处于不可用状态，接下来需要对其进行初始化  
-    > 若initializer的类型并非期望类型，则使用cast显式转换  
-    > 意图初始化为零值也应显式使用字面值
-    * `auto  t = initializer`
-    * `auto* t = initializer`
-    * `auto& t = initializer`
-    * `T t{args}`
-    * `T t(args)`
+    > 若initializer的类型并非期望类型，则使用cast显式转换
+    * `T t;`
+    * `auto  t = initializer;`
+    * `auto* t = initializer;`
+    * `auto& t = initializer;`
+    * `auto  t = T{args}`
+    * `auto  t = T(args)`
 
 # 函数设计
 ```
