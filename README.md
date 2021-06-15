@@ -2,9 +2,10 @@
 <!-- vim-markdown-toc GFM -->
 
 - [安装](#安装)
-- [C++](#c)
-- [Golang](#golang)
-- [Python](#python)
+- [编程语言](#编程语言)
+  - [C++](#c)
+  - [Golang](#golang)
+  - [Python](#python)
 - [编程之道](#编程之道)
 - [Linux](#linux)
 - [数据库](#数据库)
@@ -37,23 +38,33 @@ cmake --install .
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")  
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
-# C++
-* [C++语法特性](cpp.md):star:
-    > 一份语法清单，适合有基础的同学
-* [C++程序库](cppman.md):star:
-    > C++标准库以及一些第三方库
+# 编程语言
+* [思想碰撞](langdiff.md):star:
+    > 不同的语言有各自不同的特点以及背后的思想
+* [基础组件](langman.md):star:
+    > 掌握一门语言的必要条件是熟悉它的基础组件
+
+## C++
+* [C++语法特性](cpp.md)
+    > 一份C++语法清单，适合有基础的同学
+* [C++程序库](cppman.md)
+    > 应该掌握的基础C++库
 * [C++编程向导](cppguide.md):star:
-    > 编写高效健壮的C++代码
+    > 优雅的编写C++代码
 * [C++编码风格](cppstyle.md)
-    > 对代码风格进行规范，拒绝选择困难症
+    > 规范代码风格，拒绝选择困难症
 * [CMake构建系统](cmake.md)
-    > CMake系统构建工具语法
+    > 依赖管理与项目构建
 
-# Golang
-* [Go语言基础](go.md):star:
-    > 基础语法
+## Golang
+* [Go语言基础](go.md)
+    > Go语言基础
+* [Go程序库](goman.md)
+    > Go基础库
+* [Go编程向导](goguide.md):star:
+    > Go编程向导
 
-# Python
+## Python
 * [Python基础](python.md):star:
     > 基础语法与内置类型操作
 

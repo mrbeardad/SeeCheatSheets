@@ -149,3 +149,10 @@ func (re *Regexp) ReplaceAll(Func|Literal)?(String)?
 // 切分
 func (re *Regexp) Split(s string, n int) []string
 ```
+
+# 单元测试
+## 断言
+
+## 模拟
+
+## 打桩
