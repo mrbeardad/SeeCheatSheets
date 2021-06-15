@@ -516,15 +516,15 @@ Set -=  Other
 Set ^   Other
 Set ^=  Other
 ```
+**不可hash类型包括：list, set, dict**
 <!-- entry end -->
-
 <!-- entry begin: python dict -->
 ## 字典
 ```python
 # 构造
 Dict = dict([itr])      # itr元素为键值对元组
 Dict = {}
-Dict = {key: value}     # 键为不可变类型，如数值类型、字符串、元组
+Dict = {key: value}
 Dict = {key: val for x in itr if condition}
 
 # 访问与搜索

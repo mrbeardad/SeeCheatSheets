@@ -391,7 +391,7 @@ default:
 
 ## 指针类型
 ```go
-var p uintptr = &T{}
+var p uintptr = &T{}    // 为了垃圾回收机制而实现为“智能共享指针(shared_ptr)”
 ```
 
 ## 布尔类型
@@ -419,7 +419,9 @@ f = 0x1p1       // 小数点可忽略，但指数部分不可忽略，基数为2
 ```
 
 ## 字符类型
-* 字符串值底层数据结构：元素类型为byte的动态数组管理器`{buf, len, cap}`
+* 字符串值底层数据结构：元素类型为byte的动态数组管理器`{buf, len}`
+* 字符串为immutable的原因是使用场景广泛需要确保其安全性（不被caller并发修改）
+* string相比[]byte，会在修改和转换为[]byte时必定出现拷贝
 ```go
 var b byte      // int8别名
 var r rune      // int32别名，注意存储Unicode码点而非UTF-8编码，二者均兼容ascii

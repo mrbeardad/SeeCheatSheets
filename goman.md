@@ -56,6 +56,9 @@ func Sscanf(str string, format string, a ...interface{}) (n int, err error)
 
 ## 字符串
 ```go
+import "strings"
+import "bytes"
+
 // 比较
 func Compare(a, b string) int
 func EqualFold(s, t string) bool    // 忽略Unicode大小写
@@ -90,7 +93,7 @@ func Repeat(s string, count int) string
 // 替换
 func Replace(s, old, new string, n int) string
 func ReplaceAll(s, old, new string) string
-func ToValidUTF8(s, replacement string) string
+func ToValidUTF8(s, replacement string) string  // 将错误的字节替换为replacement
 func Map(mapping func(rune) rune, s string) string
 // 大小写转换
 func Title(s string) string
@@ -114,6 +117,7 @@ func TrimSuffix(s, suffix string) string
 
 ## 正则表达式
 ```go
+import "regexp"
 // 构造Regexp
 func Compile(expr string) (*Regexp, error)
 func MustCompile(str string) *Regexp
