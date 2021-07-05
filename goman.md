@@ -1,5 +1,6 @@
 # 字符处理
 ## 格式化
+<!-- entry begin: go fmt -->
 ```go
 import . "fmt"
 
@@ -45,7 +46,7 @@ func Sscanf(str string, format string, a ...interface{}) (n int, err error)
 | %d    | 打印十进制           | 整数                 |
 | %x    | 打印十六进制小写字母 | 整数、浮点数、string |
 | %X    | 打印十六进制大写字母 | 整数、浮点数、string |
-| %e %G | 打印科学计数法e或E   | 浮点数               |
+| %e %E | 打印科学计数法e或E   | 浮点数               |
 | %f %F | 打印定点数           | 浮点数               |
 | %g %G | 打印智能选择         | 浮点数               |
 | %c    | 打印码点对应字符     | byte、rune           |
@@ -53,6 +54,7 @@ func Sscanf(str string, format string, a ...interface{}) (n int, err error)
 | %s    | 打印字符串           | string               |
 | %q    | 打印引用后的字符串   | string               |
 | %p    | 打印十六进制指针值   | 指针                 |
+<!-- entry end -->
 
 ## 字符串
 ```go

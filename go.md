@@ -53,7 +53,7 @@ go env
 
 go clean                        # 清除构建缓存
 go build [-o exe] [file.go]     # 编译当前目录包或指定文件及其依赖
-go test                         # 编译并测试当前目录下包的测试代码XXX_test.go
+go test [-c -o exe] [file.go]   # 编译并测试当前目录下包的测试代码XXX_test.go
 go run [package|file.go]        # 编译并运行package或指定文件
 go install                      # 安装当前包及其依赖
 ```
@@ -164,7 +164,7 @@ const (
     }
 
 // 支持字符串、数组、数组指针、切片、映射、通道
-    for idxOrKey, val := range container {  // 注意range表达式会对值进行一次拷贝，区分引用语义与值语义类型
+    for idxOrKey, val := range container {  // 注意range表达式会对结构值进行一次拷贝，区分引用语义与值语义类型
         for idxOrKey := range container {
             for data := range channel {     // 通道被关闭则退出循环
                 for range any {
@@ -274,7 +274,7 @@ func init() {
 type double = float64
 
 // 类型定义
-type Int     int    // 继承底层类型的构造方式
+type Int   int      // 继承底层类型的构造方式
 type Class struct {
     ExportMem T     // 导出包外
     _         T     // 填充对齐
@@ -286,7 +286,7 @@ var i = Int(1.0)
 var (
     obj1 = Type{}               // 默认构造为全零值
     obj2 = Type{v1, v2}         // 必须全部显式初始化
-    obj3 = Type{ExportMem: val2}// 支持部分显式初始化
+    obj3 = Type{ExportMem: val} // 支持部分显式初始化
     pObj = &Type{}              // 直接返回指针
 )
 
@@ -297,8 +297,8 @@ func (self Class) MethodVal(arg T) RetT {   // 值方法
     return RetT{"B"}
 }
 func (this *Class) MethodPtr(arg T) RetT {  // 指针方法
-    self.inlineMem = arg
-    self.ExportMem = arg
+    this.inlineMem = arg
+    this.ExportMem = arg
     return RetT{"A"}
 }
 
@@ -338,10 +338,10 @@ type RW struct {    // 匿名字段的方法集会被加入外部类型的方法
 * 接口值底层数据结构：含两个指针——一个指向类型信息，一个指向动态值
 ```go
 // 任何完整实现了接口定义的方法的类对象均可赋值给接口对象
-var i Interface{}   // 零值为nil
+var i interface{}   // 零值为nil
 // i指向值的副本
-i = Impl{}          // Impl类型的方法集仅包含接收者为Impl方法，而*Impl类型的方法集包含接收者为*Impl或Impl的方法
-i = &Impl{}         // 若Impl至少有一接口方法以指针形式实现，则只能赋值*Impl给接口变量
+i = Impl{}          // 拷贝结构值
+i = &Impl{}         // 拷贝指针
 
 // 类型断言（运行时），i仅能成功转换为其真实类型或某个符合的接口类型
 i     = i.(T)       // 尝试将接口类型i转换为T类型，若失败则触发恐慌
@@ -559,7 +559,7 @@ default:// 使用default实现try，注意不应对无缓冲通道进行try，�
         default:
         }
         ```
-        * 中间者发送一对多异步信号给中间者
+        * 中间者发送一对多异步信号给senders和receivers
         ```go
         close(stopCom)
         ```
