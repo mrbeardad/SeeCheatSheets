@@ -30,7 +30,7 @@ git clone --depth=1 https://github.com/mrbeardad/SeeCheatSheets ~/.cheat
 mkdir ~/.cheat/build
 cd ~/.cheat/build
 cmake -D CMAKE_BUILD_TYPE=Release ..
-cmake --build .
+cmake --build . -t see
 cmake --install .
 ```
 
