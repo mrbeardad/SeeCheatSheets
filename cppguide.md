@@ -104,7 +104,6 @@ GFM
 * Container使用`emplace`函数代替`push|insert`函数
 * Container引用元素时，若下标为非常量，则应使用`at()`代替`operator[]()`
 * Container增删元素时，注意range-based-for、引用、指针、迭代器的有效性
-<!-- entry end -->
 
 # 性能优化
 * 减少分支

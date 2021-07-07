@@ -434,12 +434,14 @@ s = "多个符文"
 s = `raw string\
 even contain newline`
 
-len(s)
+// 返回字符串子串而非切片
 v = str[idx]
 s = str[beg:end]
 s = str[beg:]
 s = str[:end]
 s = str[:]
+
+len(s)
 ```
 
 
@@ -456,6 +458,7 @@ s = array[beg:end]
 s = array[beg:]
 s = array[:end]
 s = array[:]
+
 len(array)
 len(&array)
 cap(array)
@@ -475,6 +478,7 @@ s = slice[beg:end]
 s = slice[beg:]
 s = slice[:end]
 s = slice[:]
+
 len(slice)
 cap(slice)
 
@@ -497,9 +501,9 @@ var mapped map[Key]Val          // 零值为nil，无key且不能添加key
 mapped = make(map[Key]Val)      // 空map，无key但可以添加key
 mapped = map[Key]Val{key1: val1, /*...*/}
 
+len(mapped)
 val = mapped[key]               // 若不存在则返回对应零值
 val, ok = mapped[key]
-len(mapped)
 
 mapped[key] = val
 delete(mapped, key)
