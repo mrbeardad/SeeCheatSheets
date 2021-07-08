@@ -593,8 +593,8 @@ int     sigprocmask(int how, const sigset_t* set, sigset_t* oldset);    // 返�
 int     pthread_sigmask(int how, const sigset_t* set, sigset_t* oleset);// 返回0。how可以为SIG_BLOCK、SIG_UNBLOCK、SIG_SETMASK之一，错误返回errno
 
 /* 其他与信号有关的函数 */
-int             sigwait(const sigset_t* set, int* signop);              // 返回0
-int             sigsuspend(const sigset_t* mask);                       // 返回0。
+int     sigwait(const sigset_t* set, int* signop);                      // 返回0
+int     sigsuspend(const sigset_t* mask);                               // 返回0。
 // 等价于原子版本的
 // sigprocmask(SIG_SETMASK, &mask, &old); pause(); sigprocmask(SIG_SETMASK, &old, NULL);
 // 类似线程同步技术：

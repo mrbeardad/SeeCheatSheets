@@ -34,4 +34,3 @@
         > 应用上述“一对多异步事件信号”模型和“select多路复用”模型
     * 多个sender多个receiver：引入中间者
         * 任一sender或receiver尝试发送一对一异步信号给中间者
-        ```go

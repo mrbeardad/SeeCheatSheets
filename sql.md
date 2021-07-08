@@ -336,7 +336,7 @@ SELECT [DISTINCT] expr [AS fd_alias], ...       -- expr表示选择列或表达�
 [FROM tbl_name [AS tbl_alias], ...]             -- 若有多个表则expr中列名必须加上表名
 
 [[INNER|LEFT|RIGHT] JOIN tbl_name[AS tbl_alias]]-- 连接多表，与在FROM子句中指定多表区别在于此处可外连接，首选INNER JOIN而非FROM联结
-[ON clause]                                     -- 类似WHERE，但对于外连接不会过滤掉驱动表的行
+[ON clause]                                     -- 类似WHERE，但对于外连接对驱动表的行均判定为真
 
 [WHERE clause]                                  -- WHERE子句，用于条件过滤索引
 
