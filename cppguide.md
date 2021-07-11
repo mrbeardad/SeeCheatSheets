@@ -26,8 +26,8 @@
     * `auto  t = initializer;`
     * `auto* t = initializer;`
     * `auto& t = initializer;`
-    * `auto  t = T{args}`
-    * `auto  t = T(args)`
+    * `auto  t = T{args...}`
+    * `auto  t = T(args...)`
 
 # 函数设计
 ```

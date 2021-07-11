@@ -16,13 +16,8 @@ CodeBlk::CodeBlk()
 
 bool CodeBlk::matchBegin(const std::string& oneline)
 {
-    size_t idx{};
-    for ( ; idx < oneline.size() && oneline[idx] == '`'; ++idx );
-    if ( idx == 0 )
-        return false;
-    for ( ; idx < oneline.size() && std::isalnum(oneline[idx]); ++idx );
-    for ( ; idx < oneline.size() && std::isspace(oneline[idx]); ++idx );
-    return idx == oneline.size();
+    static auto CodeBlkBeginRegex = std::regex{R"(\s*`{3,}\w*\s*)"};
+    return std::regex_match(oneline, CodeBlkBeginRegex);
 }
 
 
@@ -33,13 +28,9 @@ bool CodeBlk::matchEnd(const std::string &oneline)
         return true;
     }
 
-    size_t idx{};
-    for ( ; idx < oneline.size() && oneline[idx] == '`'; ++idx );
-    if ( idx == 0 )
-        return false;
-    for ( ; idx < oneline.size() && std::isspace(oneline[idx]); ++idx );
+    static auto CodeBlkEndRegex = std::regex{R"(\s*`{3,}\s*)"};
     // 如果匹配到类末尾，则先将该行匹配进来，下行则返回false表示不要下行
-    if ( idx == oneline.size() ) {
+    if ( std::regex_match(oneline, CodeBlkEndRegex) ) {
         matchedEnd_ = true;
     }
     return false;
@@ -50,7 +41,7 @@ std::string& CodeBlk::highlight(std::string& text)
 {
     auto type = text.substr(0, text.find('\n') + 1);
     // 同时去掉形如```cpp头部与形如```尾部
-    std::stringstream sstrm{text.substr(type.size(), text.find_last_not_of("`\n") + 2 - type.size())};
+    std::stringstream sstrm{text.substr(type.size(), text.find_last_not_of("`\n ") + 2 - type.size())};
     text.clear();
     size_t first{type.find_first_not_of('`')};
     type = type.substr(first, type.find_first_of(" \n\t") - first);

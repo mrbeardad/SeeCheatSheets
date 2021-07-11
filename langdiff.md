@@ -42,10 +42,10 @@
         * if-else
         * switch-case-default
     * 循环
-        * do-while
-        * while
         * for
         * range-based-for
+        * do-while
+        * while
     * 异常
         * try-catch
         * throw

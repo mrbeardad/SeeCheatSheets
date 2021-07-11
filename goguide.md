@@ -15,7 +15,6 @@
 
 
 * 优雅的使用通道
-    > 编写go代码时，可在心中延用经典的多线程模型，只是goroutine在CPU密集型效率更低而在IO密集型效率更高
     * 串行化（`make(chan T)`）
     * 异步安全数据管道（`make(chan Future, bufsize)`）
     * 限制并发量（`make(chan struct{}, MAXPARALLEL)`、`maxChan <- struct{}{}; <-maxChan`）
