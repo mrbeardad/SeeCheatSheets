@@ -126,7 +126,7 @@
 * 中序遍历：根节点将序列分为左右两边
 
 * 有序遍历：最小值在最左节点，最大值在最右节点；
-    对于下个节点，若有右子树则为右子树最左节点，否则向上搜索直至根节点或该节点为其父节点的左子节点（下个节点即为其父节点）
+    对于下个节点，若有右子树则为右子树最左节点，否则向上搜索直至根节点或某节点为其父节点的左子节点（父节点为下个节点）
 
 * 插入算法：利用引用语义传入父节点的子节点指针`TreeNode*& root`
     从而简化递归基准为为`if ( root == nullptr ) { root = new TreeNode{val}; return; }`
@@ -137,6 +137,7 @@
 
 ## 哈希表
 **关键字**：极快速搜索、频度统计、重复值校验
+
 
 ## 二分搜索
 **关键字**：搜索有序序列
@@ -175,7 +176,7 @@ void quick_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
         swap(*begin, *end);
     if ( comp(*mid, *last) )    // 将最小值放尾部
         swap(*mid, *last);
-    if ( comp(*mid, *begin) )   // 将中指放首位
+    if ( comp(*mid, *begin) )   // 将中值放首位
         swap(*mid, *begin);
     swap(*begin, *last);        // 最终使最小值在首位，中指在尾部；如此间接放置的原因是当只有两个元素时依然可行
     auto& piovt = *last;

@@ -60,7 +60,7 @@ cmake --install .
 * [Go语言基础](go.md)
     > Go语言基础
 * [Go程序库](goman.md)
-    > Go基础库
+    > Go程序库
 * [Go编程向导](goguide.md):star:
     > Go编程向导
 
