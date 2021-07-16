@@ -104,63 +104,7 @@
 * DHCP接收：服务端接收并确认客户端的确认
 
 ### HTTP
-***TCP 80***
-
-**请求报文格式**  
-![http请求报文格式](images/http.jpg)
-* 方法：
-    * `GET`
-        > 请求URL定位的资源，URL后`?`结尾表示URL结尾与请求参数开始
-    * `POST`
-    * `HEAD`
-    * `PUT`
-    * `DELETE`
-    * `OPTIONS`
-    * `TRACE`
-    * `CONNECT`
-* 首部行：
-    * `Host`                    ：目的主机名`google.com`
-    * `User-Agent`              ：浏览器类型`Mozilla/5.0`
-    * `Connection`              ：连接方式`close|Keep-Alive`
-    * `Accept`                  ：内容类型`*/*`
-    * `Accept-Language`         ：自然语言`zh-CN`
-    * `Accept-Encoding`         ：压缩格式`gzip`
-    * `Accept-Charset`          ：字符编码`ISO-8859-1`
-    * `If-Modified-Since`       ：是否已变更`Wed, 9 Sep 2015 09:23:24`
-    * `Cookie`                  ：客户端存储目的域名的Cookie
-    * `Reference`               ：由`URL`跳转而来
-
-**响应报文格式**  
-![http响应报文格式](images/httpd.png)
-* 方法：`GET` `POST` `HEAD` `PUT` `DELETE`
-* 状态码：
-    * 200 OK                    ：表示客户端请求成功
-    * 400 Bad Request           ：表示客户端请求有语法错误，不能被服务器所理解
-    * 401 Unauthonzed           ：表示请求未经授权，该状态代码必须与 WWW-Authenticate 报头域一起使用
-    * 403 Forbidden             ：表示服务器收到请求，但是拒绝提供服务，通常会在响应正文中给出不提供服务的原因
-    * 404 Not Found             ：请求的资源不存在，例如，输入了错误的URL
-    * 500 Internal Server Error ：表示服务器发生不可预期的错误，导致无法完成客户端的请求
-    * 503 Service Unavailable   ：表示服务器当前不能够处理客户端的请求，在一段时间之后，服务器可能会恢复
-* 首部行：
-    * `Location`                ：重定向
-    * `Server`                  ：服务器类型`Apache/2.2.3`
-    * `Date`
-    * `Last-Modified`
-    * `Content-Length`
-    * `Content-Type`
-    * `Set-Cookie`
-
-**访问HTTP服务**
-* Cookie：
-    * 客户端：记录本机在服务器上对应的Cookie号
-    * 服务器：记录客户端在本机上对应的Cookie号，以及相应的用户信息。
-
-* Web代理/缓存：
-    * 进行代理访问
-    * 缓存http报文
-
-* DASH：基于HTTP的动态适应性流  
-    将视频编码为多个清晰度的版本，并将每个版本的视频切分为块，下载时动态选择将要下载的块的版本
+[http](http.md)
 
 ### SMTP
 ***TCP 25***
