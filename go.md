@@ -410,7 +410,7 @@ i, ui = 0o77, 0O77
 i, ui = 99,   99_999
 i, ui = 0xEE. 0Xee
 
-var f float64   // 零值0.0
+var f float32   // 零值0.0
 var d float64
 f = 1.1         // 整数部分或小数部分之一可省略
 f = 1e1         // 小数点或指数部分之一可省略，基数为10

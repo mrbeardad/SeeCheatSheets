@@ -5,7 +5,7 @@
 - [SQL基础](#sql基础)
   - [系统信息](#系统信息)
   - [用户管理](#用户管理)
-  - [数据库](#数据库)
+  - [库](#库)
   - [表](#表)
   - [模式](#模式)
   - [行记录](#行记录)
@@ -64,15 +64,15 @@ SET  NAMES charset;
 ## 用户管理
 <!-- entry begin: sql user grant -->
 ```sql
+SELECT * FROM mysql.user;                                   -- 查询用户
 CREATE USER username [IDENTIFIED BY [PASSWORD] 'passwd'];   -- 创建用户
 DROP   USER username;                                       -- 删除用户
-SELECT * FROM mysql.user;                                   -- 查询用户
 RENAME USER username TO new_username;                       -- 重命名
 SET PASSWORD FOR username = PASSWORD('passwd');             -- 修改密码
 
 SHOW GRANTS [FOR username]                                  -- 查询授权
 GRANT|REVOKE privcode, ... ON db_name.tbl_name TO username; -- 授权|撤销
-FLUSH PRIVILEGES;                                          -- 刷新权限
+FLUSH PRIVILEGES;                                           -- 刷新权限
 
 -- 用户名(username)
     -- user                ：默认host为'%'
@@ -88,35 +88,33 @@ FLUSH PRIVILEGES;                                          -- 刷新权限
 ```
 <!-- entry end -->
 
-## 数据库
+## 库
 <!-- entry begin: sql database db -->
 ```sql
-CREATE DATABASE  [IF NOT EXISTS] db_name
-    [CHARSET=charset] [COLLATE=collate];    -- 创建数据库
+SHOW   DATABASES [LIKE 'pattern'];          -- 查询数据库
+CREATE DATABASE  [IF NOT EXISTS] db_name    -- 创建数据库
 DROP   DATABASE  [IF EXISTS]     db_name;   -- 删除数据库
-SHOW   DATABASES [LIKE 'pattern'];          -- 查询已有数据库
-SHOW   CREATE    DATABASE db_name;          -- 查询数据库详情
-ALTER  DATABASE  db_name option
+ALTER  DATABASE  db_name option             -- 修改数据库选项
+
+USE    db_name;                             -- 选择数据库
 ```
 <!-- entry end -->
 
 ## 表
 ```sql
+SHOW   TABLES [LIKE 'pattern'];                         -- 查询数据表
+SHOW   TABLE  STATUS [LIKE 'pattern']                   -- 查询数据表详情
 -- 临时表只在单个连接中可见，断开连接时销毁；
 -- 临时表可能使用Memory引擎或MyISAM引擎
 -- Memory引擎不支持TEXT族和BLOB族类型数据，故这类临时表只能使用磁盘MyISAM
-CREATE [TEMPORARY] TABLE [db_name.]tbl_name (           -- 创建数据表
+CREATE [TEMPORARY] TABLE tbl_name (                     -- 创建数据表
         fd_name type [const],
         ...,
         [PRIMARY KEY (fd_name),]
         [KEY         (fd_name),]
         [FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name),]
-        [CHECK       (clause)]
-    ) [ENGINE=engine] [CHARSET=charset] [COLLATE=collate];
-DROP   TABLE  tbl_name;                                 -- 删除数据表
-SHOW   TABLES [FROM db_name ] [LIKE 'pattern'];         -- 查询已有数据表
-SHOW   TABLE  STATUS [LIKE 'pattern']                   --
-SHOW   CREATE TABLE tbl_name;                           -- 查询数据表详情
+    ) [ENGINE=engine] [CHARSET=charset] [COLLATE=collate] [AUTO_INCREMENT=n];
+DROP    TABLE tbl_name;                                 -- 删除数据表
 ALTER   TABLE tbl_name option=val;                      -- 修改表选项
 RENAME  TABLE tbl_name TO [new_db_name.]new_tbl_name;   -- 修改表名
 ```
@@ -126,24 +124,20 @@ RENAME  TABLE tbl_name TO [new_db_name.]new_tbl_name;   -- 修改表名
 <!-- entry begin: sql table index metadata -->
 ```sql
 -- field
+SHOW COLUMNS FROM tbl_name;
 ALTER TABLE tbl_name ADD    fd_name type [const] [FIRST| AFTER fd_name];
 ALTER TABLE tbl_name DROP   fd_name;
-SHOW COLUMNS FROM tbl_name;
 ALTER TABLE tbl_name CHANGE fd_name new_fd_name type [const];
 ALTER TABLE tbl_name MODIFY fd_name type [const];
 
 -- index
+SHOW  INDEX FROM tbl_name;
 ALTER TABLE tbl_name ADD  INDEX idx_name(fd_name);
 ALTER TABLE tbl_name DROP INDEX idx_name;
-SHOW  INDEX FROM tbl_name;
 
 -- FOREIGN KEY：两域类型必须相同，且被引用的域必须为`UNIQUE`
 ALTER TABLE tbl_name ADD  FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name);
 ALTER TABLE tbl_name DROP FOREIGN KEY fk_name;
-
--- CHECK
-ALTER TABLE tbl_name ADD CONSTRAINT ck_name CHECK (clause);
-ALTER TABLE tbl_name DROP CHECK ck_name;
 ```
 <!-- entry end -->
 
@@ -197,8 +191,8 @@ SET fd_name=value, ...
 ### 时间日期
 * 尽量选择TIMESTAMP
     * 存储UTC而根据时区显示对应RTC
-    * 默认`NOT NULL`
-    * 默认插入或更新时会更新第一个TIMESTAMP列
+    * 支持`DEFAULT CURRENT_TIMESTAMP`
+    * 支持`ON UPDATE CURRENT_TIMESTAMP`
 * 除DATE外，其余类型支持在其后添加`(fps)`表示秒级小数位数
 
 | 类型      | 字节 | 格式                |

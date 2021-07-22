@@ -158,3 +158,18 @@ func Sscanf(str string, format string, a ...interface{}) (n int, err error)
 ## 模拟
 
 ## 打桩
+
+# Web框架：Gin
+* 定义struct用来读/写时与表中行记录对接
+    * 字段名`SnakeCases` => 列名`snake_cases`
+    * 类型：
+        * `整数     <=> 整数`
+        * `浮点数   <=> 浮点数`
+        * `string   <=> 字符`
+        * `[]byte   <=> 字节`
+        * `time.Time<=> 日期时间`
+        * `string   <=> SQL类型`
+    * 标签：
+        * `gorm:"column:name"`指定字段对应列名
+        * `gorm:"not null"`指定字段对应列名
+        * `gorm:"embedded;embeddedPrefix:prefix_"`提升嵌入字段的字段
