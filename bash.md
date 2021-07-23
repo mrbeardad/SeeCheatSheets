@@ -214,8 +214,7 @@
 <!-- entry begin: function 函数 -->
 * 定义函数
 ```sh
-function funcname()
-{
+function funcname() {
     statements
     return val
 }

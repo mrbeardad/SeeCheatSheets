@@ -7,7 +7,7 @@ import "bytes"
 // 比较
 func Compare(a, b string) int
 func EqualFold(s, t string) bool    // 忽略Unicode大小写
-// 搜索
+// 查询
 func Count(s, substr string) int
 func Contains(s, substr string) bool
 func ContainsRune(s string, r rune) bool
@@ -23,18 +23,25 @@ func LastIndexAny(s, chars string) int
 func LastIndexFunc(s string, f func(rune) bool) int
 func HasPrefix(s, prefix string) bool
 func HasSuffix(s, suffix string) bool
-// 切分，忽略空白符
-func Fields(s string) []string
+// 切分与连接
+func Fields(s string) []string                  // 连续空白符切分
 func FieldsFunc(s string, f func(rune) bool) []string
-// 切分
 func Split(s, sep string) []string
 func SplitN(s, sep string, n int) []string      // 返回切片长度最大为N
 func SplitAfter(s, sep string) []string
 func SplitAfterN(s, sep string, n int) []string
-// 连接
 func Join(elems []string, sep string) string
-// 重复
 func Repeat(s string, count int) string
+// 删除
+func Trim(s, cutset string) string
+func TrimSpace(s string) string
+func TrimFunc(s string, f func(rune) bool) string
+func TrimLeft(s, cutset string) string
+func TrimLeftFunc(s string, f func(rune) bool) string
+func TrimRight(s, cutset string) string
+func TrimRightFunc(s string, f func(rune) bool) string
+func TrimPrefix(s, prefix string) string
+func TrimSuffix(s, suffix string) string
 // 替换
 func Replace(s, old, new string, n int) string
 func ReplaceAll(s, old, new string) string
@@ -48,16 +55,18 @@ func ToLower(s string) string
 func ToLowerSpecial(c unicode.SpecialCase, s string) string
 func ToUpper(s string) string
 func ToUpperSpecial(c unicode.SpecialCase, s string) string
-// 删除
-func Trim(s, cutset string) string
-func TrimSpace(s string) string
-func TrimFunc(s string, f func(rune) bool) string
-func TrimLeft(s, cutset string) string
-func TrimLeftFunc(s string, f func(rune) bool) string
-func TrimRight(s, cutset string) string
-func TrimRightFunc(s string, f func(rune) bool) string
-func TrimPrefix(s, prefix string) string
-func TrimSuffix(s, suffix string) string
+```
+
+## 字符处理
+```go
+import strconv
+func IsGraphic(r rune) bool
+func IsPrint(r rune) bool
+func Atoi(s string) (int, error)
+func Itoa(i int) string
+func Quote(s string) string
+func Unquote(s string) (string, error)
+
 ```
 
 ## 正则表达式
@@ -85,8 +94,7 @@ func (re *Regexp) Match(b []byte) bool              // 匹配子串，全匹配�
 func (re *Regexp) MatchString(s string) bool
 func (re *Regexp) MatchReader(r io.RuneReader) bool
 
-// 模式替换
-// 将src中匹配到的match按fmt替换后追加到dst中，返回新dst
+// 模式替换：将src中匹配到的match按fmt替换后追加到dst中，返回新dst
 func (re *Regexp) Expand(dst []byte, fmt []byte, src []byte, match []int) []byte
 func (re *Regexp) ExpandString(dst []byte, fmt string, src string, match []int) []byte
 func (re *Regexp) ReplaceAll(Func|Literal)?(String)?
@@ -98,7 +106,7 @@ func (re *Regexp) Split(s string, n int) []string
 ## 格式化
 <!-- entry begin: go fmt -->
 ```go
-import . "fmt"
+import "fmt"
 
 // 若两个操作数均非字符串，则中间添加空格
 func Print(a ...interface{}) (n int, err error)
@@ -159,7 +167,7 @@ func Sscanf(str string, format string, a ...interface{}) (n int, err error)
 
 ## 打桩
 
-# Web框架：Gin
+# ORM框架：gorm
 * 定义struct用来读/写时与表中行记录对接
     * 字段名`SnakeCases` => 列名`snake_cases`
     * 类型：
