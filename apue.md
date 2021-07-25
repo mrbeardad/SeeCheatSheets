@@ -911,24 +911,24 @@ int     fdatasync(int fd);                                              // 返�
 <!-- entry end -->
 
 <!-- entry begin: open oflag -->
-| open flag   | 说明                                                                                  |
-|-------------|---------------------------------------------------------------------------------------|
-| O_RDONLY    | 只读模式                                                                              |
-| O_WRONLY    | 只写模式                                                                              |
-| O_RDWR      | 读写模式                                                                              |
-| O_EXEC      | 执行模式                                                                              |
-| O_TRUNC     | 直接清空文件内容                                                                      |
-| O_APPEND    | 每次写时自动原子性调整文件偏移量到文件末尾，但不会自动恢复之前偏移量                  |
-| O_CLOEXEC   | 置位文件描述符标识位FD_CLOEXEC                                                        |
-| O_CREAT     | 若文件不存在则自动创建，需要额外实参mode指定权限位                                    |
-| O_EXCL      | 若文件存在则出错。若同时指定O_CREAT且目标文件为符号连接则报错。原子操作(judge;create) |
-| O_NOFOLLOW  | 若为符号链接则出错                                                                    |
-| O_DIRECTORY | 若不为目录则出错                                                                      |
-| O_SYNC      | 数据与属性同步写入                                                                    |
-| O_DSYNC     | 数据同步写入                                                                          |
-| O_NONBLOCK  | 非阻塞I/O，用于低速I/O与记录锁                                                        |
-| O_NOCTTY    | 会话首进程打开第一个尚未与会话关联的终端时，只要未使用该标识，则将该会话与终端关联    |
-| O_TTY_INIT  | 若打开一个还未打开的终端设备，设置非标准termios参数值                                 |
+| open flag   | 说明                                                                               |
+|-------------|------------------------------------------------------------------------------------|
+| O_RDONLY    | 只读模式                                                                           |
+| O_WRONLY    | 只写模式                                                                           |
+| O_RDWR      | 读写模式                                                                           |
+| O_EXEC      | 执行模式                                                                           |
+| O_TRUNC     | 直接清空文件内容                                                                   |
+| O_APPEND    | 每次写时自动原子性调整文件偏移量到文件末尾，但不会自动恢复之前偏移量               |
+| O_CLOEXEC   | 置位文件描述符标识位FD_CLOEXEC                                                     |
+| O_CREAT     | 若文件不存在则自动创建，需要额外实参mode指定权限位                                 |
+| O_EXCL      | 若文件存在则出错。若同时指定O_CREAT且目标文件存在则报错。原子操作(judge;create)    |
+| O_NOFOLLOW  | 若为符号链接则出错                                                                 |
+| O_DIRECTORY | 若不为目录则出错                                                                   |
+| O_SYNC      | 数据与属性同步写入                                                                 |
+| O_DSYNC     | 数据同步写入                                                                       |
+| O_NONBLOCK  | 非阻塞I/O，用于低速I/O与记录锁                                                     |
+| O_NOCTTY    | 会话首进程打开第一个尚未与会话关联的终端时，只要未使用该标识，则将该会话与终端关联 |
+| O_TTY_INIT  | 若打开一个还未打开的终端设备，设置非标准termios参数值                              |
 <!-- entry end -->
 
 <!-- entry begin: fcntl cmd flock -->

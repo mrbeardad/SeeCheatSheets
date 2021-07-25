@@ -645,32 +645,6 @@ ratio_greater_equal <r1, r2>::value
 ### 数学库
 ```cpp
 #include <cmath>
-// 基本运算
-f   abs(f);             // 求绝对值
-f   fmod(x, y);         // 求 x/y（向零取整）的余数
-f   remainder(x, y);    // 求 x/y（四舍五入）的余数
-f   fma(x, y, z);       // 求 x*y+z
-f   fmax(x, y);         // 求 x,y 中较大者（忽略NAN）
-f   fmin(x, y);         // 求 x,y 中较小者（忽略NAN）
-f   dim(x, y);          // 求 max(0,x-y)
-fl  nanf(Cstr);         // Cstr设置NAN的尾数
-db  nan(Cstr);
-ld  nanl(Cstr);
-// 线性插值
-f   lerp(a, b, t);      // 求 a+t(b-a)
-// 指数函数
-f   log(x);             // 求 ln(x)
-f   log1p(x);           // 求 ln(1+x)
-f   log2(x);            // 求 log₂(x)
-f   log10(x);           // 求 log₁₀(x)
-f   exp(x);             // 求 eˣ
-f   expm1(x);           // 求 eˣ-1
-f   exp2(x);            // 求 2ˣ
-// 幂函数
-f   pow(x, y);          // 求 xʸ
-f   sqrt(x);            // 求 √x
-f   cbrt(x);            // 求 ³√x
-f   hypot(x);           // 求 √(x²+y²)
 // 三角函数
 f   sin(x);             // 求 sin(x)
 f   cos(x);             // 求 cos(x)
@@ -679,25 +653,51 @@ f   asin(x);            // 求 arcsin(x) 在[-π/2, π/2]
 f   acos(x);            // 求 arccos(x) 在[0, π]
 f   atan(x);            // 求 arctan(x) 在[-π/2, π/2]
 f   atan2(y, x);        // 求 arctan(y/x)在[-π, π]
-// 误差与伽马函数
+// 对数函数
+f   log(x);             // 求 ln(x)
+f   log1p(x);           // 求 ln(1+x)
+f   log2(x);            // 求 log₂(x)
+f   log10(x);           // 求 log₁₀(x)
+// 指数函数
+f   exp(x);             // 求 eˣ
+f   expm1(x);           // 求 eˣ-1
+f   exp2(x);            // 求 2ˣ
+f   pow(x, y);          // 求 xʸ
+// 幂函数
+f   sqrt(x);            // 求 √x
+f   cbrt(x);            // 求 ³√x
+// 其他函数
 f   erf(arg);           // 误差函数
 f   erfc(arg);          // 补误差函数
 f   tgamma(arg);        // gamma函数，传入正数相当于求阶乘arg!
 f   lgamma(arg);        // gamma函数的自然对数
+f   lerp(a, b, t);      // 求 a+t(b-a)
+// 浮点运算
+f   fmod(x, y);         // 求 x/y（向零取整）的余数
+f   remainder(x, y);    // 求 x/y（四舍五入）的余数
+f   fmax(x, y);         // 求 max(x, y) 若存在NAN则返回NAN
+f   fmin(x, y);         // 求 min(x, y) 若存在NAN则返回NAN
+f   dim(x, y);          // 求 max(x-y, 0)
+f   fma(x, y, z);       // 求 x*y+z
+f   hypot(x);           // 求 √(x²+y²)
 // 浮点取整
 f   ceil(f);            // 向上取整
 f   floor(f);           // 向下取整
 f   trunc(f);           // 向零取整
 i   round(f);           // 四舍五入
-// 浮点操作
+// 符号
+f   abs(f);             // 求绝对值
+f   copysign(x, y);     // 求 x 的值与 y 的符号组成的浮点值
+// 浮点编码
+fl  nanf(Cstr);         // Cstr设置NAN的尾数
+db  nan(Cstr);
+ld  nanl(Cstr);
+f   modf(f, iptr);      // 将 f 分解为整数与小数。整数存于iptr并返回小数
 f   frexp(f, iptr);     // 将 f 分解为 n * 2ᵉˣᵖ，n ∈ [0.5, 1)。exp存于iptr并返回n
 f   ldexp(f, i);        // 求 f * 2ᵉˣᵖ
-f   modf(f, iptr);      // 将 f 分解为整数与小数。整数存于iptr并返回小数
-f   scalbn(x, exp);     // 求 x * 2ᵉˣᵖ
-i   ilogb(f);           // 求 log₂|f|
 f   logb(f);            // 求 log₂|f|
+i   ilogb(f);           // 求 log₂|f|
 f   nextafter(from, to);// 求 from 趋向 to 的下个可表示的浮点值
-f   copysign(x, y);     // 求 x 的模与 y 的符号组成的浮点值
 ```
 <!-- entry end -->
 
