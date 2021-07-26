@@ -41,7 +41,7 @@ cmake --install .
 # 编程语言
 * [思想碰撞](langdiff.md):star:
     > 不同的语言有各自不同的特点以及背后的思想
-* [基础组件](langman.md):star:
+* [基础组件](langman.md)
     > 掌握一门语言的必要条件是熟悉它的基础组件
 
 ## C++

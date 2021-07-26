@@ -930,4 +930,9 @@ elif 校验报文数据损坏且无法修复:
     * Service   ：即使Pod的IP动态变化也能通过Service(Name or IP)访问其后的Pod（四层转发，主内）
     * Deployment：管控Pod运行在用户期望状态中（调度、恢复等等）
 
-
+### 业务流程
+1. 与产品一起拆分独立子需求，并创建tapd单
+2. 每个需求对应一个分支名，前后端创建同名分支
+3. 开发时及时流转tapd单，且代码提交关联tapd单
+4. 触发提测流水线
+5. 合入test/prerelease/release/master都需要走MR

@@ -9,7 +9,7 @@ func ParseFloat(s string, base int, prec uint, mode RoundingMode) (f *Float, b i
 func NewRat(a, b int64) *Rat
 ```
 
-## 数学
+## 数学库
 ```go
 import "math"
 
@@ -22,7 +22,7 @@ func Acos(x float64) float64        // [-π/2, π/2]
 func Asin(x float64) float64        // [0,    π]
 func Atan(x float64) float64        // [-π/2, π/2]
 func Atan2(y, x float64) float64    // [-π,   π]
-// 双曲三角函数
+// 双曲函数
 func Cosh(x float64) float64
 func Sinh(x float64) float64
 func Tanh(x float64) float64
@@ -355,10 +355,10 @@ func Compact(dst *bytes.Buffer, src []byte) error
 func Valid(data []byte) bool
 
 type Json struct {
-    String string            `json:"string"`
+    Bool   bool              `json:"bool"`
     Int    int               `json:"integer"`
     Float  float64           `json:"float"`
-    Bool   bool              `json:"bool"`
+    String string            `json:"string"`
     List   []string          `json:"list"`
     Obj1   map[string]string `json:"obj1"`
     Obj2   nestobj           `json:"obj2"`
@@ -400,6 +400,67 @@ func (f *File) Seek(offset int64, whence int) (ret int64, err error)// whence(os
 ```
 
 
+# 数据库
+* 定义struct用来读/写时与表中行记录对接
+    * 结构名 => 表名
+        * `SnakeCase` => `snake_cases`
+        * `func (this *record) TableName() string`
+    * 字段名 => 列名
+        * `SnakeCase` => `snake_case`
+        * `gorm:"column:name"`
+    * 类型转换
+        * `整数      <=> 整数`
+        * `浮点数    <=> 浮点数`
+        * `string    <=> 字符`
+        * `[]byte    <=> 字节`
+        * `time.Time <=> 日期时间`
+        * `string    <=  任意SQL类型`
+    * 标签：
+        > 大多数tag用于创建表时使用，少部分会影响CRUD
+        * `gorm:"column:name"`
+        * `gorm:"type:sqltype"`
+        * `gorm:"size:len"`
+        * `gorm:"primaryKey"`
+        * `gorm:"unique"`
+        * `gorm:"not null"`
+        * `gorm:"default:value"`
+        * `gorm:"autoIncrement"`
+        * `gorm:"embedded;embeddedPrefix:prefix_"`
+        * `gorm:"<-:create"`          // allow read and create
+        * `gorm:"<-:update"`          // allow read and update
+        * `gorm:"<-"`                 // allow read and write (create and update)
+        * `gorm:"->"`                 // readonly   (disable write permission unless it configured )
+        * `gorm:"->:false;<-:create"` // createonly (disabled read from db)
+        * `gorm:"->:false;<-:update"` // updateonly (disabled read from db)
+        * `gorm:"-"`                  // no read/write permission (ignore this field)
+        * `gorm:"index:idx_member,priority:1"` // 构造索引idx_member，优先级默认为12，同优先级则根据字段先后顺序构造
+
+```go
+import "gorm.io/gorm"
+import "gorm.io/driver/mysql"
+
+func main() {
+    // 连接数据库
+    dsn := "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+    db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+    // 自动迁移表（创建或修改模式）
+    db.AutoMigrate(&Record{})
+    // 写
+    db.Create(&Record{})                            // 添加单行
+    db.Create([]Record{})                           // 添加多行
+    db.Create(map[string]interface{})               // 利用map代替struct对接
+    db.Select("filed1", "filed2").Create(&Record{}) // 选择Record字段
+    db.Omit("filed1", "filed2").Create(&Record{})   // 忽略Record字段
+    db.Select("*").Omit("filed1").Create(&Record{}) // 选择数据库表除filed1外所有字段
+    // 删
+    db.Where("id = ? OR name = 'NAME'", 1).Delete(&Record{})
+    // 改
+    db.Where("id = ? OR name = 'NAME'", 2).Updates(&Record{})   // 默认零值字段表示保持数据库原值
+    db.Where("id = ? OR name = 'NAME'", 3).Updates(map[string]interface{})
+}
+```
+
+
 # 单元测试
 ## 断言
 
@@ -407,17 +468,3 @@ func (f *File) Seek(offset int64, whence int) (ret int64, err error)// whence(os
 
 ## 打桩
 
-# ORM框架：gorm
-* 定义struct用来读/写时与表中行记录对接
-    * 字段名`SnakeCases` => 列名`snake_cases`
-    * 类型：
-        * `整数     <=> 整数`
-        * `浮点数   <=> 浮点数`
-        * `string   <=> 字符`
-        * `[]byte   <=> 字节`
-        * `time.Time<=> 日期时间`
-        * `string   <=> SQL类型`
-    * 标签：
-        * `gorm:"column:name"`指定字段对应列名
-        * `gorm:"not null"`指定字段对应列名
-        * `gorm:"embedded;embeddedPrefix:prefix_"`提升嵌入字段的字段
