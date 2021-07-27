@@ -7,6 +7,7 @@ func NewInt(x int64) *Int
 func NewFloat(x float64) *Float
 func ParseFloat(s string, base int, prec uint, mode RoundingMode) (f *Float, b int, err error)
 func NewRat(a, b int64) *Rat
+// 各大数类型提供各种方法来进行运算
 ```
 
 ## 数学库
@@ -353,7 +354,7 @@ func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error)
 func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error
 func Compact(dst *bytes.Buffer, src []byte) error
 func Valid(data []byte) bool
-
+// 从JSON转换时忽略stuct中不存在的字段，若类型不匹配则出错
 type Json struct {
     Bool   bool              `json:"bool"`
     Int    int               `json:"integer"`
@@ -364,22 +365,6 @@ type Json struct {
     Obj2   nestobj           `json:"obj2"`
 }
 ```
-
-# 数据结构与算法
-## 堆
-```go
-type Interface interface {
-    sort.Interface
-    Push(x interface{}) // add x as element Len()
-    Pop() interface{}   // remove and return element Len() - 1.
-}
-func Init(h Interface)
-func Fix(h Interface, i int)
-func Push(h Interface, x interface{})
-func Pop(h Interface) interface{}
-func Remove(h Interface, i int) interface{}
-```
-
 
 # 文件系统
 ## 基本IO
@@ -397,6 +382,113 @@ func (f *File) ReadAt(b []byte, off int64) (n int, err error)
 func (f *File) Write(b []byte) (n int, err error)
 func (f *File) WriteAt(b []byte, off int64) (n int, err error)
 func (f *File) Seek(offset int64, whence int) (ret int64, err error)// whence(os.SEEK_*)
+```
+
+## 文件路径
+```go
+import "path/filepath"
+
+func VolumeName(path string) string                 // 返回卷名。Windows返回类似"C:"，其他返回""
+func Dir(path string) string                        // 返回路径名(Clean)。"dir/file"=>"dir", "dir/"=>"dir"
+func Base(path string) string                       // 返回文件名(Clean)。"dir/file"=>"file"
+func Ext(path string) string                        // 返回扩展名。"f.go"=>".go"
+
+func SplitList(path string) []string                // path格式类似$PATH
+func Join(elem ...string) string                    // 返回合并名(Clean)
+func Split(path string) (dir, file string)          // 返回dir + file = path。"dir/file"=>"dir/"+"file"
+func Rel(basepath, targpath string) (string, error) // 返回相对路径(Clean)
+
+func IsAbs(path string) bool
+func Abs(path string) (string, error)               // 返回绝对路径(Clean)
+func EvalSymlinks(path string) (string, error)      // 返回真实路径(Clean)
+func FromSlash(path string) string                  // 转换从'/'(Clean)
+func ToSlash(path string) string                    // 转换为'/'(Clean)
+func Clean(path string) string                      // 返回干净路径(Clean)。去除"."与"..", "/.."=>"/", "/"=>"/", ""=>"/"
+
+func Match(pattern, name string) (matched bool, err error)  // shell通配符匹配
+func Glob(pattern string) (matches []string, err error)     // 返回当前目录下通配符匹配结果
+
+func WalkDir(root string, fn fs.WalkDirFunc) error
+type WalkFunc func(path string, info fs.FileInfo, err error) error
+```
+
+## 文件信息
+```go
+import "os"
+
+func Lstat(name string) (FileInfo, error)
+func Stat(name string) (FileInfo, error)
+func (s FileInfo) Name() string       // base name of the file
+func (s FileInfo) Size() int64        // length in bytes for regular files; system-dependent for others
+func (s FileInfo) IsDir() bool        // abbreviation for Mode().IsDir()
+func (s FileInfo) Mode() FileMode     // file mode bits
+func (s FileInfo) ModTime() time.Time // modification time
+func (s FileInfo) Sys() interface{}   // underlying data source (can return nil)
+
+func (m FileMode) IsDir() bool
+func (m FileMode) IsRegular() bool
+func (m FileMode) Perm() FileMode
+func (m FileMode) String() string
+func (m FileMode) Type() FileMode
+```
+
+## 文件操作
+```go
+func Chdir(dir string) error
+func Chmod(name string, mode FileMode) error
+func Chown(name string, uid, gid int) error
+func Chtimes(name string, atime time.Time, mtime time.Time) error
+func Lchown(name string, uid, gid int) error
+func Link(oldname, newname string) error
+func Mkdir(name string, perm FileMode) error
+func MkdirAll(path string, perm FileMode) error
+func MkdirTemp(dir, pattern string) (string, error)
+func Pipe() (r *File, w *File, err error)
+func ReadFile(name string) ([]byte, error)
+func Readlink(name string) (string, error)
+func Remove(name string) error
+func RemoveAll(path string) error
+func Rename(oldpath, newpath string) error
+func SameFile(fi1, fi2 FileInfo) bool
+func Symlink(oldname, newname string) error
+func TempDir() string
+func Truncate(name string, size int64) error
+func UserCacheDir() (string, error)
+func UserConfigDir() (string, error)
+func UserHomeDir() (string, error)
+func WriteFile(name string, data []byte, perm FileMode) error
+```
+
+# 进程管理
+## 进程信息
+```go
+func Clearenv()
+func DirFS(dir string) fs.FS
+func Environ() []string
+func Executable() (string, error)
+func Exit(code int)
+func Expand(s string, mapping func(string) string) string
+func ExpandEnv(s string) string
+func Getegid() int
+func Getenv(key string) string
+func Geteuid() int
+func Getgid() int
+func Getgroups() ([]int, error)
+func Getpagesize() int
+func Getpid() int
+func Getppid() int
+func Getuid() int
+func Getwd() (dir string, err error)
+func Hostname() (name string, err error)
+func IsExist(err error) bool
+func IsNotExist(err error) bool
+func IsPathSeparator(c uint8) bool
+func IsPermission(err error) bool
+func IsTimeout(err error) bool
+func LookupEnv(key string) (string, bool)
+func NewSyscallError(syscall string, err error) error
+func Setenv(key, value string) error
+func Unsetenv(key string) error
 ```
 
 

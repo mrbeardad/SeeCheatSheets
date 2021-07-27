@@ -39,7 +39,7 @@ go list [-m] all                # 列出当前模块的依赖包[或模块]
 go mod tidy -v                  # 重新整理整个模块的依赖信息
 
 go get                          # 下载、编译并安装当前目录包依赖
-go get example.com/pkg          # 下载、编译并安装依赖版本的包，初始化时下载最新版本
+go get example.com/pkg          # 下载、编译并安装依赖版本的包，若为初始化则下载最新版本
 go get example.com/pkg@latest   # 下载、编译并安装最新版本的包，并更新当前模块依赖
 go get example.com/pkg@none     # 下载、编译并安装最低要求版本的包，并更新当前模块依赖
 go get example.com/pkg@v1.0.0   # 下载、编译并安装指定版本的包，并更新当前模块依赖
