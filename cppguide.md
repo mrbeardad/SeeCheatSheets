@@ -76,19 +76,20 @@ GFM
     * 前后
     * explicit bool 1
 
-# 类间关系
-* **is-a**：public继承
-    * 抽象分化
-    * 混合类
-* **has-a**：复合
-* **impl-of**：复合或private继承
-    * virtual
-    * protect
-    * EBO
+* 类间关系
+    * **is-a**：public继承
+        * 抽象分化
+        * 混合类
+    * **has-a**：复合
+    * **impl-of**：复合或private继承
+        * virtual
+        * protect
+        * EBO
 
-* pure virtual      ：无默认定义
-* non-pure virtual  ：提供默认定义
-* non-virtual       ：提供强制定义
+* 虚函数接口
+    * pure virtual      ：无默认定义
+    * non-pure virtual  ：提供默认定义
+    * non-virtual       ：提供强制定义
 
 
 # 泛型编程

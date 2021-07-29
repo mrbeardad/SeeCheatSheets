@@ -354,7 +354,7 @@ func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error)
 func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error
 func Compact(dst *bytes.Buffer, src []byte) error
 func Valid(data []byte) bool
-// 从JSON转换时忽略stuct中不存在的字段，若类型不匹配则出错
+// 从JSON转换时忽略stuct中不存在的字段，若匹配字段的类型不匹配则出错
 type Json struct {
     Bool   bool              `json:"bool"`
     Int    int               `json:"integer"`
@@ -367,12 +367,97 @@ type Json struct {
 ```
 
 # 文件系统
-## 基本IO
+## 文件路径
+```go
+import "path/filepath"
+
+func VolumeName(path string) string                 // 返回卷名。Windows返回类似"C:"，其他返回""
+func Dir(path string) string                        // 返回路径名(Clean)。"dir/file"=>"dir", "dir/"=>"dir"
+func Base(path string) string                       // 返回文件名(Clean)。"dir/file"=>"file"
+func Ext(path string) string                        // 返回扩展名。"f.go"=>".go"
+func SplitList(path string) []string                // path格式类似$PATH
+func Split(path string) (dir, file string)          // 返回dir + file = path。"dir/file"=>"dir/"+"file"
+func Rel(basepath, targpath string) (string, error) // 返回相对路径(Clean)
+func Join(elem ...string) string                    // 返回合并路径(Clean)
+
+func IsAbs(path string) bool
+func IsPathSeparator(c uint8) bool
+func FromSlash(path string) string                  // 转换从'/'(Clean)
+func ToSlash(path string) string                    // 转换为'/'(Clean)
+func Abs(path string) (string, error)               // 返回绝对路径(Clean)
+func EvalSymlinks(path string) (string, error)      // 返回真实路径(Clean)
+func Clean(path string) string                      // 返回干净路径(Clean)。去除"."与"..", "/.."=>"/", "/"=>"/", ""=>"/"
+
+func Match(pattern, name string) (matched bool, err error)  // 仅语法上进行shell通配符匹配
+func Glob(pattern string) (matches []string, err error)     // 返回当前目录下通配符匹配结果
+func WalkDir(root string, fn fs.WalkDirFunc) error
+type WalkFunc func(path string, info fs.FileInfo, err error) error
+```
+
+## 文件信息
+```go
+import "os"
+
+func Lstat(name string) (FileInfo, error)
+func Stat(name string) (FileInfo, error)
+func IsExist(err error) bool
+func IsNotExist(err error) bool
+func IsPermission(err error) bool
+
+func (s FileInfo) Name() string       // base name of the file
+func (s FileInfo) Size() int64        // length in bytes for regular files; system-dependent for others
+func (s FileInfo) ModTime() time.Time // modification time
+func (s FileInfo) IsDir() bool        // abbreviation for Mode().IsDir()
+func (s FileInfo) Mode() FileMode     // file mode bits
+
+func (m FileMode) IsDir() bool
+func (m FileMode) IsRegular() bool
+func (m FileMode) Perm() FileMode
+func (m FileMode) String() string
+func (m FileMode) Type() FileMode
+```
+
+## 文件操作
+```go
+import "os"
+
+func Link(oldname, newname string) error
+func Symlink(oldname, newname string) error
+func Mkdir(name string, perm FileMode) error
+func MkdirAll(path string, perm FileMode) error
+func MkdirTemp(dir, pattern string) (string, error)
+func CreateTemp(dir, pattern string) (*File, error) // dir为空则默认系统临时目录，pattern中最后一个*被替换为random
+
+
+func Chown(name string, uid, gid int) error
+func Lchown(name string, uid, gid int) error
+func Chmod(name string, mode FileMode) error
+func Chtimes(name string, atime time.Time, mtime time.Time) error
+
+func Pipe() (r *File, w *File, err error)
+
+func ReadFile(name string) ([]byte, error)
+func Readlink(name string) (string, error)
+
+func Remove(name string) error
+func RemoveAll(path string) error
+func Rename(oldpath, newpath string) error
+
+func SameFile(fi1, fi2 FileInfo) bool
+func Truncate(name string, size int64) error
+func TempDir() string
+func UserCacheDir() (string, error)
+func UserConfigDir() (string, error)
+func UserHomeDir() (string, error)
+
+func WriteFile(name string, data []byte, perm FileMode) error
+```
+
+## 输入输出
 ```go
 import "os"
 
 func Create(name string) (*File, error)                             // 不存在则创建，存在则截断
-func CreateTemp(dir, pattern string) (*File, error)                 // dir为空则默认系统临时目录，pattern中最后一个*被替换为random
 func Open(name string) (*File, error)                               // 只读模式打开
 func OpenFile(name string, flag int, perm FileMode) (*File, error)  // 手动指定打开标识(os.O_*)与默认权限
 
@@ -384,80 +469,6 @@ func (f *File) WriteAt(b []byte, off int64) (n int, err error)
 func (f *File) Seek(offset int64, whence int) (ret int64, err error)// whence(os.SEEK_*)
 ```
 
-## 文件路径
-```go
-import "path/filepath"
-
-func VolumeName(path string) string                 // 返回卷名。Windows返回类似"C:"，其他返回""
-func Dir(path string) string                        // 返回路径名(Clean)。"dir/file"=>"dir", "dir/"=>"dir"
-func Base(path string) string                       // 返回文件名(Clean)。"dir/file"=>"file"
-func Ext(path string) string                        // 返回扩展名。"f.go"=>".go"
-
-func SplitList(path string) []string                // path格式类似$PATH
-func Join(elem ...string) string                    // 返回合并名(Clean)
-func Split(path string) (dir, file string)          // 返回dir + file = path。"dir/file"=>"dir/"+"file"
-func Rel(basepath, targpath string) (string, error) // 返回相对路径(Clean)
-
-func IsAbs(path string) bool
-func Abs(path string) (string, error)               // 返回绝对路径(Clean)
-func EvalSymlinks(path string) (string, error)      // 返回真实路径(Clean)
-func FromSlash(path string) string                  // 转换从'/'(Clean)
-func ToSlash(path string) string                    // 转换为'/'(Clean)
-func Clean(path string) string                      // 返回干净路径(Clean)。去除"."与"..", "/.."=>"/", "/"=>"/", ""=>"/"
-
-func Match(pattern, name string) (matched bool, err error)  // shell通配符匹配
-func Glob(pattern string) (matches []string, err error)     // 返回当前目录下通配符匹配结果
-
-func WalkDir(root string, fn fs.WalkDirFunc) error
-type WalkFunc func(path string, info fs.FileInfo, err error) error
-```
-
-## 文件信息
-```go
-import "os"
-
-func Lstat(name string) (FileInfo, error)
-func Stat(name string) (FileInfo, error)
-func (s FileInfo) Name() string       // base name of the file
-func (s FileInfo) Size() int64        // length in bytes for regular files; system-dependent for others
-func (s FileInfo) IsDir() bool        // abbreviation for Mode().IsDir()
-func (s FileInfo) Mode() FileMode     // file mode bits
-func (s FileInfo) ModTime() time.Time // modification time
-func (s FileInfo) Sys() interface{}   // underlying data source (can return nil)
-
-func (m FileMode) IsDir() bool
-func (m FileMode) IsRegular() bool
-func (m FileMode) Perm() FileMode
-func (m FileMode) String() string
-func (m FileMode) Type() FileMode
-```
-
-## 文件操作
-```go
-func Chdir(dir string) error
-func Chmod(name string, mode FileMode) error
-func Chown(name string, uid, gid int) error
-func Chtimes(name string, atime time.Time, mtime time.Time) error
-func Lchown(name string, uid, gid int) error
-func Link(oldname, newname string) error
-func Mkdir(name string, perm FileMode) error
-func MkdirAll(path string, perm FileMode) error
-func MkdirTemp(dir, pattern string) (string, error)
-func Pipe() (r *File, w *File, err error)
-func ReadFile(name string) ([]byte, error)
-func Readlink(name string) (string, error)
-func Remove(name string) error
-func RemoveAll(path string) error
-func Rename(oldpath, newpath string) error
-func SameFile(fi1, fi2 FileInfo) bool
-func Symlink(oldname, newname string) error
-func TempDir() string
-func Truncate(name string, size int64) error
-func UserCacheDir() (string, error)
-func UserConfigDir() (string, error)
-func UserHomeDir() (string, error)
-func WriteFile(name string, data []byte, perm FileMode) error
-```
 
 # 进程管理
 ## 进程信息
@@ -479,11 +490,8 @@ func Getpid() int
 func Getppid() int
 func Getuid() int
 func Getwd() (dir string, err error)
+func Chdir(dir string) error
 func Hostname() (name string, err error)
-func IsExist(err error) bool
-func IsNotExist(err error) bool
-func IsPathSeparator(c uint8) bool
-func IsPermission(err error) bool
 func IsTimeout(err error) bool
 func LookupEnv(key string) (string, bool)
 func NewSyscallError(syscall string, err error) error
@@ -493,7 +501,7 @@ func Unsetenv(key string) error
 
 
 # 数据库
-* 定义struct表示数据表
+* 定义struct/map表示数据表
     * 结构名 => 表名
         * `SnakeCase` => `snake_cases`
         * `func (this *record) TableName() string`
@@ -519,10 +527,10 @@ func Unsetenv(key string) error
         * `gorm:"default:value"`
         * `gorm:"autoIncrement"`
         * `gorm:"embedded;embeddedPrefix:prefix_"`
+        * `gorm:"<-"`                 // allow read and write (create and update)
         * `gorm:"<-:create"`          // allow read and create
         * `gorm:"<-:update"`          // allow read and update
-        * `gorm:"<-"`                 // allow read and write (create and update)
-        * `gorm:"->"`                 // readonly   (disable write permission unless it configured )
+        * `gorm:"<-:false"`           // readonly
         * `gorm:"->:false;<-:create"` // createonly (disabled read from db)
         * `gorm:"->:false;<-:update"` // updateonly (disabled read from db)
         * `gorm:"-"`                  // no read/write permission (ignore this field)
@@ -539,10 +547,20 @@ func main() {
     db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
     // 自动迁移表（创建或修改表模式）
     db.AutoMigrate(&Record{})
-    // CRUD操作时，默认选择的列由Module指定，也可通过Select().Omit()手动指定，然后使用Where()来过滤行
-    db.Select("name")                       // 手动指定选择列
-    db.Omit("name")                         // 忽略掉某些已选择的列
-    db.Where("name = ? AND age = 18", "xhc")// 使用gorm的?解析就不必担心需要用'引用字符类型的值
+
+    // 默认选择的列由Model指定，也可通过Select().Omit()手动指定
+    db.Select("name",...)   // 手动指定选择列
+    db.Omit("name",...)     // 忽略指定的已选择的列
+    // 默认不进行行过滤，空字符串相当于忽略该方法调用
+    db = db.Where("name = ?", "xhc") // gorm解析?时会根据数据库类型判断是否需要加''
+    db = db.Where("age = ?", 18)     // 该Where与上条Where形成AND逻辑关系
+    db = db.Where(&Record{Name:"x", age:1})
+    db = db.Where("age LIKE ?", "pref%")
+    db = db.Where("age BETWEEN ? AND ?", 1, 18)
+    db = db.Where("age IN ?", []int{19,20})
+    db = db.Or("")
+    db = db.Not("")
+
     // 插入：选择列
     db.Create(&Record{})
     // 删除：过滤行
@@ -559,6 +577,10 @@ func main() {
     db.Find(&Record{})
 }
 ```
+**设计准则**
+* 定义完整的与数据库模式一致的Model用于任何读写数据库的操作
+* 若与其他业务代码的接口数据结构不一致则需要进行转换
+
 
 
 # 单元测试

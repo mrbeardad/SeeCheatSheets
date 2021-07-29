@@ -45,27 +45,27 @@ cmake --install .
     > 掌握一门语言的必要条件是熟悉它的基础组件
 
 ## C++
-* [C++语法特性](cpp.md)
+* [C++语法特性](cpp.md):star:
     > 一份C++语法清单，适合有基础的同学
-* [C++程序库](cppman.md)
-    > 应该掌握的基础C++库
 * [C++编程向导](cppguide.md):star:
     > 优雅的编写C++代码
 * [C++编码风格](cppstyle.md)
     > 规范代码风格，拒绝选择困难症
+* [C++程序库](cppman.md)
+    > 应该掌握的基础C++库
 * [CMake构建系统](cmake.md)
     > 依赖管理与项目构建
 
 ## Golang
-* [Go语言基础](go.md)
+* [Go语言基础](go.md):star:
     > Go语言基础
-* [Go程序库](goman.md)
-    > Go程序库
 * [Go编程向导](goguide.md):star:
     > Go编程向导
+* [Go程序库](goman.md)
+    > Go程序库
 
 ## Python
-* [Python基础](python.md):star:
+* [Python语言基础](python.md):star:
     > 基础语法与内置类型操作
 
 # 编程之道
