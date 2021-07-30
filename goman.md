@@ -549,6 +549,7 @@ func main() {
     db.AutoMigrate(&Record{})
 
     // 默认选择的列由Model指定，也可通过Select().Omit()手动指定
+    db.Model(&Record{})
     db.Select("name",...)   // 手动指定选择列
     db.Omit("name",...)     // 忽略指定的已选择的列
     // 默认不进行行过滤，空字符串相当于忽略该方法调用
@@ -580,6 +581,37 @@ func main() {
 **设计准则**
 * 定义完整的与数据库模式一致的Model用于任何读写数据库的操作
 * 若与其他业务代码的接口数据结构不一致则需要进行转换
+
+
+# Web框架
+## API接口文档
+```go
+// @Summary 接口简述
+// @Description 接口详情
+// @Tags 标签, 类别
+// @Accept 接收MIME类型
+// @Param 参数名 参数类型 数据类型 是否必须 "注释"
+// @Produce 产生MIME类型
+// @Success 返回码 {参数类型} 数据类型 "注释"
+// @Failure 返回码 {参数类型} 数据类型 "注释"
+// @Router /path/to/resource [Method]
+```
+* MIME类型
+    * plain
+    * mpfd
+    * json
+    * xml
+* 参数类型
+    * path
+    * query
+    * formData
+    * body
+    * header
+* 数据类型
+    * bool
+    * int
+    * number
+    * string
 
 
 
