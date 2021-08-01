@@ -406,7 +406,7 @@ b = true
 var i int           // int8  int16  int32  int64  ，int为32或64位
 var ui uint         // uint8 uint16 uint32 uint64 ，uint为32或64位
 i, ui = 0b11, 0B11
-i, ui = 0o77, 0O77
+i, ui = 077, 0o77, 0O77
 i, ui = 99,   99_999
 i, ui = 0xEE. 0Xee
 

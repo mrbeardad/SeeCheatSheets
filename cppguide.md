@@ -20,21 +20,18 @@
     * 其他任何时候使用裸指针意味着持有者（接收者）无需在意其生命周期（视作一直有效）
 
 * 形式
-    > 默认初始化意味着该变量处于不可用状态，接下来需要对其进行初始化  
     > 若initializer的类型并非期望类型，则使用cast显式转换
-    * `T t;`
+    * `auto  t = T{}`
+    * `auto  t = T{args...}`
+    * `auto  t = T(args...)`
     * `auto  t = initializer;`
     * `auto* t = initializer;`
     * `auto& t = initializer;`
-    * `auto  t = T{args...}`
-    * `auto  t = T(args...)`
 
 # 函数设计
 ```
 GFM
-    ? W
-        ?       tempT&&
-        : const tempT&
+    ? tempT&&
     : !CWD
         ? T
         : W

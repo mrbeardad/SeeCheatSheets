@@ -32,12 +32,12 @@ func Asinh(x float64) float64
 func Atanh(x float64) float64
 // 对数函数
 func Log(x float64) float64
-func Log1p(x float64) float64
+func Log1p(x float64) float64       // ln(1+x)
 func Log2(x float64) float64
 func Log10(x float64) float64
 // 指数函数
 func Exp(x float64) float64
-func Expm1(x float64) float64
+func Expm1(x float64) float64       // eˣ-1
 func Exp2(x float64) float64
 func Pow10(n int) float64
 func Pow(x, y float64) float64
@@ -354,7 +354,7 @@ func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error)
 func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error
 func Compact(dst *bytes.Buffer, src []byte) error
 func Valid(data []byte) bool
-// 从JSON转换时忽略stuct中不存在的字段，若匹配字段的类型不匹配则出错
+// 从JSON转换时忽略stuct中不存在的字段，默认值为零值，若匹配字段的类型不匹配则出错
 type Json struct {
     Bool   bool              `json:"bool"`
     Int    int               `json:"integer"`
@@ -375,7 +375,7 @@ func VolumeName(path string) string                 // 返回卷名。Windows返
 func Dir(path string) string                        // 返回路径名(Clean)。"dir/file"=>"dir", "dir/"=>"dir"
 func Base(path string) string                       // 返回文件名(Clean)。"dir/file"=>"file"
 func Ext(path string) string                        // 返回扩展名。"f.go"=>".go"
-func SplitList(path string) []string                // path格式类似$PATH
+func SplitList(path string) []string                // 返回分离出来的路径名，path中各路径名用冒号:分隔
 func Split(path string) (dir, file string)          // 返回dir + file = path。"dir/file"=>"dir/"+"file"
 func Rel(basepath, targpath string) (string, error) // 返回相对路径(Clean)
 func Join(elem ...string) string                    // 返回合并路径(Clean)
@@ -390,19 +390,25 @@ func Clean(path string) string                      // 返回干净路径(Clean)
 
 func Match(pattern, name string) (matched bool, err error)  // 仅语法上进行shell通配符匹配
 func Glob(pattern string) (matches []string, err error)     // 返回当前目录下通配符匹配结果
+
 func WalkDir(root string, fn fs.WalkDirFunc) error
-type WalkFunc func(path string, info fs.FileInfo, err error) error
+type WalkDirFunc func(path string, d DirEntry, err error) error
+// WalkDirFunc在打开文件前被调用，
+// path路径前缀为root
+// err若os.Lstat(path)出错则设置err，若一个目录的Readdirnames方法失败也设置err
+// error返回SkipDir表示跳过该目录（或该文件的上级目录），返回其他non-nil则停止
 ```
 
 ## 文件信息
 ```go
 import "os"
 
-func Lstat(name string) (FileInfo, error)
 func Stat(name string) (FileInfo, error)
+func Lstat(name string) (FileInfo, error)
 func IsExist(err error) bool
 func IsNotExist(err error) bool
 func IsPermission(err error) bool
+func SameFile(fi1, fi2 FileInfo) bool
 
 func (s FileInfo) Name() string       // base name of the file
 func (s FileInfo) Size() int64        // length in bytes for regular files; system-dependent for others
@@ -410,6 +416,7 @@ func (s FileInfo) ModTime() time.Time // modification time
 func (s FileInfo) IsDir() bool        // abbreviation for Mode().IsDir()
 func (s FileInfo) Mode() FileMode     // file mode bits
 
+// FileMode包含了文件类型和权限信息，可利用位运算判断
 func (m FileMode) IsDir() bool
 func (m FileMode) IsRegular() bool
 func (m FileMode) Perm() FileMode
@@ -423,43 +430,35 @@ import "os"
 
 func Link(oldname, newname string) error
 func Symlink(oldname, newname string) error
+func Readlink(name string) (string, error)
+
 func Mkdir(name string, perm FileMode) error
 func MkdirAll(path string, perm FileMode) error
 func MkdirTemp(dir, pattern string) (string, error)
-func CreateTemp(dir, pattern string) (*File, error) // dir为空则默认系统临时目录，pattern中最后一个*被替换为random
-
-
-func Chown(name string, uid, gid int) error
-func Lchown(name string, uid, gid int) error
-func Chmod(name string, mode FileMode) error
-func Chtimes(name string, atime time.Time, mtime time.Time) error
-
-func Pipe() (r *File, w *File, err error)
-
-func ReadFile(name string) ([]byte, error)
-func Readlink(name string) (string, error)
-
-func Remove(name string) error
-func RemoveAll(path string) error
-func Rename(oldpath, newpath string) error
-
-func SameFile(fi1, fi2 FileInfo) bool
-func Truncate(name string, size int64) error
 func TempDir() string
 func UserCacheDir() (string, error)
 func UserConfigDir() (string, error)
 func UserHomeDir() (string, error)
 
-func WriteFile(name string, data []byte, perm FileMode) error
+func Remove(name string) error                      // 删除普通文件或空目录
+func RemoveAll(path string) error                   // 删除普通文件或目录
+func Rename(oldpath, newpath string) error
+
+func Chown(name string, uid, gid int) error
+func Lchown(name string, uid, gid int) error
+func Chmod(name string, mode FileMode) error
+func Chtimes(name string, atime time.Time, mtime time.Time) error
 ```
 
 ## 输入输出
 ```go
 import "os"
 
+func CreateTemp(dir, pattern string) (*File, error)                 // dir为空则默认系统临时目录，pattern中最后一个*被替换为random
 func Create(name string) (*File, error)                             // 不存在则创建，存在则截断
 func Open(name string) (*File, error)                               // 只读模式打开
 func OpenFile(name string, flag int, perm FileMode) (*File, error)  // 手动指定打开标识(os.O_*)与默认权限
+func Pipe() (r *File, w *File, err error)
 
 func (f *File) Name() string
 func (f *File) Read(b []byte) (n int, err error)
@@ -467,6 +466,11 @@ func (f *File) ReadAt(b []byte, off int64) (n int, err error)
 func (f *File) Write(b []byte) (n int, err error)
 func (f *File) WriteAt(b []byte, off int64) (n int, err error)
 func (f *File) Seek(offset int64, whence int) (ret int64, err error)// whence(os.SEEK_*)
+func (f *File) Sync() error
+
+func ReadFile(name string) ([]byte, error)
+func WriteFile(name string, data []byte, perm FileMode) error
+func Truncate(name string, size int64) error
 ```
 
 
@@ -474,29 +478,29 @@ func (f *File) Seek(offset int64, whence int) (ret int64, err error)// whence(os
 ## 进程信息
 ```go
 func Clearenv()
+
 func DirFS(dir string) fs.FS
 func Environ() []string
 func Executable() (string, error)
 func Exit(code int)
 func Expand(s string, mapping func(string) string) string
 func ExpandEnv(s string) string
-func Getegid() int
+
 func Getenv(key string) string
-func Geteuid() int
-func Getgid() int
-func Getgroups() ([]int, error)
-func Getpagesize() int
-func Getpid() int
-func Getppid() int
-func Getuid() int
-func Getwd() (dir string, err error)
-func Chdir(dir string) error
-func Hostname() (name string, err error)
-func IsTimeout(err error) bool
 func LookupEnv(key string) (string, bool)
-func NewSyscallError(syscall string, err error) error
 func Setenv(key, value string) error
 func Unsetenv(key string) error
+func Getwd() (dir string, err error)
+func Chdir(dir string) error
+func Getuid() int
+func Getgid() int
+func Geteuid() int
+func Getegid() int
+func Getgroups() ([]int, error)
+func Getpid() int
+func Getppid() int
+
+func Hostname() (name string, err error)
 ```
 
 
@@ -590,7 +594,7 @@ func main() {
 // @Description 接口详情
 // @Tags 标签, 类别
 // @Accept 接收MIME类型
-// @Param 参数名 参数类型 数据类型 是否必须 "注释"
+// @Param 参数名 参数类型 数据类型 是否必须 "注释" 属性(值)
 // @Produce 产生MIME类型
 // @Success 返回码 {参数类型} 数据类型 "注释"
 // @Failure 返回码 {参数类型} 数据类型 "注释"
@@ -612,6 +616,11 @@ func main() {
     * int
     * number
     * string
+    * array
+    * object
+* 属性
+    * default(value)
+    * enums(v1, v2)
 
 
 
