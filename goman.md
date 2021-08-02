@@ -477,8 +477,6 @@ func Truncate(name string, size int64) error
 # 进程管理
 ## 进程信息
 ```go
-func Clearenv()
-
 func DirFS(dir string) fs.FS
 func Environ() []string
 func Executable() (string, error)
@@ -490,6 +488,7 @@ func Getenv(key string) string
 func LookupEnv(key string) (string, bool)
 func Setenv(key, value string) error
 func Unsetenv(key string) error
+func Clearenv()
 func Getwd() (dir string, err error)
 func Chdir(dir string) error
 func Getuid() int
@@ -508,7 +507,7 @@ func Hostname() (name string, err error)
 * 定义struct/map表示数据表
     * 结构名 => 表名
         * `SnakeCase` => `snake_cases`
-        * `func (this *record) TableName() string`
+        * `func (this *SnakeCase) TableName() string`
     * 字段名 => 列名
         * `SnakeCase` => `snake_case`
         * `gorm:"column:name"`
@@ -518,18 +517,18 @@ func Hostname() (name string, err error)
         * `string    <=> 字符`
         * `[]byte    <=> 字节`
         * `time.Time <=> 日期时间`
-        * `string    <=  任意SQL类型`
+        * `string    <=> 任意SQL类型`
         * `struct,map<=> 单行记录`
         * `slice     <=> 多行记录`
-    * 标签：
+    * 标签
         > 大多数tag用于创建表时使用，少部分会影响CRUD
         * `gorm:"column:name"`
         * `gorm:"type:sqltype"`
         * `gorm:"size:len"`
         * `gorm:"not null"`
         * `gorm:"unique"`
-        * `gorm:"default:value"`
         * `gorm:"autoIncrement"`
+        * `gorm:"default:value"`
         * `gorm:"embedded;embeddedPrefix:prefix_"`
         * `gorm:"<-"`                 // allow read and write (create and update)
         * `gorm:"<-:create"`          // allow read and create
@@ -549,7 +548,7 @@ func main() {
     // 连接数据库
     dsn := "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
     db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-    // 自动迁移表（创建或修改表模式）
+    // 自动迁移表（创建或修改表模式，应该放在init函数里）
     db.AutoMigrate(&Record{})
 
     // 默认选择的列由Model指定，也可通过Select().Omit()手动指定
@@ -557,8 +556,8 @@ func main() {
     db.Select("name",...)   // 手动指定选择列
     db.Omit("name",...)     // 忽略指定的已选择的列
     // 默认不进行行过滤，空字符串相当于忽略该方法调用
-    db = db.Where("name = ?", "xhc") // gorm解析?时会根据数据库类型判断是否需要加''
-    db = db.Where("age = ?", 18)     // 该Where与上条Where形成AND逻辑关系
+    db = db.Where("name = ?", "xhc")    // gorm解析?时会根据数据库类型判断是否需要加''
+    db = db.Where("age <> ?", 18)       // 该Where与上条Where形成AND逻辑关系
     db = db.Where(&Record{Name:"x", age:1})
     db = db.Where("age LIKE ?", "pref%")
     db = db.Where("age BETWEEN ? AND ?", 1, 18)
@@ -592,25 +591,23 @@ func main() {
 ```go
 // @Summary 接口简述
 // @Description 接口详情
-// @Tags 标签, 类别
+// @Tags 标签, 支持逗号分隔列表
 // @Accept 接收MIME类型
-// @Param 参数名 参数类型 数据类型 是否必须 "注释" 属性(值)
-// @Produce 产生MIME类型
+// @Produce 生成MIME类型
+// @Param 参数名 参数类型 数据类型 是否必须 "注释" 可选属性(值)
 // @Success 返回码 {参数类型} 数据类型 "注释"
 // @Failure 返回码 {参数类型} 数据类型 "注释"
 // @Router /path/to/resource [Method]
 ```
 * MIME类型
-    * plain
-    * mpfd
     * json
+    * mpfd
     * xml
 * 参数类型
     * path
     * query
-    * formData
-    * body
     * header
+    * body
 * 数据类型
     * bool
     * int
@@ -619,7 +616,7 @@ func main() {
     * array
     * object
 * 属性
-    * default(value)
+    * default(*)
     * enums(v1, v2)
 
 
