@@ -356,13 +356,13 @@ func Compact(dst *bytes.Buffer, src []byte) error
 func Valid(data []byte) bool
 // 从JSON转换时忽略stuct中不存在的字段，默认值为零值，若匹配字段的类型不匹配则出错
 type Json struct {
-    Bool   bool              `json:"bool"`
-    Int    int               `json:"integer"`
-    Float  float64           `json:"float"`
-    String string            `json:"string"`
-    List   []string          `json:"list"`
-    Obj1   map[string]string `json:"obj1"`
-    Obj2   nestobj           `json:"obj2"`
+    Bool   bool                   `json:"bool"`
+    Int    int                    `json:"integer"`
+    Float  float64                `json:"float"`
+    String string                 `json:"string"`
+    List   []string               `json:"list"`
+    Obj1   map[string]interface{} `json:"obj1"`
+    Obj2   nestobj                `json:"obj2"`
 }
 ```
 
