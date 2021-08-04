@@ -7,7 +7,7 @@
   - [工厂方法模式(Factory Method)](#工厂方法模式factory-method)
   - [抽象工厂模式(Abstract Factory)](#抽象工厂模式abstract-factory)
   - [原型模式(Prototype)](#原型模式prototype)
-  - [建造者模式(Builer)](#建造者模式builer)
+  - [建造者模式(Builder)](#建造者模式builder)
   - [单例模式(Singleton)](#单例模式singleton)
   - [享元模式(Flyweight)](#享元模式flyweight)
 - [结构型](#结构型)
@@ -109,7 +109,7 @@ auto& StaticRef   = ConcreteType::StaticMem_;
 * 缺点：具体类型暴露给用户从而无法保证客户代码的正确的使用原型
 
 
-## 建造者模式(Builer)
+## 建造者模式(Builder)
 ![Builder](images/Builder.jpg)
 （复用性）
 * 对象的创建非常复杂，需要复杂的算法来组装各个部件，将组装算法提取出来，让各部件独立变化
