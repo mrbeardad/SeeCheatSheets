@@ -122,49 +122,82 @@ func Shuffle(n int, swap func(i, j int))    // i为索引[1, n]，j为随机数[
 import "time"
 
 // Time计算时使用monotonic clock，其他操作使用wall clock
-func Now() Time
-func Unix(sec int64, nsec int64) Time
+// Time底层使用ns纳秒存储Local时间，根据时区信息可转换为UTC时间
+func Now() Time     // 本地时间
+func Unix(sec int64, nsec int64) Time   // 时间为sec*1e9+nsec，本地时间
 func Date(year int, month Month, day, hour, min, sec, nsec int, loc *Location) Time
 func Parse(layout, value string) (Time, error)
 func ParseInLocation(layout, value string, loc *Location) (Time, error)
+
 // 解析格式时间layout: Mon Jan 2 15:04:05 MST 2006
-func (t Time) Format(layout string) string
-func (t Time) Date() (year int, month Month, day int)
-func (t Time) Year() int
-func (t Time) Month() Month
-func (t Time) Day() int
-func (t Time) Clock() (hour, min, sec int)
-func (t Time) Hour() int
-func (t Time) Minute() int
-func (t Time) Second() int
-func (t Time) Nanosecond() int
-func (t Time) YearDay() int
-func (t Time) Weekday() Weekday
-func (t Time) Unix() int64
-func (t Time) UnixNano() int64
+func (t *Time) Format(layout string) string
+func (t *Time) Date() (year int, month Month, day int)
+func (t *Time) Year() int
+func (t *Time) Month() Month
+func (t *Time) Day() int
+func (t *Time) Weekday() Weekday
+func (t *Time) YearDay() int
+func (t *Time) Clock() (hour, min, sec int)
+func (t *Time) Hour() int
+func (t *Time) Minute() int
+func (t *Time) Second() int
+func (t *Time) Nanosecond() int
+func (t *Time) Unix() int64
+func (t *Time) UnixNano() int64
+func (t *Time) Zone() (name string, offset int) // offset为相对UTC偏移秒数
 
-func (t Time) Zone() (name string, offset int)
-func (t Time) Location() *Location
-func (t Time) Local() Time
-func (t Time) UTC() Time
-func (t Time) In(loc *Location) Time
+func (t *Time) UTC() Time   // 转换为UTC时间
+func (t *Time) Local() Time // 转换为Local时间
+func (t *Time) Location() *Location
+func (t *Time) In(loc *Location) Time
 
-func (t Time) Add(d Duration) Time
-func (t Time) AddDate(years int, months int, days int) Time
-func (t Time) Sub(u Time) Duration
-func (t Time) Truncate(d Duration) Time
-func (t Time) Before(u Time) bool
-func (t Time) After(u Time) bool
-func (t Time) Equal(u Time) bool
-func (t Time) IsZero() bool
+func (t *Time) Add(d Duration) Time
+func (t *Time) AddDate(years int, months int, days int) Time
+func (t *Time) Sub(u Time) Duration
+func (t *Time) Truncate(d Duration) Time
+func (t *Time) Before(u Time) bool
+func (t *Time) After(u Time) bool
+func (t *Time) Equal(u Time) bool
+func (t *Time) IsZero() bool
+
+type Month int
+const (
+    January Month = 1 + iota
+    February
+    March
+    April
+    May
+    June
+    July
+    August
+    September
+    October
+    November
+    December
+)
+func (m Month) String() string
+
+type Weekday int
+const (
+    Sunday Weekday = iota
+    Monday
+    Tuesday
+    Wednesday
+    Thursday
+    Friday
+    Saturday
+)
+func (d Weekday) String() string
 
 func NewTicker(d Duration) *Ticker
 func (t *Ticker) Reset(d Duration)
 func (t *Ticker) Stop()
+
 func AfterFunc(d Duration, f func()) *Timer
 func NewTimer(d Duration) *Timer
 func (t *Timer) Reset(d Duration) bool
 func (t *Timer) Stop() bool
+
 func Sleep(d Duration)
 ```
 
