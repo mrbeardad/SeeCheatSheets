@@ -203,7 +203,7 @@ template<typename RandomIter, typename Compare=less<typename RandomIter::value_t
 void percolate_down(RandomIter begin, RandomIter end, RandomIter root, Compare comp=Compare{})
 {
     for ( RandomIter child{}; (child = begin + (root - begin) * 2 + 1) < end; ) { // 子节点下标 = root * 2 - 1
-        if ( child + 1 < end && comp*(*root, child + 1) )
+        if ( child + 1 < end && comp(*root, child + 1) )
             ++child;
         if ( comp(*root, *child) ) {
             swap(*child, *root);

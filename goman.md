@@ -70,7 +70,7 @@ func Ceil(x float64) float64        // 向上取整
 func Floor(x float64) float64       // 向下取整
 func Trunc(x float64) float64       // 向零取整
 func Round(x float64) float64       // 远零取整（四舍五入）
-func RoundToEven(x float64) float64 // 向偶取整
+func RoundToEven(x float64) float64 // 向偶取整（非四舍五入）
 // 符号
 func Abs(x float64) float64
 func Signbit(x float64) bool
@@ -188,6 +188,20 @@ const (
     Saturday
 )
 func (d Weekday) String() string
+
+// Duration单位为nanosecond
+func ParseDuration(s string) (Duration, error)  // ns, us, ms, s, m, h
+func Since(t Time) Duration
+func Until(t Time) Duration
+func (d Duration) Hours() float64
+func (d Duration) Minutes() float64
+func (d Duration) Seconds() float64
+func (d Duration) Milliseconds() int64
+func (d Duration) Microseconds() int64
+func (d Duration) Nanoseconds() int64
+func (d Duration) String() string
+func (d Duration) Round(m Duration) Duration    // 向零取整
+func (d Duration) Truncate(m Duration) Duration // 远零取整
 
 func NewTicker(d Duration) *Ticker
 func (t *Ticker) Reset(d Duration)
@@ -399,6 +413,13 @@ type Json struct {
 }
 ```
 
+# 单元测试
+## 断言
+
+## 模拟
+
+## 打桩
+
 # 文件系统
 ## 文件路径
 ```go
@@ -508,11 +529,56 @@ func Truncate(name string, size int64) error
 
 
 # 进程管理
+## 参数解析
+```go
+import "flag"
+
+func Bool(name string, value bool, usage string) *bool
+func BoolVar(p *bool, name string, value bool, usage string)
+func Int(name string, value int, usage string) *int
+func IntVar(p *int, name string, value int, usage string)
+func Uint(name string, value uint, usage string) *uint
+func UintVar(p *uint, name string, value uint, usage string)
+func Float64(name string, value float64, usage string) *float64
+func Float64Var(p *float64, name string, value float64, usage string)
+func String(name string, value string, usage string) *string
+func StringVar(p *string, name string, value string, usage string)
+func Duration(name string, value time.Duration, usage string) *time.Duration
+func DurationVar(p *time.Duration, name string, value time.Duration, usage string)
+func Func(name, usage string, fn func(string) error)    // 如fn返回non-nil则表示解析错误
+func Var(value Value, name string, usage string)
+func Parse()
+func Parsed() bool
+func PrintDefaults()    // 手动打印参数选项提示信息到stderr
+
+func Arg(i int) string  // 解析后剩余中第i个命令行参数
+func Args() []string    // 解析后剩余的命令行参数
+func NArg() int         // 解析后剩余参数个数
+func NFlag() int        // 解析的选项参数个数
+func Set(name, value string) error
+
+func Visit(fn func(*Flag))      // 仅访问被设置的flag
+func VisitAll(fn func(*Flag))   // 访问所有flag
+
+type Flag struct {
+    Name     string // name as it appears on command line
+    Usage    string // help message
+    Value    Value  // value as set
+    DefValue string // default value (as text); for usage message
+}
+
+type Value interface {
+    String() string
+    Set(string) error
+}
+```
+
 ## 进程信息
 ```go
-func DirFS(dir string) fs.FS
-func Environ() []string
+import "os"
+
 func Executable() (string, error)
+func Environ() []string
 func Exit(code int)
 func Expand(s string, mapping func(string) string) string
 func ExpandEnv(s string) string
@@ -537,6 +603,7 @@ func Hostname() (name string, err error)
 
 
 # 数据库
+## MySQL
 * 定义struct/map表示数据表
     * 结构名 => 表名
         * `SnakeCase` => `snake_cases`
@@ -620,7 +687,7 @@ func main() {
 
 
 # Web框架
-## API接口文档
+## API注释
 ```go
 // @Summary 接口简述
 // @Description 接口详情
@@ -653,11 +720,4 @@ func main() {
     * enums(v1, v2)
 
 
-
-# 单元测试
-## 断言
-
-## 模拟
-
-## 打桩
 
