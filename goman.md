@@ -120,12 +120,12 @@ func Shuffle(n int, swap func(i, j int))    // i为索引[1, n]，j为随机数[
 ## 时间库
 ```go
 import "time"
+// 时间+时区 可唯一确定一个世界通用时，当输出时的时区改变则时间也会随之改变
 
 // Time计算时使用monotonic clock，其他操作使用wall clock
-// Time底层使用ns纳秒存储Local时间，根据时区信息可转换为UTC时间
-func Now() Time     // 本地时间
-func Unix(sec int64, nsec int64) Time   // 时间为sec*1e9+nsec，本地时间
+func Now() Time
 func Date(year int, month Month, day, hour, min, sec, nsec int, loc *Location) Time
+func Unix(sec int64, nsec int64) Time   // 接受Unix时间戳sec*1e9+nsec
 func Parse(layout, value string) (Time, error)
 func ParseInLocation(layout, value string, loc *Location) (Time, error)
 
@@ -142,12 +142,13 @@ func (t *Time) Hour() int
 func (t *Time) Minute() int
 func (t *Time) Second() int
 func (t *Time) Nanosecond() int
-func (t *Time) Unix() int64
-func (t *Time) UnixNano() int64
-func (t *Time) Zone() (name string, offset int) // offset为相对UTC偏移秒数
 
-func (t *Time) UTC() Time   // 转换为UTC时间
-func (t *Time) Local() Time // 转换为Local时间
+// Unix时间戳定义为1970-1-1 00:00:00 UTC开始所流逝的秒数，不受Time的时区影响
+func (t *Time) Zone() (name string, offset int) // offset为相对UTC偏移秒数
+func (t *Time) Unix() int64                     // 返回秒级Unix时间戳
+func (t *Time) UnixNano() int64                 // 同上，但返回ns纳秒级版本
+func (t *Time) UTC() Time                       // 转换为UTC时间
+func (t *Time) Local() Time                     // 转换为Local时间
 func (t *Time) Location() *Location
 func (t *Time) In(loc *Location) Time
 
