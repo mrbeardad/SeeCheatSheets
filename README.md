@@ -15,7 +15,7 @@
 
 <!-- vim-markdown-toc -->
 # 安装
-***本仓库中提供了一支C++程序`see`用于快速查看笔记：***  
+***本仓库中提供了一支C++程序`see`用于快速查看笔记：***
 它会搜索`~/.cheat/*.md`中的entry，查找匹配的entry并打印；
 每个entry以`<!-- entry begin: .* -->`的形式开头，并以`<!-- entry end -->`结尾；
 其中`.*`表示关键字，see便会搜索其中的关键子决定是否匹配；
@@ -35,7 +35,7 @@ cmake --install .
 ```
 
 **注**：部分笔记插入了Tex公式，~~介于鄙人的懒惰~~ 介于GFM不支持Tex，诸位就自己下个浏览器插件吧。
-[github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")  
+[github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
 # 编程语言
