@@ -163,6 +163,8 @@
     * Python
     * debug keybind
     * goto keybind
+    * `<M-E>`
+    * `;`
 * Navicat
 * RDM
 * Windows10配置文档
