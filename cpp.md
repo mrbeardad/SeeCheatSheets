@@ -192,7 +192,7 @@ namespace ABC = A::B::C
     template<typename T>
     using Alias = TempType<T, int>      // 别名涉及到模板
     ```
-* using声明：<span id="using声明"></span> 
+* using声明：<span id="using声明"></span>
     ```cpp
     using ns::var, ns::func, ns::cls;   // 使命名空间成员直接可见，符号冲突则报错
     ```
