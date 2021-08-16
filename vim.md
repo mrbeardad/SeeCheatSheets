@@ -1,6 +1,7 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
+- [目录](#目录)
 - [SpaceVim定制版](#spacevim定制版)
   - [基础操作](#基础操作)
     - [插入模式](#插入模式)
@@ -10,7 +11,6 @@
       - [快捷移动](#快捷移动-1)
       - [修改内容](#修改内容-1)
     - [可视模式](#可视模式)
-    - [Buffers](#buffers)
     - [Windows](#windows)
     - [Tabs](#tabs)
     - [复制粘贴](#复制粘贴)
@@ -21,7 +21,6 @@
     - [制表与对齐](#制表与对齐)
     - [代码注释](#代码注释)
     - [代码补全](#代码补全)
-    - [快速输入结对符](#快速输入结对符)
     - [多光标编辑](#多光标编辑)
   - [高级功能](#高级功能)
     - [界面与工具](#界面与工具)
@@ -42,7 +41,6 @@
     - [代码运行](#代码运行)
   - [Markdown](#markdown)
   - [杂项](#杂项)
-- [Vim](#vim)
   - [命令模式](#命令模式)
   - [范围](#范围)
   - [寄存器](#寄存器)
@@ -53,7 +51,6 @@
   - [命令别名](#命令别名)
   - [自动命令](#自动命令)
   - [键映射](#键映射)
-  - [特殊字符](#特殊字符)
   - [调试](#调试)
 - [VimL](#viml)
   - [变量](#变量)
@@ -95,19 +92,19 @@
 | `<c-v>u{hhhh}`         | 插入码点为hhhh的unicode字符                                  |
 
 ### 普通模式
-> 复合操作符可以：  
-> 结合光标移动，对初始位置与移动后位置之间的文本进行操作，如df1删除直到第一个1  
-> 结合文本对象，对文本对象中的内容进行操作，如diw删除当前单词
- * 复合操作符：  
-    `d` `c` `y` `gu` `gU` `g~` `v`  
- * 光标移动：  
-    `0` `^` `$` `w` `W` `b` `B` `e` `E` `ge` `gE`  
-    `f` `F` `%` `(` `)` `{` `}`  
-    `gg` `G` `H` `L` `M` `{num}|` `gm`  
- * 文本对象：需要带前缀`i`或`a`  
-    `w` `s` `p` `(` `{` `[` `<` `"` `'` `` ` ``  
-    `e` `l` `i` `f` `,`  
- * 替换：  
+> 复合操作符可以：
+> 结合光标移动，对初始位置与移动后位置之间的文本进行操作，如df1删除直到第一个1
+ * 复合操作符：
+    `d` `c` `y` `gu` `gU` `g~` `v`
+ * 光标移动：
+    `0` `^` `$` `w` `W` `b` `B` `e` `E` `ge` `gE`
+    `f` `F` `%` `(` `)` `{` `}`
+    `gg` `G` `H` `L` `M` `{num}|` `gm`
+ * 文本对象：需要带前缀`i`或`a`
+    `w` `s` `p` `(` `{` `[` `<` `"` `'` `` ` ``
+    `e` `l` `i` `f` `,`
+ * 替换：
+ * 替换：
     `R` `r`
 
 #### 快捷移动
@@ -153,9 +150,9 @@
 | `v`            | 扩大可视范围       |
 | `V`            | 缩小可视范围       |
 
-### Buffers
-> 常用命令：:ene，:e，:bd，:qa，:wa，:wq，:wqa，:saveas  
-> 参数列表：:args，:arga，:argd，:argdo  
+> 常用命令：:ene，:e，:bd，:qa，:wa，:wq，:wqa，:saveas
+> 参数列表：:args，:arga，:argd，:argdo
+> 参数列表：:args，:arga，:argd，:argdo
 > buf详情：:h ls
 
 | 按键                   | 作用                     |
@@ -292,12 +289,12 @@
 | `<M-?>`          | 跳向上一个片段锚点                     |
 | `<c-x><c-f>`     | 补全路径                               |
 
-### 快速输入结对符
-> 举例：  
-> `cs{[`将`{content}`替换成`[ content ]`，  
-> `cs{]`则是将`{content}`替换成`[content]`(内部无空格)，  
-> 其它同理。  
-> 替换的字符(第二个{char})若是`<`，则还可以继续输入直到`>`来添加**html标签**  
+> 举例：
+> `cs{[`将`{content}`替换成`[ content ]`，
+> `cs{]`则是将`{content}`替换成`[content]`(内部无空格)，
+> 其它同理。
+> 替换的字符(第二个{char})若是`<`，则还可以继续输入直到`>`来添加**html标签**
+> 替换的字符(第二个{char})若是`<`，则还可以继续输入直到`>`来添加**html标签**
 > 详见[surround](https://github.com/tpope/vim-surround)
 
 | 按键                 | 作用             |
@@ -578,9 +575,9 @@
 | （普通模式）`<space>xc` | 统计代码量                     |
 | （普通模式）`<space>xC` | 统计项目代码量                 |
 
-# Vim
-> 参考：  
-> [vim-galore-zh_cn](https://github.com/wsdjeg/vim-galore-zh_cn)  
+> 参考：
+> [vim-galore-zh_cn](https://github.com/wsdjeg/vim-galore-zh_cn)
+> [vim-galore-zh_cn](https://github.com/wsdjeg/vim-galore-zh_cn)
 > [ VIM中文文档 ](https://yianwillis.github.io/vimcdoc/doc/help.html)
 
 ## 命令模式
@@ -653,9 +650,9 @@
     > 用于记录文件的更改记录，从而可进行撤销或回溯修改历史
 * viminfo文件
     > 存储vim使用信息，如打开文件记录、历史命令、寄存器值、跳转标签等
-* session文件
-    > :makesession mysession.vim  
-    > :source mysession.vim  
+    > :makesession mysession.vim
+    > :source mysession.vim
+    > :source mysession.vim
 
 ## runtimepath目录结构
 * 查看配置加载：:scriptnames
@@ -670,22 +667,22 @@
 * `:set packpath=`与`:set runtimepath=`
     * `/pack/foo/start/bar/类vim目录/`
     * `/pack/foo/opt/bar/类vim目录/`
-    * `/autoload/*.vim`
-        > 存放自动载入的函数，调用时使用  
+        > 存放自动载入的函数，调用时使用
+        > 存放自动载入的函数，调用时使用
         > `:call (dirname#)*filename#funcname()`
 * `/ftplugin/`
-    > 根据文件类型加载的配置
-    * `<filetype>.vim`  
-    * `<filetype>_<name>.vim`  
+    * `<filetype>.vim`
+    * `<filetype>_<name>.vim`
+    * `<filetype>_<name>.vim`
     * `<filetype>/<name>.vim`
 
 ## 命令别名
-* 形式： :command oldcmd Newcmd
-* 参数：`-nargs=0/1/*/?/+` 
-    `<args>`：用命令别名的参数代替该位置  
-    `<q-args>`："str \'str\' "  
-    `<f-args>`："str","str"  
-* 默认范围：-range/-range=%  
+* 参数：`-nargs=0/1/*/?/+`
+    `<args>`：用命令别名的参数代替该位置
+    `<q-args>`："str \'str\' "
+    `<f-args>`："str","str"
+* 默认范围：-range/-range=%
+* 默认范围：-range/-range=%
 
 ## 自动命令
 * 形式： :autocmd [group] {events} {file_pattern} [nested] {command}
@@ -699,11 +696,11 @@
     * `<expr>`      ：将{rhs}替换为表达式结果
     * `<SID>`       ：添加独一无二编号
 
-## 特殊字符
-`<c-v>`{key}  
-`<c-v>`{字符编码}：0，x，u，U  
-`<c-k>`{二合字符}  
-查看：:digraphs，ga，g8  
+`<c-v>`{key}
+`<c-v>`{字符编码}：0，x，u，U
+`<c-k>`{二合字符}
+查看：:digraphs，ga，g8
+查看：:digraphs，ga，g8
 
 
 ## 调试

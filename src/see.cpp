@@ -1,3 +1,16 @@
+/*
+ * File: see.cpp
+ * Project: src
+ * Author: Heache Bear (mrbeardad@qq.com)
+ * -----
+ * Created Date: 2021-08-14 01:16:01
+ * Last Modified:
+ * Modified By:
+ * -----
+ * Copyright <<projectCreationYear>> - 2021 Heachen Bear & Contributors
+ */
+
+
 /**
  * Copyright (c) 2020 Heachen Bear & Contributors
  * File: see.cpp

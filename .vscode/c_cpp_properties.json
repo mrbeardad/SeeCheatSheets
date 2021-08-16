@@ -1,0 +1,30 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64",
+            "compilerArgs": [
+                "-xc++",
+                "-Weverything-Wno-c++98-compat",
+                "-Wno-c++98-compat-pedantic",
+                "-Wno-pedantic",
+                "-Wno-missing-prototypes",
+                "-Wno-padded",
+                "-Wno-old-style-cast",
+                "-Wno-exit-time-destructors",
+                "-Wno-global-constructors",
+                "-I.",
+                "-Iinclude",
+                "-O2"
+            ]
+        }
+    ],
+    "version": 4
+}
