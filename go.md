@@ -368,11 +368,11 @@ default:
     * 底层类型：内置类型与复合类型的底层类型为自身，tpye的底层类型为声明式最右的类型（可传递）
 * 可赋值性：仅当以下情况时，类型为V的值x可直接赋值给类型为T的值
     * V与T类型相同
-    * x为nil，T为函数、接口、指针、切片、映射、通道
+    * x为nil且T为函数、接口、指针、切片、映射、通道之一
     * x为无类型常量且可重解释为T类型
     * V与T底层类型相同且至少有一个为未定义类型（即其中一个是另一个的底层复合类型）
     * V实现了接口T
-    * T是双向通道，且V与T的元素的类型相同
+    * V是双向通道而T是单向通道，且V与T的元素的类型相同
 * 显式类型转换`T(x)`：
     * 数字类型之间
     * 整型、`[]byte`、`[]rune`转换为`string`
@@ -496,10 +496,11 @@ copy(dst []byte, src string)
 * 相反的，当切片底层数组重新分配后，旧的切片值仍指向旧的底层数组，需要用户自行管理内存
 ```go
 // 键类型不能为函数、切片、字典，数组元素或结构字段也不能为这三种类型
-var mapped map[Key]Val          // 零值为nil，无key且不能添加key
+var mapped map[Key]Val          // 零值为nil，无key且不能添加key否则panic
 
 mapped = make(map[Key]Val)      // 空map，无key但可以添加key
-mapped = map[Key]Val{key1: val1, /*...*/}
+mapped = map[Key]Val{}          // 空map，无key但可以添加key
+mapped = map[Key]Val{key1: val1}
 
 len(mapped)
 val = mapped[key]               // 若不存在则返回对应零值
