@@ -40,9 +40,9 @@
 
 # 开发工具
 * 进程管理：htop
-* 集成开发：vim
-* 版本管理：git
+* 集成开发：vscode-neovim、spacevim
+* 版本管理：vscode-gitlens、git + tig
 * 接口测试：postman
-* 数据查询：workbench
-* 缓存查询：quickredis
+* 数据查询：DBeaver
+* 缓存查询：AnotherRedisDesktopManager
 * 渗透抓包：wireshark
