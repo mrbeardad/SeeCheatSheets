@@ -1,6 +1,7 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
+- [目录](#目录)
 - [命名](#命名)
 - [注释](#注释)
 - [顺序](#顺序)
@@ -12,16 +13,15 @@
 
 # 命名
 | 内容                         | 规范            | 举例                           |
-|------------------------------|-----------------|--------------------------------|
+| ---------------------------- | --------------- | ------------------------------ |
 | 命名空间                     | 全部小写+下划线 | `example_name`                 |
-| 全局函数                     | 全部小写+下划线 | `::example_name`               |
-| 全局变量                     | 大驼峰拼写法    | `::ExampleName`                |
 | 宏、常量、模板非类型参数     | 全部大写+下划线 | `EXAMPLE_NAME`                 |
 | 类名、类型别名、模板类型参数 | 大驼峰拼写法    | `ExampleName`                  |
+| 全局函数、全局变量           | 大驼峰拼写法    | `::ExampleName`                |
 | 静态变量                     | 大驼峰拼写法    | `ExampleName`                  |
 | 动态变量                     | 小驼峰拼写法    | `exampleName`                  |
 | 类的数据成员                 | 带`_`后缀       | `exampleName_`与`ExampleName_` |
-| 类的成员函数                 | 带`_`后缀       | `exampleName`与`ExampleName`   |
+| 类的成员函数                 | 不带`_`后缀     | `exampleName`与`ExampleName`   |
 
 可用于命名标识符的一些通用前后缀：
 * 位置：`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`，`last`，`this`
@@ -64,7 +64,7 @@ public:
     /* operator */
 
 private:
-    /* public段有需要private的移到此处 */
+    /* 上面public段有需要private的移到此处 */
 };
 ```
 
