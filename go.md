@@ -356,11 +356,6 @@ default:
 }
 ```
 
-* 综合
-    * 方法一般实现为指针方法
-    * 匿名内嵌一般使用值内嵌
-    * 赋值接口一般使用指针
-
 
 # 基础类型
 * 概念
@@ -408,7 +403,7 @@ var ui uint         // uint8 uint16 uint32 uint64 ，uint为32或64位
 i, ui = 0b11, 0B11
 i, ui = 077, 0o77, 0O77
 i, ui = 99,   99_999
-i, ui = 0xEE. 0Xee
+i, ui = 0xFF 0Xff
 
 var f float32   // 零值0.0
 var d float64
@@ -530,7 +525,7 @@ cap(ch)
 
 * 优雅的使用通道
     > 编写go代码时，可在心中延用经典的多线程模型，只是goroutine在CPU密集型效率更低而在IO密集型效率更高
-    * 串行化（`make(chan T)`）
+    * 同步串行化（`make(chan T)`）
     * 异步安全数据管道（`make(chan Future, bufsize)`）
     * 限制并发量（`make(chan struct{}, MAXPARALLEL)`、`maxChan <- struct{}{}; <-maxChan`）
     * 一对一异步事件信号（`make(chan struct{}, 1)`

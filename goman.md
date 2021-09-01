@@ -376,7 +376,7 @@ func Sscanf(str string, format string, a ...interface{}) (n int, err error)
 ```
 <!-- entry begin: go fmt -->
 | 格式  | 描述                 | 支持类型             |
-|-------|----------------------|----------------------|
+| ----- | -------------------- | -------------------- |
 | %v    | 打印值               | all                  |
 | %T    | 打印类型             | all                  |
 | %t    | 打印布尔值           | bool                 |
@@ -399,7 +399,7 @@ func Sscanf(str string, format string, a ...interface{}) (n int, err error)
 ## 序列化
 ### JSON
 ```go
-import "github.com/goccy/go-json"
+import "encoding/json"
 
 func Unmarshal(data []byte, v interface{}) error
 func Marshal(v interface{}) ([]byte, error)
@@ -407,7 +407,9 @@ func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error)
 func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error
 func Compact(dst *bytes.Buffer, src []byte) error
 func Valid(data []byte) bool
-// 从JSON转换时忽略stuct中不存在的字段，默认值为零值，若匹配字段的类型不匹配则出错
+// 从JSON转换时忽略stuct中不存在的字段，默认值为零值，可以利用指针复合类型确认字段是否存在（不存在为nil）
+// 若匹配字段的类型不匹配则出错
+// 字段匹配忽略大小写
 type Json struct {
     Bool   bool                   `json:"bool"`
     Int    int                    `json:"integer"`
@@ -417,6 +419,7 @@ type Json struct {
     Obj1   map[string]interface{} `json:"obj1"`
     Obj2   NestObj                `json:"obj2"`
     Omit   Omit                   `json:"-"`
+    NilPtr *string                `json:"nilPtr"`
 }
 ```
 
@@ -602,91 +605,43 @@ func Hostname() (name string, err error)
 ```
 
 # 网络库
-
-
-# 数据库
-## MySQL
-* 定义struct/map表示数据表
-    * 结构名 => 表名
-        * `SnakeCase` => `snake_cases`
-        * `func (this *SnakeCase) TableName() string`
-    * 字段名 => 列名
-        * `SnakeCase` => `snake_case`
-        * `gorm:"column:name"`
-    * 类型转换
-        * `整数      <=> 整数`
-        * `浮点数    <=> 浮点数`
-        * `string    <=> 字符`
-        * `[]byte    <=> 字节`
-        * `time.Time <=> 日期时间`
-        * `string    <=> 任意SQL类型`
-        * `struct,map<=> 单行记录`
-        * `slice     <=> 多行记录`
-    * 标签
-        > 大多数tag用于创建表时使用，少部分会影响CRUD
-        * `gorm:"column:name"`
-        * `gorm:"type:sqltype"`
-        * `gorm:"size:len"`
-        * `gorm:"not null"`
-        * `gorm:"unique"`
-        * `gorm:"autoIncrement"`
-        * `gorm:"default:value"`
-        * `gorm:"embedded;embeddedPrefix:prefix_"`
-        * `gorm:"<-"`                 // allow read and write (create and update)
-        * `gorm:"<-:create"`          // allow read and create
-        * `gorm:"<-:update"`          // allow read and update
-        * `gorm:"<-:false"`           // readonly
-        * `gorm:"->:false;<-:create"` // createonly (disabled read from db)
-        * `gorm:"->:false;<-:update"` // updateonly (disabled read from db)
-        * `gorm:"-"`                  // no read/write permission (ignore this field)
-        * `gorm:"primaryKey"`
-        * `gorm:"index:idx_member,priority:1"` // 构造索引idx_member，优先级默认为12，同优先级则根据字段先后顺序构造
-
 ```go
-import "gorm.io/gorm"
-import "gorm.io/driver/mysql"
+func SplitHostPort(hostport string) (host, port string, err error)
+func JoinHostPort(host, port string) string
+func LookupAddr(addr string) (names []string, err error)        // 从hosts文件反查ip对应host
+func LookupCNAME(host string) (cname string, err error)         // 查询host对应cname
+func LookupHost(host string) (addrs []string, err error)        // 查询host对应ip
+func LookupIP(host string) ([]IP, error)                        // 查询host对应ip
+func LookupPort(network, service string) (port int, err error)  // 查询service对应port
 
-func main() {
-    // 连接数据库
-    dsn := "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
-    db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-    // 自动迁移表（创建或修改表模式，应该放在init函数里）
-    db.AutoMigrate(&Record{})
+func ParseIP(s string) IP
+func ParseCIDR(s string) (IP, *IPNet, error)
+func (n *IPNet) Contains(ip IP) bool
+func (n *IPNet) Network() string
+func (n *IPNet) String() string
 
-    // 默认选择的列由Model指定，也可通过Select().Omit()手动指定
-    db.Model(&Record{})
-    db.Select("name",...)   // 手动指定选择列
-    db.Omit("name",...)     // 忽略指定的已选择的列
-    // 默认不进行行过滤，空字符串相当于忽略该方法调用
-    db = db.Where("name = ?", "xhc")    // gorm解析?时会根据数据库类型判断是否需要加''
-    db = db.Where("age <> ?", 18)       // 该Where与上条Where形成AND逻辑关系
-    db = db.Where(&Record{Name:"x", age:1})
-    db = db.Where("age LIKE ?", "pref%")
-    db = db.Where("age BETWEEN ? AND ?", 1, 18)
-    db = db.Where("age IN ?", []int{19,20})
-    db = db.Or("")
-    db = db.Not("")
+// network: "tcp", "tcp4", "tcp6", "udp", "udp4", "udp6", "ip", "ip4", "ip6", "unix", "unixgram", "unixpacket"
+// address: "ip:port", "host:service"
+func Dial(network, address string) (Conn, error)
+func Listen(network, address string) (Listener, error)
 
-    // 插入：选择列
-    db.Create(&Record{})
-    // 删除：过滤行
-    db.Delete(&Record{})
-    // 更新：选择列，过滤行。除非手动指定选择列，否则零值表示保持数据库原值不变
-    db.Updates(&Record{})
-    // 查询：选择列，过滤行
-    db.Select("DISTINCT records.name AS nickname")
-    db.Joins("LEFT JOIN user AS other ON records.id = user.id")
-    db.Where("name = 'xhc' AND age = 18")
-    db.Group("name, age").Having("COUNT(name) > 2")
-    db.Order("name DESC, age")
-    db.Limit(1).Offset(0)
-    db.Find(&Record{})
+type Listener interface {
+    Accept() (Conn, error)
+    Close() error
+    Addr() Addr
+}
+
+type Conn interface {
+    Read(b []byte) (n int, err error)
+    Write(b []byte) (n int, err error)
+    Close() error
+    LocalAddr() Addr
+    RemoteAddr() Addr
+    SetDeadline(t time.Time) error
+    SetReadDeadline(t time.Time) error
+    SetWriteDeadline(t time.Time) error
 }
 ```
-**设计准则**
-* 定义完整的与数据库模式一致的Model用于任何读写数据库的操作
-* 若与其他业务代码的接口数据结构不一致则需要进行转换
-
 
 # Web框架
 ## API注释
@@ -720,6 +675,130 @@ func main() {
 * 属性
     * default(*)
     * enums(v1, v2)
+# 数据库
+## MySQL
+* 定义struct/map表示数据表
+    * 结构名 => 表名
+        * `SnakeCase` => `snake_cases`
+        * `func (this *SnakeCase) TableName() string`
+    * 字段名 => 列名
+        * `SnakeCase` => `snake_case`
+        * `gorm:"column:name"`
+    * 类型转换
+        | Go数据类型         | SQL数据类型 |
+        | ------------------ | ----------- |
+        | 整数               | 整数        |
+        | 浮点数             | 浮点数      |
+        | string             | 字符        |
+        | []byte             | 字节        |
+        | time.Time          | 日期时间    |
+        | string             | 任意SQL类型 |
+        | struct,map         | 单行记录    |
+        | `[]struct`,`[]map` | 多行记录    |
+    * 标签
+        > 大多数tag用于创建表时使用，少部分会影响CRUD
+        * `gorm:"column:name"`
+        * `gorm:"type:sqltype"`
+        * `gorm:"unique"`
+        * `gorm:"not null"`
+        * `gorm:"autoIncrement"`
+        * `gorm:"default:value"`
+        * `gorm:"embedded;embeddedPrefix:prefix_"`
+        * `gorm:"<-"`                 // allow read and write (create and update)
+        * `gorm:"<-:create"`          // allow read and create
+        * `gorm:"<-:update"`          // allow read and update
+        * `gorm:"<-:false"`           // readonly
+        * `gorm:"->:false;<-:create"` // createonly (disabled read from db)
+        * `gorm:"->:false;<-:update"` // updateonly (disabled read from db)
+        * `gorm:"-"`                  // no read/write permission (ignore this field)
+        * `gorm:"primaryKey"`
+        * `gorm:"index:idx_name,priority:1"` // 构造索引idx_member，优先级默认为12，同优先级则根据字段先后顺序构造
+        * `gorm:"uniqueIndex:idx_name,priority:1"`
 
+```go
+import "gorm.io/gorm"
+import "gorm.io/driver/mysql"
 
+type Model struct {
+    gorm.Model      // 包含ID, CreateAt, UpdateAt, DeleteAt
+}
 
+// 连接数据库
+dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, ip, port, db)
+db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+sqlDB.SetMaxOpenConns(0)    // open连接越多，并发量越大，性能越高，但导致数据库压力越大；推荐10-20
+sqlDB.SetMaxIdleConns(2)    // idel连接越多，重新建连的可能性越低，但内存占用越高；推荐2-5
+sqlDB.SetConnMaxLifetime(0) // 清理超时过期的idel连接，生命周期越长，重新建连可能性越低，但导致数据库连接过期；推荐与数据库配置相同
+
+// 自动迁移表
+db.AutoMigrate(&Model{})    // 创建或修改表模式但不会删除列，应该放在init函数里
+
+// 接下来的SQL方法都会将上下文写入返回的新对象中，可用于拼接SQL语句
+
+// 选择列：默认选择的列即的Model的非零字段对应列
+db.Select("*")              // 显式指定所有列
+db.Select("field", ...)     // 显式指定列
+db.Omit("field", ...)       // 忽略指定的已选择列
+
+// 过滤行：默认不进行行过滤
+db.Where(&Model{Name:""})   // 忽略零值不用于过滤
+db.Where("field = ?", val)  // gorm解析?时会自动判断数据类型
+db.Where("field IN", []Model)
+db.Or("")
+db.Not("")
+
+// 删除：过滤行
+db.Unscoped()               // 用于查询包含软删除，用于删除则永久删除
+db.Delete(&Model{})
+
+// 插入：选择列
+db.Create(&Model{})         // 主键列ID的自增值会写回Model.ID
+db.Create(&[]Model{})
+db.CreateInBatches(&[]Model{}, size)
+
+// 更新：选择列，过滤行
+db.UpdateColumns("field", val)  // 更新指定列
+db.Updates(&Model{})            // 更新非零列
+db.Save(&Model{})               // 更新所有列
+result.RowsAffected             // 操作结果：更新行数
+db.Expr("price * ?", num)       // 解析为原生SQL语句字符串，用于原来需要go值的地方
+
+// 查询：选择列，过滤行
+db.First(&record)           // 主键升序取第一个
+db.Last(&record)            // 主键降序取第一个
+db.Take(&record)            // 未指定排序取第一个（与选取的索引有关）
+
+db.Select("field", ...)
+db.Distinct("field", ...)
+db.Joins("LEFT JOIN others ON records.id = others.id AND others.grade > ?", grade)
+db.Where("id = ?", id)
+db.Group("name, age").Having("COUNT(name) > 2")
+db.Order("field1 DESC").Order("field2")
+db.Limit(1).Offset(0)
+subQuery := db.Selete("..") // 子查询可用于Where
+
+db.Find(&Model{})
+db.Find(&[]Model{})
+db.Count(&int64{})
+
+// 事务
+tx := db.Begin()
+tx.SavePoint("sp1")
+tx.RollbackTo("sp1")
+tx.Rollback()
+tx.Commit()
+
+// 钩子
+func (u *User) BeforeCreate(tx *gorm.DB) (err error)
+func (u *User) AfterCreate(tx *gorm.DB) (err error)
+func (u *User) BeforeSave(tx *gorm.DB) (err error)
+func (u *User) AfterSave(tx *gorm.DB) (err error)
+func (u *User) BeforeUpdate(tx *gorm.DB) (err error)
+func (u *User) AfterUpdate(tx *gorm.DB) (err error)
+func (u *User) BeforeDelete(tx *gorm.DB) (err error)
+func (u *User) AfterDelete(tx *gorm.DB) (err error)
+func (u *User) AfterFind(tx *gorm.DB) (err error)
+
+// 调试
+db.Session(&Session{DryRun: true}).First(&user, 1).Statement.SQL.String()   // SQL语句
+```

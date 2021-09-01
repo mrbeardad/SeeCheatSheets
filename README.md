@@ -1,6 +1,3 @@
-# 目录
-<!-- vim-markdown-toc GFM -->
-
 - [安装](#安装)
 - [编程语言](#编程语言)
   - [C++](#c)
@@ -13,7 +10,6 @@
 - [底层](#底层)
 - [其它](#其它)
 
-<!-- vim-markdown-toc -->
 # 安装
 ***本仓库中提供了一支C++程序`see`用于快速查看笔记：***
 它会搜索`~/.cheat/*.md`中的entry，查找匹配的entry并打印；
@@ -87,8 +83,6 @@ cmake --install .
     > bash语法、内置命令以及一些unix环境基础命令
 * [开发者工具](devtool.md)
     > 包含gcc、gdb、openssh、openssl、tmux、zsh、git、pacman等工具使用
-* [Vim使用手册](vim.md)
-    > 此为[mrbeardad/SpaceVim](https://github.com/mrbeardad/SpaceVim)的使用手册
 * [Docker容器](docker.md)
     > 用于组建微服务架构
 
@@ -121,4 +115,3 @@ cmake --install .
 # 其它
 * [Markdown](markdown.md)
 * [English](english.md)
-
