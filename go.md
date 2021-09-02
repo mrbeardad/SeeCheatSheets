@@ -35,7 +35,7 @@ src/
 ```sh
 # 模块依赖管理
 go mod init ModuleName          # 以当前目录作为模块根目录初始化模块信息，并指定模块名（一般为URL）
-go list [-m] all                # 列出当前模块的依赖包[或模块]
+go mod graph                    # 列出当前模块的依赖包[或模块]
 go mod tidy -v                  # 重新整理模块的依赖
 go mod vendor -v                # 重新整理模块的依赖到vendor目录
 
@@ -53,10 +53,13 @@ go env
     -u GOPATH                   # 设置或清除go运行环境变量GOPATH
 
 go clean                        # 清除构建缓存
-go build [-o exe] [pkg|file.go] # 编译当前目录包或指定文件及其依赖
-go test [-c -o exe] [pkg|file.go]# 编译并测试当前目录下包的测试代码XXX_test.go
+go build  [pkg|file.go]         # 编译当前目录包或指定文件及其依赖
+    -o exe
+    -gcflags='all=-N -l'
+go test [pkg|file.go]           # 编译并测试当前目录下包的测试代码XXX_test.go
+    -c -o exe                   # 编译出的test程序选项-h查看参数
 go run [pkg|file.go]            # 编译并运行package或指定文件
-go install                      # 安装当前包及其依赖
+go install                      # 安装当前包及依赖
 ```
 <!-- entry end -->
 

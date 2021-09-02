@@ -3,6 +3,48 @@
 ## 模拟
 ## 打桩
 
+# 性能剖析
+<!-- entry begin: go pprof perf -->
+## runtime/pprof
+```go
+import "runtime/pprof"
+
+func StartCPUProfile(w io.Writer) error
+func StopCPUProfile()
+```
+
+## net/http/pprof
+```go
+import _ "net/http/pprof"
+```
+> http://localhost:6060/debug/pprof/
+* goroutine
+* heap
+* threadcreate
+* block
+* mutex
+* cmdline
+* profile
+* symbol
+* trace
+
+## go test
+```sh
+go test -cpuprofile cpu.prof -memprofile mem.prof -bench .
+```
+
+## go tool pprof
+```sh
+go tool pprof [binary] [binary.prof]
+go tool pprof http://localhost:6060/debug/pprof/profile
+```
+> pprof界面中常用命令
+* topN
+* list Func
+* web
+
+<!-- entry end -->
+
 # 数值处理
 ## 大数
 ```go
@@ -606,6 +648,14 @@ func Hostname() (name string, err error)
 
 # 网络库
 ```go
+import "net"
+
+func ParseIP(s string) IP
+func ParseCIDR(s string) (IP, *IPNet, error)
+func (n *IPNet) Contains(ip IP) bool
+func (n *IPNet) Network() string
+func (n *IPNet) String() string
+
 func SplitHostPort(hostport string) (host, port string, err error)
 func JoinHostPort(host, port string) string
 func LookupAddr(addr string) (names []string, err error)        // 从hosts文件反查ip对应host
@@ -613,12 +663,6 @@ func LookupCNAME(host string) (cname string, err error)         // 查询host对
 func LookupHost(host string) (addrs []string, err error)        // 查询host对应ip
 func LookupIP(host string) ([]IP, error)                        // 查询host对应ip
 func LookupPort(network, service string) (port int, err error)  // 查询service对应port
-
-func ParseIP(s string) IP
-func ParseCIDR(s string) (IP, *IPNet, error)
-func (n *IPNet) Contains(ip IP) bool
-func (n *IPNet) Network() string
-func (n *IPNet) String() string
 
 // network: "tcp", "tcp4", "tcp6", "udp", "udp4", "udp6", "ip", "ip4", "ip6", "unix", "unixgram", "unixpacket"
 // address: "ip:port", "host:service"
@@ -641,6 +685,35 @@ type Conn interface {
     SetReadDeadline(t time.Time) error
     SetWriteDeadline(t time.Time) error
 }
+```
+
+```go
+import "crypto/tls"
+
+func Listen(network, laddr string, config *Config) (net.Listener, error)
+func Dial(network, addr string, config *Config) (*Conn, error)
+func Server(conn net.Conn, config *Config) *Conn
+func Client(conn net.Conn, config *Config) *Conn
+type Config struct {
+    CipherSuites []uint16       // for both
+    Certificates []Certificate  // for both
+    InsecureSkipVerify bool     // for Client
+    ServerName string           // for Client
+    RootCAs *x509.CertPool      // for Client
+    ClientAuth ClientAuthType   // for Server
+    ClientCAs *x509.CertPool    // for Server
+    KeyLogWriter io.Writer      // 用于获取PMS来抓包解密报文
+}
+func LoadX509KeyPair(certFile, keyFile string) (Certificate, error)
+func X509KeyPair(certPEMBlock, keyPEMBlock []byte) (Certificate, error)
+
+import "crypto/x509"
+
+func NewCertPool() *CertPool
+func SystemCertPool() (*CertPool, error)
+func (s *CertPool) AddCert(cert *Certificate)
+func (s *CertPool) AppendCertsFromPEM(pemCerts []byte) (ok bool)
+func (s *CertPool) Subjects() [][]byte
 ```
 
 # Web框架
@@ -675,6 +748,7 @@ type Conn interface {
 * 属性
     * default(*)
     * enums(v1, v2)
+
 # 数据库
 ## MySQL
 * 定义struct/map表示数据表
