@@ -5,14 +5,6 @@
 
 # 性能剖析
 <!-- entry begin: go pprof perf -->
-## runtime/pprof
-```go
-import "runtime/pprof"
-
-func StartCPUProfile(w io.Writer) error
-func StopCPUProfile()
-```
-
 ## net/http/pprof
 ```go
 import _ "net/http/pprof"
@@ -27,6 +19,14 @@ import _ "net/http/pprof"
 * profile
 * symbol
 * trace
+
+## runtime/pprof
+```go
+import "runtime/pprof"
+
+func StartCPUProfile(w io.Writer) error
+func StopCPUProfile()
+```
 
 ## go test
 ```sh
@@ -644,6 +644,11 @@ func Getpid() int
 func Getppid() int
 
 func Hostname() (name string, err error)
+```
+
+# 日志库
+```go
+
 ```
 
 # 网络库
