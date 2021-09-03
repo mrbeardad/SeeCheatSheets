@@ -52,8 +52,8 @@ go env
     -w GOPATH=$HOME/.local/go/  # 设置环境变量
     -u GOPATH                   # 设置或清除go运行环境变量GOPATH
 
-go clean                        # 清除构建缓存
-go build  [pkg|file.go]         # 编译当前目录包或指定文件及其依赖
+go clean [-cache]               # 清除构建缓存
+go build [pkg|file.go]          # 编译当前目录包或指定文件及其依赖
     -o exe
     -gcflags='all=-N -l'
 go test [pkg|file.go]           # 编译并测试当前目录下包的测试代码XXX_test.go
