@@ -35,8 +35,9 @@ src/
 ```sh
 # 模块依赖管理
 go mod init ModuleName          # 以当前目录作为模块根目录初始化模块信息，并指定模块名（一般为URL）
-go list [-m] all                # 列出当前模块的依赖包[或模块]
-go mod tidy -v                  # 重新整理整个模块的依赖信息
+go mod graph                    # 列出当前模块的依赖包[或模块]
+go mod tidy -v                  # 重新整理模块的依赖
+go mod vendor -v                # 重新整理模块的依赖到vendor目录
 
 go get                          # 下载、编译并安装当前目录包依赖
 go get example.com/pkg          # 下载、编译并安装依赖版本的包，若为初始化则下载最新版本
@@ -52,10 +53,13 @@ go env
     -u GOPATH                   # 设置或清除go运行环境变量GOPATH
 
 go clean                        # 清除构建缓存
-go build [-o exe] [file.go]     # 编译当前目录包或指定文件及其依赖
-go test [-c -o exe] [file.go]   # 编译并测试当前目录下包的测试代码XXX_test.go
-go run [package|file.go]        # 编译并运行package或指定文件
-go install                      # 安装当前包及其依赖
+go build  [pkg|file.go]         # 编译当前目录包或指定文件及其依赖
+    -o exe
+    -gcflags='all=-N -l'
+go test [pkg|file.go]           # 编译并测试当前目录下包的测试代码XXX_test.go
+    -c -o exe                   # 编译出的test程序选项-h查看参数
+go run [pkg|file.go]            # 编译并运行package或指定文件
+go install                      # 安装当前包及依赖
 ```
 <!-- entry end -->
 
@@ -115,7 +119,7 @@ const (
     _, _ = iota, iota       // iota == 0
     KB = 1 << (10 * iota)   // KB == 1 << 10
     MB                      // 隐式延续表达式 1 << (10 * iota)，则MB为1 << 20
-    GB
+    GB                      // 枚举器iota大小与其出现的行数有关
     TB
     EB
 )
@@ -164,8 +168,8 @@ const (
     }
 
 // 支持字符串、数组、数组指针、切片、映射、通道
-    for idxOrKey, val := range container {  // 注意range表达式会对结构值进行一次拷贝，区分引用语义与值语义类型
-        for idxOrKey := range container {
+    for idxOrKey := range container {  // 注意range表达式会对结构值进行一次拷贝，区分引用语义与值语义类型
+        for idxOrKey, val := range container {
             for data := range channel {     // 通道被关闭则退出循环
                 for range any {
                     break
@@ -186,7 +190,7 @@ const (
         } else {
             panic("throw a panic!")
         }
-    }
+    }()
     defer call3rd()
     defer call2nd()
     defer call1st()
@@ -213,7 +217,7 @@ func asyncrun() (future chan int)
 * 操作符优先级
 
 | 操作符                       | 备注               |
-|------------------------------|--------------------|
+| ---------------------------- | ------------------ |
 | `.` `()` `[]`                | 成员、函数、下标   |
 | `+` `-` `!` `^` `*` `&` `<-` | 单目               |
 | `*` `/` `%` `<<` `>>` `&`    | 乘除、位移、位与   |
@@ -355,11 +359,6 @@ default:
 }
 ```
 
-* 综合
-    * 方法一般实现为指针方法
-    * 匿名内嵌一般使用值内嵌
-    * 赋值接口一般使用指针
-
 
 # 基础类型
 * 概念
@@ -387,7 +386,6 @@ default:
 * golang中指针的用途：
     * 避免拷贝参数
     * 修改参数原值
-    * 引用共享数据
 
 ## 指针类型
 ```go
@@ -408,7 +406,7 @@ var ui uint         // uint8 uint16 uint32 uint64 ，uint为32或64位
 i, ui = 0b11, 0B11
 i, ui = 077, 0o77, 0O77
 i, ui = 99,   99_999
-i, ui = 0xEE. 0Xee
+i, ui = 0xFF 0Xff
 
 var f float32   // 零值0.0
 var d float64
@@ -530,7 +528,7 @@ cap(ch)
 
 * 优雅的使用通道
     > 编写go代码时，可在心中延用经典的多线程模型，只是goroutine在CPU密集型效率更低而在IO密集型效率更高
-    * 串行化（`make(chan T)`）
+    * 同步串行化（`make(chan T)`）
     * 异步安全数据管道（`make(chan Future, bufsize)`）
     * 限制并发量（`make(chan struct{}, MAXPARALLEL)`、`maxChan <- struct{}{}; <-maxChan`）
     * 一对一异步事件信号（`make(chan struct{}, 1)`

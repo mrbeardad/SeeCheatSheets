@@ -267,25 +267,31 @@ pprof --help
 
 # ssl
 <!-- entry begin: openssl -->
-**openssl命令**：参考至[OSCHINA](https://my.oschina.net/u/3794778/blog/3021643)
-* openssl genrsa -des3 -out server.key 2048
-    > 创建私钥。`-des3`表示对私钥进行加密，默认不加密`-nodes`
+* openssl genpkey -algorithm RSA -out outfile
+    > 创建私钥。`-des`选项用于加密私钥，`-nodes`选项用于跳过加密
 * openssl req -key server.key -new -out server.csr
-    > 利用已有私钥创建证书请求。
+    > 创建证书请求。
+* openssl ca -cert ca.crt -keyfile ca.key -in server.csr -out server.crt
+    > 创建证书
+* openssl req -key server.key -new -x509 -days 365 -out server.crt
+    > 创建自签证书
+* openssl req -newkey rsa:2048 -keyout server.key -x509 -days 365 -out server.crt
+    > 同时创建私钥与自签证书
 * openssl req -newkey rsa:2048 -keyout server.key -out server.csr
     > 同时创建私钥与证书请求
 * openssl x509 -in server.crt -signkey server.key -x509toreq server.csr
-    > 利用已有证书创建证书请求。用于续订证书
-* openssl req -newkey rsa:2048 -keyout server.key -x509 -days 360 -out server.crt
-    > 同时创建私钥与自签证书。用于SSL加密
-* openssl req -key server.key -new -x509 -days 365 -out server.crt
-    > 利用已有私钥创建自签证书
+    > 利用已有证书创建证书请求，用于续订证书
 * openssl req  -text -noout -in server.csr
     > 查看证书请求
 * openssl x509 -text -noout -in server.crt
     > 查看证书
-* openssl ca -in server.csr -out server.crt -cert ca.crt -keyfile ca.key
-    > 利用CA自签证书与证书请求创建证书
+```sh
+# 创建自签证书
+openssl req -new \
+    -subj "/C=CN/ST=Guangdong/L=Shenzhen/O=Tencent/OU=CSIG/CN=qq.com" \
+    -addext "subjectAltName = IP:127.0.0.1,DNS:qq.com" \
+    -nodes -newkey rsa:2048 -keyout server.key -x509 -out server.crt
+```
 
 * openssl rsa -des3 -in unencrypted.key -out encrypted.key
     > 加密私钥

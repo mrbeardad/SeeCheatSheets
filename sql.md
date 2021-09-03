@@ -1,6 +1,7 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
+- [目录](#目录)
 - [安装与使用](#安装与使用)
 - [SQL基础](#sql基础)
   - [系统信息](#系统信息)
@@ -26,8 +27,6 @@
 - [视图](#视图)
 - [分区](#分区)
 - [事务](#事务)
-- [触发器](#触发器)
-- [编程](#编程)
 
 <!-- vim-markdown-toc -->
 
@@ -165,12 +164,12 @@ SET fd_name=value, ...
 
 ## 数据类型
 ### 整数类型
-> * 支持在其后添加`(N)`，指定十进制显示时的最小显示位数，最大255（不影响存储与计算） **deprecated** 
+> * 支持在其后添加`(N)`，指定十进制显示时的最小显示位数，最大255（不影响存储与计算） **deprecated**
 * 支持在其后添加`UNSIGNED`，指定为无符型整数
 * 计算时统一使用`BIGINT`类型
 
 | 类型      | 字节 |
-|-----------|------|
+| --------- | ---- |
 | TINYINT   | 1    |
 | SMALLINT  | 2    |
 | MEDIUMINT | 3    |
@@ -178,12 +177,12 @@ SET fd_name=value, ...
 | BIGINT    | 8    |
 
 ### 实数类型
-> * 对于FLOAT与DOUBLE，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（影响存储大小限制） **deprecated** 
+> * 对于FLOAT与DOUBLE，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（影响存储大小限制） **deprecated**
 * 对于DECIMAL，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（默认`(10, 0)`）
 * 计算时统一使用`DOUBLE`类型
 
 | 类型    | 字节 |
-|---------|------|
+| ------- | ---- |
 | FLOAT   | 4    |
 | DOUBLE  | 8    |
 | DECIMAL | ∞    |
@@ -196,7 +195,7 @@ SET fd_name=value, ...
 特别注意排序时也是按数字大小来，所以最好映射的字符顺序与数字顺序相对应
 
 | 类型 | 说明                                       |
-|------|--------------------------------------------|
+| ---- | ------------------------------------------ |
 | ENUM | 数字与字符串间的双射，尽量使用整数代替枚举 |
 | SET  | 给每一位取个可读性高的名称                 |
 
@@ -208,7 +207,7 @@ SET fd_name=value, ...
 * 对于TEXT族与BLOB族，排序时仅比较前`max_sort_length`字节，且可能使用外部空间存储数据而在表中存储指针
 
 | 类型            | 长度             | 说明                                 |
-|-----------------|------------------|--------------------------------------|
+| --------------- | ---------------- | ------------------------------------ |
 | CHAR            | 0~255       字符 | 固定字符数，忽略输入的尾后空格       |
 | VARCHAR         | 0~65535     字节 | 可变字符数                           |
 | BINARY          | 0~255       字节 | 类似CHAR，但用`\0`填充且索引时不忽略 |
@@ -231,7 +230,7 @@ SET fd_name=value, ...
 * 除DATE外，其余类型支持在其后添加`(fps)`表示秒级小数位数
 
 | 类型      | 字节 | 格式                |
-|-----------|------|---------------------|
+| --------- | ---- | ------------------- |
 | DATE      | 3    | YYYY-mm-dd          |
 | TIME      | 3    | HH:MM:SS            |
 | DATETIME  | 8    | YYYY-mm-dd HH:MM:SS |
@@ -240,9 +239,9 @@ SET fd_name=value, ...
 
 ## 类型约束
 | 约束             | 说明         | 备注                                                |
-|------------------|--------------|-----------------------------------------------------|
-| `NOT NULL`       | 不能为空     | PRIMARY KEY的必要条件                               |
+| ---------------- | ------------ | --------------------------------------------------- |
 | `UNIQUE`         | 不能重复     | PRIMARY KEY的必要条件，UNIQUE KEY的充分条件         |
+| `NOT NULL`       | 不能为空     | PRIMARY KEY的必要条件                               |
 | `AUTO_INCREMENT` | 自动增加数值 | 隐含UNIQUE，一个表只能有一个列为该限制且必须作为key |
 | `DEFAULT val`    | 设置默认值   | 仅支持常量默认值                                    |
 
@@ -253,13 +252,13 @@ SET fd_name=value, ...
     * 逻辑：`NOT` `AND` `OR` `XOR`          ：注意运算符优先级问题
     * 算术：`+` `-` `*` `/` `%`             ：可以用`()`来改变优先级
     * 比较：
-        * `=` `<>` `<` `<=` `>` `=>`        ：若有一边为NULL则会返回false
+        * `=` `<>` `<` `<=` `>` `=>`        ：任意一边为NULL则会返回false
         * `<=>`                             ：当两边相等或均为NULL返回true
         * `IS [NOT] NULL value`
     * 关系：
-        * `[NOT] BETWEEN value1 AND value2`
         * `[NOT] LIKE   'pattern'`          ：支持通配符`_`和`%`，匹配完整字符串
         * `[NOT] REGEXP 'pattern'`          ：转义序列使用类似`\\.`，匹配子串
+        * `[NOT] BETWEEN value1 AND value2`
         * `[NOT] IN     (val, ...)`
         * `[NOT] EXISTS (SELECT 语句)`      ：判断子查询是否检索出数据
         * `<OP> ALL     (val, ...)`         ：列表中所有行都符合`<OP>`
@@ -269,7 +268,7 @@ SET fd_name=value, ...
 ## 函数
 <!-- entry begin: sql function -->
 | 字符处理函数             | 描述                |
-|--------------------------|---------------------|
+| ------------------------ | ------------------- |
 | CONCAT(s, s)             | 拼接两数据          |
 | LEFT(s, l)               | 左边l个字符         |
 | RIGHT(s, l)              | 右边l个字符         |
@@ -283,7 +282,7 @@ SET fd_name=value, ...
 | TRIM(s)                  | 删除两侧空白符      |
 
 | 时间处理函数                     | 描述                   |
-|----------------------------------|------------------------|
+| -------------------------------- | ---------------------- |
 | NOW()                            | 返回当前日期时间       |
 | CURDATE()                        | 返回当前日期           |
 | CURTIME()                        | 返回当前时间           |
@@ -301,7 +300,7 @@ SET fd_name=value, ...
 | DATE_FORMAT(dt, format)          | 按指定格式打印日期时间 |
 
 | 数值处理函数 | 描述   |
-|--------------|--------|
+| ------------ | ------ |
 | ABS(v)       | 绝对值 |
 | SIN(v)       | 正弦   |
 | COS(v)       | 余弦   |
@@ -312,7 +311,7 @@ SET fd_name=value, ...
 | PI()         | 圆周率 |
 
 | 聚合函数 | 描述                      |
-|----------|---------------------------|
+| -------- | ------------------------- |
 | FIRST(f) | 返回第一个值              |
 | LAST(f)  | 返回最后一个值            |
 | MAX(f)   | 返回最大值                |
@@ -330,6 +329,7 @@ SET fd_name=value, ...
 SELECT [DISTINCT] expr [AS fd_alias], ...       -- expr表示选择列或表达式列
 [FROM tbl_name [AS tbl_alias], ...]             -- 若有多个表则expr中列名必须加上表名
 
+-- join的目的，范式表的查询
 [[INNER|LEFT|RIGHT] JOIN tbl_name[AS tbl_alias]]-- 连接多表，与在FROM子句中指定多表区别在于此处可外连接，首选INNER JOIN而非FROM联结
 [ON clause]                                     -- 类似WHERE，但对于外连接对驱动表的行均判定为真
 
@@ -399,49 +399,11 @@ SELECT ... FROM tbl_name PARTITION (part_name);
 ```sql
 BEGIN;                                  -- 开启事务
 ...
-SAVEPOINT point;                        -- 设置保存点
+SAVEPOINT mypoint;                        -- 设置保存点
 ...
-RELEASE SAVEPOINT point;                -- 删除保存点
+RELEASE SAVEPOINT mypoint;                -- 删除保存点
 ...
-ROLLBACK TO point;                      -- 撤销至保存点
+ROLLBACK TO mypoint;                      -- 撤销至保存点
 ...
 COMMIT 或 ROLLBACK ;                    -- 提交事务 或 撤销此次事务
 ```
-
-# 触发器
-```sql
-CREATE TRIGGER trigger_name BEFORE|AFTER INSERT|DELETE|UPDATE ON tbl_name
-    FOR EACH ROW [statement; |
-    BEGIN
-        statement;
-    END;]
-DROP TRIGGER trigger_name [tbl_name.]trigger_name;
-```
-# 编程
-```sql
--- 存储过程
-CREATE PROCEDURE func_name(IN arg1 type, OUT arg2 type, INOUT arg3 type)
-    [COMMENT 'comments...']
-    BEGIN
-        ...
-    END;
-DROP PROCEDURE func_name;
-SHOW PROCEDURE STATUS [LIKE 'pattern'];
-SHOW CREATE PROCEDURE func_name;
-CALL func_name(val1, @arg2, @arg3);
-
--- 变量访问
-DECLARE variable type [default val];    -- 声明局部变量，退出函数销毁
-SET @variable = val;                    -- 声明全局变量，退出会话销毁
-SELECT 语句 INTO variable;              -- SELECT赋值
-
--- 分支语句
-IF bool THEN
-    ...
-ELSEIF bool THEN
-    ...
-ELSE
-    ...
-END;
-```
-

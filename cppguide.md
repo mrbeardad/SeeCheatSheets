@@ -21,9 +21,10 @@
 
 * 形式
     > 若initializer的类型并非期望类型，则使用cast显式转换
-    * `auto  t = T{}`
-    * `auto  t = T{args...}`
-    * `auto  t = T(args...)`
+    * `T t;`
+        > 这种初始化语句预示着接下来一段代码用于初始化该变量，对该语句保持警醒注意该变量是否被正确初始化
+    * `auto  t = T{args...};`
+    * `auto  t = T(args...);`
     * `auto  t = initializer;`
     * `auto* t = initializer;`
     * `auto& t = initializer;`
@@ -122,7 +123,7 @@ GFM
 > 对比
 
 | 类型          | 特性                             |
-|---------------|----------------------------------|
+| ------------- | -------------------------------- |
 | T             | 拷贝                             |
 | T&            | 引用、左值（非常量）             |
 | T&&           | 引用、右值                       |
@@ -221,7 +222,7 @@ GFM
 ## 初始化
 * 初始化的形式
     * <u>具有类型精准的初始化器</u>时，使用`auto x = initializer`或`auto& x = initializer`或`auto* x = initializer`
-        > 若初始化器为函数返回值，拿不准是否应该使用`auto&`时，则直接用`auto&`并让编译器推断是否可行。  
+        > 若初始化器为函数返回值，拿不准是否应该使用`auto&`时，则直接用`auto&`并让编译器推断是否可行。
         > 若类型不精准而需要类型转换时，联用auto与cast
     * 调用容器的非`initializer_list`的构造函数时，使用`vector<int> v(10, 1)`
     * 调用容器的`initializer_list`的构造函数时，使用`vector<int> v{10, 1}`
@@ -280,7 +281,7 @@ GFM
     * Caching
         > 缓存之前获取的结果
     * Prefetching
-        > 预先进行一次大动作，代替多次小动作  
+        > 预先进行一次大动作，代替多次小动作
         > 如：磁盘I/O，堆内存申请，等各种系统调用
 
 ## 底层const优点
@@ -290,7 +291,7 @@ GFM
 ## 类的封装
 * non-member non-friend函数比member具有更好的函数封装性，且可以前者可以分离编译
 
-* 数据成员应该封装为private，  
+* 数据成员应该封装为private，
     为了更好的封装数据成员以降低编译依赖甚至可以使用**handle类**或**interface类**
     > 主要是重构数据成员时，所有调用该类的文件都要重新编译，因为数据成员包含在类的定义中被一起放在类头文件，
     > 用以编译器判断类对象所需栈内存大小。解决办法：
@@ -337,7 +338,7 @@ GFM
         > 包括其**引用**
         <details>
             <summary><b>例子</b></summary>
-        
+
 ```cpp
 // 接口头文件
 #include <string>
@@ -388,7 +389,7 @@ std::unique_ptr<Human> Human::make(const std::string& name, std::size_t id)
 &emsp;当在`A`文件中定义`a`，在`B`文件中定义`b`，`b`依赖于`a`，
 但是`a`不一定就在`b`之前构造
 <a href=## title="即使a会存储在数据段中，看似构造了，但其实它可能还需要在运行期调用构造函数，比如std::vector即使定义在全局，仍然需要在运行期在main调用之前调用其构造函数来获取堆内存；另一个例子就是定义在<iostream>里的cin与cout">[注]</a>，
-这就可能导致致命错误。  
+这就可能导致致命错误。
 &emsp;解决办法是将non-local static转换为local-static，即在函数内定义static对象，然后返回该对象的引用
 <details>
     <summary><b>例子</b></summary>
@@ -445,8 +446,8 @@ ObjB b{get_a()};    // 这样在构造b之前，a必定是已构造的
 
 ## 默认初始化
 * 默认初始化与值初始化
-    * 对于内置类型与聚合类，`int a[5];`叫默认初始化，`int a[5]{}`叫值初始化，  
-        * 默认初始化静态变量为全零，初始化动态变量为未定义；  
+    * 对于内置类型与聚合类，`int a[5];`叫默认初始化，`int a[5]{}`叫值初始化，
+        * 默认初始化静态变量为全零，初始化动态变量为未定义；
         * 而值初始化会将对象初始化为全零
 
     * 对于其它类类型，`string s;`与`string s{};`都叫默认初始化，行为都一样，即调用其默认构造函数，
@@ -541,7 +542,7 @@ void func(T&&);
 ```
 
 ## const函数重载技巧
-* `const T&`重载`T&`时，non-const版本调用const版本以避免代码重复  
+* `const T&`重载`T&`时，non-const版本调用const版本以避免代码重复
     ```cpp
     const T& func(const T& t);
 
