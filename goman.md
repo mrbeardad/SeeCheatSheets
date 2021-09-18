@@ -1,5 +1,53 @@
 # 单元测试
 ## 断言
+```go
+// file: unit_test.go
+import (
+  "testing"
+  "github.com/stretchr/testify/assert"
+)
+
+func TestSomething(t *testing.T) {
+}
+
+func Fail(t TestingT, failureMessage string, msgAndArgs ...interface{}) bool
+func FailNow(t TestingT, failureMessage string, msgAndArgs ...interface{}) bool
+
+func Zero(t TestingT, i interface{}, msgAndArgs ...interface{}) bool
+func Nil(t TestingT, object interface{}, msgAndArgs ...interface{}) bool
+func Implements(t TestingT, interfaceObject interface{}, object interface{}, msgAndArgs ...interface{}) bool
+func IsType(t TestingT, expectedType interface{}, object interface{}, msgAndArgs ...interface{}) bool
+func Same(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool
+func Regexp(t TestingT, rx interface{}, str interface{}, msgAndArgs ...interface{}) bool
+func True(t TestingT, value bool, msgAndArgs ...interface{}) bool
+func False(t TestingT, value bool, msgAndArgs ...interface{}) bool
+func Positive(t TestingT, e interface{}, msgAndArgs ...interface{}) bool
+func Negative(t TestingT, e interface{}, msgAndArgs ...interface{}) bool
+func Equal(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool
+func EqualValues(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool      // 支持可相互转换类型之间的比较
+func NotEqualValues(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool      // 支持可相互转换类型之间的比较
+func InEpsilon(t TestingT, expected, actual interface{}, epsilon float64, msgAndArgs ...interface{}) bool
+func InEpsilonSlice(t TestingT, expected, actual interface{}, epsilon float64, msgAndArgs ...interface{}) bool
+func Greater(t TestingT, e1 interface{}, e2 interface{}, msgAndArgs ...interface{}) bool
+func GreaterOrEqual(t TestingT, e1 interface{}, e2 interface{}, msgAndArgs ...interface{}) bool
+func Less(t TestingT, e1 interface{}, e2 interface{}, msgAndArgs ...interface{}) bool
+func LessOrEqual(t TestingT, e1 interface{}, e2 interface{}, msgAndArgs ...interface{}) bool
+
+func Len(t TestingT, object interface{}, length int, msgAndArgs ...interface{}) bool
+func Empty(t TestingT, object interface{}, msgAndArgs ...interface{}) bool
+func Subset(t TestingT, list, subset interface{}, msgAndArgs ...interface{}) (ok bool)
+func Contains(t TestingT, s, contains interface{}, msgAndArgs ...interface{}) bool // 针对string
+func ElementsMatch(t TestingT, listA, listB interface{}, msgAndArgs ...interface{}) (ok bool)
+func IsIncreasing(t TestingT, object interface{}, msgAndArgs ...interface{}) bool
+func IsDecreasing(t TestingT, object interface{}, msgAndArgs ...interface{}) bool
+
+func DirExists(t TestingT, path string, msgAndArgs ...interface{}) bool
+func FileExists(t TestingT, path string, msgAndArgs ...interface{}) bool
+
+func Panics(t TestingT, f PanicTestFunc, msgAndArgs ...interface{}) bool
+func PanicsWithError(t TestingT, errString string, f PanicTestFunc, msgAndArgs ...interface{}) bool
+func PanicsWithValue(t TestingT, expected interface{}, f PanicTestFunc, msgAndArgs ...interface{}) bool
+```
 ## 模拟
 ## 打桩
 
@@ -164,104 +212,6 @@ func Read(p []byte) (n int, err error)
 func Shuffle(n int, swap func(i, j int))    // i为索引[1, n]，j为随机数[0, i]
 ```
 
-## 时间库
-```go
-import "time"
-// 时间+时区 可唯一确定一个世界通用时，当输出时的时区改变则时间也会随之改变
-
-// Time计算时使用monotonic clock，其他操作使用wall clock
-func Now() Time
-func Date(year int, month Month, day, hour, min, sec, nsec int, loc *Location) Time
-func Unix(sec int64, nsec int64) Time   // 接受Unix时间戳sec*1e9+nsec
-func Parse(layout, value string) (Time, error)
-func ParseInLocation(layout, value string, loc *Location) (Time, error)
-
-// 解析格式时间layout: Mon Jan 2 15:04:05 MST 2006
-func (t *Time) Format(layout string) string
-func (t *Time) Date() (year int, month Month, day int)
-func (t *Time) Year() int
-func (t *Time) Month() Month
-func (t *Time) Day() int
-func (t *Time) Weekday() Weekday
-func (t *Time) YearDay() int
-func (t *Time) Clock() (hour, min, sec int)
-func (t *Time) Hour() int
-func (t *Time) Minute() int
-func (t *Time) Second() int
-func (t *Time) Nanosecond() int
-
-// Unix时间戳定义为1970-1-1 00:00:00 UTC开始所流逝的秒数，不受Time的时区影响
-func (t *Time) Zone() (name string, offset int) // offset为相对UTC偏移秒数
-func (t *Time) Unix() int64                     // 返回秒级Unix时间戳
-func (t *Time) UnixNano() int64                 // 同上，但返回ns纳秒级版本
-func (t *Time) UTC() Time                       // 转换为UTC时间
-func (t *Time) Local() Time                     // 转换为Local时间
-func (t *Time) Location() *Location
-func (t *Time) In(loc *Location) Time
-
-func (t *Time) Add(d Duration) Time
-func (t *Time) AddDate(years int, months int, days int) Time
-func (t *Time) Sub(u Time) Duration
-func (t *Time) Truncate(d Duration) Time
-func (t *Time) Before(u Time) bool
-func (t *Time) After(u Time) bool
-func (t *Time) Equal(u Time) bool
-func (t *Time) IsZero() bool
-
-type Month int
-const (
-    January Month = 1 + iota
-    February
-    March
-    April
-    May
-    June
-    July
-    August
-    September
-    October
-    November
-    December
-)
-func (m Month) String() string
-
-type Weekday int
-const (
-    Sunday Weekday = iota
-    Monday
-    Tuesday
-    Wednesday
-    Thursday
-    Friday
-    Saturday
-)
-func (d Weekday) String() string
-
-// Duration单位为nanosecond
-func ParseDuration(s string) (Duration, error)  // ns, us, ms, s, m, h
-func Since(t Time) Duration
-func Until(t Time) Duration
-func (d Duration) Hours() float64
-func (d Duration) Minutes() float64
-func (d Duration) Seconds() float64
-func (d Duration) Milliseconds() int64
-func (d Duration) Microseconds() int64
-func (d Duration) Nanoseconds() int64
-func (d Duration) String() string
-func (d Duration) Round(m Duration) Duration    // 向零取整
-func (d Duration) Truncate(m Duration) Duration // 远零取整
-
-func NewTicker(d Duration) *Ticker
-func (t *Ticker) Reset(d Duration)
-func (t *Ticker) Stop()
-
-func AfterFunc(d Duration, f func()) *Timer
-func NewTimer(d Duration) *Timer
-func (t *Timer) Reset(d Duration) bool
-func (t *Timer) Stop() bool
-
-func Sleep(d Duration)
-```
 
 # 字符处理
 ## 字符串
@@ -646,6 +596,136 @@ func Getppid() int
 func Hostname() (name string, err error)
 ```
 
+# 时间库
+```go
+import "time"
+// 时间+时区 可唯一确定一个世界通用时，当输出时的时区改变则时间也会随之改变
+
+// Time计算时使用monotonic clock，其他操作使用wall clock
+func Now() Time
+func Date(year int, month Month, day, hour, min, sec, nsec int, loc *Location) Time
+func Unix(sec int64, nsec int64) Time   // 接受Unix时间戳sec*1e9+nsec
+func Parse(layout, value string) (Time, error)
+func ParseInLocation(layout, value string, loc *Location) (Time, error)
+
+// 解析格式时间layout: Mon Jan 2 15:04:05 MST 2006
+func (t *Time) Format(layout string) string
+func (t *Time) Date() (year int, month Month, day int)
+func (t *Time) Year() int
+func (t *Time) Month() Month
+func (t *Time) Day() int
+func (t *Time) Weekday() Weekday
+func (t *Time) YearDay() int
+func (t *Time) Clock() (hour, min, sec int)
+func (t *Time) Hour() int
+func (t *Time) Minute() int
+func (t *Time) Second() int
+func (t *Time) Nanosecond() int
+
+// Unix时间戳定义为1970-1-1 00:00:00 UTC开始所流逝的秒数，不受Time的时区影响
+func (t *Time) Zone() (name string, offset int) // offset为相对UTC偏移秒数
+func (t *Time) Unix() int64                     // 返回秒级Unix时间戳
+func (t *Time) UnixNano() int64                 // 同上，但返回ns纳秒级版本
+func (t *Time) UTC() Time                       // 转换为UTC时间
+func (t *Time) Local() Time                     // 转换为Local时间
+func (t *Time) Location() *Location
+func (t *Time) In(loc *Location) Time
+
+func (t *Time) Add(d Duration) Time
+func (t *Time) AddDate(years int, months int, days int) Time
+func (t *Time) Sub(u Time) Duration
+func (t *Time) Truncate(d Duration) Time
+func (t *Time) Before(u Time) bool
+func (t *Time) After(u Time) bool
+func (t *Time) Equal(u Time) bool
+func (t *Time) IsZero() bool
+
+type Month int
+const (
+    January Month = 1 + iota
+    February
+    March
+    April
+    May
+    June
+    July
+    August
+    September
+    October
+    November
+    December
+)
+func (m Month) String() string
+
+type Weekday int
+const (
+    Sunday Weekday = iota
+    Monday
+    Tuesday
+    Wednesday
+    Thursday
+    Friday
+    Saturday
+)
+func (d Weekday) String() string
+
+// Duration单位为nanosecond
+func ParseDuration(s string) (Duration, error)  // ns, us, ms, s, m, h
+func Since(t Time) Duration
+func Until(t Time) Duration
+func (d Duration) Hours() float64
+func (d Duration) Minutes() float64
+func (d Duration) Seconds() float64
+func (d Duration) Milliseconds() int64
+func (d Duration) Microseconds() int64
+func (d Duration) Nanoseconds() int64
+func (d Duration) String() string
+func (d Duration) Round(m Duration) Duration    // 向零取整
+func (d Duration) Truncate(m Duration) Duration // 远零取整
+
+func NewTicker(d Duration) *Ticker
+func (t *Ticker) Reset(d Duration)
+func (t *Ticker) Stop()
+
+func AfterFunc(d Duration, f func()) *Timer
+func NewTimer(d Duration) *Timer
+func (t *Timer) Reset(d Duration) bool
+func (t *Timer) Stop() bool
+
+func Sleep(d Duration)
+```
+
+# 同步库
+```go
+type Mutex
+    func (m *Mutex) Lock()
+    func (m *Mutex) Unlock()
+type RWMutex
+    func (rw *RWMutex) Lock()
+    func (rw *RWMutex) RLock()
+    func (rw *RWMutex) RLocker() Locker
+    func (rw *RWMutex) RUnlock()
+    func (rw *RWMutex) Unlock()
+type Cond
+    func NewCond(l Locker) *Cond
+    func (c *Cond) Broadcast()
+    func (c *Cond) Signal()
+    func (c *Cond) Wait()
+type Map
+    func (m *Map) Delete(key interface{})
+    func (m *Map) Load(key interface{}) (value interface{}, ok bool)
+    func (m *Map) LoadAndDelete(key interface{}) (value interface{}, loaded bool)
+    func (m *Map) LoadOrStore(key, value interface{}) (actual interface{}, loaded bool)
+    func (m *Map) Range(f func(key, value interface{}) bool)
+    func (m *Map) Store(key, value interface{})
+type WaitGroup
+    func (wg *WaitGroup) Add(delta int)
+    func (wg *WaitGroup) Done()
+    func (wg *WaitGroup) Wait()
+type Once
+    func (o *Once) Do(f func())
+```
+
 # 网络库
 ```go
 import "net"
@@ -714,6 +794,48 @@ func SystemCertPool() (*CertPool, error)
 func (s *CertPool) AddCert(cert *Certificate)
 func (s *CertPool) AppendCertsFromPEM(pemCerts []byte) (ok bool)
 func (s *CertPool) Subjects() [][]byte
+```
+
+# 日志库
+```go
+import "github.com/sirupsen/logrus"
+
+func init() {
+    logrus.SetOutput(os.Stdout)
+    logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetReportCaller(true)
+	logrus.SetFormatter(&logrus.TextFormatter{
+		// DisableLevelTruncation:    true,
+		// PadLevelText:              true,
+		// ForceQuote:                false,
+		// DisableQuote:              false,
+		// QuoteEmptyFields:          false,
+		// ForceColors:               false,
+		// DisableColors:             false,
+		EnvironmentOverrideColors: true, // CLICOLOR_FORCE and CLICOLOR
+		// DisableTimestamp:          false,
+		FullTimestamp:             true,
+		TimestampFormat:           "2006-01-02 15:04:05",
+		CallerPrettyfier: func(f *runtime.Frame) (function string, file string) {
+			file = fmt.Sprintf("%v:%v", filepath.Base(f.File), f.Line)
+			function = fmt.Sprintf("%v()", f.Function)
+			return
+		},
+	})
+}
+
+func main() {
+	log := logrus.WithFields(logrus.Fields{})
+    iow := logrus.StandardLogger().Write()  // io.Writer
+
+	log.Trace("message")
+	log.Debug("message")
+	log.Info("message")
+	log.Warn("message")
+	log.Error("message")
+	log.Fatal("message")
+    log.Panic("message")
+}
 ```
 
 # Web框架
@@ -842,6 +964,7 @@ db.First(&record)           // 主键升序取第一个
 db.Last(&record)            // 主键降序取第一个
 db.Take(&record)            // 未指定排序取第一个（与选取的索引有关）
 
+subQuery := db.Selete("..") // 子查询可用于Where
 db.Select("field", ...)
 db.Distinct("field", ...)
 db.Joins("LEFT JOIN others ON records.id = others.id AND others.grade > ?", grade)
@@ -849,7 +972,6 @@ db.Where("id = ?", id)
 db.Group("name, age").Having("COUNT(name) > 2")
 db.Order("field1 DESC").Order("field2")
 db.Limit(1).Offset(0)
-subQuery := db.Selete("..") // 子查询可用于Where
 
 db.Find(&Model{})
 db.Find(&[]Model{})
@@ -862,7 +984,7 @@ tx.RollbackTo("sp1")
 tx.Rollback()
 tx.Commit()
 
-// 钩子
+// Hooks
 func (u *User) BeforeCreate(tx *gorm.DB) (err error)
 func (u *User) AfterCreate(tx *gorm.DB) (err error)
 func (u *User) BeforeSave(tx *gorm.DB) (err error)

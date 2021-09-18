@@ -12,7 +12,8 @@
             "intelliSenseMode": "linux-clang-x64",
             "compilerArgs": [
                 "-xc++",
-                "-Weverything-Wno-c++98-compat",
+                "-Weverything",
+                "-Wno-c++98-compat",
                 "-Wno-c++98-compat-pedantic",
                 "-Wno-pedantic",
                 "-Wno-missing-prototypes",
@@ -23,7 +24,8 @@
                 "-I.",
                 "-Iinclude",
                 "-O2"
-            ]
+            ],
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4

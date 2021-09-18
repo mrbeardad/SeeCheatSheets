@@ -39,14 +39,15 @@ go mod graph                    # 列出当前模块的依赖包[或模块]
 go mod tidy -v                  # 重新整理模块的依赖
 go mod vendor -v                # 重新整理模块的依赖到vendor目录
 
-go get                          # 下载、编译并安装当前目录包依赖
-go get example.com/pkg          # 下载、编译并安装依赖版本的包，若为初始化则下载最新版本
-go get example.com/pkg@latest   # 下载、编译并安装最新版本的包，并更新当前模块依赖
-go get example.com/pkg@none     # 下载、编译并安装最低要求版本的包，并更新当前模块依赖
-go get example.com/pkg@v1.0.0   # 下载、编译并安装指定版本的包，并更新当前模块依赖
+go get                          # 安装当前目录包依赖
+go get example.com/pkg          # 安装依赖版本的包，若为初始化则下载最新版本
+go get example.com/pkg@latest   # 安装最新版本的包，并更新当前模块依赖
+go get example.com/pkg@none     # 安装最低要求版本的包，并更新当前模块依赖
+go get example.com/pkg@v1.0.0   # 安装指定版本的包，并更新当前模块依赖
     -d      # 只下载不编译和安装依赖
     -t      # 同时下载测试代码
     -u      # 强制网络更新最新版本
+go install                      # 仅安装指定包而不更改go.mod
 
 go env
     -w GOPATH=$HOME/.local/go/  # 设置环境变量
@@ -59,7 +60,6 @@ go build [pkg|file.go]          # 编译当前目录包或指定文件及其依�
 go test [pkg|file.go]           # 编译并测试当前目录下包的测试代码XXX_test.go
     -c -o exe                   # 编译出的test程序选项-h查看参数
 go run [pkg|file.go]            # 编译并运行package或指定文件
-go install                      # 安装当前包及依赖
 ```
 <!-- entry end -->
 
