@@ -118,14 +118,14 @@
         </colgroup>
         <thead>
             <tr>
-                <th>header1</th>
-                <th>header2</th>
-                <th>header3</th>
+                <th scope="col">header1</th>
+                <th scope="col">header2</th>
+                <th scope="col">header3</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td rowspan="2">row 1/2, col 1</td>
+                <th scope="row" rowspan="2">row 1/2, col 1</td>
                 <td>row 1, col 2</td>
                 <td>row 1, col 3</td>
             </tr>
@@ -151,6 +151,10 @@
 
     <img src="images/image.png" alt="alternative content"><br>
 
+    <img srcset="elva-fairy-320w.jpg 320w, elva-fairy-480w.jpg 480w, elva-fairy-800w.jpg 800w"
+        sizes="(max-width: 320px) 280px, (max-width: 480px) 440px, 800px"
+        src="elva-fairy-800w.jpg" alt="Elva dressed as a fairy">
+
     <figure>
         <img src="images/image.png" alt="alternative content">
         <figcaption>Fig.1 - The Caption of the Figure.</figcaption>
@@ -162,12 +166,6 @@
         <area shape="circle" coords="90,58,3" href="https://www.runoob.com/try/demo_source/merglobe.gif" alt="Mercury">
         <area shape="circle" coords="124,58,8" href="https://www.runoob.com/images/venglobe.gif" alt="Venus">
     </map><br>
-
-    <picture>
-      <source type="image/svg+xml" srcset="pyramid.svg">
-      <source type="image/webp" srcset="pyramid.webp">
-      <img src="pyramid.png" alt="regular pyramid built from four equilateral triangles">
-    </picture>
 
     <video autoplay loop muted playsinline>
         <source src="instead-of-GIF.webm" type="video/webm">
