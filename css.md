@@ -53,9 +53,10 @@
 例如，如果将元素的字体大小设置为百分比，那么它将是元素父元素字体大小的百分比。
 如果使用百分比作为宽度值，那么它将是父值宽度的百分比。
 
-**注**：慎用绝对单位与百分比——容易导致溢出
-
 # 溢出处理
+**什么时候会溢出**：
+* 父元素设置了固定大小，而内容过于庞大
+
 * 图像溢出
     * `height: 100%; width: 100%;`
     * `object-fit: contain`: 被替换的内容将被缩放，以在填充元素的内容框时保持其宽高比。 整个对象在填充盒子的同时保留其长宽比，因此如果宽高比与框的宽高比不匹配，该对象将被添加“黑边”。
@@ -65,6 +66,7 @@
     * `object-fit: scale-down`: 内容的尺寸与 none 或 contain 中的一个相同，取决于它们两个之间谁得到的对象尺寸会更小一些。
 
 # 布局
+## 基础
 * 盒模型
     * margin: 外边距折叠
     * border: 替代模式设置长宽时的边界
@@ -75,22 +77,31 @@
     * `display: block`: 高度与其内容高度一致，宽度为父元素100%
     * `display: inline`: 高度、宽度与其内容高度、宽度一致，无法手动控制
     * `display: inline-block`: 相比inline可调整高度与宽度
+    * 排列方向：block inline
+    * 内容对齐：center left right
 
+## 进阶
 * Float布局
     * `float: left`: 现在仅用于插入环绕型图片
 
 * Flex布局
-    * `display: flex`: 指定该元素为flex容器，其子元素为flex项，弹性紧凑均布地按flex方向排列（默认方向row）
-    * `flex-flow: column wrap`: 设置flex容器主轴方向，并设置允许回绕下行避免溢出
-    * `flex: 1 200px`: 设置flex项的最小主轴方向长度为200px，并且剩余宽度按比例分配（交叉轴方向的宽度——即高度，与最长的flex项一致）
-    * `align-items: center`: 控制flex项在交叉轴上的位置
-    * `justify-content: space-around`: 控制flex项在主轴上的位置
+```css
+.container {
+    display: flex; /* 指定该元素为flex容器，其子元素为flex项，弹性紧凑均布地按flex方向排列（默认方向row） */
+    flex-flow: column wrap; /* 设置flex容器主轴方向，并设置允许回绕下行避免溢出 */
+    align-items: center; /* 控制flex项在交叉轴上的位置 */
+    justify-content: space-around; /* 控制flex项在主轴上的位置 */
+}
+.item {
+    flex: 1 200px; /* 设置flex项的最小主轴方向长度为200px，并且剩余宽度按比例分配（交叉轴方向的宽度——即高度，与最长的flex项一致） */
+}
+```
 
 * Grid布局
 ```css
 .container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr 2fr);
     grid-auto-rows: minmax(100px, auto);
     grid-gap: 20px;
 }
@@ -103,19 +114,19 @@
 * 响应式布局
 ```css
 @media (min-width: 1200px) {
-  h1 {
-    font-size: 4rem;
-  }
+    h1 {
+        font-size: 4rem;
+    }
 }
 
 h1 {
-  font-size: calc(1.5rem + 3vw);
+    font-size: calc(1.5rem + 3vw);
 }
 ```
 
 * 定位技术
-    * 静态：默认位置
-    * 相对：相对默认位置进行调整
-    * 绝对：将元素抽出正常布局流，类似新图层（`z-index: 1;`决定上层显示）
-    * 固定：相对浏览器视窗固定
-    * 粘性：当出现在浏览器视窗后有静态定位变为固定定位
+    * `position: static`静态：默认位置
+    * `position: relative`相对：相对默认位置进行调整
+    * `position: absolute`绝对：将元素抽出正常布局流，类似新图层（`z-index: 1;`决定上层显示）
+    * `position: fixed`固定：相对浏览器视窗固定
+    * `position: sticky`粘性：当出现在浏览器视窗后有静态定位变为固定定位

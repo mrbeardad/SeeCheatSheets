@@ -6,7 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="description" content="Description of the page less than 150 characters">
-    <title>Page Title less than 55 characters</title>
+    <title>页面标题</title>
     <link rel="icon" type="image/png" href="https://example.com/favicon-32x32.png">
 
     <link rel="dns-prefetch" href="//example.com/">
@@ -14,7 +14,7 @@
     <link rel="prefetch" href="https://www.example.com/">
     <link rel="subresource" href="styles/styles.css">
     <link rel="prerender" href="https://example.com/">
-    <link rel="preload" href="image.png" as="image">
+    <link rel="preload" href="images/image.png" as="image">
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://example.com/page.html">
@@ -30,91 +30,133 @@
     <link rel="alternate" href="https://example.com/" hreflang="x-default">
 
     <link rel="stylesheet" type="text/css" href="styles/style.css">
-    <style></style>
+    <style>
+        /* */
+    </style>
 
     <script type="text/javascript" src="scripts/main.js"></script>
-    <script></script>
-    <noscript>No JS alternative text</noscript>
+    <script>
+        //
+    </script>
+
+    <noscript>不支持JS时显示的文本</noscript>
 </head>
 
 <body>
-    <!-- 网页架构 -->
-    <header> </header>
+    <!-- 网页内容分区结构 -->
 
-    <nav> </nav>
+    <header>
+        <h1>网站一般信息：标题或标志</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li>导航栏链接一</li>
+            <li>导航栏链接二</li>
+        </ul>
+    </nav>
 
     <main>
+        <!-- article与section可根据上下文相互嵌套 -->
         <article>
             <section>
+                <h2>文章标题</h2>
+                <p>文章内容</p>
             </section>
         </article>
 
         <aside>
+            <p>侧边栏或者标注框</p>
         </aside>
     </main>
 
-    <footer> </footer>
-
-    <!-- 标题 -->
-
-    <h1>Header1</h1>
-    <h2>Header2</h2>
-    <h3>Header3</h3>
-    <h4>Header4</h4>
-    <h5>Header5</h5>
-    <h6>Header6</h6>
-
-    <!-- 块级或行级语义元素 -->
-
-    <p>
-        simple paragraph<br>
-        <b>bold</b> and <strong>strong</strong><br>
-        <i>italic</i> and <em>emphasize</em><br>
-        <del>delete</del> <ins>instead</ins><br>
-        L<sup><small>A</small></sup>T<sub><small>E</small></sub>X<br>
-        <abbr title="abbreviations">abbr</abbr><br>
-        <kbd>keyboard</kbd><br>
-        <code>code</code><br>
-        <mark>mark</mark><br>
-        <q>quote</q><br>
-        <var>variable</var><br>
-        <samp>sample</samp><br>
-        <cite>title of work</cite><br>
-        <time datetime="2021-9-10">17:36</time><br>
-        <label for="progress">Progress:</label>
-        <progress id="progress" value="22" max="100"></progress><br>
-        <label for="meter">Meter:</label>
-        <meter id="disk_c" value="2" min="0" max="10">2 out of 10</meter><br>
+    <footer>
+        <p>&copy;2021-2022 版权信息</p>
         <address>
+            联系方式：<br>
+            <a href="mailto:mrbeardad@qq.com">mrbeardad@qq.com</a><br>
+            <a href="tel:+13115552368">(311) 555-2368</a><br>
             Chengdu, Sichuan, China
         </address>
-        <blockquote>
-            blockquote
-        </blockquote>
-        <pre>
-            predefined text that
-            remain blank character
-        </pre>
-    </p>
+    </footer>
 
-    <!-- 列表 -->
+    <!-- 内联语义元素 -->
+
+    普通文本
+    <strong>重要</strong><br>
+    <em>强调</em><br>
+    <del>删除</del>
+    <ins>取代</ins><br>
+    <kbd>按键</kbd><br>
+    <mark>标记</mark><br>
+    <q>引用</q><br>
+    <cite>作品名</cite><br>
+    <code>代码</code><br>
+    <var>变量</var><br>
+    <samp>程序输出</samp><br>
+    正常<sup>上标</sup><sub>下标</sub><br>
+    <data value="001">枚举名</data><br>
+    <time datetime="2016-01-20T19:30+01:00">20 January 2016, 8.30pm in France</time><br>
+    <abbr title="完整词汇">缩写词汇</abbr><br>
+
+    <a href="URL" target="self">链接</a><br>
+    <a href="#id" target="_blank">链接</a><br>
+
+    <label for="progress">进度：</label>
+    <progress id="progress" value="22" max="100"></progress><br>
+
+    <label for="meter">计量：</label>
+    <meter id="disk_c" value="2" min="0" max="10">2 out of 10</meter><br>
+
+
+    <!-- 块级语义元素 -->
 
     <ul>
-        <li>unordered list item 1</li>
-        <li>unordered list item 2</li>
+        <li>unordered list item</li>
     </ul>
+
     <ol>
-        <li>ordered list item 1</li>
-        <li>ordered list item 2</li>
+        <li>ordered list item</li>
     </ol>
+
+    <dl>
+        <dt>description list title</dt>
+        <dd>description list description</dd>
+    </dl>
+
+    <blockquote>
+        blockquote
+    </blockquote>
+
+    <pre>
+        predefined text that
+        remain all blank character
+        and use monospace font
+    </pre>
+
+    <figure>
+        主文中引用的图片，插图，表格，代码段等等
+        <figcaption>Fig.1 - The Caption of the Figure.</figcaption>
+    </figure>
+
+    <!-- 无语义元素，用于布局与样式 -->
+
+    <div>
+        <span id="link">
+            <b>粗体</b>
+            <i>斜体</i>
+            <u>下划线</u>
+            <small>缩小</small>
+        </span>
+    </div>
 
     <!-- 表格 -->
 
     <table>
         <caption>Table test</caption>
         <colgroup>
-            <col span="1" style="background-color: blue;">
-            <col span="2" style="background-color: red;">
+            <col span="1">
+            <col span="2">
         </colgroup>
         <thead>
             <tr>
@@ -125,12 +167,12 @@
         </thead>
         <tbody>
             <tr>
-                <th scope="row" rowspan="2">row 1/2, col 1</td>
+                <th scope="row" rowspan="2">row 1/3, col 1</td>
                 <td>row 1, col 2</td>
                 <td>row 1, col 3</td>
             </tr>
             <tr>
-                <td colspan="2">row 2, col 2/3</td>
+                <td colspan="2">row 2, col 2/4</td>
             </tr>
         </tbody>
         <tfoot>
@@ -142,23 +184,20 @@
         </tfoot>
     </table>
 
-    <!-- 链接、图片、视频、音频 -->
-
-    <div><span id="link"></span></div>
-    <a href="#link" target="_blank">Link to relative URL</a><br>
-
-    <a href="https://github.com/mrbeardad/SeeCheatSheets/blob/master/html.md#link" target="self">Link to absolute URL</a><br>
+    <!-- 图片、视频、音频 -->
+    <canvas id="canvas" width="300" height="300">
+      您的浏览器不支持<canvas>元素的浏览器或是禁用了JavaScript
+    </canvas>
 
     <img src="images/image.png" alt="alternative content"><br>
 
-    <img srcset="elva-fairy-320w.jpg 320w, elva-fairy-480w.jpg 480w, elva-fairy-800w.jpg 800w"
-        sizes="(max-width: 320px) 280px, (max-width: 480px) 440px, 800px"
+    <img srcset="elva-fairy-320w.jpg 320w,
+        elva-fairy-480w.jpg 480w,
+        elva-fairy-800w.jpg 800w"
+        sizes="(max-width: 320px) 280px,
+        (max-width: 480px) 440px,
+        800px"
         src="elva-fairy-800w.jpg" alt="Elva dressed as a fairy">
-
-    <figure>
-        <img src="images/image.png" alt="alternative content">
-        <figcaption>Fig.1 - The Caption of the Figure.</figcaption>
-    </figure>
 
     <img src="https://www.runoob.com/try/demo_source/planets.gif" alt="Planets"  usemap="#planetmap" width="145" height="126">
     <map name="planetmap">
@@ -182,9 +221,132 @@
       <source src="viper.ogg" type="audio/ogg">
     </audio>
 
+    <!-- 表单-->
+
+    <form method="GET" action="URL">
+        <!-- type name id value placeholder autocomplete list readonly disable required pattern size minlength maxlength min max step -->
+        <fieldset>
+            <legend>User Information</legend>
+            <div>
+                <label for="user">Username:</label>
+                <input type="text" name="user" id="user" placeholder="enter your name">
+            </div>
+            <div>
+                <label for="pswd">Password:</label>
+                <input type="password" name="password" id="pswd" placeholder="enter yout password">
+            </div>
+            <div>
+                <label for="email">Email:</label>
+                <input type="email" name="email" id="email" placeholder="user@example.com" multiple>
+            </div>
+            <div>
+                <label for="url">HomePage:</label>
+                <input type="url" name="url" id="url" placeholder="https://example.com">
+            </div>
+            <div>
+                <label for="tel">Telephone:</label>
+                <input type="tel" name="tel" id="tel" placeholder="00123456789">
+            </div>
+            <div>
+                <label for="datetime">Birthday:</label>
+                <input type="datetime-local" name="datetime" id="datetime">
+                <label for="date">Date:</label>
+                <input type="date" name="date" id="date">
+                <label for="time">Time:</label>
+                <input type="time" name="time" id="time">
+                <label for="month">Month:</label>
+                <input type="month" name="month" id="month">
+                <label for="week">Week:</label>
+                <input type="week" name="week" id="week">
+            </div>
+            <div>
+                <label for="age">Age:</label>
+                <input type="number" name="age" id="age">
+            </div>
+            <div>
+                <label for="color">Favorite Color:</label>
+                <input type="color" name="color" id="color">
+            </div>
+            <div>
+                Range:
+                0 <input type="range" id="range" name="range" value="50" min="0" max="100" step="1"
+                    oninput="out.value=parseInt(range.value)"> 100
+                <output for="range" name="out">50</output>
+            </div>
+            <div>
+                Gender:
+                <input type="radio" name="gender" id="gender_male" value="male" checked>
+                <label for="gender_male">Male</label>
+                <input type="radio" name="gender" id="gender_famale" value="famale">
+                <label for="gender_famale">Famale</label>
+            </div>
+            <div>
+                Assets:
+                <input type="checkbox" name="assets" id="assets_car" value="car" checked>
+                <label for="assets_car">Car</label>
+                <input type="checkbox" name="assets" id="assets_house" value="house">
+                <label for="assets_house">House</label>
+            </div>
+            <div>
+                <label for="browser">Browser:</label>
+                <input type="text" name="browser" id="browser" placeholder="Browser" list="browsers">
+                <datalist id="browsers">
+                    <option value="Internet Explorer"></option>
+                    <option value="Firefox"></option>
+                    <option value="Chrome"></option>
+                    <option value="Opera"></option>
+                    <option value="Safari"></option>
+                </datalist>
+                <select name="browser">
+                    <optgroup label="PC">
+                        <option value="IE">IE</option>
+                        <option value="Chrome">Chrome</option>
+                        <option value="Firefox">Firefox</option>
+                    </optgroup>
+                    <optgroup label="Mobile">
+                        <option selected value="UC">UC</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div>
+                <input type="file" name="file" id="file" accept=".pdf" multiple>
+            </div>
+            <div>
+                <textarea id="textarea" name="textarea" cols="50" rows="10" placeholder="enter text"></textarea>
+            </div>
+        </fieldset>
+
+        <div>
+            <label for="search">Search:</label>
+            <input type="search" name="search" id="search">
+        </div>
+
+        <div>
+            Meter:
+            <meter min="0" max="100" value="50" low="33" high="66" optimum="100">50</meter>
+            Progress:
+            <progress max="100" value="70">70%</progress>
+        </div>
+
+        <div>
+            <button type="button" onclick="alert('丢雷搂母!')">Button</button>
+            <button type="reset">Reset</button>
+            <button type="submit">Submit</button>
+            <input type="image" name="iamge" id="image" src="URL" alt="alternate">
+        </div>
+    </form>
+
+    <!-- 交互元素 -->
+
+    <details>
+        <summary>简介</summary>
+        <p>折叠隐藏的内容</p>
+    </details>
+
     <!-- 嵌入子页面框架 -->
 
     <iframe src="template.html" width="800" height="500" sandbox="allow-forms"></iframe>
+
 </body>
 
 </html>
