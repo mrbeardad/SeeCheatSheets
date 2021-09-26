@@ -67,9 +67,13 @@ cmake --install .
 
 ## Web
 * [HTTP](http.md)
+    > 超文本传输协议
 * [HTML](html.md)
+    > 超文本标记语言
 * [CSS](css.md)
+    > 层叠样式表
 * [JaveScript](js.md)
+    > 前端编程语言
 
 # 编程之道
 * [设计模式](dspt.md):star:
@@ -94,7 +98,7 @@ cmake --install .
     > 用于组建微服务架构
 
 # 数据库
-* [SQL语句](sql.md):star:
+* [SQL语句](sql.md)
     > 关系型数据库查询语句
 * [数据库原理](innodb.md)
     > MySQL的设计架构，包括索引与事务原理
