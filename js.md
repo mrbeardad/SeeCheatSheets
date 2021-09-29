@@ -1,13 +1,26 @@
 # 模块
 ```js
-import name from '/path/from/projectroot/to/module.js'
-import {name1, name2} from './relative/path/to/module.js'
-import {name1 as alias} from '/path/from/projectroot/to/module.js'
-import * as module from '/path/from/projectroot/to/module.js'
+import defaultExport from "module-name";
+import * as name from "module-name";
+import { export1 , export2 } from "module-name";
+import { export as alias } from "module-name";
+import defaultExport, { export } from "module-name";
+import defaultExport, * as name from "module-name";
+import "module-name";
 
-export 声明语句
-export {name1, name2}
+import("./math").then(math => {
+  console.log(math.add(16, 26));
+});
+
+export default 声明语句;
+export 声明语句;
+export {name1, name2};
+export { MyComponent as default } from "./ManyComponents.js";
 ```
+ module-name
+ * `package-json-module`
+ * `./local/file.js`
+ * `/path/from/projectroot/to/file.js`
 
 
 # 变量
@@ -113,7 +126,7 @@ function AddMethod(x, y = 10, ...z) {   // 默认实参，变参数组
     return x + y + sum(...z); // 数组展开
 }
 
-let lambda = (x, y) => {x + y}; // 单参时可省略圆括号，单语句可省略花括号
+let lambda = (x, y) => {x + y}; // 单参时可省略圆括号，单语句可省略花括号；做闭包时可访问外部this
 ```
 **注**
 * JS中实参列表不必匹配形参列表，参数可多可少，少了则对应形参为`undefined`，多了可通过数组类型的`arguments`访问
@@ -166,6 +179,10 @@ function Child (name, age) {
 // 不直接引用Parent.prototype是防止修改Child的prototype时影响到Patent
 Child.prototype = Object.create(Patent.prototype);
 Child.constructor = Child;
+
+Child.prototype.getName = function () {
+    console.log(this.name, this.age)
+}
 ```
 **注**：JS中继承关系为对象关系而非类关系，可动态变化
 
@@ -185,8 +202,8 @@ Child.constructor = Child;
 * Object：任何 constructed 对象实例的特殊非数据结构类型；JavaScript为基础类型提供了Object包装
     * Object
     * Array
-    * Map
     * Set
+    * Map
     * Date
 
 | 原始值              | 转换为数字 | 转换为字符串      | 转换为布尔值 |
@@ -423,12 +440,12 @@ array.entries()
 ## 集合
 ```js
 let set = new Set()
-let wset = new WeakSet()    // 对象弱引用集合
+let wset = new WeakSet()    // 对象弱引用集合，key必须为object
 set.size
+set.has(value)
 set.add(value)
 set.delete(value)
 set.clear()
-set.has(value)
 set.keys()
 set.values()
 set.entries()
@@ -439,6 +456,7 @@ set.forEach(function(curValue, curIndex=, set=), thisValue=);
 ```js
 let map = new Map()
 let map = new Map([[key, val], [key, val]])
+let wmap = new WeakMap()    // 对象弱引用集合，key必须为object
 
 Array.from(map) // [[key, val], [key, val]]
 
@@ -446,9 +464,9 @@ let extend = [...map];      // 扩展，还可用于函数调用
 let [a, [b, c]] = array;    // 解构，不必完全解构数组内容
 
 map.size
+map.has(key)
 map.set(key, val)
 map.get(key)        // 若不存在则返回undefined
-map.has(key)
 map.delete(key)
 
 map.keys()

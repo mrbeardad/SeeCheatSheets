@@ -102,11 +102,15 @@
     <a href="URL" target="self">链接</a><br>
     <a href="#id" target="_blank">链接</a><br>
 
-    <label for="progress">进度：</label>
-    <progress id="progress" value="22" max="100"></progress><br>
+    <label>
+        进度：
+        <progress id="progress" value="22" max="100"></progress><br>
+    </label>
 
-    <label for="meter">计量：</label>
-    <meter id="disk_c" value="2" min="0" max="10">2 out of 10</meter><br>
+    <label>
+        计量：
+        <meter id="disk_c" value="2" min="0" max="10">2 out of 10</meter><br>
+    </label>
 
 
     <!-- 块级语义元素 -->
@@ -167,7 +171,7 @@
         </thead>
         <tbody>
             <tr>
-                <th scope="row" rowspan="2">row 1/3, col 1</td>
+                <th scope="row" rowspan="2">row 1/3, col 1</th>
                 <td>row 1, col 2</td>
                 <td>row 1, col 3</td>
             </tr>
@@ -185,21 +189,21 @@
     </table>
 
     <!-- 图片、视频、音频 -->
+
     <canvas id="canvas" width="300" height="300">
-      您的浏览器不支持<canvas>元素的浏览器或是禁用了JavaScript
+        您的浏览器不支持&lt;canvas&gt;元素的浏览器或是禁用了JavaScript
     </canvas>
 
     <img src="images/image.png" alt="alternative content"><br>
 
     <img srcset="elva-fairy-320w.jpg 320w,
         elva-fairy-480w.jpg 480w,
-        elva-fairy-800w.jpg 800w"
-        sizes="(max-width: 320px) 280px,
+        elva-fairy-800w.jpg 800w" sizes="(max-width: 320px) 280px,
         (max-width: 480px) 440px,
-        800px"
-        src="elva-fairy-800w.jpg" alt="Elva dressed as a fairy">
+        800px" src="elva-fairy-800w.jpg" alt="Elva dressed as a fairy">
 
-    <img src="https://www.runoob.com/try/demo_source/planets.gif" alt="Planets"  usemap="#planetmap" width="145" height="126">
+    <img src="https://www.runoob.com/try/demo_source/planets.gif" alt="Planets" usemap="#planetmap" width="145"
+        height="126">
     <map name="planetmap">
         <area shape="rect" coords="0,0,82,126" href="https://www.runoob.com/images/sun.gif" alt="Sun">
         <area shape="circle" coords="90,58,3" href="https://www.runoob.com/try/demo_source/merglobe.gif" alt="Mercury">
@@ -217,8 +221,8 @@
     </video>
 
     <audio controls>
-      <source src="viper.mp3" type="audio/mp3">
-      <source src="viper.ogg" type="audio/ogg">
+        <source src="viper.mp3" type="audio/mp3">
+        <source src="viper.ogg" type="audio/ogg">
     </audio>
 
     <!-- 表单-->
@@ -228,44 +232,68 @@
         <fieldset>
             <legend>User Information</legend>
             <div>
-                <label for="user">Username:</label>
-                <input type="text" name="user" id="user" placeholder="enter your name">
+                <label>
+                    Username:
+                    <input type="text" name="user" id="user" placeholder="enter your name">
+                </label>
             </div>
             <div>
-                <label for="pswd">Password:</label>
-                <input type="password" name="password" id="pswd" placeholder="enter yout password">
+                <label>
+                    Password:
+                    <input type="password" name="password" id="pswd" placeholder="enter yout password">
+                </label>
             </div>
             <div>
-                <label for="email">Email:</label>
-                <input type="email" name="email" id="email" placeholder="user@example.com" multiple>
+                <label>
+                    Email:
+                    <input type="email" name="email" id="email" placeholder="user@example.com" multiple>
+                </label>
             </div>
             <div>
-                <label for="url">HomePage:</label>
-                <input type="url" name="url" id="url" placeholder="https://example.com">
+                <label>
+                    HomePage:
+                    <input type="url" name="url" id="url" placeholder="https://example.com">
+                </label>
             </div>
             <div>
-                <label for="tel">Telephone:</label>
-                <input type="tel" name="tel" id="tel" placeholder="00123456789">
+                <label>
+                    Telephone:
+                    <input type="tel" name="tel" id="tel" placeholder="00123456789">
+                </label>
             </div>
             <div>
-                <label for="datetime">Birthday:</label>
-                <input type="datetime-local" name="datetime" id="datetime">
-                <label for="date">Date:</label>
-                <input type="date" name="date" id="date">
-                <label for="time">Time:</label>
-                <input type="time" name="time" id="time">
-                <label for="month">Month:</label>
-                <input type="month" name="month" id="month">
-                <label for="week">Week:</label>
-                <input type="week" name="week" id="week">
+                <label>
+                    Birthday:
+                    <input name="datetime" id="datetime">
+                </label>
+                <label>
+                    Date:
+                    <input type="date" name="date" id="date">
+                </label>
+                <label>
+                    Time:
+                    <input type="time" name="time" id="time">
+                </label>
+                <label>
+                    Month:
+                    <input type="month" name="month" id="month">
+                </label>
+                <label>
+                    Week:
+                    <input type="week" name="week" id="week">
+                </label>
             </div>
             <div>
-                <label for="age">Age:</label>
-                <input type="number" name="age" id="age">
+                <label>
+                    Age:
+                    <input type="number" name="age" id="age">
+                </label>
             </div>
             <div>
-                <label for="color">Favorite Color:</label>
-                <input type="color" name="color" id="color">
+                <label>
+                    Favorite Color:
+                    <input type="color" name="color" id="color">
+                </label>
             </div>
             <div>
                 Range:
@@ -275,38 +303,51 @@
             </div>
             <div>
                 Gender:
-                <input type="radio" name="gender" id="gender_male" value="male" checked>
-                <label for="gender_male">Male</label>
-                <input type="radio" name="gender" id="gender_famale" value="famale">
-                <label for="gender_famale">Famale</label>
+                <label>
+                    <input type="radio" name="gender" id="gender_male" value="male" checked>
+                    Male
+                </label>
+                <label>
+                    <input type="radio" name="gender" id="gender_famale" value="famale">
+                    Famale
+                </label>
             </div>
             <div>
                 Assets:
-                <input type="checkbox" name="assets" id="assets_car" value="car" checked>
-                <label for="assets_car">Car</label>
-                <input type="checkbox" name="assets" id="assets_house" value="house">
-                <label for="assets_house">House</label>
+                <label>
+                    <input type="checkbox" name="assets" id="assets_car" value="car" checked>
+                    Car
+                </label>
+                <label>
+                    <input type="checkbox" name="assets" id="assets_house" value="house">
+                    House
+                </label>
             </div>
             <div>
-                <label for="browser">Browser:</label>
-                <input type="text" name="browser" id="browser" placeholder="Browser" list="browsers">
-                <datalist id="browsers">
-                    <option value="Internet Explorer"></option>
-                    <option value="Firefox"></option>
-                    <option value="Chrome"></option>
-                    <option value="Opera"></option>
-                    <option value="Safari"></option>
-                </datalist>
-                <select name="browser">
-                    <optgroup label="PC">
-                        <option value="IE">IE</option>
-                        <option value="Chrome">Chrome</option>
-                        <option value="Firefox">Firefox</option>
-                    </optgroup>
-                    <optgroup label="Mobile">
-                        <option selected value="UC">UC</option>
-                    </optgroup>
-                </select>
+                <label>
+                    Browser:
+                    <input type="text" name="browser" id="browser" placeholder="Browser" list="browsers">
+                    <datalist id="browsers">
+                        <option value="Internet Explorer"></option>
+                        <option value="Firefox"></option>
+                        <option value="Chrome"></option>
+                        <option value="Opera"></option>
+                        <option value="Safari"></option>
+                    </datalist>
+                </label>
+                <label>
+                    Browser:
+                    <select name="browser">
+                        <optgroup label="PC">
+                            <option value="IE">IE</option>
+                            <option value="Chrome">Chrome</option>
+                            <option value="Firefox">Firefox</option>
+                        </optgroup>
+                        <optgroup label="Mobile">
+                            <option selected value="UC">UC</option>
+                        </optgroup>
+                    </select>
+                </label>
             </div>
             <div>
                 <input type="file" name="file" id="file" accept=".pdf" multiple>
@@ -317,8 +358,10 @@
         </fieldset>
 
         <div>
-            <label for="search">Search:</label>
-            <input type="search" name="search" id="search">
+            <label>
+                Search:
+                <input type="search" name="search" id="search">
+            </label>
         </div>
 
         <div>
