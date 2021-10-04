@@ -1,4 +1,4 @@
-# 系统构建
+# 项目构建
 ```txt
 $GOROOT/pkg/
 └── linux_amd64/

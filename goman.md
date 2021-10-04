@@ -814,7 +814,7 @@ func init() {
 		// QuoteEmptyFields:          false,
 		// ForceColors:               false,
 		// DisableColors:             false,
-		EnvironmentOverrideColors: true, // CLICOLOR_FORCE and CLICOLOR
+		// EnvironmentOverrideColors: true, // CLICOLOR_FORCE and CLICOLOR
 		// DisableTimestamp:          false,
 		FullTimestamp:             true,
 		TimestampFormat:           "2006-01-02 15:04:05",

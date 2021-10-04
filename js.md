@@ -18,9 +18,9 @@ export {name1, name2};
 export { MyComponent as default } from "./ManyComponents.js";
 ```
  module-name
- * `package-json-module`
- * `./local/file.js`
- * `/path/from/projectroot/to/file.js`
+ * `node-module`
+ * `./path/from/currentdir/to/local-file.js`
+ * `/path/from/projectroot/to/local-file.js`
 
 
 # 变量
@@ -396,8 +396,8 @@ date.toLocaleString()   //Converts a Date object to a string, using locale conve
 let array = new Array(length=1)
 let arr1 = [...elements]
 
-let extend = [...array]     // 扩展，还可用于函数调用
-let [val1, val2] = array    // 解构，不必完全解构数组内容
+let extend = [...array]         // 展开，还可用于函数调用
+let [v1, v2, ...rest] = array   // 解构，不必完全解构数组内容
 
 array[idx]          // 若idx超出范围则返回undefined
 array[idx] = value  // 若idx超出范围则填充undefined；若idx非整数则作为属性
@@ -441,6 +441,10 @@ array.entries()
 ```js
 let set = new Set()
 let wset = new WeakSet()    // 对象弱引用集合，key必须为object
+
+let extend = [...set];      // 展开，还可用于函数调用
+let [v1, v2, ...rest] = set;// 解构，不必完全解构数组内容
+
 set.size
 set.has(value)
 set.add(value)
@@ -460,8 +464,8 @@ let wmap = new WeakMap()    // 对象弱引用集合，key必须为object
 
 Array.from(map) // [[key, val], [key, val]]
 
-let extend = [...map];      // 扩展，还可用于函数调用
-let [a, [b, c]] = array;    // 解构，不必完全解构数组内容
+let extend = [...map];          // 展开，还可用于函数调用
+let [pair, [key, val]] = map;   // 解构，不必完全解构数组内容
 
 map.size
 map.has(key)
@@ -485,6 +489,13 @@ let obj = {
 
 obj.name    // 若key的字符串内容符合标识符规范则可用该语法
 obj['age']  // 否则只能使用方括号下标法
+
+let extend = {...obj}       // 展开，一种copy手法
+let {k1, k2, ..rest} = obj  // 解构，不必完全解构内容
+function({k1, k2})          // 解构，可用于函数调用
+let {'key-name':val} = obj  // 解构，非规范属性名
+let keyName = 'key-name'
+let {[keyName]: val} = obj  // 同上，先计算keyName
 
 Object.keys(o)
 Object.getOwnPropertyNames(o)
