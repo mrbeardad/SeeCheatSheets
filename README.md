@@ -1,10 +1,11 @@
 - [安装](#安装)
-- [编程语言](#编程语言)
+- [编程之道](#编程之道)
+- [语言](#语言)
   - [C++](#c)
   - [Golang](#golang)
   - [Python](#python)
   - [Web](#web)
-- [编程之道](#编程之道)
+- [Server](#server)
 - [Linux](#linux)
 - [数据库](#数据库)
 - [网络](#网络)
@@ -12,14 +13,6 @@
 - [其它](#其它)
 
 # 安装
-***本仓库中提供了一支C++程序`see`用于快速查看笔记：***
-它会搜索`~/.cheat/*.md`中的entry，查找匹配的entry并打印；
-每个entry以`<!-- entry begin: .* -->`的形式开头，并以`<!-- entry end -->`结尾；
-其中`.*`表示关键字，see便会搜索其中的关键子决定是否匹配；
-详情请使用`see -h`查看。
-
-![see](images/see.png)
-
 **安装步骤：**
 ```sh
 git clone --depth=1 https://github.com/mrbeardad/SeeCheatSheets ~/.cheat
@@ -30,12 +23,26 @@ cmake -D CMAKE_BUILD_TYPE=Release ..
 cmake --build . -t see
 cmake --install .
 ```
+***本仓库中提供了一支C++程序`see`用于快速查看笔记：***
+它会搜索`~/.cheat/*.md`中的entry，查找匹配的entry并打印；
+每个entry以`<!-- entry begin: .* -->`的形式开头，并以`<!-- entry end -->`结尾；
+其中`.*`表示关键字，see便会搜索其中的关键子决定是否匹配；
+详情请使用`see -h`查看。
+
+![see](images/see.png)
+
 
 **注**：部分笔记插入了Tex公式，~~介于鄙人的懒惰~~ 介于GFM不支持Tex，诸位就自己下个浏览器插件吧。
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
-# 编程语言
+# 编程之道
+* [设计模式](dspt.md):star:
+    > 应用框架系统的设计套路
+* [编码经验](coding.md):star:
+    > 解题技巧与编码经验
+
+# 语言
 * [思想碰撞](langdiff.md):star:
     > 不同的语言有各自不同的特点以及背后的思想
 * [基础组件](langman.md)
@@ -74,16 +81,16 @@ cmake --install .
     > 层叠样式表
 * [JaveScript](js.md)
     > 前端编程语言
+* [React](react.md)
+    > 前端框架
 
-# 编程之道
-* [设计模式](dspt.md):star:
-    > 应用框架系统的设计套路
-* [编码经验](coding.md):star:
-    > 解题技巧与编码经验
-* [数据结构与算法](dsaa.md)
-    > 基础数据结构与算法
-* [正则表达式](regex.md)
-    > 目前包含的正则语法版本有egrep、Vim、C++
+# Server
+* K8S
+    > 用于动态编排容器集群
+* [Docker](docker.md)
+    > 提供进程隔离的运行环境
+* Nginx
+    > 用于路由与负载均衡
 
 # Linux
 * [Linux知识体系](linux.md):star:
@@ -94,13 +101,11 @@ cmake --install .
     > bash语法、内置命令以及一些unix环境基础命令
 * [开发者工具](devtool.md)
     > 包含gcc、gdb、openssh、openssl、tmux、zsh、git、pacman等工具使用
-* [Docker容器](docker.md)
-    > 用于组建微服务架构
 
 # 数据库
 * [SQL语句](sql.md)
     > 关系型数据库查询语句
-* [数据库原理](innodb.md)
+* [innodb存储引擎原理](innodb.md)
     > MySQL的设计架构，包括索引与事务原理
 
 # 网络
@@ -124,5 +129,9 @@ cmake --install .
     > 链接、异常控制流、虚拟内存
 
 # 其它
-* [Markdown](markdown.md)
-* [English](english.md)
+* [八股](interview.md)
+* [Markdown语法](markdown.md)
+* [多种正则语法](regex.md)
+* [数据结构与算法](dsaa.md)
+* [English读音](english.md)
+* [色彩理论](color.md)

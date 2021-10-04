@@ -11,6 +11,12 @@
 
 风格部分参考自[HosseinYousefi/CompetitiveCPPManifesto](https://github.com/HosseinYousefi/CompetitiveCPPManifesto)
 
+建议使用.clang-format配置：
+```
+BasedOnStyle: Chromium
+IndentWidth: 4
+```
+
 # 命名
 | 内容                         | 规范            | 举例                           |
 | ---------------------------- | --------------- | ------------------------------ |
