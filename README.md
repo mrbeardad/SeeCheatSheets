@@ -7,10 +7,9 @@
   - [Web](#web)
 - [Server](#server)
 - [Linux](#linux)
-- [数据库](#数据库)
 - [网络](#网络)
 - [底层](#底层)
-- [其它](#其它)
+- [Last but not least](#last-but-not-least)
 
 # 安装
 **安装步骤：**
@@ -91,8 +90,14 @@ cmake --install .
     > 用于动态编排容器集群
 * [Docker](docker.md)
     > 提供进程隔离的运行环境
-* [Nginx](https://www.w3cschool.cn/nginx/nginx-d1aw28wa.html)
+* [Nginx](nginx.md)
     > 用于路由与负载均衡
+* [MySQL](sql.md)
+    > 关系型数据库
+* [Redis](redis.md)
+    > 数据结构化内存存储
+* Kafka
+    > 消息队列
 
 # Linux
 * [Linux知识体系](linux.md):star:
@@ -103,12 +108,6 @@ cmake --install .
     > bash语法、内置命令以及一些unix环境基础命令
 * [开发者工具](devtool.md)
     > 包含gcc、gdb、openssh、openssl、tmux、zsh、git、pacman等工具使用
-
-# 数据库
-* [SQL语句](sql.md)
-    > 关系型数据库查询语句
-* [innodb存储引擎原理](innodb.md)
-    > MySQL的设计架构，包括索引与事务原理
 
 # 网络
 * [计算机网络](network.md)
@@ -129,8 +128,10 @@ cmake --install .
     > 主要是总线接口与存储技术，还有显卡与显示屏工作原理
 * [操作系统](os.md)
     > 链接、异常控制流、虚拟内存
+* [存储引擎](innodb.md)
+    > MySQL中innodb存储引擎的设计架构，包括索引与事务原理
 
-# 其它
+# Last but not least
 * [Markdown语法](markdown.md)
 * [多种正则语法](regex.md)
 * [数据结构与算法](dsaa.md)
