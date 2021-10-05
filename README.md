@@ -39,8 +39,10 @@ cmake --install .
 # 编程之道
 * [设计模式](dspt.md):star:
     > 应用框架系统的设计套路
-* [编码经验](coding.md):star:
+* [编码技术](coding.md):star:
     > 解题技巧与编码经验
+* [计科八股](interview.md):star:
+    > 计算机科学基础知识
 
 # 语言
 * [思想碰撞](langdiff.md):star:
@@ -89,12 +91,12 @@ cmake --install .
     > 用于动态编排容器集群
 * [Docker](docker.md)
     > 提供进程隔离的运行环境
-* Nginx
+* [Nginx](https://www.w3cschool.cn/nginx/nginx-d1aw28wa.html)
     > 用于路由与负载均衡
 
 # Linux
 * [Linux知识体系](linux.md):star:
-    > Linux的开机流程，以及整个系统知识体系
+    > Linux的启动流程，以及整个系统知识体系
 * [Linux系统接口](apue.md):star:
     > 大部分都符合POSIX、XSI或USU规范
 * [Shell脚本](bash.md)
@@ -129,9 +131,8 @@ cmake --install .
     > 链接、异常控制流、虚拟内存
 
 # 其它
-* [八股](interview.md)
 * [Markdown语法](markdown.md)
 * [多种正则语法](regex.md)
 * [数据结构与算法](dsaa.md)
-* [English读音](english.md)
+* [英文读音](english.md)
 * [色彩理论](color.md)

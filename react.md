@@ -4,8 +4,7 @@
 npx create-react-app react-app
 cd react-app
 npx install-peerdeps --dev eslint-config-airbnb
-npm install react-router-dom --save
-npm install @reduxjs/toolkit react-redux
+npm install react-router-dom @reduxjs/toolkit react-redux --save
 ```
 
 * 目录结构
@@ -96,7 +95,7 @@ ReactDOM.render(
 # 生命周期
 React自身维护一个虚拟DOM，每次组件更新时可能会更新虚拟DOM，利用diff算法找出更新部分再更新浏览器DOM，而避免让浏览器重新渲染整个页面；
 每个React组件都是一个状态机，状态切换时会执行对应回调函数（见[react lifecycle](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)）；
-每个组件状态机的事件底层是通过浏览器事件触发的。
+组件状态机的更新事件一般都是依赖浏览器事件触发的。
 
 
 # 技巧与优化
