@@ -1,65 +1,84 @@
 # 目录
 - [目录](#目录)
 - [报文](#报文)
-- [方法](#方法)
-- [资源](#资源)
-- [首部](#首部)
-- [状态](#状态)
+  - [方法](#方法)
+  - [资源](#资源)
+  - [首部](#首部)
+  - [状态](#状态)
+- [安全](#安全)
+  - [HTTPS](#https)
+  - [Cookie](#cookie)
+  - [外部访问限制](#外部访问限制)
+  - [网页内容限制](#网页内容限制)
 - [连接](#连接)
-- [web结构组件](#web结构组件)
 
 # 报文
 请求报文格式
-> 方法 URI 协议版本
-
-![http请求报文格式](images/http.jpg)
+```txt
+方法 URL 协议版本\r\n
+首部:值\r\n
+...
+\n
+主体
+```
 
 响应报文格式
-> 协议版本 状态码 描述
+```txt
+协议版本 状态码 描述\r\n
+首部:值\r\n
+...
+\n
+主体
+```
+* 对于浏览器前端开发来说，URL,Header,Body都是可以传递参数的地方
+* 对于服务器后端开发来说，Code,Header是可以控制浏览器行为的信息
 
-![http响应报文格式](images/httpd.png)
+## 方法
+| 方法    | 描述                  | 请求包含主体 | 成功响应包含主体 | 安全 | 幂等 | 缓存                                      |
+| ------- | --------------------- | ------------ | ---------------- | ---- | ---- | ----------------------------------------- |
+| GET     | 用于获取数据          | no           | yes              | yes  | yes  | yes                                       |
+| HEAD    | 同GET但响应不包含主体 | no           | no               | yes  | yes  | yes                                       |
+| POST    | 创建资源              | yes          | yes              | no   | no   | Only if freshness information is included |
+| PUT     | 替换资源              | yes          | no               | no   | yes  | no                                        |
+| PATCH   | 修改资源              | yes          | no               | no   | no   | no                                        |
+| DELETE  | 删除资源              | no           | no               | no   | yes  | no                                        |
+| CONNECT | 建立隧道              | no           | yes              | no   | no   | no                                        |
+| OPTIONS | 获取特定URL支持的方法 | no           | yes              | yes  | no   |
+| TRACE   | 路径追踪              | no           | no               | no   | yes  | no                                        |
+
+## 资源
+资源可能是静态文件，也可能是请求后台服务产生的动态数据
+
+通用资源标识符URI：
+* URN
+* URL：`<scheme>://<user>:<password>@<host>:<port>/<path>;<params>?<query>&<query>#<frag>`
+    * 相对URL（可移植性）
+    * 自动扩展URL
+    * 安全字符与非安全字符的转义
 
 
-# 方法
-| 方法    | 描述                                               | 是否包含主体 |
-| ------- | -------------------------------------------------- | ------------ |
-| GET     | 安全且幂等的从服务器获取资源                       | 否           |
-| HEAD    | 同GET但响应不包含body                              | 否           |
-| POST    | 向指定资源新增或提交数据，可缓存                   | 是           |
-| PUT     | 幂等地创建或替换指定资源                           | 是           |
-| DELETE  | 删除指定资源                                       | 否           |
-| CONNECT | 建立隧道                                           | 否           |
-| TRACE   | 对可能经过代理服务器传送到服务器上去的报文进行追踪 | 否           |
-| OPTIONS | 决定可以在服务器上执行哪些方法                     | 否           |
+## 首部
+| 通用首部 | 值  | 描述 |
+| -------- | --- | ---- |
 
-# 资源
-资源可能是静态文件，也可能是从程序生成的动态数据
-* URI
-    * URN
-    * URL：`<scheme>://<user>:<password>@<host>:<port>/<path>;<params>?<query>&<query>#<frag>`
-        * 相对URL（可移植性）
-        * 自动扩展URL
-        * 安全字符与非安全字符的转义
+| 请求首部             | 值                  | 描述 |
+| -------------------- | ------------------- | ---- |
+| Authorization:       |                     |      |
+| Proxy-Authorization: |                     |      |
+| Cookie:              | yummy_cookie=choco; |      |
+
+| 响应首部            | 值      | 描述 |
+| ------------------- | ------- | ---- |
+| WWW-Authenticate:   |         |      |
+| Proxy-Authenticate: |         |      |
+| Set-Cookie:         | id=val; |      |
+
+| 实体首部 | 值  | 描述 |
+| -------- | --- | ---- |
 
 
-# 首部
-| 首部              | 字段值                               |
-| ----------------- | ------------------------------------ |
-| Host              | 目的主机名`google.com`               |
-| User-Agent        | 浏览器类型`Mozilla/5.0`              |
-| Connection        | 连接方式`close\|Keep-Alive`          |
-| Accept            | 内容类型`*/*`                        |
-| Accept-Charset    | 字符编码`ISO-8859-1`                 |
-| Accept-Encoding   | 压缩格式`gzip`                       |
-| Accept-Language   | 自然语言`zh-CN`                      |
-| Content-Length    | 本次响应数据长度                     |
-| Content-Type      | 本次响应数据格式                     |
-| Content-Encoding  | 本次响应数据压缩方法                 |
-| If-Modified-Since | 是否已变更`Wed, 9 Sep 2015 09:23:24` |
-| Cookie            | 客户端存储目的域名的Cookie           |
-| Reference         | 由`URL`跳转而来                      |
 
-# 状态
+## 状态
 | 状态码 | 描述                  | 备注                         |
 | ------ | --------------------- | ---------------------------- |
 | 200    | OK                    | 若非HEAD请求则响应包含body   |
@@ -75,6 +94,76 @@
 | 501    | Not Implemented       | 请求功能未支持               |
 | 502    | Bad Gateway           | 网关或代理访问后端服务器出错 |
 | 503    | Service Unavailable   | 服务器忙                     |
+
+
+# 安全
+## HTTPS
+**HTTPS**
+使用HTTP协议加载动态资源(如javascript)会被浏览器阻止
+
+**HSTS(HTTP Strict Transport Security)**
+响应头部设置`Strict-Transport-Security:`以指示浏览器重定向至https
+* max-age: 指定秒数内均重定向访问至https
+* includeSubDomains: 重定向包括子域名
+* preload: 加入浏览器HSTS List从而省略第一次报文用于指示重定向https
+
+**HPKP(HTTP Public Key Pinning)**
+响应头部设置`Public-Key-Pins:`来让浏览器使用固定公钥访问网站
+* max-age: 指定秒数内使用固定公钥
+* includeSubDomains: 包括子域名
+
+## Cookie
+响应头部设置`Set-Cookie:`来记录会话信息
+* id=guid;
+* Expires=Wed, 21 Oct 2015 07:28:00 GMT;
+    > 默认会话期cookie，指定过期时间
+* Max-Age=3600;
+    > 默认会话期cookie，指定过期秒数
+* Domain=example.com;
+    > 默认为响应端host且不包含子域名，显式给值则包含子域名
+* Path=/doc;
+    > 允许匹配子路径
+* Secure;
+    > 仅能通过https访问
+* HttpOnly;
+    > 无法被js脚本访问
+* SameSite=;
+    * None表示允许跨站请求发送cookie
+    * Lax表示仅当导航到URL才发送cookie
+    * Strict表示仅访问相同站点时发送cookie
+
+**Same-Site**：若两url减去有效一级域名后的二级域名相同则为同站，否则为跨站
+
+**Same-Origin**：若两url的schema, host, port均相同则为同域，否则为跨域
+
+## 外部访问限制
+**预防CSRF(Cross-site request forgeries)**
+* 检测Origin/Referer
+* 验证码
+* anti-CSRF tokens
+* Cookie SameSite
+
+**嵌套框架限制**：
+站点可以通过确保网站没有被嵌入到别人的站点里面，从而避免 clickjacking 攻击
+* X-Frame-Options: deny
+* X-Frame-Options: sameorigin
+* X-Frame-Options: allow-from https://example.com/
+
+## 网页内容限制
+**内容安全策略CSP**：
+响应头部设置`Content-Security-Policy`提供策略来限制浏览器哪些资源仅能从哪些地方获取，启用CSP会使浏览器禁用内联js与css
+
+**内容类型限制**：
+相应头部设置`X-Content-Type-Options: nosiniff`使下面两种情况的请求将被阻止：
+* 请求类型是"style" 但是 MIME 类型不是 "text/css"，
+* 请求类型是"script" 但是 MIME 类型不是  JavaScript MIME 类型。
+
+**Referer头部限制**：
+响应头设置`Referer-Policy:`限制浏览器如何设置Referer
+* no-referer: never send the Referer header
+* same-origin: send referrer, but only on requests to the same origin
+* strict-origin: send referrer to all origins, but only the URL sans path (e.g. https://example.com/)
+* strict-origin-when-cross-origin: send full referrer on same origin, URL sans path on foreign origin
 
 
 # 连接
@@ -96,17 +185,3 @@
     * 服务器推送
 * HTTP/3：
     * 利用UPD+QUIC代替TCP，解决重传等待
-
-* 时延性能聚焦：
-    * 连接建立
-    * 拥塞控制（尤其慢启动）
-    * 数据聚集的Nagle算法（尽量填充MSS）
-    * 延迟累计确认
-    * TIME_WAIT时延与端口耗尽
-
-# web结构组件
-* 缓存
-* 代理
-* 网关
-* 隧道
-* Agent代理

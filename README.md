@@ -2,7 +2,7 @@
 - [编程之道](#编程之道)
 - [语言](#语言)
   - [C++](#c)
-  - [Golang](#golang)
+  - [Go](#go)
   - [Python](#python)
   - [Web](#web)
 - [Server](#server)
@@ -36,23 +36,23 @@ cmake --install .
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
 # 编程之道
-* [设计模式](dspt.md):star:
-    > 应用框架系统的设计套路
-* [编码技术](coding.md):star:
-    > 解题技巧与编码经验
 * [计科八股](interview.md):star:
     > 计算机科学基础知识
+* [编码技术](coding.md):star:
+    > 解题技巧与编码经验
+* [设计模式](dspt.md):star:
+    > 应用框架系统的设计套路
 
 # 语言
 * [思想碰撞](langdiff.md):star:
     > 不同的语言有各自不同的特点以及背后的思想
-* [基础组件](langman.md)
+* [基础组件](langman.md):star:
     > 掌握一门语言的必要条件是熟悉它的基础标准库
 
 ## C++
-* [C++语法特性](cpp.md):star:
+* [C++语法特性](cpp.md)
     > 一份C++语法清单，适合有基础的同学
-* [C++编程指导](cppguide.md):star:
+* [C++编程指导](cppguide.md)
     > 优雅的编写C++代码
 * [C++编码风格](cppstyle.md)
     > 规范代码风格，拒绝选择困难症
@@ -61,16 +61,16 @@ cmake --install .
 * [CMake构建系统](cmake.md)
     > 依赖管理与项目构建
 
-## Golang
-* [Go语言基础](go.md):star:
+## Go
+* [Go语言基础](go.md)
     > Go语言基础
-* [Go编程指导](goguide.md):star:
+* [Go编程指导](goguide.md)
     > Go编程向导
 * [Go程序库](goman.md)
     > Go程序库
 
 ## Python
-* [Python语言基础](python.md):star:
+* [Python语言基础](python.md)
     > 基础语法与内置类型操作
 
 ## Web
@@ -83,7 +83,7 @@ cmake --install .
 * [JaveScript](js.md)
     > 前端编程语言
 * [React](react.md)
-    > 前端框架
+    > 前端UI框架
 
 # Server
 * K8S
@@ -100,9 +100,9 @@ cmake --install .
     > 消息队列
 
 # Linux
-* [Linux知识体系](linux.md):star:
+* [Linux知识体系](linux.md)
     > Linux的启动流程，以及整个系统知识体系
-* [Linux系统接口](apue.md):star:
+* [Linux系统接口](apue.md)
     > 大部分都符合POSIX、XSI或USU规范
 * [Shell脚本](bash.md)
     > bash语法、内置命令以及一些unix环境基础命令
