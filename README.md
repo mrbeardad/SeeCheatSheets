@@ -7,15 +7,13 @@
   - [Web](#web)
 - [Server](#server)
 - [Linux](#linux)
-- [网络](#网络)
-- [底层](#底层)
+- [底层原理](#底层原理)
 - [Last but not least](#last-but-not-least)
 
 # 安装
-**安装步骤：**
 ```sh
-git clone --depth=1 https://github.com/mrbeardad/SeeCheatSheets ~/.cheat
 # 国内访问github不太友好的话，可以将URL中的github.com改为gitee.com
+git clone --depth=1 https://github.com/mrbeardad/SeeCheatSheets ~/.cheat
 mkdir ~/.cheat/build
 cd ~/.cheat/build
 cmake -D CMAKE_BUILD_TYPE=Release ..
@@ -109,15 +107,7 @@ cmake --install .
 * [开发者工具](devtool.md)
     > 包含gcc、gdb、openssh、openssl、tmux、zsh、git、pacman等工具使用
 
-# 网络
-* [计算机网络](network.md)
-    > 自顶向下展示互联网架构
-* [差错校验与加密技术](security.md)
-    > 这些技术在网络中有重要应用
-* [比特币系统](bitcoin.md)
-    > 理解大名顶顶的比特币
-
-# 底层
+# 底层原理
 * [信息编码](code.md)
     > 整数之无符码与补码，浮点数之IEEE 754标准，字符之Unicode与UTF-8
 * [汇编语言](asm.md)
@@ -130,10 +120,15 @@ cmake --install .
     > 链接、异常控制流、虚拟内存
 * [存储引擎](innodb.md)
     > MySQL中innodb存储引擎的设计架构，包括索引与事务原理
+* [计算机网络](network.md)
+    > 自顶向下展示互联网架构
+* [信息学应用](security.md)
+    > 差错校验与加密技术
 
 # Last but not least
 * [Markdown语法](markdown.md)
 * [多种正则语法](regex.md)
 * [数据结构与算法](dsaa.md)
+* [比特币系统](bitcoin.md)
 * [英文读音](english.md)
 * [色彩理论](color.md)

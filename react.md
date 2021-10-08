@@ -4,7 +4,7 @@
 npx create-react-app react-app
 cd react-app
 npx install-peerdeps --dev eslint-config-airbnb
-npm install react-router-dom @reduxjs/toolkit react-redux --save
+npm install react-router-dom @reduxjs/toolkit react-redux immutable --save
 ```
 
 * 目录结构
@@ -100,10 +100,23 @@ React自身维护一个虚拟DOM，每次组件更新时可能会更新虚拟DOM
 
 # 技巧与优化
 ## 重新渲染优化
-* PureComponent
+* list&key：为`<li>`指定属性`key=id`可优化diff算法
+* React.PureComponent
 * shouldComponentUpdate()
 * React.memo(MyComponent, areEqual)
-* list&key：为`<li>`指定属性`key=id`可优化diff算法
+* **immutable-js**
+```js
+import Immutable from 'immutable';
+// 该库提供了一些容器集合类，这些类是不可变类型，即任何试图修改其内容的操作都会返回一个新对象；
+// 使用了结构共享技术，返回的新对象会尽量与原对象共享子对象引用节点，同时做深度值比较也更快速；
+// 特别的，当修改操作后的值并未变化时，直接返回原对象引用
+Immutable.List
+Immutable.Set
+Immutable.Map
+Immutable.OrderedSet
+Immutable.OrderedMap
+Immutable.fromJS()
+```
 
 ## 受控组件
 使表单输入值完全受控于`this.state`
