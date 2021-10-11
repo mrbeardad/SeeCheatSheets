@@ -6,8 +6,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="description" content="Description of the page less than 150 characters">
-    <title>页面标题</title>
-    <link rel="icon" type="image/png" href="https://example.com/favicon-32x32.png">
 
     <link rel="dns-prefetch" href="//example.com/">
     <link rel="preconnect" href="https://www.example.com/">
@@ -39,10 +37,13 @@
         //
     </script>
 
-    <noscript>不支持JS时显示的文本</noscript>
+    <title>页面标题</title>
+    <link rel="icon" type="image/png" href="https://example.com/favicon-32x32.png">
 </head>
 
 <body>
+    <noscript>不支持JS时显示的文本</noscript>
+
     <!-- 网页内容分区结构 -->
 
     <header>

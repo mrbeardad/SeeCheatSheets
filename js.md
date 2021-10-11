@@ -2,40 +2,52 @@
 ```js
 import defaultExport from "module-name";
 import * as name from "module-name";
-import { export1 , export2 } from "module-name";
+import { export } from "module-name";
 import { export as alias } from "module-name";
-import defaultExport, { export } from "module-name";
+import { export1 , export2 } from "module-name";
+import { foo , bar } from "module-name/path/to/specific/un-exported/file";
+import { export1 , export2 as alias2 , [...] } from "module-name";
+import defaultExport, { export [ , [...] ] } from "module-name";
 import defaultExport, * as name from "module-name";
 import "module-name";
+var promise = import("module-name");//这是一个处于第三阶段的提案。
 
-import("./math").then(math => {
-  console.log(math.add(16, 26));
-});
+// 导出单个特性
+export let name1, name2, …, nameN; // also var, const
+export let name1 = …, name2 = …, …, nameN; // also var, const
+export function FunctionName(){...}
+export class ClassName {...}
 
-export default 声明语句;
-export 声明语句;
-export {name1, name2};
-export { MyComponent as default } from "./ManyComponents.js";
+// 导出列表
+export { name1, name2, …, nameN };
+
+// 重命名导出
+export { variable1 as name1, variable2 as name2, …, nameN };
+
+// 解构导出并重命名
+export const { name1, name2: bar } = o;
+
+// 默认导出
+export default expression;
+export default function (…) { … } // also class, function*
+export default function name1(…) { … } // also class, function*
+export { name1 as default, … };
+
+// 导出模块合集
+export * from …; // does not set the default export
+export * as name1 from …; // Draft ECMAScript® 2O21
+export { name1, name2, …, nameN } from …;
+export { import1 as name1, import2 as name2, …, nameN } from …;
+export { default } from …;
 ```
- module-name
- * `node-module`
- * `./path/from/currentdir/to/local-file.js`
- * `/path/from/projectroot/to/local-file.js`
 
 
 # 变量
 ```js
-/* deprecated: 声明全局变量 */
-globalVariable = value;
+/* let声明的变量作用域仅限于块作用域内，若不进行初始化则初始值为undefined */
+let blcokVariable = value;
 
-/* deprecated: var声明的变量作用域于整个函数作用域中，包括声明语句之前的部分(undefined) */
-var functionVariable = value;
-
-/* let声明的变量作用域仅限于块作用域内 */
-let blcokVariable;           // 声明变量，初始值为undefined
-let blockVariable = value;   // 声明并初始化变量
-
-/* 声明常量作用域仅限于块作用域内，但无法限制更改数组与对象 */
+/* const声明常量作用域仅限于块作用域内，但无法限制更改数组与对象 */
 const constant = value;
 ```
 
@@ -122,15 +134,12 @@ try {
 
 # 函数
 ```js
-function AddMethod(x, y = 10, ...z) {   // 默认实参，变参数组
-    return x + y + sum(...z); // 数组展开
+function AddMethod(x, y = 10, ...z) {   // arguments，默认实参，变参数组
+    return x + y + sum(...z);
 }
 
-let lambda = (x, y) => {x + y}; // 单参时可省略圆括号，单语句可省略花括号；做闭包时可访问外部this
+let lambda = (x, y) => {x + y}; // 单参时可省略圆括号，单return语句可省略花括号与return；做闭包时可访问外部this
 ```
-**注**
-* JS中实参列表不必匹配形参列表，参数可多可少，少了则对应形参为`undefined`，多了可通过数组类型的`arguments`访问
-* 函数声明会被提升至文件顶部
 
 
 # 面向对象
