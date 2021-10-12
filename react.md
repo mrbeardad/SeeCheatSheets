@@ -3,10 +3,10 @@
 ```sh
 npx create-react-app react-app
 cd react-app
-npm install immutable @reduxjs/toolkit react-redux react-router-dom react-hook-form \
-  @mui/material @emotion/react @emotion/styled react-motion \
-  eslint htmlhint --save
+npm install eslint htmlhint --save
 npx install-peerdeps --dev eslint-config-airbnb
+npm install immutable @reduxjs/toolkit react-redux react-router-dom react-hook-form \
+  @mui/material @emotion/react @emotion/styled react-motion --save
 ```
 
 **目录结构**
@@ -43,17 +43,21 @@ my-app/
 * 每个React组件相当于一个状态机：
   * 事件一（当组件类型变化时）：会卸载旧组件，挂载新组件并触发react render
   * 事件二（组件修改了props或state）：一般会触发react render
-  * 详情见[react lifecycle](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)）；
+    1. 当注册的浏览器事件处理函数调用时，一般会调用setState()
+    2. 当调用setState()时，re-render该组件
+    3. 当修改了子组件的props时，re-render该子组件
+    4. 如此递归
+> 详情见[react lifecycle](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)）
   
 **减少不必要的调用render是重要的性能优化手段**
 * `<il key=id>`：为`<il>`指定key属性可优化diff算法
 * `class Component extends React.PureComponent`：默认shouldComponentUpdate()浅比较props与state
-* `const Component = React.memo(ComponentCore, areEqual)`：同上
+* `const Component = React.memo(ComponentCore)`：同上
 * `import {List, Set, Map, OrderedSet, OrderedMap, fromJS} from 'immutable-js'`
   > 该库提供了一些容器集合类，这些类是不可变类型，即任何试图修改其内容的操作都会返回一个新对象； 使用了结构共享技术，返回的新对象会尽量与原对象共享子对象引用节点，同时做深度值比较也更快速； 特别的，当修改操作后的值并未变化时，直接返回原对象引用
 
 
-# 组件定义
+# 组件基础
 ```js
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -78,6 +82,7 @@ class ParentComponent extends React.Component {   // 组件名必须大写字母
       <div>
         {this.props.children}
         <button type="button" onClick={this.hadleChange}>A</button>
+        {/* deprecated: 注意传递匿名函数因每次类型都不同而导致该组件的卸载与重新加载 */}
         <button type="button" onClick={(event) => this.hadleChange(event)}>B</button>
       </div>
     );
@@ -107,6 +112,14 @@ ReactDOM.render(
   document.getElementById("root"),
 );
 ```
+* 注意`props`的只读性质以及如何传递；
+* 注意`state`的可写性质以及如何修改；
+* 注意`handle`方法的`.bind(this)`以及
+* **Hooks**:
+  * `useState(initValOrLazyFunc)`：在第一次render前
+  * `useEffect(funcReturnCleaner, [memo])`：在每次render后，记忆memo若其未变更则不调用
+  * `useMemo(funcGenereteVal, [memo])`：记忆memo若其未变更则不调用
+
 
 # 技巧方法
 ## 组件通讯
@@ -490,4 +503,4 @@ import { Button } from '@mui/material/Button';
 
 * Box: 用于包裹组件来调整样式
 * Typography: 用于包裹内容来排版
-* AppBar为flex column，ToolBar为flex raw
+* AppBar为flex:column+position:fixed，ToolBar为flex:raw+position:block
