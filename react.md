@@ -41,12 +41,10 @@ my-app/
 # 生命周期
 * React自身维护一个虚拟DOM，每次组件触发react render后，会利用diff算法检查虚拟DOM与浏览器DOM的区别，从而仅修改部分浏览器DOM而非完全替换导致重新渲染整个页面
 * 每个React组件相当于一个状态机：
-  * 事件一（当组件类型变化时）：会卸载旧组件，挂载新组件并触发react render
-  * 事件二（组件修改了props或state）：一般会触发react render
-    1. 当注册的浏览器事件处理函数调用时，一般会调用setState()
-    2. 当调用setState()时，re-render该组件
-    3. 当修改了子组件的props时，re-render该子组件
-    4. 如此递归
+  1. 当注册的浏览器事件处理函数调用时，一般会调用setState()
+  2. 当调用setState()时，re-render该组件
+  3. 当修改了子组件的props时，re-render该子组件
+  4. 当修改了子组件的类型时，卸载旧组件并挂载新组件render
 > 详情见[react lifecycle](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)）
   
 **减少不必要的调用render是重要的性能优化手段**
@@ -376,7 +374,6 @@ const App = () => (
     <ul>
       <li><Link to="/">Home</Link></li>
       <li><Link to="/fuck">Fuck</Link></li>
-      <li><Link to="/you">You</Link></li>
       <li><Link to="/fuck/you">Fuck You</Link></li>
       <li><Link to="/fuck/you/man">Fuck You Man</Link></li>
     </ul>
@@ -493,6 +490,39 @@ function NestedInput() {
   const { register } = useFormContext(); // retrieve all hook methods
   return <input {...register("test")} />;
 }
+
+// use witch ui library
+import { useForm, Controller } from "react-hook-form";
+import Input from "@material-ui/core/Input";
+
+const App = () => {
+  const { control, handleSubmit } = useForm();
+  const onSubmit = data => console.log(data);
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="firstName"
+        control={control}
+        defaultValue=""
+        render={({ field }) => <Input {...field} />}
+      />
+      <Controller
+        name="iceCreamType"
+        control={control}
+        render={({ field }) => <Select 
+          {...field} 
+          options={[
+            { value: "chocolate", label: "Chocolate" },
+            { value: "strawberry", label: "Strawberry" },
+            { value: "vanilla", label: "Vanilla" }
+          ]} 
+        />}
+      />
+      <input type="submit" />
+    </form>
+  );
+};
 ```
 
 ## UI库

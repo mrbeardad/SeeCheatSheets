@@ -142,6 +142,7 @@
 * 验证码
 * anti-CSRF tokens
 * Cookie SameSite
+* 浏览器本身会限制跨域访问（如fetch()无法读取跨域报文内容）
 
 **嵌套框架限制**：
 站点可以通过确保网站没有被嵌入到别人的站点里面，从而避免 clickjacking 攻击
