@@ -3,10 +3,11 @@
 ```sh
 npx create-react-app react-app
 cd react-app
-npm install eslint htmlhint --save
+npm install -S eslint eslint-plugin-unused-imports htmlhint
 npx install-peerdeps --dev eslint-config-airbnb
-npm install immutable @reduxjs/toolkit react-redux react-router-dom react-hook-form \
-  @mui/material @emotion/react @emotion/styled react-motion --save
+npm install -S redux react-redux @reduxjs/toolkit immutable redux-immutable \
+  react-router-dom react-hook-form \
+  @mui/material @mui/icons-material @mui/system @emotion/react @emotion/styled
 ```
 
 **目录结构**
@@ -17,9 +18,9 @@ my-app/
   package.json
   public/   // index.html导入的文件，不会被编译处理
     index.html    /* page template */
-    favicon.ico   /* 网页图标 */
-    manifest.json /* 安装WebApp时所需元数据 */
-    robots.txt    /* 机器人排除协议 */
+    favicon.ico
+    manifest.json
+    robots.txt
   src/      // index.js导入的文件，需要编译处理
     index.js      /* entry point */
     index.css
@@ -45,13 +46,13 @@ my-app/
   2. 当调用setState()时，re-render该组件
   3. 当修改了子组件的props时，re-render该子组件
   4. 当修改了子组件的类型时，卸载旧组件并挂载新组件render
-> 详情见[react lifecycle](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)）
+> 详情见[react lifecycle](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
   
 **减少不必要的调用render是重要的性能优化手段**
-* `<il key=id>`：为`<il>`指定key属性可优化diff算法
 * `class Component extends React.PureComponent`：默认shouldComponentUpdate()浅比较props与state
 * `const Component = React.memo(ComponentCore)`：同上
-* `import {List, Set, Map, OrderedSet, OrderedMap, fromJS} from 'immutable-js'`
+* `<il key=id>`：为`<il>`指定key属性可优化diff算法
+* `import {List, Set, Map, OrderedSet, OrderedMap, fromJS, is} from 'immutable-js'`
   > 该库提供了一些容器集合类，这些类是不可变类型，即任何试图修改其内容的操作都会返回一个新对象； 使用了结构共享技术，返回的新对象会尽量与原对象共享子对象引用节点，同时做深度值比较也更快速； 特别的，当修改操作后的值并未变化时，直接返回原对象引用
 
 
@@ -112,7 +113,6 @@ ReactDOM.render(
 ```
 * 注意`props`的只读性质以及如何传递；
 * 注意`state`的可写性质以及如何修改；
-* 注意`handle`方法的`.bind(this)`以及
 * **Hooks**:
   * `useState(initValOrLazyFunc)`：在第一次render前
   * `useEffect(funcReturnCleaner, [memo])`：在每次render后，记忆memo若其未变更则不调用
@@ -273,88 +273,52 @@ class MyErrorBoundary extends React.Component {
 # 第三方库
 ## 状态管理
 ```js
-// 简单demo
-import {createStore} from 'redux'
+// tree.js
+import { fromJS } from 'immutable';
+import { createAction } from '@reduxjs/toolkit';
 
-const store = createStore(reducer) // 创建store
+const initState = fromJS({
+  files: {},
+});
 
-function reducer(state = {value: 0}, action) { // 实现reducer
-  switch(action.type) {
-    case 'counter/incremented':
-      return state.value + 1
-    case 'counter/decremented':
-      return state.value - action.payload
+const setFilesActionType = 'tree/setFiles';
+const setContentActionType = 'tree/setFileContent';
+export const setFileAction = createAction(setFilesActionType);
+export const setContentAction = createAction(setContentActionType);
+
+export function treeReducer(state = initState, { type, payload }) {
+  switch (type) {
+    case setFilesActionType:
+      return state.set('files', fromJS(payload.files));
+    case setContentActionType:
+      return state.setIn(['files', payload.path, 'content'], payload.content);
+    default:
+      return state;
   }
 }
 
+// store.js
+import { createStore } from 'redux';
+import { combineReducers } from 'redux-immutable';
+import { themeReducer } from './theme';
+import { treeReducer } from './tree';
 
-store.subscribe(() => console.log(store.getState())) // 注册监听器
+const store = createStore(combineReducers({
+  theme: themeReducer,
+  tree: treeReducer,
+}));
 
-store.dispatch({type: 'counter/incremented'}) // 调用reducer(state, action)
-store.dispatch({type: 'counter/incremented'})
-store.dispatch({type: 'counter/decremented'})
+export default store;
 
-// 高级demo
-import { createSlice, configureStore } from '@reduxjs/toolkit'
-/*
- * 1个store对应多个stateSlice
- * 1个stateSlice对应1个reducerSlice
- * 1个reducerSlice对应多个action
-*/
-const counterSlice = createSlice({
-  name: 'counter',
-  initialState: {
-    value: 0
-  },
-  reducers: {
-    incremented: state => {
-      state.value += 1  // 修改的是state副本
-    },
-    decremented: (state, action) => {
-        state.value -= action.payload
-    }
-  }
-})
-
-const store = configureStore({
-  reducer: {
-    counter: counterSlice.reducer
-  }
-})
-
-export const { incremented, decremented } = counterSlice.actions
-
-store.subscribe(() => console.log(store.getState()))
-
-store.dispatch(incremented()) // {value: 1}
-store.dispatch(incremented()) // {value: 2}
-store.dispatch(decremented()) // {value: 1}
-
-// 实践demo
-import { Provider, useSelector, useDispatch, useStore } from 'react-redux'
-import store from './app/store'
-
-ReactDOM.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
-  </React.StrictMode>,
-  document.getElementById('root')
-);
-
-function App() {
-  // 利用hooks访问store
-  let store = useStore(); // store
-  let state = useSelector(state => state.counter); // store.getState().counter
-  let dispatch = useDispatch(); // store.dispatch
+// App.js
+export default function App() {
+  const dispatch = useDispatch();
+  const files = useSelector((state) => state.getIn(['tree', 'files']));
+  ...
 }
 ```
 为实现父子组件双向通讯，需将state提升至全局，利用redux来管理该全局状态
 * Store：存储State的容器
-  * getState
-  * dispatch
-  * subscribe
 * State：集成所有应用中组件的state
 * Action：提供操作State的元数据
 * Reducer：注册于Store而根据(state, action)来实际操作State
@@ -392,16 +356,7 @@ const App = () => (
 * `<Link>`：跳转链接
   * `to=string`：目标路径名
   * `replace=bool`：替换而非添加到history stack中
-* `<NavLink>`：同上，若与当前url匹配则额外添加样式
-  * `activeClassName=string`：指定匹配时的className
-  * `activeStyle=object`：直接指定css样式
-  * `exact=bool`：是否精准匹配
-  * `strict=bool`：是否严格模式（匹配包括末尾斜杠）
 * `<Switch>`：所有匹配的Route组件都会被渲染，使用Switch包装起来则只会渲染第一个匹配的Route
-* `<Prompt>`：当用户离开页面时展示提示信息
-  * `message=string`
-  * `message=func`
-  * `when=bool`
 * `<Route>`：路由组件，若路由匹配则渲染该组件
   * 路径匹配
     * `path=string`：匹配路由路径，支持正则表达式以及url path parameter
@@ -424,12 +379,14 @@ const App = () => (
       * pathname：当前url path
       * search：当前url query
       * hash：当前url hash
+  * `withRoute(Component)`：使组件在url变更时render，并同`<Route>`接收路由组件属性
 
 ## 表单控制
 ```js
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Input from "@material-ui/core/Input";
 
-export default function App() {
+const App = () => {
   // 创建表单控制器，提供方法统一存储、访问、操作表单数据
   const {
     handleSubmit, // 用于处理submit成功或失败
@@ -448,59 +405,14 @@ export default function App() {
       isValidating,
       errors,
     }
-  } = useForm({defaultValues: {example: "default"}});
+  } = useForm();
 
   // 订阅change事件，用户每次输入都会触发render与validation
-  console.log(getValue("example"));
-
   const onSubmit = (data, event) => console.log(data);
   const onError = (errors, event) => console.log(errors);
 
   return (
-    // 每次表单内容没修改都会触发render与validate
     <form onSubmit={handleSubmit(onSubmit, onError)}>
-      <input defaultValue="test" {...register("example")} />
-      <br />
-      <input {...register("exampleRequired", { required: true })} />
-      {errors.exampleRequired && <span>This field is required</span>}
-      <br />
-      <input type="submit" />
-    </form>
-  );
-}
-
-// useFormContext
-import { useForm, FormProvider, useFormContext } from "react-hook-form";
-
-export default function App() {
-  const methods = useForm();
-  const onSubmit = data => console.log(data);
-
-  return (
-    <FormProvider {...methods} > // pass all methods into the context
-      <form onSubmit={methods.handleSubmit(onSubmit)}>
-        <NestedInput />
-        <input type="submit" />
-      </form>
-    </FormProvider>
-  );
-}
-
-function NestedInput() {
-  const { register } = useFormContext(); // retrieve all hook methods
-  return <input {...register("test")} />;
-}
-
-// use witch ui library
-import { useForm, Controller } from "react-hook-form";
-import Input from "@material-ui/core/Input";
-
-const App = () => {
-  const { control, handleSubmit } = useForm();
-  const onSubmit = data => console.log(data);
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
       <Controller
         name="firstName"
         control={control}
@@ -525,12 +437,13 @@ const App = () => {
 };
 ```
 
-## UI库
+## UI
+主题：配色、形状、图标、字体、动画
+### 布局
 ```js
 import { Button } from '@mui/material/Button';
 ```
-主题：配色、形状、图标、字体、动画
 
-* Box: 用于包裹组件来调整样式
-* Typography: 用于包裹内容来排版
+* Container: 用于居中布局
+* Box与Typography: 用于包裹组件来调整样式
 * AppBar为flex:column+position:fixed，ToolBar为flex:raw+position:block

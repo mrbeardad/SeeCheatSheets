@@ -1,29 +1,31 @@
 # 色彩理论
-在色彩理论中，颜色被组织在色轮上，并分为三大类：
+**首先，色彩理论是一种心理学或者说是生理学理论，而非物理理论！**
 
-* 原色(primary colors)：
-“原色”并非是一种物理概念，而是一种生物学的概念，是基于人的肉眼对于光线的生理作用。
-人的眼睛内有几种辨别颜色的锥状细胞，分别对黄绿色、绿色和蓝紫色（564、534和420纳米波长）的光最敏感。
-人类以及其他具有这三种感光受体的生物称为“三色感光体生物”。虽然眼球中的椎状细胞并非对红、绿、蓝三色的感受度最强，
-但是由肉眼的椎状细胞所能感受的光的带宽很大，红、绿、蓝也能够独立刺激这三种颜色的受光体，因此这三色被视为原色。
+> 参考：
+> * [上海交通大学-物体色度值的测量](https://pec.sjtu.edu.cn/ols/DocumentLib/recent/072011506/072011506_slides.pdf)
+> * [StackExchange: What do Hue, Chroma, Saturation, Value, Tones, Tints, Shade, etc. mean?](https://photo.stackexchange.com/questions/14820/what-do-hue-chroma-saturation-value-tones-tints-shade-etc-mean/98909#98909)
+> * [The fundamentals of understanding color theory](https://99designs.hk/blog/tips/the-7-step-guide-to-understanding-color-theory/)
 
-* 间色(secondary colors)：两种原色混合
+**什么是色彩？**
+色彩即是光照射到视网膜上，被锥形细胞接收后转换为人体的一种生理或心理反应。
+人眼有三种锥形细胞(S,M,L)，分别对420nm, 530nm, 560nm的光最敏感，大脑根据每种细胞被光刺激后激活程度的比例来呈现色彩。
+我们需要研究的是光的客观的物理属(波长与强度)性到人的主观的色彩感受的普遍规律。
+![SML](https://pic3.zhimg.com/80/v2-a00c5c7a51a13868cafe4291c064b43e_720w.jpg?source=1940ef5c)
 
-* 复色(tertiary colors)：间色与原色混合
+**什么是RGB？**
+一种色彩模型。通过光的三原色——红(Red)、绿(Green)、蓝(Blue)——按一定比列的亮度混合，我们可以模拟各波长与强度的光的视觉效果。国际照明委员会(CIE)规定了三原色的波长，并定义配出白光时的RGB配比为1:1:1。一般用于自发光源，如屏幕。
 
-# CMYK消减型混色模型
-传统上，消减过程中使用的原色是红色、黄色和蓝色，因为这些颜色是画家混合得到所有其他色调的颜色。
-随着彩色印刷的出现，它们随后被青色、洋红、黄色和按键/黑色（CMYK）所取代，
-因为这种颜色组合使打印机能够在纸张上产生更广泛的颜色。
+**什么是CMYK？**
+另一种色彩模型。通过混合青(Cyan)、品红(Magenta)、黄(Yellow)和黑墨(Balck Ink)来实现确定色彩。一般用于需要额外光源照射来观看的物体，如印刷。
 
-# 心理色彩
-> In summary, extreme unity leads to under-stimulation, extreme complexity leads to over-stimulation.
-> Harmony is a dynamic equilibrium.
+**什么是HSL？**
+也是一种色彩模型：
+* 色相(Hue)：指定色彩在可见光谱上的大致范围
+* 饱和度(Saturation)：指参杂的灰色比例，完全饱和是纯色相，完全不饱和是纯灰色
+* 亮度(Lightness)：是接近黑色还是接近白色
+> [尝试一下](https://mothereffinghsl.com/)
 
-# 色轮
-[color wheel](https://99designs-blog.imgix.net/blog/wp-content/uploads/2017/02/Color-Wheel-2.gif?auto=format&q=60&fit=max&w=930)
+![color wheel](https://99designs-blog.imgix.net/blog/wp-content/uploads/2017/02/Color-Wheel-2.gif?auto=format&q=60&fit=max&w=930)
 
 # 配色方案
-* 相邻色：3种色轮上相邻的颜色搭配，其中一种占主导
-* 互补色：2种色轮上相对的颜色搭配，对比强烈且图像清晰
-* 三基色：3中色轮上内等边三角颜色搭配，各部分有鲜明对比，同时更加柔和
+> [尝试一下](https://color.adobe.com/zh/create/color-wheel)

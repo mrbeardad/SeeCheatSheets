@@ -68,15 +68,21 @@
 # 布局
 ## 基础
 * 盒模型
-    * margin: 外边距折叠
-    * border: 替代模式设置长宽时的边界
-    * padding: 内边距
-    * content: 标准模式设置长宽时的边界
+    * margin: 外边距折叠，一般用于调整布局展示
+    * border: 替代模式设置长宽时的边界，一般用于显示边界框
+    * padding: 内边距，一般用于调整内容对齐
+    * content: 标准模式设置长宽时的边界，展示的主体内容
 
 * 正常布局流：浏览器默认的盒模型堆积模式
-    * `display: block`: 高度与其内容高度一致，宽度为父元素100%
-    * `display: inline`: 高度、宽度与其内容高度、宽度一致，无法手动控制
-    * `display: inline-block`: 相比inline可调整高度与宽度
+    * `display: inline`
+      * 高度：同content高度，无法手动指定
+      * 宽度：同content宽度，无法手动指定
+    * `display: inline-block`
+      * 高度：同content高度，可手动指定
+      * 宽度：同content宽度，可手动指定
+    * `display: block`
+      * 高度：inline子元素content高度、block子元素border高度、inline-block子元素margin高度中最高者
+      * 宽度：父元素宽度100%
     * 排列方向：block inline
     * 内容对齐：center left right
 

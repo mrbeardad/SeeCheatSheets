@@ -8,8 +8,7 @@
 - [安全](#安全)
   - [HTTPS](#https)
   - [Cookie](#cookie)
-  - [外部访问限制](#外部访问限制)
-  - [网页内容限制](#网页内容限制)
+  - [限制浏览器访问](#限制浏览器访问)
 - [连接](#连接)
 
 # 报文
@@ -132,17 +131,18 @@
     * Lax表示仅当导航到URL才发送cookie
     * Strict表示仅访问相同站点时发送cookie
 
-**Same-Site**：若两url减去有效一级域名后的二级域名相同则为同站，否则为跨站
-
 **Same-Origin**：若两url的schema, host, port均相同则为同域，否则为跨域
 
-## 外部访问限制
+**Same-Site**：若两url减去有效一级域名后的二级域名相同则为同站，否则为跨站
+
+## 限制浏览器访问
 **预防CSRF(Cross-site request forgeries)**
 * 检测Origin/Referer
 * 验证码
 * anti-CSRF tokens
 * Cookie SameSite
 * 浏览器本身会限制跨域访问（如fetch()无法读取跨域报文内容）
+* `Access-Control-Allow-Origin: *`允许浏览器跨域访问
 
 **嵌套框架限制**：
 站点可以通过确保网站没有被嵌入到别人的站点里面，从而避免 clickjacking 攻击
@@ -150,7 +150,6 @@
 * X-Frame-Options: sameorigin
 * X-Frame-Options: allow-from https://example.com/
 
-## 网页内容限制
 **内容安全策略CSP**：
 响应头部设置`Content-Security-Policy`提供策略来限制浏览器哪些资源仅能从哪些地方获取，启用CSP会使浏览器禁用内联js与css
 
