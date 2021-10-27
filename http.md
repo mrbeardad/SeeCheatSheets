@@ -6,8 +6,8 @@
   - [首部](#首部)
   - [状态](#状态)
 - [安全](#安全)
-  - [HTTPS](#https)
   - [Cookie](#cookie)
+  - [HTTPS](#https)
   - [限制浏览器访问](#限制浏览器访问)
 - [连接](#连接)
 
@@ -51,8 +51,7 @@
 通用资源标识符URI：
 * URN
 * URL：`<scheme>://<user>:<password>@<host>:<port>/<path>;<params>?<query>&<query>#<frag>`
-    * 相对URL（可移植性）
-    * 自动扩展URL
+    * 相对URL
     * 安全字符与非安全字符的转义
 
 
@@ -96,21 +95,6 @@
 
 
 # 安全
-## HTTPS
-**HTTPS**
-使用HTTP协议加载动态资源(如javascript)会被浏览器阻止
-
-**HSTS(HTTP Strict Transport Security)**
-响应头部设置`Strict-Transport-Security:`以指示浏览器重定向至https
-* max-age: 指定秒数内均重定向访问至https
-* includeSubDomains: 重定向包括子域名
-* preload: 加入浏览器HSTS List从而省略第一次报文用于指示重定向https
-
-**HPKP(HTTP Public Key Pinning)**
-响应头部设置`Public-Key-Pins:`来让浏览器使用固定公钥访问网站
-* max-age: 指定秒数内使用固定公钥
-* includeSubDomains: 包括子域名
-
 ## Cookie
 响应头部设置`Set-Cookie:`来记录会话信息
 * id=guid;
@@ -134,6 +118,21 @@
 **Same-Origin**：若两url的schema, host, port均相同则为同域，否则为跨域
 
 **Same-Site**：若两url减去有效一级域名后的二级域名相同则为同站，否则为跨站
+
+## HTTPS
+**HTTPS**
+使用HTTP协议加载动态资源(如javascript)会被浏览器阻止
+
+**HSTS(HTTP Strict Transport Security)**
+响应头部设置`Strict-Transport-Security:`以指示浏览器重定向至https
+* max-age: 指定秒数内均重定向访问至https
+* includeSubDomains: 重定向包括子域名
+* preload: 加入浏览器HSTS List从而省略第一次报文用于指示重定向https
+
+**HPKP(HTTP Public Key Pinning)**
+响应头部设置`Public-Key-Pins:`来让浏览器使用固定公钥访问网站
+* max-age: 指定秒数内使用固定公钥
+* includeSubDomains: 包括子域名
 
 ## 限制浏览器访问
 **预防CSRF(Cross-site request forgeries)**

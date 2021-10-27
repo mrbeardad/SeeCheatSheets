@@ -124,11 +124,11 @@ cmake --install .
     > 自顶向下展示互联网架构
 * [信息学应用](security.md)
     > 差错校验与加密技术
+* [数据结构与算法](dsaa.md)
 
 # Last but not least
 * [Markdown语法](markdown.md)
 * [多种正则语法](regex.md)
-* [数据结构与算法](dsaa.md)
 * [比特币系统](bitcoin.md)
 * [英文读音](english.md)
 * [色彩理论](color.md)

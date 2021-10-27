@@ -502,9 +502,8 @@ obj['age']  // 否则只能使用方括号下标法
 let extend = {...obj}       // 展开，一种copy手法
 let {k1, k2, ..rest} = obj  // 解构，不必完全解构内容
 function({k1, k2})          // 解构，可用于函数调用
-let {'key-name':val} = obj  // 解构，非规范属性名
-let keyName = 'key-name'
-let {[keyName]: val} = obj  // 同上，先计算keyName
+let {keyName: val} = obj    // 解构，非规范属性名
+let {['keyName']: val} = obj// 同上，先计算keyName
 
 Object.keys(o)
 Object.getOwnPropertyNames(o)

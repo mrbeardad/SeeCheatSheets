@@ -379,7 +379,7 @@ const App = () => (
       * pathname：当前url path
       * search：当前url query
       * hash：当前url hash
-  * `withRoute(Component)`：使组件在url变更时render，并同`<Route>`接收路由组件属性
+* `withRoute(Component)`：使组件在url变更时render，并同`<Route>`接收路由组件属性
 
 ## 表单控制
 ```js
@@ -440,10 +440,7 @@ const App = () => {
 ## UI
 主题：配色、形状、图标、字体、动画
 ### 布局
-```js
-import { Button } from '@mui/material/Button';
-```
-
-* Container: 用于居中布局
-* Box与Typography: 用于包裹组件来调整样式
-* AppBar为flex:column+position:fixed，ToolBar为flex:raw+position:block
+* Box: 默认block布局，用于包裹其他组件来使用sx属性
+* Container: 默认block布局，用于限宽居中布局
+* Grid: 默认flex布局，用于二维响应式布局
+* Stack: 默认flex布局，用于一维响应式布局
