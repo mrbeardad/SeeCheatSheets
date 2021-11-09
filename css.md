@@ -62,6 +62,7 @@
     * content: 标准模式设置长宽时的边界，展示的主体内容
 
 * 正常布局流：浏览器默认的盒模型堆积模式
+    > 高度的产生主要因为`<br>`与`wrap`
     * `display: inline`
       * 高度：同content高度，无法手动指定
       * 宽度：同content宽度，无法手动指定
@@ -71,14 +72,23 @@
     * `display: block`
       * 高度：inline子元素content高度、block子元素border高度、inline-block子元素margin高度中最高者
       * 宽度：父元素宽度100%
-    * 排列方向：block inline
-    * 内容对齐：center left right
+
+* 排列方向：block inline
+    * `writing-mode: horizontal-tb`
+      * Top-to-bottom block flow direction. Sentences run horizontally.
+    * `writing-mode: vertical-rl`
+      * Right-to-left block flow direction. Sentences run vertically.
+    * `writing-mode: vertical-lr`
+      * Left-to-right block flow direction. Sentences run vertically.
+    * `inline-size`&`block-size`
 
 ## 进阶
 * Float布局
     * `float: left`: 现在仅用于插入环绕型图片
 
+![flex](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox/flex_terms.png)
 * Flex布局
+    * 默认所有item高度被拉伸为其中最高者同等高度
 ```css
 .container {
     display: flex; /* 指定该元素为flex容器，其子元素为flex项，弹性紧凑均布地按flex方向排列（默认方向row） */
@@ -126,8 +136,13 @@ h1 {
 * `position: sticky`粘性：当出现在浏览器视窗后有静态定位变为固定定位
 
 # 溢出处理
-**什么时候会溢出**：
-* 父元素设置了固定大小，而子元素过于庞大
+**什么时候会溢出**：父元素设置了固定大小，而子元素过于庞大
+
+The `overflow` property has the following values:
+* visible - Default. The overflow is not clipped. The content renders outside the element's box
+* hidden - The overflow is clipped, and the rest of the content will be invisible
+* scroll - The overflow is clipped, and a scrollbar is added to see the rest of the content
+* auto - Similar to scroll, but it adds scrollbars only when necessary
 
 * 图像溢出
     * `height: 100%; width: 100%;`

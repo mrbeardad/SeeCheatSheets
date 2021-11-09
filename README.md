@@ -26,7 +26,7 @@ cmake --install .
 其中`.*`表示关键字，see便会搜索其中的关键子决定是否匹配；
 详情请使用`see -h`查看。
 
-![see](images/see.png)
+![see](images/see.jpg)
 
 
 **注**：部分笔记插入了Tex公式，~~介于鄙人的懒惰~~ 介于GFM不支持Tex，诸位就自己下个浏览器插件吧。
