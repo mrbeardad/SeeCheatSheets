@@ -1,5 +1,6 @@
 # 系统构建
-**项目初始化**
+
+## 项目初始化
 ```sh
 npx create-react-app react-app
 cd react-app
@@ -10,62 +11,42 @@ npm install -S redux react-redux @reduxjs/toolkit immutable redux-immutable \
   @mui/material @mui/icons-material @mui/system @emotion/react @emotion/styled
 ```
 
-**目录结构**
+## 目录结构
 ```txt
 my-app/
   README.md
   node_modules/
   package.json
-  public/   // index.html导入的文件，不会被编译处理
+  public/       // index.html导入的文件，不会被编译处理
     index.html    /* page template */
     favicon.ico
     manifest.json
     robots.txt
-  src/      // index.js导入的文件，需要编译处理
+  src/          // index.js导入的文件，需要编译处理
     index.js      /* entry point */
-    index.css
-    App.css
     App.js
-    App.test.js
-    logo.svg
 ```
 
-**核心思想**
+# 组件基础
+
+## 核心思想
 * 传统做法将HTML（语义）、CSS（样式）、JS（动态控制前两者）分开，而React将三者结合封装到JSX组件中（利用JSX可更简洁直观的在JS中插入HTML，同时在HTML中调用JS表达式、组件，CSS则通过导入JSX的方式）
 * 组件被一层层的嵌套导入，形成一个组件树，最终生成完整的html然后被渲染成网页。动态组件通常会注册事件处理函数，当执行时更新了组件内容(props, state)时，会触发react render来更新生成的html
 * 通过JSX导入src目录下的js、css、image、font等文件的优点
   * 尽量合并文件从而减少网络IO
   * 缺失的文件导致编译错误而非给用户显示404
   * 编译结果文件名包含hash值从而防止客户端浏览器缓存旧网页
-
-
-# 生命周期
-* React自身维护一个虚拟DOM，每次组件触发react render后，会利用diff算法检查虚拟DOM与浏览器DOM的区别，从而仅修改部分浏览器DOM而非完全替换导致重新渲染整个页面
-* 每个React组件相当于一个状态机：
-  1. 当注册的浏览器事件处理函数调用时，一般会调用setState()
-  2. 当调用setState()时，re-render该组件
-  3. 当修改了子组件的props时，re-render该子组件
-  4. 当修改了子组件的类型时，卸载旧组件并挂载新组件render
-> 详情见[react lifecycle](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
   
-**减少不必要的调用render是重要的性能优化手段**
-* `class Component extends React.PureComponent`：默认shouldComponentUpdate()浅比较props与state
-* `const Component = React.memo(ComponentCore)`：同上
-* `<il key=id>`：为`<il>`指定key属性可优化diff算法
-* `import {List, Set, Map, OrderedSet, OrderedMap, fromJS, is} from 'immutable-js'`
-  > 该库提供了一些容器集合类，这些类是不可变类型，即任何试图修改其内容的操作都会返回一个新对象； 使用了结构共享技术，返回的新对象会尽量与原对象共享子对象引用节点，同时做深度值比较也更快速； 特别的，当修改操作后的值并未变化时，直接返回原对象引用
-
-
-# 组件基础
+## 声明语法
 ```js
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-// 类声明形式的组件
+// 类声明形式的组件，函数声明形式的组件类似render方法
 class ParentComponent extends React.Component {   // 组件名必须大写字母开头
   constructor(props) {
-    super(props);       // 初始化props(只读)
-    this.state = {};    // 初始化state(可写)
+    super(props);       // 初始化props(只读)，注意如何传递props
+    this.state = {};    // 初始化state(可写)，注意如何修改state
     this.handleChange = this.handleChange.bind(this); // 保证调用该方法时this上下文指向该类实例
   }
 
@@ -111,92 +92,120 @@ ReactDOM.render(
   document.getElementById("root"),
 );
 ```
-* 注意`props`的只读性质以及如何传递；
-* 注意`state`的可写性质以及如何修改；
-* **Hooks**:
-  * `useState(initValOrLazyFunc)`：在第一次render前
-  * `useEffect(funcReturnCleaner, [memo])`：在每次render后，记忆memo若其未变更则不调用
-  * `useMemo(funcGenereteVal, [memo])`：记忆memo若其未变更则不调用
+
+* JSX组件的编译需要导入`react`以引用`React.createElement`
+* 用户定义组件必须首字母大写
+* 注意`props`的只读属性以及如何传递
+* 注意`state`的可写属性以及如何修改
+* JSX 中的 JavaScript 表达式将会被计算为字符串、React组件元素或者是列表
+* false, null, undefined, and true 是合法的子元素，但它们并不会被渲染。
 
 
-# 技巧方法
-## 组件通讯
-### 状态提升
-* 将多个子组件中的共享数据提升到最近公共父组件中去：`this.state.date`
-* 然后传入子组件：`<Child shared={this.state.date} changeShared={this.onChange} />`
-* 子组件使用：`let data = this.props.shared`
-* 子组件修改：`this.props.changeShared()`
+# 生命周期
+## 核心思想
+* React自身维护一个**虚拟DOM**，每次组件触发react render后，会利用diff算法检查虚拟DOM与浏览器DOM的区别，从而仅修改部分浏览器DOM而非完全替换导致重新渲染整个页面
+* 每个React组件相当于一个状态机：
+  1. 当注册的浏览器事件处理函数调用时，一般会调用setState()
+  2. 当调用setState()时，re-render该组件
+  3. 当修改了子组件的props时，re-render该子组件
+  4. 当修改了子组件的类型时，卸载旧组件并挂载新组件render
+> 详情见[react lifecycle](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
+  
+## Hooks
+Hook 就是 JavaScript 函数，但是使用它们会有两个额外的规则：
+* 只能在函数最外层调用 Hook。不要在循环、条件判断或者子函数中调用。
+* 只能在 React 的函数组件和自定义Hook中调用 Hook。不要在其他 JavaScript 函数中调用。
 
-### 组件提升
-* 当封装大组件时，需要传递一个接口值到组件深处使用，则提升该深处的组件
-```js
-function Page(props) {
-  const user = props.user;
-  const userLink = (
-    <Link href={user.permalink}>
-      <Avatar user={user} size={props.avatarSize} />
-    </Link>
-  );
-  return <PageLayout userLink={userLink} />;
-}
-
-// 现在，我们有这样的组件：
-<Page user={user} avatarSize={avatarSize} />
-// ... 渲染出 ...
-<PageLayout userLink={...} />
-// ... 渲染出 ...
-<NavigationBar userLink={...} />
-// ... 渲染出 ...
-{props.userLink}
+### useState
+```jsx
+const [state, setState] = useState(initialState);
+const [state, setState] = useState(() => someExpensiveComputation(props));
+setState(newState);                   // 全量更新而非增量更新
+setState(prevState => prevState + 1); // 依赖旧值进行更新
 ```
+* useState在初始渲染期间，返回的状态 (state) 与传入的第一个参数 (initialState) 值相同。
+* useState在后续的重新渲染中，返回的第一个值将始终是更新后最新的 state。
+* 调用setState将跳过子组件的渲染及 effect 的执行。（React 使用 Object.is 比较算法 来比较 state），但可能仍需要在跳过渲染前渲染该组件。
 
-### Context
-* 组件向上寻找最近的Context，这种做法会加强耦合降低复用性
-* Context更新时会强制更新渲染其消费者
-```js
-const ThemeContext = React.createContext('light');  // 1
+### useEffect
+```jsx
+useEffect(() => {
+  // 执行副作用
+  const subscription = props.source.subscribe();
+  // 清除订阅
+  return () => { subscription.unsubscribe(); };
+});
+```
+* `useEffect`默认 effect 将在每轮渲染结束后执行，`useLayoutEffect`则在DOM更新后且在浏览器渲染前同步调用
+* 可传递 effect 所依赖的值数组而在只有某些值改变的时候 才执行，传递`[]`表示只在初次渲染时调用。
+* 返回的清除函数会在组件卸载前执行，如果组件多次渲染，则在执行下一个 effect 之前，上一个 effect 就已被清除。
 
-class App extends React.Component {
-  render() {
-    return (
-      <ThemeContext.Provider value="dark"> // 2
-        <Toolbar />
-      </ThemeContext.Provider>
-    );
-  }
+### useContext
+```jsx
+const ThemeContext = React.createContext(themes.light);
+
+function App() {
+  return (
+    <ThemeContext.Provider value={themes.dark}>
+      <Toolbar />
+    </ThemeContext.Provider>
+  );
 }
 
 function Toolbar() {
-  return (
-    <div>
-      <ThemedButton />
-    </div>
-  );
-}
-
-class ThemedButton extends React.Component {
-  static contextType = ThemeContext; // 3
-
-  render() {
-    return <Button theme={this.context} />; // 4
-  }
+  const theme = useContext(ThemeContext);
+  /* ... */
 }
 ```
 
-### Ref
-```js
-let ref = React.createRef();  // ref将指向了该div元素
-<div ref={ref}></div>
-
-const FancyButton = React.forwardRef((props, ref) => (
-  <button ref={ref} className="FancyButton">
-    {props.children}
-  </button>
+### useRef
+```jsx
+const MyInput = React.forwardRef((props, ref) => (
+  <input ref={ref} type="text" className="FancyButton" />
 ));
 
-const ref = React.createRef();  // ref将指向button
-<FancyButton ref={ref}>Click me!</FancyButton>;
+function TextInputWithFocusButton() {
+  const inputEl = useRef(null); // inputEl.current最终指向了<input />
+  const onButtonClick = () => {
+    // `current` 指向已挂载到 DOM 上的文本输入元素
+    inputEl.current.focus();
+  };
+  return (
+    <>
+      <MyInput ref={inputEl} />
+      <button onClick={onButtonClick}>Focus the input</button>
+    </>
+  );
+}
 ```
+
+### useCallback
+```jsx
+const memoizedCallback = useCallback(
+  () => { doSomething(a, b); },
+  [a, b],
+);
+```
+* memoizedCallback只在依赖项更新时才会调用
+
+### useMemo
+```jsx
+const memoizedValue = useMemo(
+  () => computeExpensiveValue(a, b),
+  [a, b]
+);
+```
+* memoizedValue只在依赖项更新时才重新计算
+
+
+# 技巧方法
+## 减少渲染
+* `<il key=id>`：为`<il>`指定key属性可优化diff算法
+* `class Component extends React.PureComponent`：默认shouldComponentUpdate()浅比较props与state
+* `const Component = React.memo(ComponentCore)`：同上
+* `import {List, Set, Map, OrderedSet, OrderedMap, fromJS, is} from 'immutable-js'`
+  > 该库提供了一些容器集合类，这些类是不可变类型，即任何试图修改其内容的操作都会返回一个新对象； 使用了结构共享技术，返回的新对象会尽量与原对象共享子对象引用节点，同时做深度值比较也更快速； 特别的，当修改操作后的值并未变化时，直接返回原对象引用
+
 
 ## 代码分割
 正常情况下build操作会将import的包合并到一个文件中，有时代码过于庞大则需要一点技巧来提示打包器分割代码
@@ -219,17 +228,6 @@ const MyComponent = () => ( // 将懒加载组件作为Suspense子组件实现�
     </MyErrorBoundary>
   </div>
 );
-```
-
-## 受控组件
-使表单输入值完全受控于`this.state`
-```js
-class MyComponent extends React.Component {
-  /* ... */
-  render() {
-    return <input type="text" value={this.state.value} onClick={this.handle}>
-  }
-}
 ```
 
 ## 错误边界
@@ -265,9 +263,12 @@ class MyErrorBoundary extends React.Component {
 ## 环境变量
 * js中调用：`process.env.NODE_ENV`
 * public/html中调用：`<a href="%PUBLIC_URL%">%REACT_APP_WEBSITE%</p>`
-* `NODE_ENV`：development, test, production
-* `PUBLIC_URL`：public目录中的文件资源在编译构建后的路径前缀
-* `REACT_APP_*`：react app环境变量
+
+| 变量          | 值                                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`    | development, test, production                                                                        |
+| `PUBLIC_URL`  | public目录中的文件资源在编译构建后的路径前缀，通过修改*package.json*中的`homepage`可修改该环境变量值 |
+| `REACT_APP_*` | react app环境变量                                                                                    |
 
 
 # 第三方库
@@ -326,60 +327,55 @@ export default function App() {
 
 ## 网页路由
 ```js
-import {BrowserRouter, Link, Switch, Route} from 'react-router-dom';
-
-const ShowUI = (props) => {
-  console.log(props);
-  return <p>{props.match.url}</p>;
-};
-
-const App = () => (
-  <BrowserRouter basename="/route">
-    <ul>
-      <li><Link to="/">Home</Link></li>
-      <li><Link to="/fuck">Fuck</Link></li>
-      <li><Link to="/fuck/you">Fuck You</Link></li>
-      <li><Link to="/fuck/you/man">Fuck You Man</Link></li>
-    </ul>
-    <Switch>
-      <Route path="/" exact component={ShowUI} />
-      <Route path="/fuck" component={ShowUI} />
-      <Route path="/fuck/you" component={ShowUI} />
-      <Route path="/fuck/you/*" component={ShowUI} />
-    </Switch>
-  </BrowserRouter>
+// 原理：<BrowserRouter> creates a history, puts the initial location in to state, and subscribes to the URL.
+ReactDOM.render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />}>
+        <Route index element={<Home />} />
+        <Route path="teams" element={<Teams />}>
+          <Route path=":teamId" element={<Team />} />
+          <Route path="new" element={<NewTeamForm />} />
+          <Route index element={<LeagueStandings />} />
+        </Route>
+      </Route>
+      <Route element={<PageLayout />}>
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/tos" element={<Tos />} />
+      </Route>
+      <Route path="contact-us" element={<Contact />} />
+    </Routes>
+  </BrowserRouter>,
+  document.getElementById("root")
 );
 ```
-* 原理：利用接口监听URL变更，阻止浏览器发送http请求，转而根据路由判断渲染各Route组件
-* `<BrowserRouter>`：使用HTML5 history API实现前端路由
-* `<HashRouter>`：使用URL hash实现前端路由
-* `<Link>`：跳转链接
-  * `to=string`：目标路径名
-  * `replace=bool`：替换而非添加到history stack中
-* `<Switch>`：所有匹配的Route组件都会被渲染，使用Switch包装起来则只会渲染第一个匹配的Route
-* `<Route>`：路由组件，若路由匹配则渲染该组件
-  * 路径匹配
-    * `path=string`：匹配路由路径，支持正则表达式以及url path parameter
-    * `exact=bool`：是否精准匹配，默认只需匹配路径前缀
-    * `strict=bool`：是否严格模式（匹配包括末尾斜杠）
-    * `sensitive=bool`：是否大小写敏感
-  * 渲染方法
-    > 每个inline function都是不同类型的实例，当使用component=inline func时，更新组件时React判断旧组件被卸载了，新组件被加载了，而实际上我们只需重新尝试render。
-    * `component=Component`：class or function组件
-    * `render=func`：inline function组件
-    * `children=func`：inline function组件，无论是否匹配都会被渲染，利用传入的match，组件可自行依据路径匹配决定哪些要渲染而哪些不渲染
-  * 组件属性
-    * history
-    * match
-      * path：即传给`<Route />`的path属性
-      * url：path所匹配的url
-      * params：匹配的url path paramter
-      * isExact：是否精准匹配
-    * location
-      * pathname：当前url path
-      * search：当前url query
-      * hash：当前url hash
-* `withRoute(Component)`：使组件在url变更时render，并同`<Route>`接收路由组件属性
+* `<Link>`or`<NavLink>`：跳转链接
+  * `to="pathname"`：目标路径名
+  * `replace`：替换而非添加到history stack中
+
+* `<Routes>`：路由配置树
+  * 从所有路由策略路线中匹配最优策略分支
+  * 渲染整个匹配分支需要父级element使用`<Outlet />`代替`props.children`）
+
+* `<Route>`：路由策略
+  * `path="pathname"`：自动添加前缀为父级path，支持`/static`、`/:param`、`/global/*`；若无该属性则作为布局路由不参与匹配（单其子路由会参与，若子路由匹配则渲染该布局路由）
+  * `index`：当恰好完全匹配父级路由path时，该条路由作为父级`<Outlet />`
+  * `caseSensitive`
+  * `element={<Component />}`
+  
+* Hooks
+  * useParams()
+  * useSearchParams()
+  * useLocation()
+  ```jsx
+  {
+    key: 'default',
+    pathname: '/somewhere'
+    search: '?some=search-string',
+    hash: '#howdy',
+    state: null,
+  }
+  ```
 
 ## 表单控制
 ```js
@@ -438,7 +434,7 @@ const App = () => {
 ```
 
 ## UI
-主题：配色、形状、图标、字体、动画
+主题：配色、物件形状、图片、图标、字体、动画
 ### 布局
 * Box: 默认block布局，用于包裹其他组件来使用sx属性
 * Container: 默认block布局，用于限宽居中布局

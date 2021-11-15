@@ -10,7 +10,6 @@ import { export1 , export2 as alias2 , [...] } from "module-name";
 import defaultExport, { export [ , [...] ] } from "module-name";
 import defaultExport, * as name from "module-name";
 import "module-name";
-var promise = import("module-name");//这是一个处于第三阶段的提案。
 
 // 导出单个特性
 export let name1, name2, …, nameN; // also var, const
