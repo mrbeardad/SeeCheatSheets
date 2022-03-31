@@ -22,7 +22,7 @@ cmake --install .
 ```
 ***本仓库中提供了一支C++程序`see`用于快速查看笔记：***
 它会搜索`~/.cheat/*.md`中的entry，查找匹配的entry并打印；
-每个entry以`<!-- entry begin: .* -->`的形式开头，并以`<!-- entry end -->`结尾；
+每个条目以`<!-- entry begin: .* -->`的形式开头，并以`<!-- entry end -->`结尾；
 其中`.*`表示关键字，see便会搜索其中的关键子决定是否匹配；
 详情请使用`see -h`查看。
 
@@ -108,23 +108,24 @@ cmake --install .
     > 包含gcc、gdb、openssh、openssl、tmux、zsh、git、pacman等工具使用
 
 # 底层原理
-* [信息编码](code.md)
-    > 整数之无符码与补码，浮点数之IEEE 754标准，字符之Unicode与UTF-8
-* [汇编语言](asm.md)
-    > x86-64汇编语言
-* [处理器设计](cpu.md)
-    > 逻辑电路与处理器设计，以及CPU高速缓存机制
-* [计算机组成](bus.md)
-    > 主要是总线接口与存储技术，还有显卡与显示屏工作原理
-* [操作系统](os.md)
-    > 链接、异常控制流、虚拟内存
-* [存储引擎](innodb.md)
-    > MySQL中innodb存储引擎的设计架构，包括索引与事务原理
-* [计算机网络](network.md)
-    > 自顶向下展示互联网架构
-* [信息学应用](security.md)
-    > 差错校验与加密技术
-* [数据结构与算法](dsaa.md)
+> 精华版可阅读[计科八股](interview.md)
+> * [处理器设计](cpu.md)
+>     > 逻辑电路与处理器设计，以及CPU高速缓存机制
+> * [计算机组成](bus.md)
+>     > 主要是总线接口与存储技术，还有显卡与显示屏工作原理
+> * [信息编码](code.md)
+>     > 整数之无符码与补码，浮点数之IEEE 754标准，字符之Unicode与UTF-8
+> * [汇编语言](asm.md)
+>     > x86-64汇编语言
+> * [操作系统](os.md)
+>     > 链接、异常控制流、虚拟内存
+> * [数据库存储](innodb.md)
+>     > MySQL中innodb存储引擎的设计架构，包括索引与事务原理
+> * [计算机网络](network.md)
+>     > 自顶向下展示互联网架构
+> * [信息学应用](security.md)
+>     > 差错校验与加密技术
+> * [数据结构与算法](dsaa.md)
 
 # Last but not least
 * [Markdown语法](markdown.md)

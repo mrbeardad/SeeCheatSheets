@@ -6,13 +6,24 @@ project(SeeCheatSheet VERSION 3.0)
 # prepare
 ###################################################################################################
 message("[33m===>[m You must install source-highlight libraries by your package manager!")
+message("[34m===>[m Build Type: " ${CMAKE_BUILD_TYPE})
 
 # build type
 ###################################################################################################
-if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
-    add_compile_options(-g3 -ggdb3 -rdynamic)
+if(DEFINED CMAKE_EXPORT_COMPILE_COMMANDS)
+    add_compile_options(
+        -O2
+        -Weverything
+        -Wno-c++98-compat
+        -Wno-c++98-compat-pedantic
+        -Wno-pedantic
+        -Wno-missing-prototypes
+        -Wno-padded
+        -Wno-old-style-cast
+        -Wno-global-constructors
+        -Wno-exit-time-destructors
+    )
 endif()
-message("[34m===>[m Build Type: " ${CMAKE_BUILD_TYPE})
 
 # targets
 ###################################################################################################
