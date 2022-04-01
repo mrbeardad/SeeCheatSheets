@@ -2,12 +2,18 @@
 <!-- vim-markdown-toc GFM -->
 
 - [目录](#目录)
-- [bash参数](#bash参数)
-- [特殊字符扩展](#特殊字符扩展)
-- [变量](#变量)
+- [bash命令参数](#bash命令参数)
+- [基础语法](#基础语法)
+- [命令行扩展](#命令行扩展)
+  - [花括号扩展](#花括号扩展)
+  - [波浪号扩展](#波浪号扩展)
+  - [变量/命令/算数扩展](#变量命令算数扩展)
+  - [进程扩展](#进程扩展)
+  - [字词划分](#字词划分)
+  - [路径扩展](#路径扩展)
+  - [引用移除](#引用移除)
 - [语句](#语句)
 - [常用命令](#常用命令)
-  - [内建命令](#内建命令)
   - [文件信息](#文件信息)
   - [文件日期](#文件日期)
   - [目录文件](#目录文件)
@@ -21,234 +27,179 @@
     - [awk](#awk)
     - [sed](#sed)
   - [其他命令](#其他命令)
-- [Test条件检测](#test条件检测)
 
 <!-- vim-markdown-toc -->
 
-系统可用shell见`/etc/shells`
-
-# bash参数
+# bash命令参数
 <!-- entry begin: bash set -->
-| 选项        | 功能                                                            |
-| ----------- | --------------------------------------------------------------- |
-| -c          | 执行给定命令                                                    |
-| -s          | 从标准输入读取命令                                              |
-| -u          | 未初始化变量被视作错误，同`set -u`                              |
-| -e          | 遇非零返回值则立即退出，同`set -e`                              |
-| -o pipefail | 管道命令返回值只有当所有命令返回零才返回零，同`set -o pipefail` |
+| 选项        | 功能                                                      |
+| ----------- | --------------------------------------------------------- |
+| -c          | 执行给定命令                                              |
+| -s          | 从标准输入读取命令                                        |
+| -u          | 未初始化变量被视作错误，同`set -u`                        |
+| -e          | 遇非零返回值则立即退出，同`set -e`                        |
+| -o pipefail | 管道命令只有当所有命令返回零才返回零，同`set -o pipefail` |
 <!-- entry end -->
 
-# 特殊字符扩展
-<!-- entry begin: wildchar 通配符 -->
-* 通配符：
-    * `*`       ：任意长度的任意字符
-    * `?`       ：一个任意字符
-    * `[  ]`    ：序列中一个可能的字符
-    * `[ - ]`   ：序列范围中一个可能的字符
-    * `[^ ]`    ：非序列中一个字符
-    * `{ , }`   ：序列中的字符展开
-    * `{ .. }`  ：序列范围中的字符展开
-    * `**`      ：递归目录(only zsh)
-<!-- entry end -->
+# 基础语法
+```sh
+# Simple Commands
+[!] cmd [args...] [Redirection]
+# Pipelines
+[time] Simple-Command [[| or |&] ...]
+# Lists
+Pipeline [[; or || or &&] ...]
+# Compound-Commands
+(list)
+{ list; }
+((expression))
+[[ expression ]]
+```
 
-<!-- entry begin: 括号 -->
-* 括号
-    * `( cmd; cmd; )`   ：子shell中执行，
-    * `{ cmd; cmd; }`   ：当前shell中执行
-    * `[ ]`             ：test命令别名（不推荐），最后一个参数必须为`]`
-    * `[[ ]]`           ：bash关键字（推荐），且支持`=~`匹配正则子串（括号内关闭通配符扩展），支持逻辑运算符
-    * `((expr, expr))`  ：C风格表达式。若最后一个表达式的结果为0则返回1，若为非0则返回0
-<!-- entry end -->
+| Redirection重定向 | 功能                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| `[fd]<file`       | 重定向fd到file，fd默认为0                                                          |
+| `[fd]<<EOF`       | 重定向fd到（接下来内容直到一行只有EOF的行，不包括结束符EFO），fd默认为0            |
+| `[fd]<<-EOF`      | 重定向fd到（接下来内容直到一行只有EOF的行，不包括行首的tab与结束符EFO），fd默认为0 |
+| `[fd]<<<string`   | 重定向fd到（string内容），fd默认为0                                                |
+| `[fd]>file`       | 重定向fd到file（截断），fd默认为1                                                  |
+| `[fd]>>file`      | 重定向fd到file（追加），fd默认为1                                                  |
+| `&>file`          | 重定向stdout与stderr到file（截断）                                                 |
+| `&>>file`         | 重定向stdout与stderr到file（追加）                                                 |
+| `fd1>&fd2`        | 重定向fd1到fd2                                                                     |
+| `fd<>file`        | 打开文件描述符n指向file                                                            |
 
-<!-- entry begin: ~扩展 -->
-* ~扩展
-    * `~` ：家目录
-    * `~+`：当前目录
-    * `~-`：上次目录
-<!-- entry end -->
+# 命令行扩展
+## 花括号扩展
+| 扩展前    | 扩展后     | 备注                          |
+| --------- | ---------- | ----------------------------- |
+| `{a,b,c}` | `a b c`    | 逐词扩展，可再嵌套逐词扩展    |
+| `{a-c}`   | `a b c`    | 字符序列扩展｝                |
+| `{1-3}`   | `1 2 3`    | 数字序列扩展                  |
+| `{1-3-2}` | `1 3`      | 可选设置增量，默认1或-1       |
+| `{01-9}`  | `01 02 03` | 第一个数字0开头则用零补齐宽度 |
 
-<!-- entry begin: !扩展 -->
-* !扩展：
-    * 指定历史命令
-        * `!cmd`    ：上条以`cmd`开头的命令
-        * `!-n`     ：上第n条命令
-        * `!!`      ：上第1条命令
-        * `!#`      ：当前命令
-    * 指定历史命令参数
-        * `!cmd:n` ：命令即上述历史命令（其中`!!`可简写为`!`），n即为该命令第n个参数
-        * `!^`      ：上第1条命令的第1个参数
-        * `!$`      ：上第1条命令的最后一个参数
-        * `!:n`     ：上第1条命令的第n个参数
-        * `!:n-$`   ：上第1条命令的第n个参数到最后一个参数
-<!-- entry end -->
+## 波浪号扩展
+* 波浪号扩展在变量赋值时也有效
 
-<!-- entry begin: $扩展 -->
-* `$`扩展：
-    * `$$`                            ：扩展为当前shell的PID
-    * `$!`                            ：扩展为上次后台进程的PID
-    * `$?`                            ：扩展为上次命令返回值
-    * `$*`                            ：扩展为所有参数（聚合）字符串
-    * `$@`                            ：扩展为所有参数（分离）数组
-    * `$#`                            ：扩展为参数个数（不包含命令名）
-    * `$N`                            ：扩展为bash脚本或bash函数的第N个参数，`$0`为执行的命令
-    * `$(<file)`                      ：扩展为file文件的内容
-    * `<(cmd)`                        ：将cmd的stdout定向到临时文件并替换为该文件名（作为补充放在此处）
-    * `$(cmd)`                        ：扩展为cmd的标准输出，同`` `cmd` ``
-    * `$((expr, expr))、$[expr, expr]`：扩展为C风格表达式结果
-    * `$'escap'`                      ：扩展为anscii转义后的字符
-    * `$varname、${varname}`          ：扩展为变量的值
-<!-- entry end -->
+| 扩展前  | 扩展后                | 备注                             |
+| ------- | --------------------- | -------------------------------- |
+| `~user` | `/path/t，/user/home` | ~与下个/之间的所有字符被当做user |
+| `~+`    | `/path/to/PWD`        | `$PWD`                           |
+| `~-`    | `/path/to/OLDPWD`     | `$OLDPWD`                        |
 
-<!-- entry begin: # | ! && || ; & 逻辑与执行 逻辑或执行 逻辑非执行 顺序执行 后台执行 -->
-* `#`           ：注释直到换行符
-* `空白符`      ：空格为参数分隔符，换行为执行命令行
-* `|`           ：管道连接符，**连接后的命令视作一条命令**
-* `!`           ：逻辑非执行（返回码取反），放在一条命令前
-* `&&`          ：逻辑与执行（返回码为0则才执行下条用`&&`连接的命令），放在一条命令后
-* `||`          ：逻辑或执行（返回码为非0则才执行下条用`||`连接的命令），放在一条命令后
-* `;`           ：顺序执行，放在一条命令后
-* `&`           ：后台执行，放在一条命令后
-> 使用`( cmd; cmd; )`与`{ cmd; cmd; }`也可将命令连接成一条命令
-<!-- entry end -->
+## 变量/命令/算数扩展
+* `paramter=val`
+* `array[0]=v0`
+* `array=(v0 v1 v2)`
+* `array=([A]=v0 [B]=v1 [C]=v2)`
 
-<!-- entry begin: IO重定向 I/O重定向  -->
-* I/O重定向
-    > 重定向符号放在一条命令最后，或管道符之前。[fd]表示可以省略描述符
-    * `[fd]<file`       ：重定向fd到file，fd默认为0
-    * `[fd]<<EOF`       ：重定向fd到（接下来内容直到一行只有EOF的行，不包括结束符EFO），fd默认为0
-    * `[fd]<<-EOF`      ：重定向fd到（接下来内容直到一行只有EOF的行，不包括行首的tab与结束符EFO），fd默认为0
-    * `[fd]<<<string`   ：重定向fd到（string内容），fd默认为0
-    * `[fd]>file`       ：重定向fd到file（截断），fd默认为1
-    * `[fd]>>file`      ：重定向fd到file（追加），fd默认为1
-    * `&>file`          ：重定向stdout与stderr到file（截断）
-    * `&>>file`         ：重定向stdout与stderr到file（追加）
-    * `fd1>&fd2`        ：重定向fd1到fd2
-    * `fd<>file`        ：打开文件描述符n指向file
-<!-- entry end -->
+| 扩展前                        | 备注                                                               |
+| ----------------------------- | ------------------------------------------------------------------ |
+| `${paramter}`                 | 变量名无歧义时可省略花括号，`array`当做`parameter`时值为`array[0]` |
+| `${!paramter}`                | 间接变量，大概意思即`${$paramter}`                                 |
+| `${#paramter}`                | 字符长度（支持array扩展为数组长度）                                |
+| `"${array[@]}"`               | 扩展为`"v1 v2 v3"`                                                 |
+| `"${array[*]}"`               | 扩展为`"v1" "v2" "v3"`                                             |
+| `${!array[*]}`                | 扩展为数组keys                                                     |
+| `${!array[@]}`                | 扩展为数组keys                                                     |
+| `${!prefix*}`                 | 扩展前缀为prefix的变量名                                           |
+| `${!prefix@}`                 | 扩展前缀为prefix的变量名                                           |
+| `${paramter:-word}`           | 若param为空则默认值为word                                          |
+| `${paramter:=word}`           | 若param为空则赋值其为word                                          |
+| `${paramter:?word}`           | 若param为空则打印错误消息word                                      |
+| `${paramter:+word}`           | 若param不为空则替换为word                                          |
+| `${paramter:offset:length}`   | 子串展开，可省略`:length`（支持array）                             |
+| `${paramter#pattern}`         | 删除最短的匹配头部（支持array）                                    |
+| `${paramter##pattern}`        | 删除最长的匹配头部（支持array）                                    |
+| `${paramter%pattern}`         | 删除最短的匹配尾部（支持array）                                    |
+| `${paramter%%pattern}`        | 删除最长的匹配尾部（支持array）                                    |
+| `${paramter/pattern/string}`  | 模式替换，仅替换首个匹配（支持array）                              |
+| `${paramter//pattern/string}` | 模式替换，替换全部匹配（支持array）                                |
+| `${paramter^pattern}`         | 转换为大写，仅替换首个匹配，pattern默认为`?`（支持array）          |
+| `${paramter^^pattern}`        | 转换为大写，替换全部匹配， pattern默认为`?`（支持array）           |
+| `${paramter,pattern}`         | 转换为小写，仅替换首个匹配，pattern默认为`?`（支持array）          |
+| `${paramter,,pattern}`        | 转换为小写，替换全部匹配，pattern默认为`?`（支持array）            |
+| `$(command)`                  | 替换为命令的标准输出                                               |
+| `` `command` ``               | 替换为命令的标准输出（旧式）                                       |
+| `$(<file)`                    | 替换为文件内容，更快速的`$(cat file)`                              |
+| `$((expression))`             | 参数扩展、字符扩展、命令扩展、引号删除                             |
 
-<!-- entry begin: escape 转义字符 -->
-* 转义字符
-    * `\`   ：转义所有特殊字符
-    * `" "` ：其中只保留`$扩展`、`!扩展`、`"`、`\`的功能
-    * `' '` ：其中只保留 `'` 的功能
-<!-- entry end -->
+## 进程扩展
+| 扩展前    | 备注                                         |
+| --------- | -------------------------------------------- |
+| `<(list)` | 替换为FIFO文件名，list标准输出重定向到该文件 |
+| `>(list)` | 替换为FIFO文件名，list标准输入重定向到该文件 |
 
-# 变量
-<!-- entry begin: 变量 bash -->
-* 定义变量
-    * `var=val`
-    * `array[0]=valA`
-    * `array=(valA valB valC)`
-    * `array=([0]=valA [1]=valB [2]=valC)`
-    * `env`
-    * `env VAR=VAL cmd`
-    * `export var=val`
+## 字词划分
+`Space`、`Tab`、`NewLine`将命令行划分为一个个**word**
 
-* 读取变量
-    * `${var}`                    ：读取变量值
-    * `${+var}`                   ：变量存在为1，否则为0
-    * `${array[i]}`               ：取得数组中的元素
-    * `${array[@]}`               ：取得数组中所有元素
-    * `${#var}`                   ：字符串长度
-    * `${#array[@]}`              ：取得数组的长度
-    * `${#array[i]}`              ：取得数组中某个变量的长度
-    * `${varname:-word}`          ：若不为空则返回变量，否则返回 word
-    * `${varname:=word}`          ：若不为空则返回变量，否则赋值成 word 并返回
-    * `${varname:?message}`       ：若不为空则返回变量，否则打印错误信息并退出
-    * `${varname:offset}`         ：取得字符串的子字符串（若varname为数组，则len为idx）
-    * `${varname:offset:len}`     ：取得字符串的子字符串（若varname为数组，则len为idx）
+## 路径扩展
+* 若无匹配路径则默认不扩展
 
-* 修改变量
-    > 通配符匹配
-    * `${variable#pattern}`       ： 如果变量头部匹配 pattern，则删除最小匹配部分返回剩下的
-    * `${variable##pattern}`      ： 如果变量头部匹配 pattern，则删除最大匹配部分返回剩下的
-    * `${variable%pattern}`       ： 如果变量尾部匹配 pattern，则删除最小匹配部分返回剩下的
-    * `${variable%%pattern}`      ： 如果变量尾部匹配 pattern，则删除最大匹配部分返回剩下的
-    * `${variable/pattern/str}`   ： 将变量中第一个匹配 pattern 的替换成 str，并返回
-    * `${variable//pattern/str}`  ： 将变量中所有匹配 pattern 的地方替换成 str 并返回
-    * `eval \$$var_cmd`           ： 将参数进行shell扩展后再执行
-<!-- entry end -->
+| 扩展前 | 备注               |
+| ------ | ------------------ |
+| `*`    | 任意长的任意字符   |
+| `?`    | 一个任意字符       |
+| `[]`   | 同正则表达式的`[]` |
+
+## 引用移除
+* 当前面所有扩展完成后，自动将多余引用符号删除
+* 引用符号包括`\`、`" "`、`' '`用于转义特殊字符
+* 其中`" "`中还会保留变量扩展、命令替换、算数扩展
 
 # 语句
-<!-- entry begin: function 函数 -->
-* 定义函数
+* **分支**
 ```sh
-function funcname() {
-    statements
-    return val
-}
-```
+if list; then
+    ...
+elif list; then
+    ...
+else
+    ...
+fi
 
-* 调用函数
-```sh
-    funcname  arg1  arg2
-```
-<!-- entry end -->
-
-<!-- entry begin: 语句 -->
-* if分支语句
-```sh
-    if cmd ;then
-        #...
-    elif [[ test ]] ;then
-        #...
-    else
-        #...
-    fi
-```
-
-* 循环语句
-```sh
-for i in List ;do
-    for (( ; ; )) ;do
-        while cmd ;do
-            until [[ test ]] ;do
-                #...
-            done
-        done
-    done
-done
-```
-
-* select选择语句
-```sh
-PS3=
-select i in List ;do
-    #...
-done
-# 死循环选择，一般嵌套case语句
-# 输出PS3提示，选择数字并将对应List中字符串赋值给i
-```
-
-* case多分支
-```sh
-case $i in
-v1)     statement ;;    # 直接结束
-v2|v3)  statement ;;&   # 测试下个子句是否匹配
-*)      statement ;&    # 直接执行下个子句
+case word in
+pattern)
+    list ;&    # fallthrough
+pattern|pattern)
+    list ;;    # break
 esac
 ```
 
-* 控制跳转
-    * continue
-    * break
-<!-- entry end -->
+* **循环**
+```sh
+while list; do
+done
+
+until list; do
+done
+
+for name in word... ; do
+done
+
+for (( expr1; expr2; expr3 )); do
+done
+
+# 打印$PS3提示用户选择，一直循环直到执行break
+select name in word ; do
+    break
+done
+```
+
+* **函数**
+```sh
+# 返回值为最后一个命令返回值
+name() compound-command [redirection]
+
+# 复合命令包括：
+(list)              # 子shell中执行
+{ list; }           # 当前shell执行
+((expression))      # C风格表达式，true返回0，false返回非零
+[[ expression ]]    # test，内部禁用通配符扩展
+```
 
 # 常用命令
-## 内建命令
-<!-- entry begin: bash builtin -->
-* bash部分内建命令
-    * :             ：空白命令，返回零
-    * alias         ：命令别名
-    * source        ：读取指定配置，也可用`.`代替
-    * history       ：命令历史
-    * reset         ：重置因读取二进制文件导致的乱码
-    * exit          ：退出bash界面
-    * exec          ：调用exec()加载执行程序
-    * wait          ：等待指定的子进程退出
-    * sleep         ：休眠指定时间
-<!-- entry end -->
-
 <!-- entry begin: getopts -->
 * getopts optstring name
     > * 命令行参数    ：在shell中执行一条命令的所有字符，即脚本中的变量`$0` `$1`等。类型有：执行命令、选项、选项参数、命令参数  
@@ -704,51 +655,3 @@ esac
     * -l        ：可以使用数学库函数 s(sin x)，c(cos x)，a(arctan x)，l(ln x)，e(e^x)
     * 特殊变量  ：scale，last，ibase，obase，支持^运算符求幂
 <!-- entry end -->
-
-
-# Test条件检测
-<!-- entry begin: test operator -->
-* 逻辑运算符：
-    * `!`
-    * `&&`
-    * `||`
-
-* 字符串比较：
-    * `=~` `==` `!=` `<` `>`
-        > ==支持通配符，=~支持正则表达式
-    * -n    ：不为空
-    * -z    ：为空
-
-* 算术比较
-    * -eq、-ne
-    * -gt、-ge
-    * -lt、-le
-
-* 文件判断
-    * -e    ：存在
-    * -s    ：存在且size不为0
-    * -N    ：修改时间新于读取时间
-    * -nt   ：file1比file2新（mtime）
-    * -ot   ：file1比file2旧（mtime）
-    * -ef   ：两文件为同一文件的硬连接
-
-* 文件类型
-    * -b    ：块文件
-    * -c    ：字符文件
-    * -d    ：目录
-    * -f    ：普通文件
-    * -L    ：符号链接
-    * -S    ：socket
-    * -p    ：pipe
-
-* 文件权限
-    * -r    ：可读
-    * -w    ：可写
-    * -x    ：可执行
-    * -u    ：SUID
-    * -g    ：SGID
-    * -k    ：SBIT
-    * -O    ：onwer为EUID
-    * -G    ：group为EGID
-<!-- entry end -->
-
