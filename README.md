@@ -8,7 +8,7 @@
 - [Server](#server)
 - [Linux](#linux)
 - [底层原理](#底层原理)
-- [Last but not least](#last-but-not-least)
+- [杂项](#杂项)
 
 # 安装
 ```sh
@@ -99,13 +99,13 @@ cmake --install .
 
 # Linux
 * [Linux知识体系](linux.md)
-    > Linux的启动流程，以及整个系统知识体系
+    > 从Linux启动流程开始了解整个Linux系统知识体系
 * [Linux系统接口](apue.md)
     > 大部分都符合POSIX、XSI或USU规范
-* [Shell脚本](bash.md)
-    > bash语法、内置命令以及一些unix环境基础命令
+* [Shell命令行](bash.md)
+    > bash基础语法与一些内建命令
 * [开发者工具](devtool.md)
-    > 包含gcc、gdb、openssh、openssl、tmux、zsh、git、pacman等工具使用
+    > 一些常用的linux命令与工具
 
 # 底层原理
 > 精华版可阅读[计科八股](interview.md)
@@ -127,7 +127,7 @@ cmake --install .
 >     > 差错校验与加密技术
 > * [数据结构与算法](dsaa.md)
 
-# Last but not least
+# 杂项
 * [Markdown语法](markdown.md)
 * [多种正则语法](regex.md)
 * [比特币系统](bitcoin.md)

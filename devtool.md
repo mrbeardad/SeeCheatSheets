@@ -7,6 +7,8 @@
 - [gpg](#gpg)
 - [curl](#curl)
 - [git](#git)
+- [awk](#awk)
+- [sed](#sed)
 
 # gcc
 <!-- entry begin: gcc -->
@@ -207,4 +209,111 @@ curl cht.sh/<lang>/<question with + instead of space>
 
 *.gitkeep*
 * 作为一个约定俗成的文件名，用来保留空目录
+<!-- entry end -->
+
+<!-- entry begin: awk -->
+# awk
+```sh
+awk 'pattern{statment;} 模式{语句;}' file # 若未指定file则从stdin读取数据
+# 选项
+-F  # 指定分隔符，默认[[:space:]]
+-f  # 指定执行脚本文件
+-v  # 预先从Shell设置变量
+```
+**匹配模式**
+* BEGIN
+* END
+* /pattern/
+* !/pattern/
+* /pattern1/&&/pattern2/
+* /pattern1/||/pattern2/
+* expression
+
+**变量**
+* `var=val` `map[key]=val`
+* 变量无需声明，初值为空(string)或0(int)
+
+| 内置变量   | 描述                          |
+| ---------- | ----------------------------- |
+| ARGC       | awk参数个数                   |
+| ARGV       | awk参数map                    |
+| RS         | 行分隔符(默认`newline`)       |
+| FS         | 字段分隔符(默认`Space`)       |
+| ORS        | 输出的行分隔符(默认`newline`) |
+| OFS        | 输出的字段分隔符(默认`,`)     |
+| NR         | 行数                          |
+| FNR        | 在当前文件中的行数            |
+| NF         | 字段数                        |
+| OFMT       | 数字输出格式(默认`%.6g`)      |
+| IGNORECASE | 为true则忽略大小写            |
+
+**表达式**
+| 操作符                            | 描述               |
+| --------------------------------- | ------------------ |
+| `(...)`                           | 分组               |
+| `$`                               | 字段引用，`$0`整行 |
+| `++` `--`                         | 自增自减           |
+| `^`                               | 指数运算           |
+| `+` `-` `!`                       | 正、负、逻辑非     |
+| `*` `/` `%`                       | 乘 除 模           |
+| `+` `-`                           | 加 减              |
+| `space`                           | 字符连接           |
+| `|` `|&`                          | 管道连接           |
+| `<` `>` `<=` `>=` `==` `!=`       | 关系运算           |
+| `~` `!~`                          | 正则匹配           |
+| `in`                              | 数组成员           |
+| `&&`                              | 逻辑与             |
+| `||`                              | 逻辑或             |
+| `?:`                              | 条件运算           |
+| `=` `+=` `-=` `*=` `/=` `%=` `^=` | 赋值               |
+
+**IO语句**
+```sh
+print expr-list       # expr-list中表达式以逗号分隔，打印每个表达式以OFS，结尾ORS
+printf fmt, expr-list # fmt为C风格
+
+print ... >file
+print ... >>file
+print ... | "command"
+print ... |& "command"
+
+getline                     # 立即读取缓冲区中下一行，并覆盖当前字段引用
+getline var                 # 同上，但将其赋值到变量var
+getline <file               # 读取文件到当前字段引用
+getline var <file           # 读取文件到变量var
+"command" | getline [var]   # 读取command标准输出
+"command" |& getline [var]  # 读取command标准输出与标准错误
+
+next  # 立即处理下行，跳过后续处理
+```
+<!-- entry end -->
+
+<!-- entry begin: sed -->
+# sed
+```sh
+sed 'pattern{statment;}; 模式{语句;}' file # 若未指定file则从stdin读取数据
+sed -e 'pattern statment' -e '模式 语句' file # a i c r w操作无法共用模式匹配
+
+-n  # 仅显示a i c r p操作的文本行
+-i  # 修改原文件
+-r  # 支持扩展正则表达式
+```
+**模式匹配**
+* /pattern/
+* !/pattern/
+* /pattern/I
+* /pattern/,m
+* n,m
+
+**操作**
+| 操作符      | 功能                                                        |
+| ----------- | ----------------------------------------------------------- |
+| a i         | 行后或行前添加字符串                                        |
+| c           | 会把所有匹配行转换成一个字符串                              |
+| r w         | 读取file到行后，写入匹配行到file                            |
+| p           | 打印本行                                                    |
+| s/pat/repl/ | 文本替换，repl中`&`代表匹配串，默认首次替换，g全部，Ng第N个 |
+| d           | 删除匹配行                                                  |
+| n           | 立即处理下一行，跳过后续操作                                |
+| q           | 退出                                                        |
 <!-- entry end -->
