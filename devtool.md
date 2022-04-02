@@ -306,6 +306,7 @@ sed -e 'pattern statment' -e '模式 语句' file # a i c r w操作无法共用�
 * /pattern/I
 * /pattern/,m
 * n,m
+* ^,$
 
 **操作**
 | 操作符      | 功能                                                        |

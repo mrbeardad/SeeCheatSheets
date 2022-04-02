@@ -1,7 +1,6 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
-- [目录](#目录)
 - [bash参数](#bash参数)
 - [基础语法](#基础语法)
 - [命令行扩展](#命令行扩展)
@@ -30,9 +29,9 @@
 # 基础语法
 ```sh
 # Simple Commands
-[!] cmd [args...] [Redirection]
+cmd [args...] [Redirection]
 # Pipelines
-[time] Simple-Command [[| or |&] ...]
+[time] [!] Simple-Command [[| or |&] ...]
 # Lists
 Pipeline [[; or || or && or &] ...]
 # Compound-Commands
