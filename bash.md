@@ -2,21 +2,21 @@
 <!-- vim-markdown-toc GFM -->
 
 - [目录](#目录)
-- [bash命令参数](#bash命令参数)
+- [bash参数](#bash参数)
 - [基础语法](#基础语法)
 - [命令行扩展](#命令行扩展)
   - [花括号扩展](#花括号扩展)
   - [波浪号扩展](#波浪号扩展)
   - [变量/命令/算数扩展](#变量命令算数扩展)
   - [进程扩展](#进程扩展)
-  - [字词划分](#字词划分)
+  - [字词分割](#字词分割)
   - [路径扩展](#路径扩展)
   - [引用移除](#引用移除)
 - [语句](#语句)
 
 <!-- vim-markdown-toc -->
 
-# bash命令参数
+# bash参数
 <!-- entry begin: bash set -->
 | 选项        | 功能                                                      |
 | ----------- | --------------------------------------------------------- |
@@ -36,17 +36,17 @@
 # Lists
 Pipeline [[; or || or && or &] ...]
 # Compound-Commands
-(list)
-{ list; }
-((expression))
-[[ expression ]]
+(list)              # 子shell中执行
+{ list; }           # 当前shell执行
+((expression))      # C风格表达式，true返回0，false返回非零
+[[ expression ]]    # test，内部禁用字词分割与路径扩展
 ```
 
 | Redirection重定向 | 功能                                                                               |
 | ----------------- | ---------------------------------------------------------------------------------- |
 | `[fd]<file`       | 重定向fd到file，fd默认为0                                                          |
 | `[fd]<<EOF`       | 重定向fd到（接下来内容直到一行只有EOF的行，不包括结束符EFO），fd默认为0            |
-| `[fd]<<-EOF`      | 重定向fd到（接下来内容直到一行只有EOF的行，不包括行首的tab与结束符EFO），fd默认为0 |
+| `[fd]<<-EOF`      | 重定向fd到（接下来内容直到一行只有EOF的行，不包括行首的tab与结束符EOF），fd默认为0 |
 | `[fd]<<<string`   | 重定向fd到（string内容），fd默认为0                                                |
 | `[fd]>file`       | 重定向fd到file（截断），fd默认为1                                                  |
 | `[fd]>>file`      | 重定向fd到file（追加），fd默认为1                                                  |
@@ -108,13 +108,13 @@ getopts optstring name [args]
 | ----------------------------- | ------------------------------------------------------------------ |
 | `${paramter}`                 | 变量名无歧义时可省略花括号，`array`当做`parameter`时值为`array[0]` |
 | `${!paramter}`                | 间接变量，大概意思即`${$paramter}`                                 |
-| `${#paramter}`                | 字符长度（支持array扩展为数组长度）                                |
-| `"${array[@]}"`               | 扩展为`"v1 v2 v3"`                                                 |
-| `"${array[*]}"`               | 扩展为`"v1" "v2" "v3"`                                             |
+| `${#paramter}`                | 字符长度（支持`array[@]`与`array[*]`扩展为数组长度）               |
+| `"${array[*]}"`               | 扩展为`"v1 v2 v3"`                                                 |
+| `"${array[@]}"`               | 扩展为`"v1" "v2" "v3"`                                             |
+| `${!prefix*}`                 | 扩展前缀为prefix的环境变量名                                       |
+| `${!prefix@}`                 | 扩展前缀为prefix的环境变量名                                       |
 | `${!array[*]}`                | 扩展为数组keys                                                     |
 | `${!array[@]}`                | 扩展为数组keys                                                     |
-| `${!prefix*}`                 | 扩展前缀为prefix的变量名                                           |
-| `${!prefix@}`                 | 扩展前缀为prefix的变量名                                           |
 | `${paramter:-word}`           | 若param为空则默认值为word                                          |
 | `${paramter:=word}`           | 若param为空则赋值其为word                                          |
 | `${paramter:?word}`           | 若param为空则打印错误消息word                                      |
@@ -124,16 +124,16 @@ getopts optstring name [args]
 | `${paramter##pattern}`        | 删除最长的匹配头部（支持array）                                    |
 | `${paramter%pattern}`         | 删除最短的匹配尾部（支持array）                                    |
 | `${paramter%%pattern}`        | 删除最长的匹配尾部（支持array）                                    |
-| `${paramter/pattern/string}`  | 模式替换，仅替换首个匹配（支持array）                              |
-| `${paramter//pattern/string}` | 模式替换，替换全部匹配（支持array）                                |
 | `${paramter^pattern}`         | 转换为大写，仅替换首个匹配，pattern默认为`?`（支持array）          |
 | `${paramter^^pattern}`        | 转换为大写，替换全部匹配， pattern默认为`?`（支持array）           |
 | `${paramter,pattern}`         | 转换为小写，仅替换首个匹配，pattern默认为`?`（支持array）          |
 | `${paramter,,pattern}`        | 转换为小写，替换全部匹配，pattern默认为`?`（支持array）            |
-| `$(command)`                  | 替换为命令的标准输出                                               |
-| `` `command` ``               | 替换为命令的标准输出（旧式）                                       |
-| `$(<file)`                    | 替换为文件内容，更快速的`$(cat file)`                              |
-| `$((expression))`             | 参数扩展、字符扩展、命令扩展、引号删除                             |
+| `${paramter/pattern/string}`  | 模式替换，仅替换首个匹配（支持array）                              |
+| `${paramter//pattern/string}` | 模式替换，替换全部匹配（支持array）                                |
+| `$(command)`                  | 命令替换，替换为命令的标准输出                                     |
+| `` `command` ``               | 命令替换，替换为命令的标准输出（旧式）                             |
+| `$(<file)`                    | 命令替换，替换为文件内容，更快速的`$(cat file)`                    |
+| `$((expression))`             | 算数扩展                                                           |
 
 ## 进程扩展
 | 扩展前    | 备注                                         |
@@ -141,7 +141,7 @@ getopts optstring name [args]
 | `<(list)` | 替换为FIFO文件名，list标准输出重定向到该文件 |
 | `>(list)` | 替换为FIFO文件名，list标准输入重定向到该文件 |
 
-## 字词划分
+## 字词分割
 `Space`、`Tab`、`NewLine`将命令行划分为一个个**word**
 
 ## 路径扩展

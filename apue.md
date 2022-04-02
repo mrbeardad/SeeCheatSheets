@@ -1,6 +1,7 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
+- [目录](#目录)
 - [基础知识](#基础知识)
   - [UNIX架构](#unix架构)
   - [线程阻塞](#线程阻塞)
@@ -29,7 +30,7 @@
   - [文件权限](#文件权限)
   - [文件操作](#文件操作)
   - [文件类型](#文件类型)
-    - [目录](#目录)
+    - [目录](#目录-1)
     - [符号链接](#符号链接)
     - [设备文件](#设备文件)
     - [普通文件](#普通文件)
@@ -54,7 +55,7 @@
 <!-- entry begin: 阻塞 block -->
 * 有些文件并非立即可用，需要等待，期间调用**线程**（而非进程）会阻塞。
 * 互斥锁机制（文件记录锁、线程同步锁）也会使线程阻塞
-* 当等待某些异步事件发生时，如调用`wait`、`sleep`、`pause`、`sigsuspend`、`sigwait`也会主动进入阻塞状态
+* 当等待某些异步事件发生时，如调用`wait`、`sleep`、`pause`、`sigwait`、`sigsuspend`也会主动进入阻塞状态
 <!-- entry end -->
 
 ## 标准与限制
@@ -149,7 +150,7 @@ void    endspent(void);             // 关闭/etc/shadow
 ## group
 <!-- entry begin: group getgrgid getgrnam getgrent setgrent endgrent getgroups -->
 | 限制宏      | 说明           |
-|-------------|----------------|
+| ----------- | -------------- |
 | NGROUPS_MAX | 附数组最大数量 |
 
 ```c
@@ -183,7 +184,7 @@ int     setlogmask(int maskpri);                                // 返回之前m
 int     LOGMASK(int priority);                                  // 返回将pri转换的maskpri
 ```
 | option     | 说明                                    |
-|------------|-----------------------------------------|
+| ---------- | --------------------------------------- |
 | LOG_PID    | 记录日志时包含PID信息                   |
 | LOG_CONS   | 若无法连接日志管理服务则打印到控制台    |
 | LOG_PERROR | 额外打印到标准错误                      |
@@ -191,7 +192,7 @@ int     LOGMASK(int priority);                                  // 返回将pri�
 | LOG_ODELAY | 延迟打开UNIX socket直到第一次记录日志时 |
 
 | facility     | 说明                          |
-|--------------|-------------------------------|
+| ------------ | ----------------------------- |
 | LOG_AUDIT    | 审计检查设施                  |
 | LOG_AUTH     | 授权程序：login、su、getty等  |
 | LOG_AUTHPRIV | 同上，但写入日志时有限制      |
@@ -218,7 +219,7 @@ int     LOGMASK(int priority);                                  // 返回将pri�
 | LOG_LOCAL7   | 保留本地使用                  |
 
 | level       | 说明               |
-|-------------|--------------------|
+| ----------- | ------------------ |
 | LOG_DEBUG   | 调试消息           |
 | LOG_INFO    | 信息性消息         |
 | LOG_NOTICE  | 正常但重要消息     |
@@ -262,7 +263,7 @@ time_t  mktime(tm* tmptr);                                                      
 
 <!-- entry begin: strftime format date -->
 | strftime format | 说明            | Thu Jan 19 21:24:52 EST 2012 |
-|-----------------|-----------------|------------------------------|
+| --------------- | --------------- | ---------------------------- |
 | %C              | 年前两位        | 20                           |
 | %y              | 年后两位        | 12                           |
 | %Y              | 年              | 2012                         |
@@ -417,7 +418,7 @@ int     clock_settime(clockid_t clock_id, timespec* tsp);    // 返回0
 
 <!-- entry begin: clock_gettime clock_settime clock_getres  -->
 | clock_id                 | 说明                           |
-|--------------------------|--------------------------------|
+| ------------------------ | ------------------------------ |
 | CLOCK_REALTIME           | 系统日期时间计时器（系统时间） |
 | CLOCK_MONOTONIC          | 系统开机时间计时器（单调时间） |
 | CLOCK_PROCESS_CPUTIME_ID | 进程CPU时间                    |
@@ -470,27 +471,27 @@ int     WCOREDUMP(int status);          // 若产生core则返回非0
 
 <!-- entry begin: waitpid -->
 | waitpid pid | 说明                                  |
-|-------------|---------------------------------------|
+| ----------- | ------------------------------------- |
 | `pid > 0`   | 等待指定子进程                        |
 | `pid < -1`  | 等待PGID为pid绝对值的进程组中的子进程 |
 | `pid == 0`  | 等待同进程组中的子进程                |
 | `pid == -1` | 等待任一子进程                        |
 
 | waitpid options | 说明                                   |
-|-----------------|----------------------------------------|
+| --------------- | -------------------------------------- |
 | WNOHANG         | 子进程状态若非立即可用，则直接返回     |
 | WUNTRACED       | 任一子进程处于停止状态，且尚未报告状态 |
 | WCONTINUED      | 任一子进程停止后已继续，且尚未报告状态 |
 <!-- entry end -->
 <!-- entry begin: waitid -->
 | waitid idtype | 说明                   |
-|---------------|------------------------|
+| ------------- | ---------------------- |
 | P_PID         | 指定id表示PID          |
 | P_PGID        | 指定id表示PGID         |
 | P_ALL         | 忽略id并等待任一子进程 |
 
 | waitid options | 说明                               |
-|----------------|------------------------------------|
+| -------------- | ---------------------------------- |
 | WEXITED        | 等待进程正常退出或信号终止         |
 | WSTOPPED       | 等待进程停止                       |
 | WCONTINUED     | 等待进程停止后继续                 |
@@ -562,12 +563,15 @@ int         pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*c
 
 ## 信号处理
 <!-- entry begin: signal_names strsignal sigemptyset sigfillset sigaddset sigdelset sigismember kill raise sigqueue pthread_kill sigqueue pthread_kill sigpending sigprocmask pthread_sigmask signal sigaction -->
-安全处理信号：
-* 阻塞所有信号
-* 循环处理不排队的信号表示的事件
+安全处理信号首要解决问题是防止handler在执行某段代码时被启动
+* `sigprocmask`阻塞handler处理的信号防止其被调用，从而创建保护区（类似互斥锁）
+* `sigsuspend`原子性阻塞线程并恢复SIGNAL_MASK（类似条件量）
+
+其次
+* 信号不排队所以不能确定信号代表的事件发生了多少次，尽可能多的处理
 * 保存和恢复errno
-* 只调用异步安全函数
-* `volatile sig_atomic_t`修饰共享变量
+* 调用异步安全函数，否则小心使用`volatile sig_atomic_t`全局变量
+
 ```c
 #include <string.h>
 char*   strsignal(int signo);                                           // 返回解释该信号的字符串
@@ -593,13 +597,8 @@ int     sigprocmask(int how, const sigset_t* set, sigset_t* oldset);    // 返�
 int     pthread_sigmask(int how, const sigset_t* set, sigset_t* oleset);// 返回0。how可以为SIG_BLOCK、SIG_UNBLOCK、SIG_SETMASK之一，错误返回errno
 
 /* 其他与信号有关的函数 */
-int     sigwait(const sigset_t* set, int* signop);                      // 返回0
-int     sigsuspend(const sigset_t* mask);                               // 返回0。
-// 等价于原子版本的
-// sigprocmask(SIG_SETMASK, &mask, &old); pause(); sigprocmask(SIG_SETMASK, &old, NULL);
-// 类似线程同步技术：
-// 把sigprocmask()当互斥锁，阻塞目标信号
-// 把sigsuspend()当条件变量，解除阻塞信号并阻塞线程
+int     sigwait(const sigset_t* set, int* signop);                      // 返回0。阻塞线程直到接收到set中的信号，处理后返回
+int     sigsuspend(const sigset_t* mask);                               // 返回0。阻塞线程直到接收到set中的信号，处理后返回。线程阻塞时会先阻塞set中的信号，返回时恢复（原子性）
 
 #include <unistd.h>
 int             pause(void)                                             // 返回-1且errno置为EINTR。只有执行信号处理返回时返回
@@ -615,7 +614,7 @@ int             system(const char* cmdstring);                          // 返�
 
 <!-- entry begin: kill -->
 | kill pid    | 说明                                        |
-|-------------|---------------------------------------------|
+| ----------- | ------------------------------------------- |
 | `pid > 0`   | 发送给指定进程                              |
 | `pid < -1`  | 发送给PGID等于pid绝对值的进程组中的所有进程 |
 | `pid == 0`  | 发送给同进程组所有有权限发送的进程          |
@@ -645,7 +644,7 @@ struct siginfo_t
 };
 ```
 | sigaction sa_flag | 说明                                                                               |
-|-------------------|------------------------------------------------------------------------------------|
+| ----------------- | ---------------------------------------------------------------------------------- |
 | SA_SIGINFO        | 使用sa_sigaction代替sa_handler                                                     |
 | SA_RESTART        | 自动重启中断的系统调用                                                             |
 | SA_INTERRUPT      | 不自动重启中断的系统调用（默认重启）                                               |
@@ -676,7 +675,7 @@ int     getpriority(int which, id_t who);               // 返回友好值。若
 int     setpriority(int which, id_t who, int value);    // 返回0。
 ```
 | rlimit resource   | 说明                            |
-|-------------------|---------------------------------|
+| ----------------- | ------------------------------- |
 | RLIMIT_AS         | 进程虚拟内存最大长度            |
 | RLIMIT_MEMLOCK    | 进程调用mlock()能锁住的最大内存 |
 | RLIMIT_RSS        | 进程最大驻留内存长度            |
@@ -691,7 +690,7 @@ int     setpriority(int which, id_t who, int value);    // 返回0。
 | RLIMIT_NPROC      | 实际用户可拥有的最大进程数      |
 
 | setpriority which | 说明                          |
-|-------------------|-------------------------------|
+| ----------------- | ----------------------------- |
 | PRIO_PROCESS      | 指定who为PID（0代表调用进程） |
 | PRIO_PGRP         | 指定who为PGID                 |
 | PRIO_USER         | 指定who为SID                  |
@@ -707,7 +706,7 @@ int     dlclose(void* handle);                      // 成功返回0，出错返
 char*   dlerror(void);                              // 返回上面三个函数出错信息，若无错则返回NULL
 ```
 | dlopen flag | 解释                                        |
-|-------------|---------------------------------------------|
+| ----------- | ------------------------------------------- |
 | RTLD_LAZY   | 过程引用延迟绑定（变量引用仍立即解析）      |
 | RTLD_NOW    | 立即绑定（环境变量LD_BIND_NOW非空也是如此） |
 <!-- entry end -->
@@ -790,7 +789,7 @@ int     fchownat(int fd, const char* pathname, uid_t owner, gid_t group, int fla
 
 <!-- entry begin: access mode -->
 | access mode | 说明           |
-|-------------|----------------|
+| ----------- | -------------- |
 | F_OK        | 文件是否存在   |
 | R_OK        | 文件是否可读   |
 | W_OK        | 文件是否可写   |
@@ -799,7 +798,7 @@ int     fchownat(int fd, const char* pathname, uid_t owner, gid_t group, int fla
 
 <!-- entry begin: chmod mode -->
 | chmod mode | 说明 |
-|------------|------|
+| ---------- | ---- |
 | S_ISUID    | 4000 |
 | S_ISGID    | 2000 |
 | S_ISVTX    | 1000 |
@@ -876,7 +875,7 @@ unsigned int    minor(dev_t st_rdev);
 ### 普通文件
 <!-- entry begin: open openat creat fcntl close dup dup2 lseek read write pread pwrite truncate ftruncate sync fsync fdatasync -->
 | 限制宏       | 说明                                                    |
-|--------------|---------------------------------------------------------|
+| ------------ | ------------------------------------------------------- |
 | _PC_OPEN_MAX | 同时打开文件的最大数量，即文件描述符范围[0, OPEN_MAX-1] |
 | _PC_NAME_MAX | 文件名最大长度                                          |
 | _PC_PATH_MAX | 路径名最大长度                                          |
@@ -912,7 +911,7 @@ int     fdatasync(int fd);                                              // 返�
 
 <!-- entry begin: open oflag -->
 | open flag   | 说明                                                                               |
-|-------------|------------------------------------------------------------------------------------|
+| ----------- | ---------------------------------------------------------------------------------- |
 | O_RDONLY    | 只读模式                                                                           |
 | O_WRONLY    | 只写模式                                                                           |
 | O_RDWR      | 读写模式                                                                           |
@@ -933,7 +932,7 @@ int     fdatasync(int fd);                                              // 返�
 
 <!-- entry begin: fcntl cmd flock -->
 | fcntl cmd       | 说明                                                                                          |
-|-----------------|-----------------------------------------------------------------------------------------------|
+| --------------- | --------------------------------------------------------------------------------------------- |
 | F_DUPFD         | 返回新描述符。指定arg为期望新描述符。复制文件描述符，并清除FD_CLOEXEC                         |
 | F_DUPFD_CLOEXEC | 返回新描述符。指定arg为期望新描述符。复制文件描述符，并置位FD_CLOEXEC                         |
 | F_GETFD         | 返回文件描述符标识                                                                            |
@@ -958,7 +957,7 @@ struct flock
 
 <!-- entry begin: lseek whence -->
 | whence   | 说明       |
-|----------|------------|
+| -------- | ---------- |
 | SEEK_SET | 文件开始处 |
 | SEEK_CUR | 当前位置   |
 | SEEK_END | 文件结尾处 |
@@ -967,7 +966,7 @@ struct flock
 ### 管道
 <!-- entry begin: pipe popen pclose -->
 | 限制         | 说明                                                 |
-|--------------|------------------------------------------------------|
+| ------------ | ---------------------------------------------------- |
 | _PC_PIPE_BUF | 内核管道缓冲队列的大小，即能原子性写入的最大字节长度 |
 ```c
 // 注意：使用两个管道与协同进程交流时，使用标准I/O可能会因为全缓冲而导致死锁（主进程没写完就开始读）
@@ -1020,7 +1019,7 @@ void freeaddrinfo(addrinfo* ai);    // 指定ai为getaddrinfo返回的res用于�
 const char* gai_strerrot(int errno);// 返回出错信息字符串。指定errno为getaddrinfo返回的错误码
 ```
 | addrinfo ai_flags | 说明                                           |
-|-------------------|------------------------------------------------|
+| ----------------- | ---------------------------------------------- |
 | AI_ADDRCONFIG     | 当存在IPv4地址时才返回IPv4，IPv6同理           |
 | AI_V4MAPPED       | 若为IPv6地址则返回映射到IPv6格式的IPv4地址     |
 | AI_ALL            | 查找IPv4和IPv6（仅用于AI_V4MAPPED）            |
@@ -1030,7 +1029,7 @@ const char* gai_strerrot(int errno);// 返回出错信息字符串。指定errno
 | AI_NUMERICSERV    | 强制指定服务名用数字端口号                     |
 
 | getnameinfo flag | 说明                                     |
-|------------------|------------------------------------------|
+| ---------------- | ---------------------------------------- |
 | NI_DGRAM         | 服务基于数据报而非流                     |
 | NI_NAMEREQD      | 若找不到主机名则出错                     |
 | NI_NOFQDN        | 若为本地主机则返回全限定域名的节点名部分 |
@@ -1056,7 +1055,7 @@ int     sockmark(int sockfd);       // 若下个读取字节为外带数据返�
 <!-- entry end -->
 套接字接口调用流程：
 | 函数           | 网络服务端 | 网络客户端 | UNIX域服务端 | UNIX域客户端 |
-|----------------|------------|------------|--------------|--------------|
+| -------------- | ---------- | ---------- | ------------ | ------------ |
 | socket         | 1          | 1          | 1            | 1            |
 | bind           | 1          | 1/0        | 1            | 0            |
 | listen         | 1          | 0          | 1            | 0            |
@@ -1068,7 +1067,7 @@ int     sockmark(int sockfd);       // 若下个读取字节为外带数据返�
 
 <!-- entry begin: domain socket addrinfo -->
 | domain    | 说明         |
-|-----------|--------------|
+| --------- | ------------ |
 | AF_INET   | IPv4因特网域 |
 | AF_INET6  | IPv6因特网域 |
 | AF_UNIX   | UNIX域       |
@@ -1076,7 +1075,7 @@ int     sockmark(int sockfd);       // 若下个读取字节为外带数据返�
 <!-- entry end -->
 <!-- entry begin: socktype socket addrinfo -->
 | socktype       | 说明                                         |
-|----------------|----------------------------------------------|
+| -------------- | -------------------------------------------- |
 | SOCK_DGRAM     | 无连接的、不可靠的、固定长度的报文传递       |
 | SOCK_STREAM    | 面向连接的、可靠的、连续的流传递             |
 | SOCK_SEQPACKET | 面向连接的、可靠的、固定长度的报文传递       |
@@ -1084,7 +1083,7 @@ int     sockmark(int sockfd);       // 若下个读取字节为外带数据返�
 <!-- entry end -->
 <!-- entry begin: protocol socket addrinfo -->
 | protocol     | 说明       |
-|--------------|------------|
+| ------------ | ---------- |
 | IPPROTO_IP   | IPv4       |
 | IPPROTO_IPV6 | IPv6       |
 | IPPROTO_ICMP | ICMP       |
@@ -1095,7 +1094,7 @@ int     sockmark(int sockfd);       // 若下个读取字节为外带数据返�
 
 <!-- entry begin: socket send -->
 | send flag     | 说明                             |
-|---------------|----------------------------------|
+| ------------- | -------------------------------- |
 | MSG_CONFIRM   | 提供链路层反馈以保持地址映射有效 |
 | MSG_DONTROUTE | 勿将数据包路由出本地网络         |
 | MSG_DONTWAIT  | 非阻塞操作（等价O_NONBLOCK）     |
@@ -1106,7 +1105,7 @@ int     sockmark(int sockfd);       // 若下个读取字节为外带数据返�
 <!-- entry end -->
 <!-- entry begin: socket recv -->
 | recv flag        | 说明                                                      |
-|------------------|-----------------------------------------------------------|
+| ---------------- | --------------------------------------------------------- |
 | MSG_CMSG_CLOEXEC | 为UNIX域套接字上接收的描述符设置执行时关闭标识            |
 | MSG_DONTWAIT     | 非阻塞操作（等价O_NONBLOCK）                              |
 | MSG_ERRQUEUE     | 接收错误信息作为辅助数据                                  |
@@ -1155,13 +1154,13 @@ struct winsize                                              // 获取winsize：i
 
 <!-- entry begin: tcsetattr termios stty -->
 | tcsetattr opt | 说明                         |
-|---------------|------------------------------|
+| ------------- | ---------------------------- |
 | TCSANOW       | 更改立即发生                 |
 | TCSADRAIN     | 发送所有输出后更改才发生     |
 | TCASFLUSH     | 同上，且丢弃未读取的输入数据 |
 
 | c_iflag | 说明                                                |
-|---------|-----------------------------------------------------|
+| ------- | --------------------------------------------------- |
 | BRKINT  | 清空输入输出队列，并发射SIGINT给前台进程组          |
 | IGNBRK  | 忽略BREAK条件                                       |
 | ICRNL   | 将输入的CR转换为NL                                  |
@@ -1179,7 +1178,7 @@ struct winsize                                              // 获取winsize：i
 | IXANY   | 任何字符都重启输出                                  |
 
 | c_oflag | 说明                                  |
-|---------|---------------------------------------|
+| ------- | ------------------------------------- |
 | BSDLY   | BS延迟屏蔽字(BS0, BS1)                |
 | TABDLY  | TAB延迟屏蔽字(TAB0, TAB1, TAB2, TAB3) |
 | VTDLY   | VT延迟屏蔽字(VT0, VT1)                |
@@ -1196,7 +1195,7 @@ struct winsize                                              // 获取winsize：i
 | OPOST   | 执行输出处理（解释c_oflag）           |
 
 | c_cflag | 说明                                       |
-|---------|--------------------------------------------|
+| ------- | ------------------------------------------ |
 | HUPCL   | 最后一个进程关闭设备时，断开调制解调器连接 |
 | CLOCAL  | 忽略调制解调器状态线                       |
 | CREAD   | 可以接收字符                               |
@@ -1208,7 +1207,7 @@ struct winsize                                              // 获取winsize：i
 | CSTOPB  | 发送两个停止位而非一个                     |
 
 | c_lflag | 说明                               |
-|---------|------------------------------------|
+| ------- | ---------------------------------- |
 | ECHO    | 启用回显                           |
 | ECHOCTL | 回显控制字符为`^X`，`X`为0x40+char |
 | ECHOE   | 可视ERASE擦除字符(`\b \b`)         |
@@ -1226,7 +1225,7 @@ struct winsize                                              // 获取winsize：i
 | IEXTEN  | 扩展输入字符处理                   |
 
 | 特殊字符 | 说明                      | c_cc下标 | 启用标识           | 典型值    |
-|----------|---------------------------|----------|--------------------|-----------|
+| -------- | ------------------------- | -------- | ------------------ | --------- |
 | CR       | 回车（规范行边界）        | 不能更改 | c_lflag ICANON     | `\r`      |
 | NL       | 换行 （规范行边界）       | 不能更改 | c_lflag ICANON     | `\n`      |
 | EOF      | 文件结束 （规范行边界）   | VEOF     | c_lflag ICANON     | `^D`      |
@@ -1247,10 +1246,10 @@ struct winsize                                              // 获取winsize：i
 | MIN      | 非规范模式最小读取字节数  | VMIN     |                    |           |
 
 对于非规范模式的设置：
-| 属性      |                            MIN > 0                           |               MIN == 0              |
-|-----------|:------------------------------------------------------------:|:-----------------------------------:|
+| 属性      |                           MIN > 0                            |              MIN == 0               |
+| --------- | :----------------------------------------------------------: | :---------------------------------: |
 | TIME > 0  | 若未超时则读取[MIN, n]；若超时则可能无限期阻塞地读取[1, MIN] | 若未超时则读取[1, n]；若超时则读取0 |
-| TIME == 0 |                 可能无限期阻塞地读取[MIN, n]                 |              读取[0, n]             |
+| TIME == 0 |                 可能无限期阻塞地读取[MIN, n]                 |             读取[0, n]              |
 <!-- entry end -->
 
 <!-- entry begin: pty posix_openpt grantpt unlockpt ptsname openpty forkpty -->
@@ -1289,7 +1288,7 @@ pid_t   forkpty(int* master, char* name, const termios* termp, const winsize* wi
 ### 异步I/O
 <!-- aiocb sigevent  aio_read aio_write aio_fsync aio_error aio_return aio_cancel aio_suspend aio_listio  -->
 | 限制               | 描述                                |
-|--------------------|-------------------------------------|
+| ------------------ | ----------------------------------- |
 | AIO_LISTIO_MAX     | 单个列表I/O调用中最大操作数         |
 | AIO_MAX            | 未完成的异步I/O操作的最大数目       |
 | AIO_PRIO_DELTA_MAX | 进程可减少的其异步I/O优先级的最大值 |
@@ -1324,14 +1323,14 @@ int     aio_suspend(const aiocb* const list[], int nent, const timespec* timeout
 int     aio_listio(int mode, aiocb* const list[], int nent, sigevent* sigev);       // 成功返回0。sigev为额外另加的sigev，在全部操作完成后调用，可为NULL
 ```
 | aio_cancel return | 解释                     |
-|-------------------|--------------------------|
+| ----------------- | ------------------------ |
 | AIO_ALLDONE       | 所有操作均已在尝试前完成 |
 | AIO_CANCELED      | 所有操作均已取消         |
 | AIO_NOTCANCELED   | 至少有一个未被取消       |
 | -1                | aio_cancel调用失败       |
 
 | aio_listio mode | 解释     |
-|-----------------|----------|
+| --------------- | -------- |
 | AIO_WAIT        | 同步调用 |
 | AIO_NOWAIT      | 异步调用 |
 <!-- entry end -->
@@ -1370,7 +1369,7 @@ int poll(pollfd fdarray[], nfds_t nfds, int timeout);   // 返回准备好的描
 
 ```
 | poll事件   | events | revents | 解释                                 |
-|------------|--------|---------|--------------------------------------|
+| ---------- | ------ | ------- | ------------------------------------ |
 | POLLIN     | 1      | 1       | 可以不阻塞地读高优先级数据以外的数据 |
 | POLLRDNORM | 1      | 1       | 可以不阻塞地读普通数据               |
 | POLLRDBAND | 1      | 1       | 可以不阻塞地读优先级的数据           |
@@ -1417,7 +1416,7 @@ int epoll_pwait(
 );
 ```
 | epoll_event events | 说明                                                                                                          |
-|--------------------|---------------------------------------------------------------------------------------------------------------|
+| ------------------ | ------------------------------------------------------------------------------------------------------------- |
 | EPOLLIN            | 表示对应的文件描述符可以读（包括对端SOCKET正常关闭）；                                                        |
 | EPOLLOUT           | 表示对应的文件描述符可以写；                                                                                  |
 | EPOLLPRI           | 表示对应的文件描述符有紧急的数据可读（这里应该表示有带外数据到来）；                                          |
@@ -1438,7 +1437,7 @@ int epoll_pwait(
 ### 分段I/O
 <!-- entry begin: readv writev iovec -->
 | 限制宏  | 说明                |
-|---------|---------------------|
+| ------- | ------------------- |
 | IOV_MAX | iov参数最大元素个数 |
 ```c
 #include <sys/uio.h>
@@ -1469,14 +1468,14 @@ int msync(void* addr, size_t len, int flag);    // 返回0
 int munmap(void* addr, size_t len);             // 返回0
 ```
 | prot       | 说明     |
-|------------|----------|
+| ---------- | -------- |
 | PROT_NONE  | 不可访问 |
 | PROT_READ  | 可读     |
 | PROT_WRITE | 可写     |
 | PROT_EXEC  | 可执行   |
 
 | mmap flag   | 说明                                                                    |
-|-------------|-------------------------------------------------------------------------|
+| ----------- | ----------------------------------------------------------------------- |
 | MAP_FIXED   | 强制起始位置为指定的addr                                                |
 | MAP_SHARED  | 共享内存映射，写会影响内核缓冲区块                                      |
 | MAP_PRIVATE | 私有内存区块，写只影响进程缓冲区块（内核缓冲区刷新时也会刷新该缓冲区 ） |
@@ -1521,13 +1520,13 @@ void* shmat(int shmid, const void* addr, int flag); // 返回共享段起始地�
 int shmdt(const void* addr);                        // 返回0。引用计数减1
 ```
 | shmget flag | 说明              |
-|-------------|-------------------|
+| ----------- | ----------------- |
 | IPC_CREAT   | 若key不存在则创建 |
 | IPC_EXCL    | 若key已存在则出错 |
 | 0666        | 读写权限          |
 
 | shmat flag | 说明                                     |
-|------------|------------------------------------------|
+| ---------- | ---------------------------------------- |
 | SHM_RDONLY | 指定连接共享段为只读（默认读写）         |
 | SHM_RND    | 使指定的共享段的映射地址向下取SHMLBA倍数 |
 <!-- entry end -->

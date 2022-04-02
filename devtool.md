@@ -146,8 +146,11 @@ pprof <path/to/binary> /tmp/prof.out
 # curl
 <!-- entry begin: curl -->
 ```sh
+# 下载文件
 curl <url> -o <file>
+# 执行远程脚本
 sh -c "$(curl -fsSL <url>)"
+# 快速查阅远程手册
 curl cht.sh/<cmd>
 curl cht.sh/<lang>/<question with + instead of space>
 ```
@@ -225,9 +228,8 @@ awk 'pattern{statment;} 模式{语句;}' file # 若未指定file则从stdin读�
 * END
 * /pattern/
 * !/pattern/
-* /pattern1/&&/pattern2/
-* /pattern1/||/pattern2/
 * expression
+* 支持关系运算与逻辑运算
 
 **变量**
 * `var=val` `map[key]=val`
@@ -293,7 +295,7 @@ next  # 立即处理下行，跳过后续处理
 ```sh
 sed 'pattern{statment;}; 模式{语句;}' file # 若未指定file则从stdin读取数据
 sed -e 'pattern statment' -e '模式 语句' file # a i c r w操作无法共用模式匹配
-
+# 选项
 -n  # 仅显示a i c r p操作的文本行
 -i  # 修改原文件
 -r  # 支持扩展正则表达式
