@@ -1,6 +1,7 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
+- [目录](#目录)
 - [C++标准库](#c标准库)
   - [错误处理](#错误处理)
     - [异常体系结构](#异常体系结构)
@@ -78,10 +79,6 @@
   - [YAS](#yas)
   - [BOOST](#boost)
   - [JSON](#json)
-- [Mysql++](#mysql)
-  - [异常](#异常)
-  - [连接](#连接)
-  - [SQL语句执行](#sql语句执行)
 
 <!-- vim-markdown-toc -->
 注：代码块中的示例为伪代码
@@ -777,7 +774,7 @@ int  tolower(c);
 ```cpp
 #include <string>
 class String {
-    // 目标：(str, pos = 0, len = npos) (cstr, len = auto) (char) (n, char)
+    // 目标：(str, pos=0, len=npos) (cstr, len=auto) (char) (n, char)
     // 构造函数
     string(目标)
     // 修改
@@ -789,6 +786,9 @@ class String {
     string& insert      (pos, 目标)         // 目标除开(char)
     string& erase       (pos=0, len=npos)
     string& replace     (pos, len, 目标)
+    // 创建
+    string  substr(pos=0, len=npos);
+    size_t  copy(cstr, len, pos=0);
     // 查找
     bool    starts_with (str) (cstr) (char)
     bool    end_with    (str) (cstr) (char)
@@ -801,10 +801,6 @@ class String {
     size_t  find_last_not_of (str, pos=0) (cstr, pos=0, len=auto) (char, pos=0)
     // 比较
     int     compare(pos, len, 目标);        // 目标除开(char) (n, char)
-    // 复制
-    size_t  copy(cstr, len, pos=0);
-    // 子串
-    string  substr(pos=0, len=npos);
     // 容量
     bool    empty();
     size_t  size();
@@ -2547,7 +2543,7 @@ int main(int argc, char* argv[]) {  // 或者直接链接libgtest_main.so而避�
 }
 ```
 | gtest命令行参数          | 说明                                                |
-|--------------------------|-----------------------------------------------------|
+| ------------------------ | --------------------------------------------------- |
 | --gtest_list_tests       | 列出所有测试而不运行                                |
 | --gtest_filter           | 通配符过滤，一次指定一个。通配符包括`-`,`?`,`*`,`:` |
 | --gtest_repeat           | 指定重复运行次数，-1表示无限                        |
@@ -2800,103 +2796,3 @@ int main()
     > 取决于当前json对象所存储的实际数据类型，类型转换失败会抛出异常（**就像std::any**）  
     > 弱类型系统与强类型系统的交互原理可参见[mysqlpp](#mysqlpplx)
     * `.get<cppType>(); .get_to(cppObj);`：支持的类型转换以及STL接口见上
-
-
-# Mysql++
-<!-- entry begin: mysqlpp mysql++ 异常 exception -->
-## 异常
-```
-BadIndex        ：`row[idx]`中idx越界
-BadFieldName    ：`row[fd_name]`中fd_name无效
-BadConversion   ：SQL与C++数据类型之间的转换不合理（类型不匹配或窄化）
-BadParamCount
-TypeLookupFailed
-```
-* `mysqlpp::NoExceptions disableExceptions{con}`
-    > 构造时禁用传递的mysqlpp::Connection的异常机制  
-    > 销毁时解禁
-<!-- entry end -->
-
-<!-- entry begin: mysqlpp mysql++ Connection -->
-## 连接
-* mysqlpp::Connection
-    * 构造：
-        * Connection(bool=true)                         ：若为false则表示用false flag代替抛出异常，其他任何构造方式都会开启异常机制
-        * Connection(db, server, user, password, port)  ：除了`db`外其余参数均有默认实参
-            > 对于`server`：
-            > * 0                   ：让数据库驱动选择通讯方式
-            > * "."                 ：Windows named pipes
-            > * "/path/to/socket"   ：Unix domain socket
-            > * "host.or.ip:port"   ：TCP
-    * 数据库服务连接：
-        * .connect(db, host, user, password，port)  ：返回bool表示是否连接成功，其余同上述构造函数
-        * .connected()                              ：返回bool表示是否连接成功
-        * .disconnect()
-        * .shutdown()
-    * 数据库服务信息：
-        * .client_version()
-        * .server_version()
-        * .server_status()
-        * .ipc_info()
-    * 数据库操作：
-        * .select_db(db)
-        * .create_db(db)
-        * .drop_db(db)
-    * 数据库查询：
-        * .count_rows(tbl)                          ：返回table的行数
-        * .query()                                  ：返回连接到该Connection的mysqlpp::Query
-        * .query("SQL Statement")                   ：返回已初始化的mysqlpp::Query
-    * 错误处理
-        * .error()                                  ：返回上次发生错误时的信息
-        * .ping()                                   ：返回bool表示是否可ping通
-<!-- entry end -->
-
-<!-- entry begin: mysqlpp mysql++ Query quote -->
-## SQL语句执行
-* mysqlpp::Query
-    * 读取SQL语句
-        * Query("SQL Statement")
-        * `operator<<(Query, string)`
-    * 执行SQL语句
-        * .exec()                           ：只返回bool
-        * .execute()                        ：返回mysqlpp::SimpleResult，存储提示信息
-        * .store()                          ：返回mysqlpp::StoreQueryResult，存储数据信息
-        * .use()                            ：返回mysqlpp::UseQueryReslt，存储数据信息（利用按需加载机制）
-    * 错误处理
-        * .error()                          ：返回错误消息
-
-* mysqlpp::quote
-    > 流操作符，作用类似std::quote
-<!-- entry end -->
-
-<!-- entry begin: mysqlpp mysql++ StroeQueryResult UseQueryResult SimpleQueryResult -->
-* mysqlpp::SimpleQueryResult
-    * .info()
-
-* mysqlpp::StoreQueryResult
-    * .begin()
-    * .end()
-    * .operator bool()
-    * `.operator[]()`                       ：返回mysqlpp::Row
-    * .num_rows()                           ：返回总行数
-
-* mysqlpp::UseQueryReslt
-    > 按需加载
-    * .fetch_field()                        ：返回mysqlpp::Field
-    * .fetch_row()                          ：返回mysqlpp::Row
-<!-- entry end -->
-
-<!-- entry begin: mysqlpp mysql++ Null type -->
-<span id="mysqlpplx"></span>
-MYSQL++中定义有类型映射到SQL类型，如：  
-`mysqlpp::sql_tinyint_unsigned_null`表示SQL类型`TINYINT UNSIGNED`  
-`mysqlpp::sql_tinyint_unsigned`表示SQL类型`TINYINT UNSIGNED NOT NULL`  
-非NOT NULL的SQL类型可以接受`mysqlpp::null`的赋值，表示特殊值`TINYINT NULL`  
-NULL类型的基础便是该类
-* `mysqlpp::Null<Type, mysqlpp::NullIsZero或mysqlpp::NullIsNull>`
-
-String 可以将 SQL 类型字符串转换为 C++ 数据类型  
-STA 可以将 C++数据类型转换为 SQL 类型字符串  
-两种字符串都使用了Copy-on-Write机制
-
-<!-- entry end -->

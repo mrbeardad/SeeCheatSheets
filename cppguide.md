@@ -13,25 +13,17 @@
 | 类的成员函数                 | 不带`_`后缀     | `exampleName`/`ExampleName`   |
 
 可用于命名标识符的一些通用前后缀：
-* 位置：`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`，`last`，`this`
+* 位置：`idx`，`pos`，`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`
+* 计数：`count`，`size`，`length`，`width`，`height`，`depth`
 * 时间：`new`，`old`，`orig`，`cur`，`before`，`after`
 * 循环：`idx`，`pos`
-* 计数：`count`，`size`，`length`，`width`，`height`，`depth`
-* 序数：`1st`，`2nd`，`3rd`，`number`
+* 序数：`number`，`1st`，`2nd`，`3rd`
 * 布尔：`is`，`not`，`any`，`all`，`none`，`has`
 * 介词：`in`，`on`，`at`，`of`，`2`，`4`
 * 类型：`int`，`char`，`str`，`strm`，`p`
 * 用途：`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`dst`
 
 # 变量
-* static变量
-    * 可以使用 nonlocal-static 变量的构造函数来初始化程序状态
-    * 尽量使用 reference-return 技术代替 nonlocal-static 变量
-
-* 指针 or 引用：
-    * 一般使用引用，除非需要**NULL语义**或**更改指向**
-    * 使用裸指针做形参意味着函数内部无需在意其生命周期，其有效性与销毁由调用方保证
-
 * 初始化语法
     * `T t;`：这种初始化语句预示着接下来一段代码用于初始化该变量，对该语句保持警醒注意该变量是否被正确初始化
     * `auto  t = T(args...);`
@@ -39,6 +31,14 @@
     * `auto  t = initializer;`：若initializer的类型并非期望类型，则使用cast显式转换
     * `auto* t = initializer;`
     * `auto& t = initializer;`
+
+* 指针 or 引用：
+    * 一般使用引用，除非需要**NULL语义**或**更改指向**
+    * 使用裸指针做形参意味着函数内部无需在意其生命周期，其有效性与销毁由调用方保证
+
+* static变量
+    * 可以使用 nonlocal-static 变量的构造函数来初始化程序状态
+    * 尽量使用 reference-return 技术代替 nonlocal-static 变量
 
 # 函数设计
 形参修饰选择：
