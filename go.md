@@ -1,77 +1,88 @@
 # 项目构建
 ```txt
-$GOROOT/pkg/
-└── linux_amd64/
-    └── path/to/pkgA/
-        └── pkgA.a
+$GOROOT/
+└── pkg/
+    └── linux_amd64/
+        └── path/to/pkg.a
 
-$GOPATH/pkg/
-├── sumdb/
-└── mod/
-    ├── path/to/modA/
-    │   ├── v1/
-    │   └── v2/         # 新版本子目录，后向兼容，增量迁移
-    └── path/to/modB/
+$GOPATH/
+├── src/
+│   └── path/to/pkg/
+└── pkg/
+    ├── sumdb/
+    └── mod/
+        └── path/to/mod/
+            └── v2/
 
 $GOBIN/
-└── executable
+└── exe
 
 $GOCACHE/
-
-src/
-└── path/to/mod/
-    ├── go.mod          # 模块依赖的版本信息
-    ├── go.sum          # 模块依赖的哈希校验
-    ├── executable.go   # pacagke main
-    └── otherPkg/
-        ├── file1.go    # package pkgA
-        ├── file2.go    # package pkgA
-        └── xxx_test.go # package pkgA
 ```
 
 # 模块
-* 模块是包的集合，是依赖管理和项目构建的基本单位
+* 模块名：
+  * 版本管理仓库根目录`golang.org/x/net`
+  * 版本管理仓库子目录`golang.org/x/tools/gopls`
+  * 添加主版本后缀`golang.org/x/repo/sub/v2`：表示主版本为2的版本
+* 版本号：
+  * 公共接口变更且后向不兼容时，更新主版本号
+  * 公共接口添加了后向兼容的功能时，更新次版本号
+  * 公共接口未变化时，更新补丁号
+  * 预发布版本：可选添加pre-release后缀
+  * 伪版本：特殊的预发布版本，go自动根据git-tag, utc-time, commit-hash生成伪版本号
+  * v0与预发布版本均视作不稳定版本，即视其与任何版本都不兼容
+  * go根据MVS(minimal version selection)算法计算模块依赖树
 <!-- entry begin: go -->
 ```sh
-# 模块依赖管理
-go mod init ModuleName          # 以当前目录作为模块根目录初始化模块信息，并指定模块名（一般为URL）
-go mod graph                    # 列出当前模块的依赖包[或模块]
-go mod tidy -v                  # 重新整理模块的依赖
-go mod vendor -v                # 重新整理模块的依赖到vendor目录
+go env [-u] [-w] [var ...]
+# 逗号分隔列表，指定proxy-url，direct表示直接从版本管理仓库下载
+GOPROXY=https://proxy.golang.org,direct
+# 签名文件下载服务器
+GOSUMDB=sum.golang.google.cn
+# 逗号分隔列表，是GONOPROXY与GONOSUMDB的默认值，指定通配符匹配的模块作为私有模块，不走代理且无需验证
+GOPRIVATE=
 
-go get                          # 安装当前目录包依赖
-go get example.com/pkg          # 安装依赖版本的包，若为初始化则下载最新版本
-go get example.com/pkg@latest   # 安装最新版本的包，并更新当前模块依赖
-go get example.com/pkg@none     # 安装最低要求版本的包，并更新当前模块依赖
-go get example.com/pkg@v1.0.0   # 安装指定版本的包，并更新当前模块依赖
-    -d      # 只下载不编译和安装依赖
-    -t      # 同时下载测试代码
-    -u      # 强制网络更新最新版本
-go install                      # 仅安装指定包而不更改go.mod
+-mod=mod        # 忽略vendor目录，并自动更新go.mod
+-mod=readonly   # 忽略vendor目录，且当需要更改go.mod时报错
+-mod=vendor     # 仅从vendor目录加载模块
+# 1.14之后，若存在vendor目录则默认-mod=vendor，其他情况默认-mod=readonly
 
-go env
-    -w GOPATH=$HOME/.local/go/  # 设置环境变量
-    -u GOPATH                   # 设置或清除go运行环境变量GOPATH
+go mod init [module-path]       # 初始化模块
+go mod tidy [-v]                # 重新扫描并整理依赖
+go mod vendor [-v]              # 同步依赖模块到vendor目录
+go mod graph                    # 列出依赖模块
+go mod why packages...          # 列出主模块到列出包的最短路径
+go mod download                 # 下载主模块所有依赖
 
-go clean [-cache]               # 清除构建缓存
-go build [pkg|file.go]          # 编译当前目录包或指定文件及其依赖
-    -o exe
-    -gcflags='all=-N -l'
-go test [pkg|file.go]           # 编译并测试当前目录下包的测试代码XXX_test.go
-    -c -o exe                   # 编译出的test程序选项-h查看参数
-go run [pkg|file.go]            # 编译并运行package或指定文件
+go get -d golang.org/x/net      # 管理依赖，可选添加@指定版本
+# @v1.2.3       # 完整版本号
+# @v1.2         # 版本号前缀
+# @<v1.2.3      # 版本号比较
+# @master       # 标签名或分支名
+# @1234abcd     # 提交哈希前缀
+# @latest       # 依次：最新release > 最新pre-release > 最新默认分支commit
+# @upgrade      # （默认）规则同上，但只升级不降级
+# @patch        # 选择当前主版本号与次版本号相同的补丁版本最高的版本
+# @none         # 删除依赖，并降级其他模块至不依赖它的版本
+
+go clean -cache                 # 清除构建缓存
+go build [-o output] [packages] # 编译当前包或指定包，参数 -gcflags='all=-N -l' 用于调试
+go run packages [arguments]     # 编译并运行指定包
+go test [packages]              # 编译并测试当前包或指定包，测试文件XXX_test.go
+go install [packages]           # 编译并安装当前包或指定包
 ```
 <!-- entry end -->
 
 
 # 包
-* 包是模块下的一个目录，按依赖和实现关系导入相应的包
-* 同一包中的符号相互引用不依赖定义的先后顺序
+* 包是模块下的一个目录所有文件集合（不包括子目录）
+* 同一包中的符号可相互引用不依赖定义的先后顺序
 * 导入包的搜索路径
     * 当前模块
     * `$GOROOT/src/`
     * `$GOPATH/pkg/mod/`
-    * 根据`improt "Module/path/to/pkg"`下载对应版本`Module`
+    * 下载模块
 ```go
 // go源文件第一条语句必须是定义包名
 // 一个目录就是一个包，顶级目录下所有源文件必须属于同一个包
