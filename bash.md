@@ -1,6 +1,7 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
+- [目录](#目录)
 - [bash参数](#bash参数)
 - [基础语法](#基础语法)
 - [命令行扩展](#命令行扩展)
@@ -54,7 +55,7 @@ Pipeline [[; or || or && or &] ...]
 | `fd1>&fd2`        | 重定向fd1到fd2                                                                     |
 | `fd<>file`        | 打开文件描述符n指向file                                                            |
 
-学习内建命令getopts有助于理解命令选项参数，unix系统提供了底层C函数用于解析命令行，所以大部分unix工具都遵从该规范
+学习内建getopts命令有助于理解命令选项参数，unix系统提供了底层C函数用于解析命令行，所以大部分unix工具都遵从该规范
 <!-- entry begin: bash getopts -->
 ```sh
 getopts optstring name [args]

@@ -52,8 +52,6 @@ cmake --install .
     > 一份C++语法清单，适合有基础的同学
 * [C++编程指导](cppguide.md)
     > 优雅的编写C++代码
-* [C++编码风格](cppstyle.md)
-    > 规范代码风格，拒绝选择困难症
 * [C++程序库](cppman.md)
     > 应该掌握的基础C++库
 * [CMake构建系统](cmake.md)

@@ -1,54 +1,58 @@
 [详细版目录](#目录)
 
-# 项目构建
-* 模块：一个头文件 + 一可选实现文件
-* 根据 **依赖** 与 **实现** 关系来导入相应模块
-* 头文件接口粒度要尽量细
-* 尽量将依赖关系隐藏到实现文件中导入
+# 命名
+| 内容                         | 规范            | 举例                          |
+| ---------------------------- | --------------- | ----------------------------- |
+| 命名空间                     | 全部小写        | `examplename`                 |
+| 宏、常量、模板非类型参数     | 全部大写+下划线 | `EXAMPLE_NAME`                |
+| 类名、类型别名、模板类型参数 | 大驼峰拼写法    | `ExampleName`                 |
+| 全局函数/变量                | 大驼峰拼写法    | `::ExampleName`               |
+| 静态变量                     | 大驼峰拼写法    | `ExampleName`                 |
+| 动态变量                     | 小驼峰拼写法    | `exampleName`                 |
+| 类的成员变量                 | 带`_`后缀       | `exampleName_`/`ExampleName_` |
+| 类的成员函数                 | 不带`_`后缀     | `exampleName`/`ExampleName`   |
 
-# 变量初始化
+可用于命名标识符的一些通用前后缀：
+* 位置：`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`，`last`，`this`
+* 时间：`new`，`old`，`orig`，`cur`，`before`，`after`
+* 循环：`idx`，`pos`
+* 计数：`count`，`size`，`length`，`width`，`height`，`depth`
+* 序数：`1st`，`2nd`，`3rd`，`number`
+* 布尔：`is`，`not`，`any`，`all`，`none`，`has`
+* 介词：`in`，`on`，`at`，`of`，`2`，`4`
+* 类型：`int`，`char`，`str`，`strm`，`p`
+* 用途：`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`dst`
+
+# 变量
 * static变量
-    * 若非试图利用全局静态变量或类的static数据成员的构造函数来初始化程序状态
-    * 则应该使用reference-return技术来返回静态变量
+    * 可以使用 nonlocal-static 变量的构造函数来初始化程序状态
+    * 尽量使用 reference-return 技术代替 nonlocal-static 变量
 
-* 使用指针or引用：
-    * 仅在以下情况使用引用
-        * （NULL）保证引用初始化而无需检测其有效性
-        * （指向）保证引用途中不能更改指向
-        * （别名）函数内部实现可读性更高的别名
-        * （语法）实现操作符的语法要求引用
-    * 其他任何时候使用裸指针意味着持有者（接收者）无需在意其生命周期（视作一直有效）
+* 指针 or 引用：
+    * 一般使用引用，除非需要**NULL语义**或**更改指向**
+    * 使用裸指针做形参意味着函数内部无需在意其生命周期，其有效性与销毁由调用方保证
 
-* 形式
-    > 若initializer的类型并非期望类型，则使用cast显式转换
-    * `T t;`
-        > 这种初始化语句预示着接下来一段代码用于初始化该变量，对该语句保持警醒注意该变量是否被正确初始化
-    * `auto  t = T{args...};`
+* 初始化语法
+    * `T t;`：这种初始化语句预示着接下来一段代码用于初始化该变量，对该语句保持警醒注意该变量是否被正确初始化
     * `auto  t = T(args...);`
-    * `auto  t = initializer;`
+    * `auto  t = T{args...};`
+    * `auto  t = initializer;`：若initializer的类型并非期望类型，则使用cast显式转换
     * `auto* t = initializer;`
     * `auto& t = initializer;`
 
 # 函数设计
-```
-GFM
-    ? tempT&&
-    : !CWD
-        ? T
-        : W
-            ?       T& -> T&&
-            : const T& -> T& -> T&&
-```
-* 修饰
-    * this
-    * const
-    * noexcept
+形参修饰选择：
+1. 需要泛型：`template T&&`
+    > 注意使用`std::decay_t<T>`与`std::forward<T>(t)`
+2. 修改形参：`T&`
+3. 内置类型：`T`
+4. 其他：`const T&`
+
+函数修饰选择：
+    * this(const &/&&)
     * inline
     * constexpr
-    * =delete
 
-* 使用`temp T&&`时注意使用`std::decay_t<T>`与`std::forward<T>(t)`
-* 使用`T&&`与`T`时注意使用`std::move(t)`
 
 # 类的设计
 * 取消友元
@@ -101,7 +105,6 @@ GFM
 * Stream在循环中使用一定不要忘记调用`clear()`
 * Stream仅持有StreamBuf的指针而非完整对象，不保证其生命周期
 * Container使用`emplace`函数代替`push|insert`函数
-* Container引用元素时，若下标为非常量，则应使用`at()`代替`operator[]()`
 * Container增删元素时，注意range-based-for、引用、指针、迭代器的有效性
 
 # 性能优化
