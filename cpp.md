@@ -9,8 +9,7 @@
   - [using用法](#using用法)
   - [变量](#变量)
     - [声明与定义](#声明与定义)
-    - [全局静态](#全局静态)
-    - [局部静态](#局部静态)
+    - [静态变量](#静态变量)
   - [表达式](#表达式)
     - [类型转换](#类型转换)
     - [左值与右值](#左值与右值)
@@ -249,15 +248,21 @@ auto& [x, y] = f(); // 引用绑定
 ```
 * `f()`返回值类型的所有public非静态数据成员必须为直接成员或相同基类的直接成员，不能绑定union
 
+**推荐初始化**
+```cpp
+Type var{args...};          // 一般默认使用该形式
+auto var = initializer;     // 具有初始化器，且类型太长或需类型转换
+auto [a, b] = aggregation;
+```
 
-### 全局静态
-全局静态变量即声明于命名空间中的变量，此处特点也适用于类的静态数据成员
+
+### 静态变量
+**全局静态**变量即声明于命名空间中的变量，此处特点也适用于类的静态数据成员
 * 其构造函数会在进入main函数前调用，可用于初始化程序
 * 其析构函数会在退出main函数后调用，可用于程序结束处理
 * 注意：多个翻译单元中全局静态变量相互之间的构造顺序并未定义
 
-### 局部静态
-局部静态变量即声明于函数内部的static变量
+**局部静态**变量即声明于函数内部的static变量
 ```cpp
 // reference-return
 T& Instance() {
@@ -429,6 +434,16 @@ void func() try
 | temp const T& | 引用、左值、右值、泛型、只读     |
 | temp T&&      | 引用、左值、右值、泛型、转发     |
 
+**形参列表修饰**：
+1. 需要泛型：`template T&&`：注意使用`std::decay_t<T>`与`std::forward<T>(t)`
+2. 修改形参：`T&`
+3. 内置类型：`T`
+4. 其他：`const T&`
+
+**函数签名修饰**：
+* `noexcept`：当函数抛出异常是不可能或不可接受的时候
+* `inline`：当在头文件中定义函数时应该声明为内联
+
 ### 关键字
 * noexcept：<span id="noexcept"></span>
     * 用法：
@@ -533,6 +548,8 @@ void func() try
 * 捕获列表：
     * 捕获类型：非static的值或引用（static值可直接使用）
     * 显式捕获：
+        > 非本地使用的lambda应该使用值捕获（如return lambda）；
+        > 本地使用的lambda应该使用引用捕获（避免拷贝）
         * `[x, &y]`：按值捕获x，按引用捕获y
         * `[this]`：捕获this，从而可以使用其成员且可省略`this->`
     * 隐式捕获：
@@ -929,7 +946,46 @@ C++20无栈协程：
     * Template通过泛型的编译时实例化(静态多态)
         * 需要设计类的成员供Template调用
         * 需要重新编译源文件(因为template时根据已有的调用实例由编译器自动生成的，而在设计它之前是没有这个实例的)
->
+
+> 类设计规则
+* 取消友元
+* 数据成员
+    * private
+    * pImpl
+    * 结构对齐
+    * const & 引用
+* 构造函数
+    * default?
+    * explicit?
+    * non-inline
+    * never-call-virtual
+* 析构
+    * virutal  & definition
+    * noexcept & .destroy()
+    * non-inline
+    * never-call-virtual
+* copy? & move?
+* operator
+    * 单成
+    * 算赋
+    * 前后
+    * explicit bool 1
+
+* 类间关系
+    * **is-a**：public继承
+        * 抽象分化
+        * 混合类
+    * **has-a**：复合
+    * **impl-of**：复合或private继承
+        * virtual
+        * protect
+        * EBO
+
+* 虚函数接口
+    * pure virtual      ：无默认定义
+    * non-pure virtual  ：提供默认定义
+    * non-virtual       ：提供强制定义
+
 # 泛型编程
 ## 模板参数
 * 模板参数作用域中，不能重用模板参数名

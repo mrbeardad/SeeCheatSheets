@@ -56,11 +56,9 @@ cmake --install .
 
 ## Go
 * [Go语言基础](go.md)
-    > Go语言基础
-* [Go编程指导](goguide.md)
-    > Go编程向导
+    > 语言基础
 * [Go程序库](goman.md)
-    > Go程序库
+    > 常用程序库
 
 ## Python
 * [Python语言基础](python.md)

@@ -54,11 +54,12 @@ add_library(lib_target SHARED
 add_library(lib_target INTERFACE)
     # 该target添加头文件时也只能指定INTERFACE
 
-# 自定义脚本运行
+# 自定义脚本运行(target)
 add_custom_target(target
     [ALL] # 表示该target应该加入default target
     cmd args...
     [COMMAND cmd args...]...)
+
 add_dependencies(target
      [<target-dependency>]...)
 ```
@@ -206,6 +207,7 @@ install(DIRECTORY <dir>...    [...])
 ```
 
 # 内建变量
+<!-- entry begin: cmake buildtype builtin-variable -->
 | 变量名                | 含义                         |
 | --------------------- | ---------------------------- |
 | PROJECT_NAME          | 当前项目名称                 |
@@ -232,3 +234,4 @@ install(DIRECTORY <dir>...    [...])
 | MinSizeRel              | `-Os -DNDEBUG`    |
 | RelWithDebInfo(default) | `-O2 -g -DNDEBUG` |
 | Debug                   | `-g`              |
+<!-- entry end -->

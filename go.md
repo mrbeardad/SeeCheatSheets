@@ -180,7 +180,7 @@ default:
 
 // variable与label的类型必须相同
 switch [init;] variable {
-case label1, label2:    // case label，从上到下，从左到右，短路求值
+case expr1, expr2:    // 从上到下，从左到右，短路求值
     fallthrough
 default:
 
@@ -260,8 +260,7 @@ func f(arg1 T, args ...T) (slice []T, ok bool) {
     return
 }
 
-// 闭包：可隐式引用捕获闭包外的局部变量，一定要注意其并发问题
-// 解决方法：1. 外覆函数包装启动goroutine 2. 利用传递值拷贝参数代替引用捕获
+// 闭包：可隐式引用捕获闭包外的局部变量
 func counter(i int) func() int {
     return func() int {
         i++
@@ -280,14 +279,17 @@ func counter(i int) func() int {
 type double = float64
 
 // 类型定义
-type Int   int      // 继承底层类型的构造方式
-type Class struct {
+type Class struct { // struct是一种特殊类型
     ExportMem T     // 导出包外
     _         T     // 填充对齐
     inlineMem T     // 只能在包内访问
 }
-// 利用类型转换模拟构造
-var i = Int(1.0)
+
+// 方法定义，只能为同一包中的自定义类型定义方法
+func (self Class) MethodV(arg T) RetT { }
+func (this *Class) MethodP(arg T) RetT { }
+
+
 // 构造结构体
 var (
     obj1 = Type{}               // 默认构造为全零值
@@ -296,23 +298,11 @@ var (
     pObj = &Type{}              // 直接返回指针
 )
 
-// 方法定义，只能为同一包中的自定义类型定义方法
-func (self Class) MethodVal(arg T) RetT {   // 值方法
-    self.inlineMem = arg
-    self.ExportMem = arg
-    return RetT{"B"}
-}
-func (this *Class) MethodPtr(arg T) RetT {  // 指针方法
-    this.inlineMem = arg
-    this.ExportMem = arg
-    return RetT{"A"}
-}
-
-// 调用方法，指针与值方法的调用区别可被隐藏
-obj.MethodPtr()     // 引用语义
-(&obj).MethodPtr()  // 引用语义
-obj.MethodVal()     // 值语义
-(&obj).MethodVal()  // 值语义
+// 访问字段与方法时，
+obj.MethodP(arg)    // Class.MethodP(&obj, arg)
+p2obj.MethodP(arg)  // Class.MethodP(p2obj, arg)
+obj.MethodV(arg)    // Class.MethodV(obj, arg)
+p2obj.MethodV(arg)  // Class.MethodV(*p2obj, arg)
 ```
 
 
@@ -345,7 +335,7 @@ type RW struct {    // 匿名字段的方法集会被加入外部类型的方法
 ```go
 // 任何完整实现了接口定义的方法的类对象均可赋值给接口对象
 var i interface{}   // 零值为nil
-// i指向值的副本
+// i指向拷贝的副本
 i = Impl{}          // 拷贝结构值
 i = &Impl{}         // 拷贝指针
 
@@ -353,8 +343,8 @@ i = &Impl{}         // 拷贝指针
 i     = i.(T)       // 尝试将接口类型i转换为T类型，若失败则触发恐慌
 i, ok = i.(T)       // 尝试将接口类型i转换为T类型，若失败则t为零值且ok为false
 
-// 类型选择
-switch t := i.(type) {
+// 类型选择：获取动态真实类型
+switch realtypeValue := interfaceValue.(type) {
 case RealType:
 case OtherIF:
 default:
@@ -369,11 +359,11 @@ default:
     * 底层类型：内置类型与复合类型的底层类型为自身，tpye的底层类型为声明式最右的类型（可传递）
 * 可赋值性：仅当以下情况时，类型为V的值x可直接赋值给类型为T的值
     * V与T类型相同
+    * x为无类型常量且可无损重解释为T类型
     * x为nil且T为函数、接口、指针、切片、映射、通道之一
-    * x为无类型常量且可重解释为T类型
-    * V与T底层类型相同且至少有一个为未定义类型（即其中一个是另一个的底层复合类型）
     * V实现了接口T
     * V是双向通道而T是单向通道，且V与T的元素的类型相同
+    * V与T底层类型相同且至少有一个为未定义类型（即其中一个是另一个的底层复合类型）
 * 显式类型转换`T(x)`：
     * 数字类型之间
     * 整型、`[]byte`、`[]rune`转换为`string`
@@ -453,6 +443,7 @@ var array [128]int              // 元素值初始化为零值
 array = [128]int{0, 1, /*...*/} // 数组字面值
 array = [...]int{0, 1, /*...*/} // 由编译器自动推断长度
 
+// 返回 slice
 v = array[idx]
 s = array[beg:end]
 s = array[beg:]
@@ -529,14 +520,13 @@ cap(ch)
 ```
 
 * 优雅的使用通道
-    > 编写go代码时，可在心中延用经典的多线程模型，只是goroutine在CPU密集型效率更低而在IO密集型效率更高
     * 同步串行化（`make(chan T)`）
     * 异步安全数据管道（`make(chan Future, bufsize)`）
     * 限制并发量（`make(chan struct{}, MAXPARALLEL)`、`maxChan <- struct{}{}; <-maxChan`）
     * 一对一异步事件信号（`make(chan struct{}, 1)`
     * 一对多异步事件信号（`close(done)`）
     * 多对一异步事件信号（`var wg sync.WaitGroup; wg.Add(N)`）
-    * 多对一异步事件信号采用首例（使用try一对一）
+    * 多对一异步事件信号采用首例（使用try-select一对一）
     * 异步定时器（`<-time.After(dur)`）
 
 ```go

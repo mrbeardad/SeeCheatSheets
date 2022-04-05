@@ -1,94 +1,12 @@
 [详细版目录](#目录)
 
-# 命名
-| 内容                         | 规范            | 举例                          |
-| ---------------------------- | --------------- | ----------------------------- |
-| 命名空间                     | 全部小写        | `examplename`                 |
-| 宏、常量、模板非类型参数     | 全部大写+下划线 | `EXAMPLE_NAME`                |
-| 类名、类型别名、模板类型参数 | 大驼峰拼写法    | `ExampleName`                 |
-| 全局函数/变量                | 大驼峰拼写法    | `::ExampleName`               |
-| 静态变量                     | 大驼峰拼写法    | `ExampleName`                 |
-| 动态变量                     | 小驼峰拼写法    | `exampleName`                 |
-| 类的成员变量                 | 带`_`后缀       | `exampleName_`/`ExampleName_` |
-| 类的成员函数                 | 不带`_`后缀     | `exampleName`/`ExampleName`   |
+# 指针与引用
+* 一般使用引用，除非需要**NULL语义**或**更改指向**
+* 使用裸指针做形参意味着函数内部无需在意其生命周期，其有效性与销毁由调用方保证
 
-可用于命名标识符的一些通用前后缀：
-* 位置：`idx`，`pos`，`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`
-* 计数：`count`，`size`，`length`，`width`，`height`，`depth`
-* 时间：`new`，`old`，`orig`，`cur`，`before`，`after`
-* 循环：`idx`，`pos`
-* 序数：`number`，`1st`，`2nd`，`3rd`
-* 布尔：`is`，`not`，`any`，`all`，`none`，`has`
-* 介词：`in`，`on`，`at`，`of`，`2`，`4`
-* 类型：`int`，`char`，`str`，`strm`，`p`
-* 用途：`ret`，`ans`，`val`，`need`，`tmp`，`deal`，`src`，`dst`
-
-# 变量
-* 初始化语法
-    1. `T v{args...}`：值初始化`v{}`，容器`v(args...)`
-    2. `auto v = initializer`：类转`static_cast<T>(initializer)`，引用`auto&`
-    3. `auto [t, v] = aggregation`：引用`auto&`
-
-* 指针 or 引用：
-    * 一般使用引用，除非需要**NULL语义**或**更改指向**
-    * 使用裸指针做形参意味着函数内部无需在意其生命周期，其有效性与销毁由调用方保证
-
-* static变量
+# static变量
     * 可以使用 nonlocal-static 变量的构造函数来初始化程序状态
     * 尽量使用 reference-return 技术代替 nonlocal-static 变量
-
-# 函数设计
-形参修饰选择：
-1. 需要泛型：`template T&&`
-    > 注意使用`std::decay_t<T>`与`std::forward<T>(t)`
-2. 修改形参：`T&`
-3. 内置类型：`T`
-4. 其他：`const T&`
-
-函数修饰选择：
-    * this(const &/&&)
-    * inline
-    * constexpr
-
-
-# 类的设计
-* 取消友元
-* 数据成员
-    * private
-    * pImpl
-    * 结构对齐
-    * const & 引用
-* 构造
-    * default?
-    * explicit?
-    * non-inline
-    * never-call-virtual
-* 析构
-    * virutal  & definition
-    * noexcept & .destroy()
-    * non-inline
-    * never-call-virtual
-* copy? & move?
-* operator
-    * 单成
-    * 算赋
-    * 前后
-    * explicit bool 1
-
-* 类间关系
-    * **is-a**：public继承
-        * 抽象分化
-        * 混合类
-    * **has-a**：复合
-    * **impl-of**：复合或private继承
-        * virtual
-        * protect
-        * EBO
-
-* 虚函数接口
-    * pure virtual      ：无默认定义
-    * non-pure virtual  ：提供默认定义
-    * non-virtual       ：提供强制定义
 
 
 # 泛型编程
@@ -117,8 +35,7 @@
 
 
 
-# 附录
-## 函数参数
+# 函数参数
 * 形参修饰
 > 对比
 
@@ -152,28 +69,51 @@
         * [标签分派](#标签分派)：利用`std::true_type`与`std::false_type`进行工具重载
         * [模板类型限制](#模板类型限制)：利用`std::enable_if_t<bool>`限制类型
 
-## 面向对象
+# 面向对象
+> * 取消友元
+> * 数据成员
+>     * private
+>     * pImpl
+>     * 结构对齐
+>     * const & 引用
+> * 构造
+>     * default?
+>     * explicit?
+>     * non-inline
+>     * never-call-virtual
+> * 析构
+>     * virutal  & definition
+>     * noexcept & .destroy()
+>     * non-inline
+>     * never-call-virtual
+> * copy? & move?
+> * operator
+>     * 单成
+>     * 算赋
+>     * 前后
+>     * explicit bool 1
+
 * 先声明再定义，注意定义依赖顺序
 * 思考是否可提供接口成员函数以取消友元函数的friend属性以加强封装
 * 类型成员应该声明在前
 
 * 数据成员
-    * 构造顺序与对齐问题
-    * 若有const与引用成员，则无法合成default构造与赋值操作
     * private封装
     * handle与interface封装
+    * 构造顺序与对齐问题
+    * 若有const与引用成员，则无法合成default构造与赋值操作
 
 * 构造函数
     * 思考default构造是否有意义
     * 单参构造最好`explicit`
-    * 不要调用虚函数，因为调用的虚函数是静态版本而违反直觉
     * 不要声明为`inline`
+    * 不要调用虚函数，因为调用的虚函数是静态版本而违反直觉
 
 * 析构函数
-    * 不要让异常逃离析构函数，同时可以提供`.destroy()`接口给用户来处理异常的机会
     * 多态基类的析构函数应该声明为`virtual`，并需要提供定义（即使是`pure virtual`）
-    * 不要调用虚函数，因为调用的虚函数是静态版本而违反直觉
+    * 不要让异常逃离析构函数，同时可以提供`.destroy()`接口给用户来处理异常的机会
     * 不要声明为`inline`
+    * 不要调用虚函数，因为调用的虚函数是静态版本而违反直觉
 
 * copy与move
     * 思考是否需要copy或move操作
@@ -219,29 +159,8 @@
 
 * **继承体系中，non-leaf类应该设计为抽象基类**
 
-## 初始化
-* 初始化的形式
-    * <u>具有类型精准的初始化器</u>时，使用`auto x = initializer`或`auto& x = initializer`或`auto* x = initializer`
-        > 若初始化器为函数返回值，拿不准是否应该使用`auto&`时，则直接用`auto&`并让编译器推断是否可行。
-        > 若类型不精准而需要类型转换时，联用auto与cast
-    * 调用容器的非`initializer_list`的构造函数时，使用`vector<int> v(10, 1)`
-    * 调用容器的`initializer_list`的构造函数时，使用`vector<int> v{10, 1}`
-    * 其它情况（该类无形参为initializer_list的构造函数）调用构造函数时，使用`string s{"string"}`
 
-* 尽可能延后对象的声明直到使用的前一刻，并一律马上初始化
-
-* 循环中使用的对象，一般在循环体中定义而非在循环外，因为
-前者执行n次构造+n次析构，后者执行1次构造+1次析构+n次赋值。
-所以**除非1次赋值比1次构造+1次析构更高效，否则定义再循环内**
-> 一般来讲，长string、容器与流这类构造开销大的类都应该定义在循环外
-
-* 注意多个翻译单元(TU)中，non-local static对象的初始化顺序是未定义的，此时需要使用[reference-return技术](#reference-return)
-    该技术优点如下：
-    * 解决多TU中static对象的初始化顺序问题
-    * 在调用`get_a()`之前，不会有构造`a`的开销
-
-
-## 异常
+# 异常
 * 异常的易错点
     * catch语句按顺序进行捕获，所以派生类放前面，基类放后面
     * 以引用捕获，而非值捕获或指针捕获
@@ -254,7 +173,7 @@
     * 使用copy-and-sawp技巧
     * 使用move_if_noexcept
 
-## 并发
+# 并发
 * 同步单个变量用`std::atomic`，同步多个变量用`std::mutex`
 
 * `volatile`用于特种内存（值的改变由程序之外的条件影响）
@@ -262,7 +181,7 @@
 * 保证const成员函数的线程安全性，因为const成员函数一般视为只读，如此在多线程环境应该是无需用户手动同步的；
     但是若它更改了mutable数据成员，为了维护上述线程安全性，需要在const成员函数中进行同步
 
-## 效率优化
+# 效率优化
 * 延迟评估：
     * 写时复制
         * Handle类持有Implement类的指针
@@ -284,11 +203,11 @@
         > 预先进行一次大动作，代替多次小动作
         > 如：磁盘I/O，堆内存申请，等各种系统调用
 
-## 底层const优点
+# 底层const优点
 * 可以让编译器帮助我们查找违反本意（即修改了不该修改的数据）的代码
 * <b>const T&</b>相比<b>T&</b>，前者可以接收更多类型，见下表
 
-## 类的封装
+# 类的封装
 * non-member non-friend函数比member具有更好的函数封装性，且可以前者可以分离编译
 
 * 数据成员应该封装为private，
@@ -385,7 +304,7 @@ std::unique_ptr<Human> Human::make(const std::string& name, std::size_t id)
 ```
         </details>
 
-## reference-return
+# reference-return
 &emsp;当在`A`文件中定义`a`，在`B`文件中定义`b`，`b`依赖于`a`，
 但是`a`不一定就在`b`之前构造
 <a href=## title="即使a会存储在数据段中，看似构造了，但其实它可能还需要在运行期调用构造函数，比如std::vector即使定义在全局，仍然需要在运行期在main调用之前调用其构造函数来获取堆内存；另一个例子就是定义在<iostream>里的cin与cout">[注]</a>，
@@ -411,7 +330,7 @@ ObjB b{get_a()};    // 这样在构造b之前，a必定是已构造的
 ```
 </details>
 
-## 异常安全
+# 异常安全
 * 异常安全性
     * 不泄漏任何资源
     * 不允许数据败坏
@@ -421,6 +340,24 @@ ObjB b{get_a()};    // 这样在构造b之前，a必定是已构造的
     * 基本承诺  ：若异常发生，保证资源不泄漏，保证数据有效
     * 强烈保证  ：若异常发生，保证返回状态与调用前状态相同
     * 不抛出异常：顾名思义，但若还是抛出异常则终止程序
+
+# 初始化
+* 初始化语法
+    1. `T v{args...}`：值初始化`v{}`，容器`v(args...)`
+    2. `auto v = initializer`：类转`static_cast<T>(initializer)`，引用`auto&`
+    3. `auto [t, v] = aggregation`：引用`auto&`
+
+* 尽可能延后对象的声明直到使用的前一刻，并一律马上初始化
+
+* 循环中使用的对象，一般在循环体中定义而非在循环外，因为
+前者执行n次构造+n次析构，后者执行1次构造+1次析构+n次赋值。
+所以**除非1次赋值比1次构造+1次析构更高效，否则定义再循环内**
+> 一般来讲，长string、容器与流这类构造开销大的类都应该定义在循环外
+
+* 注意多个翻译单元(TU)中，non-local static对象的初始化顺序是未定义的，此时需要使用[reference-return技术](#reference-return)
+    该技术优点如下：
+    * 解决多TU中static对象的初始化顺序问题
+    * 在调用`get_a()`之前，不会有构造`a`的开销
 
 ## auto初始化
 * 优点
@@ -459,7 +396,7 @@ ObjB b{get_a()};    // 这样在构造b之前，a必定是已构造的
 
     * 注意成员的构造顺序与声明顺序一致，且基类本身先构造；对于多重继承的基类构造顺序，则是从左到右、从上到下 <a href=## title="从左到右即是在派生说明中的顺序，从上到下即是从更深的基类到派生类">[注]</a>
 
-## 内存引用优化
+# 内存引用优化
 读取某个内存引用，若在作用域内不可能被某些操作写入，重复引用时可以被编译器优化，
 而避免手动将其载入寄存器的麻烦，以下操作便会妨碍优化：
 
@@ -471,7 +408,7 @@ ObjB b{get_a()};    // 这样在构造b之前，a必定是已构造的
 * 全局变量：试图读取全局对象，但又要调用任何函数
     > 任何函数都可能修改全局变量，包括lambda
 
-## set_new_handle
+# set_new_handle
 * 为不同的类设计new失败时的处理函数
 ```cpp
 // 此例子中为简便而并未将实现分离
@@ -505,7 +442,7 @@ private:
 }
 ```
 
-## 莫滥用inline函数
+# 莫滥用inline函数
 **注意：莫要滥用inline函数，特别是构造函数与析构函数，因为**
 * 构造函数的会捕获成员构造时所抛出的异常并析构已构造的成员（不会调用类的析构函数），
     则会有大量的重复调用成员的析构函数，特别是第一个构造的成员的析构函数
@@ -517,7 +454,7 @@ private:
 * 流程直接
 * 调用频繁
 
-## 标签分派
+# 标签分派
 ```cpp
 template <typename T>
 void func_tool(T&& t, false_type);
@@ -532,7 +469,7 @@ void func(T&& t)
 }
 ```
 
-## 模板类型限制
+# 模板类型限制
 ```cpp
 // 限制对`int&` `const int&` `int&&`的实例化
 template <typename T, typename = enable_if_t<
@@ -541,7 +478,7 @@ template <typename T, typename = enable_if_t<
 void func(T&&);
 ```
 
-## const函数重载技巧
+# const函数重载技巧
 * `const T&`重载`T&`时，non-const版本调用const版本以避免代码重复
     ```cpp
     const T& func(const T& t);
