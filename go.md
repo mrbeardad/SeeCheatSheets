@@ -33,7 +33,7 @@ $GOCACHE/
   * 伪版本：特殊的预发布版本，go自动根据git-tag, utc-time, commit-hash生成伪版本号
   * v0与预发布版本均视作不稳定版本，即视其与任何版本都不兼容
   * go根据MVS(minimal version selection)算法计算模块依赖树
-<!-- entry begin: go -->
+<!-- entry begin: go command -->
 ```sh
 go env [-u] [-w] [var ...]
 # 逗号分隔列表，指定proxy-url，direct表示直接从版本管理仓库下载
