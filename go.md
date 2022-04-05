@@ -1,4 +1,4 @@
-# 项目构建
+# 安装
 ```txt
 $GOROOT/
 └── pkg/
@@ -53,7 +53,7 @@ go mod tidy [-v]                # 重新扫描并整理依赖
 go mod vendor [-v]              # 同步依赖模块到vendor目录
 go mod graph                    # 列出依赖模块
 go mod why packages...          # 列出主模块到列出包的最短路径
-go mod download                 # 下载主模块所有依赖
+go mod download [all]           # 下载主模块所有依赖
 
 go get -d golang.org/x/net      # 管理依赖，可选添加@指定版本
 # @v1.2.3       # 完整版本号
@@ -84,16 +84,21 @@ go install [packages]           # 编译并安装当前包或指定包
     * `$GOPATH/pkg/mod/`
     * 下载模块
 ```go
-// go源文件第一条语句必须是定义包名
-// 一个目录就是一个包，顶级目录下所有源文件必须属于同一个包
+// 源文件第一条语句必须是定义包名
 package pkgname
-package internal        // 仅能在该模块中访问
+package main                    // 构建可执行文件的包
+package internal                // 仅在模块内访问的包
 
 // 导入指定包，即指定路径下所有源文件，同属一个包的其他文件直接可见
-import    "Module/path/to/pkg"  // 包限定符为对应包名，所有包名最好与目录名相同
+import    "Module/path/to/pkg"  // 包限定符为对应包名，所以包名最好与目录名相同
 import as "Module/path/to/pkg"  // 包限定符别名为as
 import .  "Module/path/to/pkg"  // 直接导入包中导出的符号，无需额外添加包限定符
 import _  "Module/path/to/pkg"  // 指明不会使用该包中的符号，仅利用导入该包的副作用(init函数)
+
+// 包初始化：首先根据依赖关系初始化所有全局变量，再调用所有init函数
+func init() {   // 一个包甚至一个源文件内可存在多个init函数
+
+}
 
 // 导出全局作用域中任何以大写字母开头的变量、常量、函数、类型、字段、方法、接口
 var Var Type
@@ -106,16 +111,15 @@ type Base interface { Method(T) RetT }
 
 
 # 变量
-* go自带垃圾回收器，变量引用计数为0时判定为可销毁
-* 退出变量声明所在作用域时，变量引用计数减1
+* 垃圾回收器：
+  * 最小触发GC内存大小 4MB*GOGC/100 （GOGC默认100，`off`关闭GC）
+  * 内存分配达到一定比例则触发GC
+  * 2分钟没触发过GC则触发GC
+  * 手动触发GC`runtime.GC()`
 ```go
-// 多个变量名可用逗号分隔，变量名可为空白标识符_
-var var0 Type
-var var1 Type = Var
-var var2      = Var
-var3         := Var
-var3, var4   := Var, Var
-_, var5      := Var, Var
+// var variable Type
+variable := initializer // 类转：Type(initializer)
+a, b, _  := get_values()
 ```
 
 # 常量
@@ -123,8 +127,8 @@ _, var5      := Var, Var
 * 常量具有任意精度（实现可能会有限制），可以无类型
 * 无类型常量在表达式中会进行适当类型转换，若可能丢失精度则编译器报错
 ```go
-const INT int = 1 << 31     // 无类型常量，任意精度
-const BIGINT = 1 << 511     // 有类型常量，限制精度
+const INT int = 1 << 31     // 有类型常量，限制精度
+const BIGINT = 1 << 511     // 无类型常量，任意精度
 // 枚举值
 const (
     _, _ = iota, iota       // iota == 0
@@ -138,8 +142,6 @@ const (
 
 
 # 表达式
-* 操作符优先级
-
 | 操作符                       | 备注               |
 | ---------------------------- | ------------------ |
 | `.` `()` `[]`                | 成员、函数、下标   |
@@ -160,72 +162,73 @@ const (
 # 语句
 * **分支**
 ```go
-    if init; cond {
+if [init;] condition {
 
-    } else if cond {
+} else if cond {
 
-    } else {
+} else {
 
-    }
-
-// golang中并未限制label为整形常量，但variable与label的类型必须相同
-    switch init; variable {
-    case label1:        // case label，从上到下，从左到右，短路求值
-        break
-    case label2, label3:// 每条分支中的变量独立
-        fallthrough
-    default:
-        switch variable {
-        default:
-        }
-    }
+}
 
 // golang中switch本质就是if-else
-    switch {
-    case cond1:
-    case cond2:
-    default:
-    }
+switch {
+case condition:
+
+default:
+
+}
+
+// variable与label的类型必须相同
+switch [init;] variable {
+case label1, label2:    // case label，从上到下，从左到右，短路求值
+    fallthrough
+default:
+
+}
 ```
 
 * **循环**
 ```go
-    for init; cond; iter {
-        for cond {
-            for {
+for initializer; condition; iterator {
+    for condition {
+        for {
+            break
+            continue
+        }
+    }
+}
+
+// 支持字符串、数组、数组指针、切片、映射、通道
+for idxOrKey := range container {  // 注意range表达式会浅拷贝container，注意区分值语义与引用语义
+    for idxOrKey, val := range container {
+        for data := range channel {     // 通道被关闭则退出循环
+            for range any {
+                break
                 continue
             }
         }
     }
-
-// 支持字符串、数组、数组指针、切片、映射、通道
-    for idxOrKey := range container {  // 注意range表达式会对结构值进行一次拷贝，区分引用语义与值语义类型
-        for idxOrKey, val := range container {
-            for data := range channel {     // 通道被关闭则退出循环
-                for range any {
-                    break
-                }
-            }
-        }
-    }
+}
 ```
 
 
 * 延迟调用
 ```go
-// defer将函数地址及其参数（当场捕获）压栈，延迟到当前函数“返回前”按出栈顺序调用
-    defer func() {
-        ret = recover() // 延迟调用可访问外部函数的局部变量
-        if ret != nil { // recover返回nil可能是当前无panic，也可能是panic(nil)
-            println("catch a panic!")
-        } else {
-            panic("throw a panic!")
-        }
-    }()
-    defer call3rd()
-    defer call2nd()
-    defer call1st()
+// 模拟异常
+defer func() {
+    panic = recover()
+    if panic != nil { // recover返回nil可能是当前无panic，也可能是panic(nil)
+        println("catch a panic!")
+    } else {
+        panic("throw a panic!")
+    }
+}()
+
+defer call3rd()
+defer call2nd()
+defer call1st()
 ```
+
 
 * 异步并发
     * 默认goroutine运行在多个系统线程中，从而可能并行
@@ -233,19 +236,11 @@ const (
         > 每个线程都有自己的协程队列（无锁），另外还有一个全局协程队列（有锁）
     * 占用当前线程控制流的协程阻塞前，会主动交出控制权给下个协程（或许是下个非阻塞用户协程，或许是调度器）
 ```go
-func asyncrun() (future chan int)
-    future = make(chan int, 1)
-    for i := 0; i < 10; i++ {
-        go func(i int) {    // go语句无法获取启动函数返回值，通过让闭包引用捕获外覆函数返回值来解决
-            println(i)
-        }(i)
-    }
-}
+go jobRun(args...)
 ```
 
 
 # 函数
-* 函数值底层数据结构：函数指针
 ```go
 // 一般函数示例
 func f(arg1 T1, arg2 T2) RetT {
@@ -274,10 +269,6 @@ func counter(i int) func() int {
     }
 }
 
-// 包初始化器，在当前文件所有变量初始化以及导入包的初始化都完成后才调用该文件init函数
-func init() {
-    /*...*/
-}
 ```
 
 

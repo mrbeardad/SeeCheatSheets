@@ -8,19 +8,16 @@ pkg_src/
 └── modC/py
 ```
 
-# 包
-* 项目管理的单元
+# 包与模块
 * 在一个目录下创建名为`__init__.py`的文件即可形成一个package
 * 导入包前会执行`__init__.py`并将其中符号导入包命名空间
 ```python
+from package.module import name
+
 import package.module       # 可将其完全当做module来编写，见下
 from package import module  # 从指定的package中导入module
 from package import *       # 导入包 __init__.py 中由 类型为list[str]的全局变量 __all__ 中指定的模块
-```
 
-
-# 模块
-```python
 import module1, module2                             # 导入模块，隔离其符号表
 import module1 as alias1, module2 as alias2         # 导入模块，并使用模块别名
 from module import name1, name2                     # 导入模块中指定符号

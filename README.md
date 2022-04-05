@@ -1,14 +1,14 @@
 - [安装](#安装)
 - [编程之道](#编程之道)
-- [语言](#语言)
+- [编程语言](#编程语言)
   - [C++](#c)
   - [Go](#go)
   - [Python](#python)
-  - [Web](#web)
+- [Web](#web)
 - [Server](#server)
 - [Linux](#linux)
 - [底层原理](#底层原理)
-- [杂项](#杂项)
+- [其他](#其他)
 
 # 安装
 ```sh
@@ -21,7 +21,7 @@ cmake --build . -t see
 cmake --install .
 ```
 ***本仓库中提供了一支C++程序`see`用于快速查看笔记：***
-它会搜索`~/.cheat/*.md`中的entry，查找匹配的entry并打印；
+它会搜索`~/.cheat/*.md`中匹配的笔记条目并进行语法高亮后打印到终端。
 每个条目以`<!-- entry begin: .* -->`的形式开头，并以`<!-- entry end -->`结尾；
 其中`.*`表示关键字，see便会搜索其中的关键子决定是否匹配；
 详情请使用`see -h`查看。
@@ -41,11 +41,8 @@ cmake --install .
 * [设计模式](dspt.md):star:
     > 应用框架系统的设计套路
 
-# 语言
-* [思想碰撞](langdiff.md):star:
-    > 不同的语言有各自不同的特点以及背后的思想
-* [基础组件](langman.md):star:
-    > 掌握一门语言的必要条件是熟悉它的基础标准库
+# 编程语言
+* [语言总结](langsum.md):star:
 
 ## C++
 * [C++语法特性](cpp.md)
@@ -69,7 +66,7 @@ cmake --install .
 * [Python语言基础](python.md)
     > 基础语法与内置类型操作
 
-## Web
+# Web
 * [HTTP](http.md)
     > 超文本传输协议
 * [HTML](html.md)
@@ -125,7 +122,7 @@ cmake --install .
 >     > 差错校验与加密技术
 > * [数据结构与算法](dsaa.md)
 
-# 杂项
+# 其他
 * [Markdown语法](markdown.md)
 * [多种正则语法](regex.md)
 * [比特币系统](bitcoin.md)

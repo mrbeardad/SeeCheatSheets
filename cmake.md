@@ -1,54 +1,23 @@
-# 系统构建
-* 模块
-    * 一系列类、函数的集合，文件系统中表现为一个接口头文件和一个（可选）实现文件
-    * 对子模块的依赖尽量转移到实现文件中
-* 库
-    * 一系列模块的集合，文件系统中表现为一系列头文件和若干静态/动态库
-* 程序入口
-    * 包含`main`函数的一个实现文件，该`main`函数即程序入口，而该文件则集成各模块功能实现业务程序
-* 构建
-    * 依赖需要手动安装，并手动指定位置（模块/库搜送目录默认不包含当前目录）
-    * 发布时，或者由用户手动安装依赖，或者由开发者将依赖一同打包
-```txt
-# 3种target：脚本命令、可执行程序、静态/动态库
-src/
-    main.cpp~
-    modA.cpp
-    modB.cpp
-    modC.cpp
-include/
-    modA.hpp
-    modB.hpp
-    modC.hpp
-    header_only_mod.hpp
-```
-
-# cmake命令
+# 命令行参数
 <!-- entry begin: cmake -->
 ```sh
-# cmake命令
-cmake "[options]" "<path-to-source>"
-cmake "[options]" "<path-to-existing-build>"
-cmake "[options]" -S "<path-to-source>" -B "<path-to-build>"
-
 # 一般步骤
 cd build_dir
-cmake source_dir
+cmake [options] source_dir
 cmake --build .
 cmake --install .
 
 # 选项
--D <var>=<val>
--G <generator-name>
+-D CMAKE_VARIABLE=value
 
---build   <build_dir> [<options>] [-- <build-tool-options>]
-    -j <jobs>            # 指定线程数
-    -t <target>          # 执行指定makefile目标
-    --clean-first        # build前先执行clean
+--build build_dir [options]
+    -j n                # 指定线程数
+    -t target           # 构建指定target
+    --clean-first       # 构建前先清理缓存
 
---install <build_dir> [<options>]
-    --prefix <path>      # 覆盖CMAKE_INSTALL_PREFIX
-    --component <compon> # 仅安装目标组件
+--install build_dir [options]
+    --prefix=path       # 覆盖CMAKE_INSTALL_PREFIX
+    --component=compon  # 仅安装目标组件
 ```
 <!-- entry end -->
 
@@ -238,7 +207,7 @@ install(DIRECTORY <dir>...    [...])
 
 # 内建变量
 | 变量名                | 含义                         |
-|-----------------------|------------------------------|
+| --------------------- | ---------------------------- |
 | PROJECT_NAME          | 当前项目名称                 |
 | CMAKE_PROJECT_NAME    | 顶级项目名称                 |
 | PROJECT_VERSION       | 当前项目版本号               |
@@ -258,7 +227,7 @@ install(DIRECTORY <dir>...    [...])
 | CMAKE_INSTALL_PREFIX  | 安装路径前缀                 |
 
 | 构建类型                | 编译参数          |
-|-------------------------|-------------------|
+| ----------------------- | ----------------- |
 | Release                 | `-O3 -DNDEBUG`    |
 | MinSizeRel              | `-Os -DNDEBUG`    |
 | RelWithDebInfo(default) | `-O2 -g -DNDEBUG` |

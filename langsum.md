@@ -1,18 +1,18 @@
 # 依赖
 * C++
     * 依赖管理：手动（git-submodule & cmake）
-    * 依赖模块：一个头文件 + 一个实现文件（可选）
+    * 依赖模块：一个头文件 + 一个实现文件（可选），初始化：`global-constructor`
     * 依赖导入：导入头文件路径，符号限定于命名空间
     * 依赖导出：头文件中所有宏与符号
 * Go
     * 依赖管理：自动（go）
-    * 依赖模块：目录下所有文件（不包括子目录）
+    * 依赖模块：目录下所有文件（不包括子目录），初始化：`func init()`
     * 依赖导入：导入目录路径，符号限定于包名
     * 依赖导出：大写字母开头的符号
 * Python
     * 依赖管理：手动（pip）
-    * 依赖模块：一个源文件
-    * 依赖导入：导入源文件名去除扩建，符号限定于文件名
+    * 依赖模块：一个源文件，初始化：`__init__.py`
+    * 依赖导入：导入包名.模块名，符号限定于文件名
     * 依赖导出：源文件中所有符号
 
 # 变量
@@ -32,43 +32,52 @@
     * 作用域：直到退出函数才不可见
     * 赋值拷贝：所有类型变量本质为指针，均为引用语义
 
-**引用语义作用**：
-* 避免拷贝
-* 修改实参
+# 表达式
+> 优先级：右结合 > 单目 > 乘除 > 加减 > 关系 > 逻辑与 > 逻辑或
+* Go
+  * `=` `++` `--`均为语句而非表达式
+* Python
+  * 支持指数运算`**`与浮点数模运算`%`
+  * 支持连续关系比较`a > b > c`且省略逻辑与符号
 
 # 语句
 * C++
     * 分支
-        * if-else
-        * switch-case-default
+        * `if (init; cond) else`
+        * `switch () { case CONST: default: }`
     * 循环
-        * for
-        * range-based-for
-        * do-while
-        * while
+        * `for (init; cond; iter)`
+        * `for (auto elem : container)`
     * 异常
-        * try-catch
-        * throw
+        * `try {}`         `func() try{}`
+        * `catch (excep&)` `catch (...)`
+        * `throw excep`    `throw`
 * Go
     * 分支
-        * if-else
-        * switch-case-default
+        * `if init; cond {} else {}`
+        * `switch { case cond: fallthrough }`
+        * `switch init; cond { case var: }`
     * 循环
-        * for
-        * for-range
+        * `for (init; cond; iter) {}`
+        * `for (cond) {}`
+        * `for {}`
+        * `for idx, val := range container {}`
     * 延迟
         * defer
     * 并发
         * go
 * Python
     * 分支
-        * if-elif-else
+        * `if cond: elif cond: else:`
     * 循环
-        * while-else
-        * for-else
+        * `while cond: else:`
+        * `for elem in Iter: else:`
     * 异常
-        * try-except-else-finally
-        * raise
+        * `try:`
+        * `except Exception:` `except Exception as excep` `except:`
+        * `raise excep` `raise excep from cause` `raise`
+        * `else:`
+        * `finally:`
 
 # 函数
 * C++
@@ -79,7 +88,6 @@
     * 泛型变参
     * 闭包
 * Go
-    * 参数列表
     * 返回列表
     * 变参包
     * 闭包

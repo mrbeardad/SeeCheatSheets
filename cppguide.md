@@ -25,12 +25,9 @@
 
 # 变量
 * 初始化语法
-    * `T t;`：这种初始化语句预示着接下来一段代码用于初始化该变量，对该语句保持警醒注意该变量是否被正确初始化
-    * `auto  t = T(args...);`
-    * `auto  t = T{args...};`
-    * `auto  t = initializer;`：若initializer的类型并非期望类型，则使用cast显式转换
-    * `auto* t = initializer;`
-    * `auto& t = initializer;`
+    1. `T v{args...}`：值初始化`v{}`，容器`v(args...)`
+    2. `auto v = initializer`：类转`static_cast<T>(initializer)`，引用`auto&`
+    3. `auto [t, v] = aggregation`：引用`auto&`
 
 * 指针 or 引用：
     * 一般使用引用，除非需要**NULL语义**或**更改指向**
