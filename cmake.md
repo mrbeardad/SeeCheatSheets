@@ -21,50 +21,49 @@ cmake --install .
 ```
 <!-- entry end -->
 
-# CMakeLists.txt基础命令
+# CMakeLists.txt基础
+## 添加目标
 ```cmake
 # CMake版本要求
 cmake_minimum_required(VERSION 3.10)
 
 # 工程项目名称
-project(project_name
-    VERSION <major>[.<minor>[.<patch>[.<tweak>]]]
-    DESCRIPTION "project description string"
-    HOMEPAGE_URL "URL string")
+project(project_name VERSION <major>[.<minor>[.<patch>[.<tweak>]]])
 
-# 注意：target的文件名不能加路径
+# 可执行文件
+add_executable(target
+    source...)
 
-# 可执行文件(target)
-add_executable(exe_target
-    main.cpp)
+# 静态库
+add_library(target STATIC
+    source...)
 
-# 别名(target)
-add_library(namespace::lib_target ALIAS
-    lib_target)
+# 动态库
+add_library(target SHARED
+    source...)
 
-# 静态库(target)
-add_library(lib_target STATIC
-    src/lib_a.cpp)
+# HeaderOnly库
+add_library(target INTERFACE) # 该target添加头文件时也只能指定INTERFACE
 
-# 动态库(target)
-add_library(lib_target SHARED
-    src/lib_so.cpp)
+# 安装
+install(TARGETS   <target>... [...])
+install(FILES     <file>...   [...])
+install(DIRECTORY <dir>...    [...])
+# DESTINATION       <path>      指定安装目录的绝对或相对地址
+# PERMISSIONS       <perm>..    包括{OWNER|GROUP|WORLD}_{READ|WRITE|EXECUTE}, SETUID, SETGID
+# CONFIGURATIONS    <conf>      在指定配置下才生效
+# COMPONENT         <comp>      指定属于哪个安装组件，如runtime、development等
 
-# HeaderOnly库(target)
-add_library(lib_target INTERFACE)
-    # 该target添加头文件时也只能指定INTERFACE
-
-# 自定义脚本运行(target)
+# 自定义命令
 add_custom_target(target
     [ALL] # 表示该target应该加入default target
     cmd args...
-    [COMMAND cmd args...]...)
-
-add_dependencies(target
-     [<target-dependency>]...)
+    [COMMAND command [args...]]...
+    [DEPENDS [depens...]]
+    [WORKING_DIRECTORY dir])
 ```
 
-# CMakeLists.txt编译参数
+## 编译参数
 ```cmake
 # INTERFACE :表示只用于链接到该target的其他target
 # PUBLIC    :表示用于target和链接到它的其他target
@@ -72,107 +71,77 @@ add_dependencies(target
 
 # 头文件
 target_include_directories(target
-    PUBLIC
-    include_dir)
+    PUBLIC include_dirs...)
 
 # 链接库
 target_link_libraries(target
-    PRIVATE
-    lib_target)
+    PRIVATE item...) # 目标名、库名、路径名
 
 # 标准版本
 target_compile_features(target
-    PRIVATE
-    cxx_feature_name
-    cxx_std_11)
+    PRIVATE cxx_feature_names cxx_std_11 ...)
 
 # 编译参数
-target_compile_options(target
-    [BEFORE] # 表示将参数加在前面而非缺省的最后
-    PRIVATE
-    -lpthread -ldl -lutil -fcoroutines)
-add_compile_options(-opt)
+target_compile_options(target [BEFORE] # 表示将参数加在前面而非缺省的最后
+    PRIVATE options...)
+add_compile_options(options...)
 
 # 宏定义
 target_compile_definitions(target
-    PRIVATE
-    MACRO=val)
+    PRIVATE MACRO=val)
 add_compile_definitions(MACRO=val)
-
 ```
 
-# CMakeLists.txt配置变量
+## 脚本变量
 ```cmake
-# 相当于在此处插入并执行子目录下的CMakeLists.txt脚本
-add_subdirectory(dir_name)
+# 普通变量：作用于当前函数或目录
+set(<variable> <value>... [PARENT_SCOPE]) # 该选项表示为上级目录或上级函数作用域设置变量，而并非为当前作用域设置，返回后生效
 
-# 构建期配置文件，关联cmake宏与cpp宏
-configure_file(include/ver.h.in  ${PROJECT_BINARY_DIR}/ver.hpp)
-    # 将文件中的 `#cmakedefine MACRO` 替换为 `#define MACRO @MACRO@`
-    # 将文件中的 `@CMAKE_VAR@` 替换为cmake项目变量 `CMAKE_VAR` 的值
-    # 注意使用 target_include_directories(target ${PROJECT_BINARY_DIR})
-
-# 设置可开关的选项
-option(OPTION "description" [OFF|ON])
-    # 与用普通cmake变量来控制cpp宏的区别在于：
-    # 1. 在GUI程序中显示该选项
-    # 2. 定义为CACHE变量
-
-# 在当前函数作用域或目录作用域中设置变量
+# 缓存变量：存储在Cmake缓存中，用于为用户提供配置。设置缓存变量成功后会删除同名的普通变量
 set(<variable> <value>...
-    [PARENT_SCOPE])     # 该选项表示为上级目录或上级函数作用域设置变量，而并非为当前作用域设置，返回后生效
-    # 若有多个变量会存储为列表变量
-    # 若<value>为空相当于unset(<variable>)
+    CACHE <type>    # <type>包括：BOOL、FILEPATH、PATH、STRING、INTERNAL
+    <doc-string>
+    [FORCE])        # 表示强制覆盖已存在的缓存变量
 
-# 设置缓冲作用域的变量，其生命周期可跨多次cmake命令行调用
-set(<variable> <value>...
-    CACHE <type> <doc-string> # <type>包括：BOOL、FILEPATH、PATH、STRING、INTERNAL（GUI不对外显示的字符串，隐式FORCE）
-    [FORCE])    # 表示强制覆盖已存在的缓存变量
-    # 设置缓存变量成功后会删除同名的普通变量
+option(OPTION "description" [OFF|ON])   # BOOL缓存变量
 
-# 设置环境变量
-set($ENV{VAR} <value>)
+# 环境变量
+set(ENV{VAR} [<value>])
 
-# 读取文件内容到变量
-file(READ <filename> <variable>
-    [OFFSET <offset>]
-    [LIMIT <max-bytes>]
-    [HEX])
+# 获取文件列表
+file(GLOB|GLOB_RECURSE <variable> [<globbing-expressions>...])
 
-# 读取文件每行内容形成列表
-file(STRINGS <filename> <variable> [<options>...])
-    # <options>包括
-    # LENGTH_MAXIMUM <max-len>
-    # LENGTH_MINIMUM <min-len>
-    # LIMIT_COUNT    <max-line>
-    # REGEX          <regex>
+# 列表操作
+list()
 
-# 计算哈希值
-file(<HASH> <filename> <variable>)
-    # 支持的哈希算法有：MD5、SHA1、SHA256、SHA512、SHA3_256、SHA3_512
+# 条件判断
+if()
+elseif()
+else()
+endif()
 
-# 下载文件
-file(DOWNLOAD <URL> [<file>] [<options>...])
-    # 不指定<file>则不下载而只判断<URL>是否存在
-    # INACTIVITY_TIMEOUT <seconds>
-    # TIMEOUT <seconds>
-    # SHOW_PROGRESS
-    # STATUS <variable>             # 两元素的列表变量，首元素为数字表示错误码，次元素为错误字符串
-    # EXPECTED_HASH ALGO=<value>    # ALGO为哈希算法
-
-# 打印字符串
+# 打印消息
 message( [<mode>] <message-string>... )
     # FATAL_ERROR       # 停止进程与构建
     # SEND_ERROR        # 继续进程但不构建
     # WARNING           # 继续进程
+
+# 相当于在此处插入并执行子目录下的CMakeLists.txt脚本
+add_subdirectory(dir_name)
+
+# 构建期配置文件，关联cmake宏与cpp宏
+configure_file(foo.h.in foo.hpp)
+    # 将文件中的 `#cmakedefine VAR ...` 替换为 `#define VAR ...`
+    # 将文件中的 `@CMAKE_VAR@` 替换为cmake变量 `CMAKE_VAR` 的值
+    # 注意添加 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 ```
 **关于cmake脚本中的变量**：
 * 变量类型均为字符串（必要时使用""来转义），一些命令会自己将字符串解析为其它类型
 * 使用未定义的变量相当于使用空字符串
+* 变量搜索会依照作用域向上进行搜索，最终还会搜索缓存变量
 * 引用普通变量`${VAR}`
 * 引用缓存变量`$CACHE{VAR}`
 * 引用环境变量`$ENV{VAR}`
-* 变量搜索会依照作用域向上进行搜索，最终还会搜索缓存变量
 
 
 # 第三方库依赖
@@ -195,38 +164,21 @@ find_package(Boost
 # Boost_<C>_LIBRARY      - Libraries to link for component <C> (may include target_link_libraries debug/optimized keywords)
 ```
 
-# 安装
-```cmake
-install(TARGETS   <target>... [...])
-install(FILES     <file>...   [...])
-install(DIRECTORY <dir>...    [...])
-# DESTINATION       <path>      指定安装目录的绝对或相对地址
-# PERMISSIONS       <perm>..    包括{OWNER|GROUP|WORLD}_{READ|WRITE|EXECUTE}, SETUID, SETGID
-# CONFIGURATIONS    <conf>      在指定配置下才生效
-# COMPONENT         <comp>      指定属于哪个安装组件，如runtime、development等
-```
-
 # 内建变量
 <!-- entry begin: cmake buildtype builtin-variable -->
-| 变量名                | 含义                         |
-| --------------------- | ---------------------------- |
-| PROJECT_NAME          | 当前项目名称                 |
-| CMAKE_PROJECT_NAME    | 顶级项目名称                 |
-| PROJECT_VERSION       | 当前项目版本号               |
-| CMAKE_PROJECT_VERSION | 顶级项目版本号               |
-| name_VERSION          | 指定项目版本号               |
-| PROJECT_SOURCE_DIR    | 当前项目源码树               |
-| CMAKE_SOURCE_DIR      | 顶级项目源码树               |
-| name_SOURCE_DIR       | 指定项目源码树               |
-| PROJECT_BINARY_DIR    | 当前项目构建目录             |
-| CMAKE_BINARY_DIR      | 顶级项目构建目录             |
-| name_BINARY_DIR       | 指定项目构建目录             |
-| CMAKE_BUILD_TYPE      | 构建类型（见下）             |
-| CMAKE_CXX_COMPILER    | 编译平台                     |
-| CMAKE_CXX_FLAGS       | 编译参数                     |
-| CMAKE_CXX_STANDARD    | C++语言标准版本              |
-| CMAKE_MODULE_PATH     | 默认/usr/share/cmake/Modules |
-| CMAKE_INSTALL_PREFIX  | 安装路径前缀                 |
+| 变量名                   | 含义                         |
+| ------------------------ | ---------------------------- |
+| CMAKE_PROJECT_NAME       | 顶级项目名称                 |
+| PROJECT_NAME             | 当前项目名称                 |
+| CMAKE_PROJECT_VERSION    | 顶级项目版本号               |
+| PROJECT_VERSION          | 当前项目版本号               |
+| CMAKE_SOURCE_DIR         | 顶级项目源码树               |
+| CMAKE_CURRENT_SOURCE_DIR | 当前项目源码树               |
+| CMAKE_BINARY_DIR         | 顶级项目构建目录             |
+| CMAKE_CURRENT_BINARY_DIR | 当前项目构建目录             |
+| CMAKE_BUILD_TYPE         | 构建类型                     |
+| CMAKE_MODULE_PATH        | 默认/usr/share/cmake/Modules |
+| CMAKE_INSTALL_PREFIX     | 安装路径前缀                 |
 
 | 构建类型                | 编译参数          |
 | ----------------------- | ----------------- |
