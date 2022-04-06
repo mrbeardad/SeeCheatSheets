@@ -292,9 +292,8 @@ func (this *Class) MethodP(arg T) RetT { }
 
 // 构造结构体
 var (
-    obj1 = Type{}               // 默认构造为全零值
+    obj3 = Type{ExportMem: val} // 支持部分显式初始化，未初始化字段为零值
     obj2 = Type{v1, v2}         // 必须全部显式初始化
-    obj3 = Type{ExportMem: val} // 支持部分显式初始化
     pObj = &Type{}              // 直接返回指针
 )
 
@@ -411,7 +410,7 @@ f = 0x1p1       // 小数点可忽略，但指数部分不可忽略，基数为2
 ## 字符类型
 * 字符串值底层数据结构：元素类型为byte的动态数组管理器`{buf, len}`
 * 字符串为immutable的原因是使用场景广泛需要确保其安全性（不被caller并发修改）
-* string相比[]byte，会在修改和转换为[]byte时必定出现拷贝
+* string相比`[]byte`，会在修改和转换为`[]byte`时必定出现拷贝
 ```go
 var b byte      // int8别名
 var r rune      // int32别名，注意存储Unicode码点而非UTF-8编码，二者均兼容ascii

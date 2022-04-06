@@ -435,10 +435,10 @@ void func() try
 | temp T&&      | 引用、左值、右值、泛型、转发     |
 
 **形参列表修饰**：
-1. 需要泛型：`template T&&`：注意使用`std::decay_t<T>`与`std::forward<T>(t)`
+1. 默认形式：`const T&`
 2. 修改形参：`T&`
 3. 内置类型：`T`
-4. 其他：`const T&`
+4. 需要泛型：`template T&&`：注意使用`std::decay_t<T>`与`std::forward<T>(t)`
 
 **函数签名修饰**：
 * `noexcept`：当函数抛出异常是不可能或不可接受的时候

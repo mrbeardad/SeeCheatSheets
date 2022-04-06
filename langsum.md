@@ -51,7 +51,7 @@
     * 赋值拷贝：所有类型变量本质为指针，均为引用语义
 
 # 表达式
-> 优先级：成员|函数|下标 > 单目 > 乘除 > 加减 > 关系 > 逻辑与 > 逻辑或
+> 优先级：成员|函数|下标 > 单目 > 乘除 > 加减 > 关系 > 逻辑
 * C++
   * `=`为表达式
   * 支持`? :`
@@ -96,18 +96,32 @@
 
 # 函数
 * C++
-    * 参数修饰
-    * 签名修饰
+    ```cpp
+    inline bool example(const string& s, int i) noexcept {
+        return true;
+    }
+    ```
+    * 形参修饰
+    * 函数声明
     * 默认实参
-    * 重载函数
-    * 泛型变参
+    * 泛型变参包
+    * 函数重载
     * 闭包
 * Go
-    * 指针修饰
+    ```go
+    func example(s *string, i int) (ok bool) {
+        return true;
+    }
+    ```
+    * 形参指针
     * 返回列表
-    * 变参包
+    * 切片变参包
     * 闭包
 * Python
+    ```python
+    def exmaple(s: str, /, i: int, *, l: list) -> bool:
+        return True
+    ```
     * 类型注解
     * 默认实参
     * 位置参数与键值参数
@@ -143,7 +157,7 @@
 ## 复用
 * C++
     ```cpp
-    class Derived: public Base {}
+    class Derived: public Base {};
     ```
 * Go
     ```go
