@@ -1,0 +1,3 @@
+[submodule "src/third_party/unicode_display_width"]
+	path = src/third_party/unicode_display_width
+	url = https://github.com/p-ranav/unicode_display_width

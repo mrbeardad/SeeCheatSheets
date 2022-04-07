@@ -1,18 +1,14 @@
 #ifndef MRBEARDAD_SEE_COMMENT_HPP
 #define MRBEARDAD_SEE_COMMENT_HPP
 
-
 #include "mkdblock.hpp"
 
+namespace mkdhilit {
 
-namespace see {
-
-
-class CommentBlk : public MkdBlock
-{
+class CommentBlk : public MkdBlock {
     static CommentBlk Instance_;
 
-public:
+   public:
     CommentBlk();
     bool matchBegin(const std::string& oneline) override;
     bool matchEnd(const std::string&) override;
@@ -20,8 +16,6 @@ public:
 };
 inline CommentBlk CommentBlk::Instance_{};
 
+}  // namespace mkdhilit
 
-} // namespace see
-
-
-#endif // MRBEARDAD_SEE_COMMENT_HPP
+#endif  // MRBEARDAD_SEE_COMMENT_HPP

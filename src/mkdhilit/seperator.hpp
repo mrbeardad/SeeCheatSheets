@@ -1,18 +1,14 @@
 #ifndef MRBEARDAD_SEE_SEPERATOR_HPP
 #define MRBEARDAD_SEE_SEPERATOR_HPP
 
-
 #include "mkdblock.hpp"
 
+namespace mkdhilit {
 
-namespace see {
-
-
-class SeperatorBlk : public MkdBlock
-{
+class SeperatorBlk : public MkdBlock {
     static SeperatorBlk Instance_;
 
-public:
+   public:
     SeperatorBlk();
     bool matchBegin(const std::string& oneline) override;
     bool matchEnd(const std::string&) override;
@@ -20,8 +16,6 @@ public:
 };
 inline SeperatorBlk SeperatorBlk::Instance_{};
 
+}  // namespace mkdhilit
 
-} // namespace see
-
-
-#endif // MRBEARDAD_SEE_SEPERATOR_HPP
+#endif  // MRBEARDAD_SEE_SEPERATOR_HPP

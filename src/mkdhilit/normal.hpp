@@ -1,18 +1,14 @@
 #ifndef MRBEARDAD_SEE_NORMAL_HPP
 #define MRBEARDAD_SEE_NORMAL_HPP
 
-
 #include "mkdblock.hpp"
 
+namespace mkdhilit {
 
-namespace see {
-
-
-class NormalBlk : public MkdBlock
-{
+class NormalBlk : public MkdBlock {
     static NormalBlk Instance_;
 
-public:
+   public:
     NormalBlk();
     bool matchBegin(const std::string& oneline) override;
     bool matchEnd(const std::string&) override;
@@ -21,8 +17,6 @@ public:
 };
 inline NormalBlk NormalBlk::Instance_{};
 
+}  // namespace mkdhilit
 
-} // namespace see
-
-
-#endif // MRBEARDAD_SEE_NORMAL_HPP
+#endif  // MRBEARDAD_SEE_NORMAL_HPP

@@ -1,18 +1,14 @@
 #ifndef MRBEARDAD_SEE_HEADER_HPP
 #define MRBEARDAD_SEE_HEADER_HPP
 
-
 #include "mkdblock.hpp"
 
+namespace mkdhilit {
 
-namespace see {
-
-
-class HeaderBlk : public MkdBlock
-{
+class HeaderBlk : public MkdBlock {
     static HeaderBlk Instance_;
 
-public:
+   public:
     HeaderBlk();
     virtual bool matchBegin(const std::string& oneline) override;
     virtual bool matchEnd(const std::string&) override;
@@ -20,8 +16,6 @@ public:
 };
 inline HeaderBlk HeaderBlk::Instance_{};
 
+}  // namespace mkdhilit
 
-} // namespace see
-
-
-#endif // MRBEARDAD_SEE_HEADER_HPP
+#endif  // MRBEARDAD_SEE_HEADER_HPP

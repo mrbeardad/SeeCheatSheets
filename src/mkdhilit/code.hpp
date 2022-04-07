@@ -1,29 +1,23 @@
 #ifndef MRBEARDAD_SEE_CODE_HPP
 #define MRBEARDAD_SEE_CODE_HPP
 
-
 #include "mkdblock.hpp"
 
+namespace mkdhilit {
 
-namespace see {
-
-
-class CodeBlk : public MkdBlock
-{
+class CodeBlk : public MkdBlock {
     bool matchedEnd_;
 
     static CodeBlk Instance_;
 
-public:
+   public:
     CodeBlk();
     bool matchBegin(const std::string& oneline) override;
-    bool matchEnd(const std::string &oneline) override;
+    bool matchEnd(const std::string& oneline) override;
     std::string& highlight(std::string& text) override;
 };
 inline CodeBlk CodeBlk::Instance_{};
 
+}  // namespace mkdhilit
 
-} // namespace see
-
-
-#endif // MRBEARDAD_SEE_CODE_HPP
+#endif  // MRBEARDAD_SEE_CODE_HPP
