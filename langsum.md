@@ -1,18 +1,18 @@
 # 依赖
 * C++
     * 依赖管理：手动（git-submodule & cmake）
-    * 依赖模块：一个头文件 + 一个实现文件（可选），初始化：`global-constructor`
-    * 依赖导入：导入头文件路径，符号限定于命名空间
+    * 依赖单元：一个头文件 + 一个实现文件（可选），初始化：`global-constructor`
+    * 依赖导入：`#include <path/to/header.hpp>`，符号限定于命名空间
     * 依赖导出：头文件中所有宏与符号
 * Go
     * 依赖管理：自动（go）
-    * 依赖模块：目录下所有文件（不包括子目录），初始化：`func init()`
-    * 依赖导入：导入模块/包路径，符号限定于包名
+    * 依赖单元：一个目录（不包括子目录），初始化：`func init()`
+    * 依赖导入：`import module.github.com/path/to/package`，符号限定于包名
     * 依赖导出：大写字母开头的符号
 * Python
     * 依赖管理：手动（pip）
-    * 依赖模块：一个源文件，初始化：`__init__.py`
-    * 依赖导入：导入包名.模块名，符号限定于文件名
+    * 依赖单元：一个源文件，初始化：`__init__.py`
+    * 依赖导入：`from package.module import name`，符号限定于文件名
     * 依赖导出：源文件中所有符号
 
 # 变量
@@ -188,7 +188,7 @@
   * 利用动态符号表与反射实现
 
 # 命名
-可用于命名标识符的一些通用前后缀：
+**名字规范的要点是不要节省字母，要做到让别人顾名思义**，以下为一些通用前后缀：
 * 位置：`idx`，`pos`，`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`
 * 计数：`count`，`size`，`length`，`width`，`height`，`depth`
 * 时间：`new`，`old`，`orig`，`cur`，`before`，`after`
@@ -198,16 +198,18 @@
 * 介词：`in`，`on`，`at`，`of`，`2`，`4`
 * 用途：`ret`，`val`，`need`，`temp`，`deal`，`src`，`dest`
 
-| 类型           | 规范            | 举例                          |
-| -------------- | --------------- | ----------------------------- |
-| 命名空间、包名 | 全部小写        | `examplename`                 |
-| 宏、常量       | 全部大写+下划线 | `EXAMPLE_NAME`                |
-| 类型           | 大驼峰拼写法    | `ExampleName`                 |
-| 全局函数/变量  | 大驼峰拼写法    | `::ExampleName`               |
-| 静态变量       | 大驼峰拼写法    | `ExampleName`                 |
-| 动态变量       | 小驼峰拼写法    | `exampleName`                 |
-| 类的成员变量   | 带`_`后缀       | `exampleName_`/`ExampleName_` |
-| 类的成员函数   | 不带`_`后缀     | `exampleName`/`ExampleName`   |
+| C++命名        | 例子               | 备注                                               |
+| -------------- | ------------------ | -------------------------------------------------- |
+| 头文件名       | `example_name.hpp` |
+| 实现文件名     | `example_name.cpp` |
+| 命名空间名     | `example_name`     | 顶级命名空间与项目名匹配，内嵌命名空间与目录名匹配 |
+| 宏             | `EXAMPLE_NAME`     |
+| 类型名         | `ExampleName`      |
+| 函数名         | `ExampleName`      |
+| 常量名         | `kExampleName`     |
+| 变量名         | `example_name`     |
+| struct数据成员 | `example_name`     |
+| class数据成员  | `example_name_`    |
 
 
 # 总结
