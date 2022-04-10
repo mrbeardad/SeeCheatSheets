@@ -35,7 +35,7 @@ cmake --install .
 
 # 编程之道
 * [编码逻辑](coding.md):star:
-* [设计模式](dspt.md):star:
+* [设计模式](dspt.md):star:：面向接口、功能拆分、隔离性、扩展性
 
 # 编程语言
 * [语言总结](langsum.md):star:
