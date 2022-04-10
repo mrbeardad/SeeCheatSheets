@@ -1,19 +1,19 @@
 # 依赖
 * C++
-    * 依赖管理：手动（git-submodule & cmake）
     * 依赖单元：一个头文件 + 一个实现文件（可选），初始化：`global-constructor`
     * 依赖导入：`#include <path/to/header.hpp>`，符号限定于命名空间
     * 依赖导出：头文件中所有宏与符号
+    * 依赖管理：手动（git-submodule & cmake）
 * Go
-    * 依赖管理：自动（go）
     * 依赖单元：一个目录（不包括子目录），初始化：`func init()`
     * 依赖导入：`import module.github.com/path/to/package`，符号限定于包名
     * 依赖导出：大写字母开头的符号
+    * 依赖管理：自动（go-mod）
 * Python
-    * 依赖管理：手动（pip）
     * 依赖单元：一个源文件，初始化：`__init__.py`
-    * 依赖导入：`from package.module import name`，符号限定于文件名
+    * 依赖导入：`from package.subpackage import module`，符号限定于文件名
     * 依赖导出：源文件中所有符号
+    * 依赖管理：手动（pip-install）
 
 # 变量
 * C++
@@ -103,8 +103,8 @@
     ```
     * 形参修饰
     * 函数声明
-    * 默认实参
     * 泛型变参包
+    * 默认实参
     * 函数重载
     * 闭包
 * Go
@@ -123,9 +123,9 @@
         return True
     ```
     * 类型注解
-    * 默认实参
     * 位置参数与键值参数
     * 位置变参包与键值变参包
+    * 默认实参
     * 闭包
 
 # 面向对象

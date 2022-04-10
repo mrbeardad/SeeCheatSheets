@@ -563,11 +563,12 @@ int         pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*c
 
 ## 信号处理
 <!-- entry begin: signal_names strsignal sigemptyset sigfillset sigaddset sigdelset sigismember kill raise sigqueue pthread_kill sigqueue pthread_kill sigpending sigprocmask pthread_sigmask signal sigaction -->
-安全处理信号首要解决问题是防止handler在执行某段代码时被启动
+安全处理信号首要解决问题是防止**正常线程**执行某段代码时被handler中断：
 * `sigprocmask`阻塞handler处理的信号防止其被调用，从而创建保护区（类似互斥锁）
 * `sigsuspend`原子性阻塞线程并恢复SIGNAL_MASK（类似条件量）
 
-其次
+对于**处理函数**内部：
+* 阻塞所有信号
 * 信号不排队所以不能确定信号代表的事件发生了多少次，尽可能多的处理
 * 保存和恢复errno
 * 调用异步安全函数，否则小心使用`volatile sig_atomic_t`全局变量

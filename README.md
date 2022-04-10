@@ -35,90 +35,54 @@ cmake --install .
 
 # 编程之道
 * [编码逻辑](coding.md):star:
-    > 解题技巧与编码经验
 * [设计模式](dspt.md):star:
-    > 应用框架系统的设计套路
 
 # 编程语言
 * [语言总结](langsum.md):star:
-
 ## C++
-* [C++语法特性](cpp.md)
-    > 一份C++语法清单，适合有基础的同学
-* [C++编程指导](cppguide.md)
-    > 优雅的编写C++代码
-* [C++程序库](cppman.md)
-    > 应该掌握的基础C++库
-* [CMake构建系统](cmake.md)
-    > 依赖管理与项目构建
-
+> * [C++语法特性](cpp.md)
+> * [C++编程指导](cppguide.md)
+> * [C++程序库](cppman.md)
+> * [CMake构建系统](cmake.md)
 ## Go
-* [Go语言基础](go.md)
-    > 语言基础
-* [Go程序库](goman.md)
-    > 常用程序库
-
+> * [Go语言基础](go.md)
+> * [Go程序库](goman.md)
 ## Python
-* [Python语言基础](python.md)
-    > 基础语法与内置类型操作
+> * [Python语言基础](python.md)
 
 # Web
-* [HTTP](http.md)
-    > 超文本传输协议
-* [HTML](html.md)
-    > 超文本标记语言
-* [CSS](css.md)
-    > 层叠样式表
-* [JaveScript](js.md)
-    > 前端编程语言
-* [React](react.md)
-    > 前端UI框架
+* [HTTP](http.md)：超文本传输协议
+* [HTML](html.md)：超文本标记语言
+* [CSS](css.md)：层叠样式表
+* [JaveScript](js.md)：前端编程语言
+* [React](react.md)：前端UI框架
 
 # Server
-* K8S
-    > 用于动态编排容器集群
-* [Docker](docker.md)
-    > 提供进程隔离的运行环境
-* [Nginx](nginx.md)
-    > 用于路由与负载均衡
-* [MySQL](sql.md)
-    > 关系型数据库
-* [Redis](redis.md)
-    > 数据结构化内存存储
-* Kafka
-    > 消息队列
+* K8S：用于动态编排容器集群
+* [Docker](docker.md)：提供进程隔离的运行环境
+* [Nginx](nginx.md)：用于路由与负载均衡
+* [MySQL](sql.md)：关系型数据库
+* [Redis](redis.md)：数据结构化内存存储
+* Kafka：消息队列
 
 # Linux
-* [Linux知识体系](linux.md)
-    > 从Linux启动流程开始了解整个Linux系统知识体系
-* [Linux系统接口](apue.md)
-    > 大部分都符合POSIX、XSI或USU规范
-* [Shell命令行](bash.md)
-    > bash基础语法与一些内建命令
-* [开发者工具](devtool.md)
-    > 一些常用的linux命令与工具
+* [Linux总结](linuxsum.md):star:：Linux系统必备知识与技能
+> * [Linux知识体系](linux.md)
+> * [Linux系统接口](apue.md)
+> * [Shell命令行](bash.md)
+> * [开发者工具](devtool.md)
 
 # 底层原理
-* [计科八股](interview.md):star:
-    > 计算机基本面试知识点，本章下面各篇文章的精华总结
-
-> * [处理器设计](cpu.md)
->     > 逻辑电路与处理器设计，以及CPU高速缓存机制
-> * [计算机组成](bus.md)
->     > 主要是总线接口与存储技术，还有显卡与显示屏工作原理
-> * [信息编码](code.md)
->     > 整数之无符码与补码，浮点数之IEEE 754标准，字符之Unicode与UTF-8
-> * [汇编语言](asm.md)
->     > x86-64汇编语言
-> * [操作系统](os.md)
->     > 链接、异常控制流、虚拟内存
-> * [数据库存储](innodb.md)
->     > MySQL中innodb存储引擎的设计架构，包括索引与事务原理
-> * [计算机网络](network.md)
->     > 自顶向下展示互联网架构
-> * [信息学应用](security.md)
->     > 差错校验与加密技术
+* [计科八股](interview.md):star:：计算机基本面试知识点
 > * [数据结构与算法](dsaa.md)
+> * [处理器设计](cpu.md)
+> * [信息编码](code.md)
+> * [汇编语言](asm.md)
+> * [计算机组成](bus.md)
+> * [操作系统](os.md)
+> * [数据库存储](innodb.md)
+> * [计算机网络](network.md)
+> * [信息学应用](security.md)
 
 # 其他
 * [Markdown语法](markdown.md)
