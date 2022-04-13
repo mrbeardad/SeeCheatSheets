@@ -13,7 +13,7 @@
     * 依赖单元：一个源文件，初始化：`__init__.py`
     * 依赖导入：`from package.subpackage import module`，符号限定于文件名
     * 依赖导出：源文件中所有符号
-    * 依赖管理：手动（pip-install）
+    * 依赖管理：半自动（pip-install）
 
 # 变量
 * C++
