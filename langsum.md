@@ -1,16 +1,19 @@
 # 依赖
 
 - C++
+  - 程序入口：main函数
   - 依赖单元：一个头文件 + 一个实现文件（可选），初始化：`global-constructor`
   - 依赖导入：`#include <path/to/header.hpp>`，符号限定于命名空间
   - 依赖导出：头文件中所有宏与符号
   - 依赖管理：手动（git-submodule & cmake）
 - Go
+  - 程序入口：main包中main函数
   - 依赖单元：一个目录（不包括子目录），初始化：`func init()`
   - 依赖导入：`import "module.github.com/path/to/package"`，符号限定于包名
   - 依赖导出：大写字母开头的符号
   - 依赖管理：自动（go-mod）
 - Python
+  - 程序入口：源码文件均可执行，`__init__ == "__main__"`
   - 依赖单元：一个源文件，初始化：`__init__.py`
   - 依赖导入：`from package.subpackage import module`，符号限定于文件名
   - 依赖导出：源文件中所有符号
@@ -34,7 +37,7 @@
   val := Type{members}// 构造
   val := initializer  // 拷贝
   val := Type(other)  // 转换
-  val, _ := valuelist // 多元
+  val, _ := value-list// 多元
   ```
   - 变量类型：强类型
   - 生命周期：直到引用计数为零才时销毁
@@ -73,7 +76,7 @@
     - switch-case-default-break
   - 循环
     - for
-    - for-range
+    - **for-range**
   - 异常
     - try-catch-throw
 - Go
@@ -84,7 +87,7 @@
     - switch-case:type
   - 循环
     - for
-    - for-range
+    - **for-range**
   - 延迟
     - defer
   - 并发
@@ -107,12 +110,12 @@
       return true;
   }
   ```
-  - 形参修饰
-  - 函数声明
-  - 泛型变参包
+  - **形参修饰**
+  - **函数声明**
+  - **泛型**变参包
   - 默认实参
   - 函数重载
-  - 闭包
+  - **闭包**
 - Go
   ```go
   func example(s *string, i int) (ok bool) {
@@ -132,7 +135,7 @@
   - 位置参数与键值参数
   - 位置变参包与键值变参包
   - 默认实参
-  - 闭包
+  - **闭包**
 
 # 面向对象
 
@@ -140,12 +143,12 @@
 
 - C++
   - 访问控制：public, private, protected
-  - 属性定义：默认实例唯一，static 类唯一
+  - **属性定义**：默认实例唯一，static 类唯一
   - 方法定义：默认实例相关，static 类相关
-  - 构造控制：构造函数
-  - 析构控制：析构函数
-  - 拷贝控制：拷贝与移动函数
-  - 类型转换：构造函数与 operator 函数
+  - **构造控制**：构造函数
+  - **析构控制**：析构函数
+  - **拷贝控制**：拷贝与移动函数
+  - **类型转换**：构造函数与 operator 函数
 - Go
   - 访问控制：首字母大写导出包外
   - 属性定义：实例唯一
@@ -153,7 +156,7 @@
   - 构造控制：花括号构造
   - 析构控制：无
   - 拷贝控制：无
-  - 类型转换：底层类型相同可转换
+  - **类型转换**：底层类型相同可转换
 - Python
   - 访问控制：前缀`__`私有
   - 属性定义：默认类唯一，实例可动态增删属性

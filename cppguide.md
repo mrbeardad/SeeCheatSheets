@@ -1,6 +1,7 @@
 # 目录
 <!-- vim-markdown-toc GFM -->
 
+- [目录](#目录)
 - [初始化](#初始化)
   - [auto初始化](#auto初始化)
   - [列表初始化](#列表初始化)
@@ -173,8 +174,8 @@ ObjB b{get_a()};    // 这样在构造b之前，a必定是已构造的
 > * 数据成员
 >     * private
 >     * pImpl
+>     * 构造顺序
 >     * 结构对齐
->     * const & 引用
 > * 构造
 >     * default?
 >     * explicit?

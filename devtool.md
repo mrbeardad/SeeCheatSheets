@@ -147,9 +147,11 @@ pprof <path/to/binary> /tmp/prof.out
 <!-- entry begin: curl -->
 ```sh
 # 下载文件
-curl <url> -o <file>
+curl -Lo filename URL
+# 断点续传，文件同由URL指定
+curl -OLC - URL
 # 执行远程脚本
-sh -c "$(curl -fsSL <url>)"
+sh -c "$(curl -fsSL URL)"
 # 快速查阅远程手册
 curl cht.sh/<cmd>
 curl cht.sh/<lang>/<question with + instead of space>
