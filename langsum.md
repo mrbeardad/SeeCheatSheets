@@ -28,7 +28,7 @@
   auto var = static_cast<Type>(other) // 转换
   auto [a, b] = aggregation;          // 多元
   ```
-  - 变量类型：强类型
+  - 变量类型：强类型（变量类型不可变、函数声明不可变、没有动态符号表）
   - 生命周期：退出块作用域时销毁
   - 作用域：退出块作用域后不可见
   - 赋值拷贝：一般为值语义，指针类型为引用语义
@@ -61,12 +61,13 @@
 
 - C++
   - `=`为表达式
-  - 支持`? :`
+  - 支持`? :`、`++`、`--`
 - Go
-  - `=` `++` `--`均为语句而非表达式
+  - `=`与`:=`均为语句而非表达式
+  - 支持后缀`++`与`--`且为语句
 - Python
   - `=`为语句，`:=`为表达式
-  - 支持`a > b > c` `a**e`
+  - 支持`a > b > c`、`a**e`
 
 # 语句
 
@@ -215,18 +216,36 @@
 - 介词：`in`，`on`，`at`，`of`，`2`，`4`
 - 用途：`ret`，`val`，`need`，`temp`，`deal`，`src`，`dest`
 
-| C++命名         | 例子               | 备注                                               |
-| --------------- | ------------------ | -------------------------------------------------- |
-| 头文件名        | `example_name.hpp` |
-| 实现文件名      | `example_name.cpp` |
-| 命名空间名      | `example_name`     | 顶级命名空间与项目名匹配，内嵌命名空间与目录名匹配 |
-| 宏              | `EXAMPLE_NAME`     |
-| 类型名          | `ExampleName`      |
-| 函数名          | `ExampleName`      |
-| 常量名          | `kExampleName`     |
-| 变量名          | `example_name`     |
-| struct 数据成员 | `example_name`     |
-| class 数据成员  | `example_name_`    |
+| C++命名            | 例子                   | 备注                                                               |
+| ------------------ | ---------------------- | ------------------------------------------------------------------ |
+| Headers            | `lower_with_under.hpp` |
+| Implements         | `lower_with_under.cpp` |
+| Namespaces         | `lower_with_under`     | 顶级命名空间与项目名匹配，内嵌命名空间与目录名匹配                 |
+| Macroes            | `CAPS_WITH_UNDER`      | 尽量使用inline或constexpr代替                                      |
+| Classes            | `CapWords`             |
+| Functions          | `CapWords`             |
+| Method             | `CapWords`             |
+| Constants          | `kCapWords`            |
+| Static Variables   | `kCapWords`            | 应该限制静态生命周期变量为平凡类型，且使用ref-return代替global变量 |
+| Local Variables    | `lower_with_under`     |
+| struct Data Member | `lower_with_under`     |
+| class Data Member  | `lower_with_under_`    |
+
+| Go命名   | Public     | Internal   |
+| -------- | ---------- | ---------- |
+| All Name | `MixedCap` | `mixedCap` |
+
+| Python命名             | Public                | Internal                          |
+| ---------------------- | --------------------- | --------------------------------- |
+| Packages               | `lower_with_under`    |                                   |
+| Modules                | `lower_with_under.py` | `_lower_with_under.py`            |
+| Classes                | `CapWords`            | `_CapWords`                       |
+| Functions              | `lower_with_under()`  | `_lower_with_under()`             |
+| Method                 | `lower_with_under()`  | `_lower_with_under() (protected)` |
+| Constants              | `CAPS_WITH_UNDER`     | `_CAPS_WITH_UNDER`                |
+| Global/Class Variables | `lower_with_under`    | `_lower_with_under`               |
+| Local Variables        | `lower_with_under`    | `_lower_with_under`               |
+| Instance Variables     | `lower_with_under`    | `_lower_with_under (protected)`   |
 
 # 总结
 
