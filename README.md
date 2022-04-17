@@ -41,7 +41,6 @@ cmake --install .
 * [语言总结](langsum.md):star:
 ## C++
 > * [C++语法特性](cpp.md)
-> * [C++编程指导](cppguide.md)
 > * [C++程序库](cppman.md)
 > * [CMake构建系统](cmake.md)
 ## Go
