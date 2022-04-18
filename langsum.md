@@ -8,8 +8,8 @@
   - [函数](#函数)
   - [面向对象](#面向对象)
     - [封装](#封装)
-    - [复用](#复用)
-    - [动态绑定](#动态绑定)
+    - [继承](#继承)
+    - [取代](#取代)
   - [命名规范](#命名规范)
 
 ## 依赖
@@ -52,10 +52,10 @@
 - Go
 
   ```go
-  val := Type{members}// 构造
-  val := initializer  // 拷贝
-  val := Type(other)  // 转换
-  val, _ := value-list// 多元
+  val := Type{fd: data} // 构造
+  val := initializer    // 拷贝
+  val := Type(other)    // 转换
+  val, _ := value-list  // 多元
   ```
 
   - 变量类型：强类型
@@ -185,53 +185,57 @@
   - 访问控制：首字母大写导出包外
   - 结构定义：实例唯一
   - 方法定义：实例相关
-  - 构造控制：花括号构造
+  - 构造控制：无
   - 析构控制：无
   - 拷贝控制：无
   - 类型转换：底层类型相同可转换
 - Python
-  - 访问控制：无
+  - 访问控制：`_`开头不导出文件外
   - 结构定义：默认类唯一，实例可动态增删属性
   - 方法定义：默认实例相关，实例可动态增删方法
-  - 构造控制：`__init__`方法
-  - 析构控制：无
+  - 构造控制：`__init__()`
+  - 析构控制：`__del__()`
   - 拷贝控制：无
-  - 类型转换：无
+  - 类型转换：`__bool__()`或`__len__()`或`True`
 
-### 复用
+### 继承
 
 - C++
 
 ```cpp
 class Base {
-    public:
+   public:
     Base() = default;
     Base(Base&&) = default; // copiable?
     Base(const Base&) = default; // movable?
     Base& operator=(Base&&) = default;
     Base& operator=(const Base&) = default;
     virtual ~Base() = default;
+
     virtual int InterfaceMethod() = 0;
 };
 
 class MyClass: public Base {
-    public:
+   public:
     MyClass();
-    MyClass(MyClass&&) = default; // copiable?
-    MyClass(const MyClass&) = default; // movable?
+    MyClass(MyClass&&) = default;
+    MyClass(const MyClass&) = default;
     MyClass& operator=(MyClass&&) = default;
     MyClass& operator=(const MyClass&) = default;
-    ~MyClass();
+    virtual ~MyClass() override;
+
+    virtual int InterfaceMethod() override;
+
     explicit operator int() const;
 
-    private:
+   private:
     int id_; // private! p2Impl? construct-order! alignment?
 };
 // default? explicit? non-inline! never-call-virtual!
 MyClass::MyClass() : Base{}, id_{} {}
 // virtual-def! noexcept! non-inline! never-call-virtual!
 MyClass::~MyClass() {}
-// explicit! bool! only-one-cvt-number!
+// explicit! bool? only-one-cvt-number!
 MyClass::operator int() const {
     return id_;
 }
@@ -262,11 +266,11 @@ func (this *MyClass)
 ```python
 class MyClass(Base):
     def __init__(self, id: int):
-        Base.__init__()
-        Base._id = id
+        Base.__init__(self)
+        self._id = id
 ```
 
-### 动态绑定
+### 取代
 
 - C++：
   - 派生类的引用或指针可转换为基类的引用或指针
@@ -277,13 +281,18 @@ class MyClass(Base):
   - 运行时类型：`switch rt := interf.(type) {}` `rt[, ok] = interf.(RT)`
   - 通过静态符号表与反射实现
 - Python
-  - 弱类型可直接转换为接口类型
+  - 弱类型系统可直接转换为接口类型
   - 运行时类型：`type()`
   - 利用动态符号表与反射实现
 
 ## 命名规范
 
-**名字规范的要点是不要节省字母，要做到让别人顾名思义**，以下为一些通用前后缀：
+名字规范的要点：
+
+1. 是不要节省字母，要做到让别人顾名思义
+2. 作用域约广越远的局部变量要约详细，反之作用域很小的变量（比如循环变量 i）甚至可以 1 个字母
+
+常用命名前后缀：
 
 - 位置：`idx`，`pos`，`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`
 - 计数：`count`，`size`，`length`，`width`，`height`，`depth`

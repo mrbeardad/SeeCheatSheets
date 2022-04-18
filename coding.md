@@ -132,10 +132,10 @@
 while ( left <= right ) {       // left <= right可以保证当right一直未移动时能检测到right
     mid = left + (right - left) / 2
 // 步骤二：检测目标语义
-    if ( check(mid) )
+    if ( Check(mid) )
         return mid;
 // 步骤三：折半缩减搜索范围
-    else if ( ifTargetInLeftHalf(mid) )
+    else if ( IfTargetInLeftHalf(mid) )
         right = mid - 1;        // 因为这一句则当left,right为下标时应该使用ssize_t而非size_t
     else
         left = mid + 1;
