@@ -22,7 +22,7 @@ cmake --build . -t see
 cmake --install .
 ```
 
-**_本仓库中提供了一支 C++程序`see`用于快速查看笔记：_**
+本仓库中提供了命令行工具`see`用于快速查看笔记：
 它会搜索`~/.cheat/*.md`中匹配的笔记条目并进行语法高亮后打印到终端。
 每个条目以`<!-- entry begin: .* -->`的形式开头，并以`<!-- entry end -->`结尾；
 其中`.*`表示关键字，see 便会搜索其中的关键子决定是否匹配；
@@ -89,9 +89,8 @@ cmake --install .
   - [汇编语言](asm.md)
   - [计算机组成](bus.md)
   - [操作系统](os.md)
-  - [数据库存储](innodb.md)
   - [计算机网络](network.md)
-  - [信息学应用](security.md)
+  - [数据库存储](innodb.md)
 
 ## 其他
 

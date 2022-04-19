@@ -113,8 +113,8 @@
     - **for-range**
   - 延迟
     - defer
-  - 并发
-    - go
+    - panic()
+    - recover()
 - Python
   - 分支
     - if-elif-else
@@ -137,7 +137,7 @@
 
   - 形参修饰：`const T&` ? `T` ? `T&`
   - 函数声明：`inline` ? `noexcept` ? `this`
-  - 函数重载：`-> const T&` ? `T&&` ? `template<typename T>`
+  - 函数重载：`-> T&` ? `T&&` ? `template<typename T>`
   - 泛型变参包
   - 默认实参
   - 闭包：`[&r, v] (auto& x) mutable {}`
@@ -165,7 +165,7 @@
 
   - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`dict[str, int]`
   - 位置参数与键值参数
-  - 位置变参包与键值变参包
+  - 位置变参包与键值变参包：`*posargs`与`**kwargs`
   - 默认实参：仅定义时构造一次，注意引用类型
   - 闭包：`lambda x, y: x * y`
 
@@ -206,8 +206,8 @@
 class Base {
    public:
     Base() = default;
-    Base(Base&&) = default; // copiable?
-    Base(const Base&) = default; // movable?
+    Base(Base&&) = default;
+    Base(const Base&) = default;
     Base& operator=(Base&&) = default;
     Base& operator=(const Base&) = default;
     virtual ~Base() = default;
@@ -247,7 +247,7 @@ MyClass::operator int() const {
 type Interface interface {
     Get() int
 }
-// 将“复用”与“接口”分开
+// 将“接口定义”与“方法继承”分开
 type MyClass struct {
     Base1   // MyClass与*MyClass均继承Base1方法集
     *Base2  // MyClass无法继承*Base2的方法集，而*MyClass可以
