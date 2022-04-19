@@ -9,7 +9,7 @@
   - [面向对象](#面向对象)
     - [封装](#封装)
     - [继承](#继承)
-    - [取代](#取代)
+    - [多态](#多态)
   - [命名规范](#命名规范)
 
 ## 依赖
@@ -212,7 +212,7 @@ class Base {
     Base& operator=(const Base&) = default;
     virtual ~Base() = default;
 
-    virtual int InterfaceMethod() = 0;
+    virtual void InterfaceMethod() = 0;
 };
 
 class MyClass: public Base {
@@ -224,21 +224,22 @@ class MyClass: public Base {
     MyClass& operator=(const MyClass&) = default;
     virtual ~MyClass() override;
 
-    virtual int InterfaceMethod() override;
-
     explicit operator int() const;
 
+    virtual void InterfaceMethod() override;
+
    private:
-    int id_; // private! p2Impl? construct-order! alignment?
+    int name_; // private! p2Impl? construct-order! alignment?
 };
-// default? explicit? non-inline! never-call-virtual!
-MyClass::MyClass() : Base{}, id_{} {}
+// default? explicit! non-inline! never-call-virtual!
+MyClass::MyClass() : Base{}, name_{} {}
 // virtual-def! noexcept! non-inline! never-call-virtual!
 MyClass::~MyClass() {}
 // explicit! bool? only-one-cvt-number!
 MyClass::operator int() const {
     return id_;
 }
+void MyClass::InterfaceMethod() {}
 ```
 
 - Go
@@ -251,26 +252,35 @@ type Interface interface {
 type MyClass struct {
     Base1   // MyClass与*MyClass均继承Base1方法集
     *Base2  // MyClass无法继承*Base2的方法集，而*MyClass可以
-    id int
+    name string
 }
 
 func (this *MyClass) Get() int {
-    return this.id
+    return this.name
 }
-
-func (this *MyClass)
 ```
 
 - Python
 
 ```python
 class MyClass(Base):
-    def __init__(self, id: int):
-        Base.__init__(self)
-        self._id = id
+    def __init__(self, name: str):
+        super().__init__()  # super.(Base, self).__init__()
+        self._name = name
+
+    def __del__(self):
+        super().__del__()
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
 ```
 
-### 取代
+### 多态
 
 - C++：
   - 派生类的引用或指针可转换为基类的引用或指针
@@ -305,14 +315,14 @@ class MyClass(Base):
 
 | C++命名            | 例子                   | 备注                                                                     |
 | ------------------ | ---------------------- | ------------------------------------------------------------------------ |
-| Headers            | `lower_with_under.hpp` |
-| Implements         | `lower_with_under.cpp` |
+| Headers            | `lower_with_under.hpp` |                                                                          |
+| Implements         | `lower_with_under.cpp` |                                                                          |
 | Namespaces         | `lower_with_under`     | 顶级命名空间与项目名匹配，内嵌命名空间与目录名匹配                       |
 | Macroes            | `CAPS_WITH_UNDER`      | 尽量使用 inline 或 constexpr 代替                                        |
-| Classes            | `CapWords`             |
-| Functions          | `CapWords`             |
-| Method             | `CapWords`             |
-| Constants          | `kCapWords`            |
+| Classes            | `CapWords`             |                                                                          |
+| Functions          | `CapWords`             |                                                                          |
+| Method             | `CapWords`             |                                                                          |
+| Constants          | `kCapWords`            |                                                                          |
 | Static Variables   | `kCapWords`            | 注意不会调用静态生命周期对象的析构函数，使用 ref-return 代替 global 变量 |
 | Local Variables    | `lower_with_under`     |
 | struct Data Member | `lower_with_under`     | static 同                                                                |
