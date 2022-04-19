@@ -58,7 +58,7 @@
 
 利用抽象工厂（即工厂的工厂），它将多个工厂类组合起来，从而统一地创建一套内部相互关联的对象族。
 
-![AbstractFactory](images/AbatractFactory.jpg)
+![AbstractFactory](images/AbsatractFactory.jpg)
 
 ### 建造者模式(Builder)
 
@@ -156,7 +156,7 @@
 
 访问者允许你定义一个新的操作，而不需要改变它所操作的元素的类。双分派技术缺点是当添加元素类时需要修改所有访问者。
 
-![Visitor](images/visitor.png)
+![Visitor](images/Visitor.png)
 
 ### 迭代器模式(Iterator)
 
@@ -178,7 +178,7 @@
 
 赋予多个对象处理请求的机会，最终只有一个负责处理。
 
-![Chain of Responsibility](images/chain_of_responsibility.png)
+![Chain of Responsibility](images/Chain_of_Responsibility.png)
 
 ### 命令模式(Command)
 
@@ -190,7 +190,7 @@
 
 在外部存储内部状态以届时恢复
 
-![Memento](images/memento.png)
+![Memento](images/Memento.png)
 
 ### 中介者模式(Mediator)
 
@@ -208,7 +208,7 @@
 
 利用更改内部抽象对象来实现状态切换。
 
-![State](images/state.png)
+![State](images/State.png)
 
 ### 策略模式(Strategy)
 
@@ -220,4 +220,4 @@
 
 将算法的框架定义为一个抽象类，允许其子类提供具体的行为覆盖之。
 
-![Templte](images/template.png)
+![Templte](images/Template.png)
