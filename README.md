@@ -15,8 +15,8 @@
 ```sh
 # 国内访问github不太友好的话，可以将URL中的github.com改为gitee.com
 git clone --depth=1 https://github.com/mrbeardad/SeeCheatSheets ~/.cheat
-mkdir ~/.cheat/build
-cd ~/.cheat/build
+mkdir ~/.cheat/src/build
+cd ~/.cheat/src/build
 cmake -D CMAKE_BUILD_TYPE=Release ..
 cmake --build . -t see
 cmake --install .
