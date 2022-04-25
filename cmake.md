@@ -1,5 +1,7 @@
 # 命令行参数
+
 <!-- entry begin: cmake -->
+
 ```sh
 # 一般步骤
 cd build_dir
@@ -19,10 +21,13 @@ cmake --install .
     --prefix=path       # 覆盖CMAKE_INSTALL_PREFIX
     --component=compon  # 仅安装目标组件
 ```
+
 <!-- entry end -->
 
-# CMakeLists.txt基础
+# CMakeLists.txt 基础
+
 ## 添加目标
+
 ```cmake
 # CMake版本要求
 cmake_minimum_required(VERSION 3.10)
@@ -45,55 +50,60 @@ add_library(target SHARED
 # HeaderOnly库
 add_library(target INTERFACE) # 该target添加头文件时也只能指定INTERFACE
 
+# 自定义命令
+add_custom_target(target
+    [ALL] # 表示该target应该加入default target
+    command1 args...
+    [COMMAND command2 [args...]]...
+    [DEPENDS [target...]]
+    [WORKING_DIRECTORY dir])
+
 # 安装
 install(TARGETS   <target>... [...])
 install(FILES     <file>...   [...])
 install(DIRECTORY <dir>...    [...])
 # DESTINATION       <path>      指定安装目录的绝对或相对地址
-# PERMISSIONS       <perm>..    包括{OWNER|GROUP|WORLD}_{READ|WRITE|EXECUTE}, SETUID, SETGID
-# CONFIGURATIONS    <conf>      在指定配置下才生效
-# COMPONENT         <comp>      指定属于哪个安装组件，如runtime、development等
-
-# 自定义命令
-add_custom_target(target
-    [ALL] # 表示该target应该加入default target
-    cmd args...
-    [COMMAND command [args...]]...
-    [DEPENDS [depens...]]
-    [WORKING_DIRECTORY dir])
 ```
 
 ## 编译参数
+
 ```cmake
 # INTERFACE :表示只用于链接到该target的其他target
 # PUBLIC    :表示用于target和链接到它的其他target
 # PRIVATE   :表示只用于target
 
 # 头文件
+include_directories(dirs...)
 target_include_directories(target
-    PUBLIC include_dirs...)
+    PUBLIC dirs...)
 
 # 链接库
+link_directories(dirs...)
 target_link_libraries(target
     PRIVATE item...) # 目标名、库名、路径名
 
 # 标准版本
+set(CMAKE_CXX_STANDARD 11)
 target_compile_features(target
     PRIVATE cxx_feature_names cxx_std_11 ...)
 
 # 编译参数
-target_compile_options(target [BEFORE] # 表示将参数加在前面而非缺省的最后
-    PRIVATE options...)
 add_compile_options(options...)
+target_compile_options(target
+    PRIVATE options...)
 
 # 宏定义
+add_compile_definitions(MACRO_NAME=val)
 target_compile_definitions(target
     PRIVATE MACRO=val)
-add_compile_definitions(MACRO=val)
 ```
 
 ## 脚本变量
+
 ```cmake
+# 相当于在此处插入并执行子目录下的CMakeLists.txt脚本
+add_subdirectory(dir_name)
+
 # 普通变量：作用于当前函数或目录
 set(<variable> <value>... [PARENT_SCOPE]) # 该选项表示为上级目录或上级函数作用域设置变量，而并非为当前作用域设置，返回后生效
 
@@ -126,25 +136,24 @@ message( [<mode>] <message-string>... )
     # SEND_ERROR        # 继续进程但不构建
     # WARNING           # 继续进程
 
-# 相当于在此处插入并执行子目录下的CMakeLists.txt脚本
-add_subdirectory(dir_name)
-
 # 构建期配置文件，关联cmake宏与cpp宏
 configure_file(foo.h.in foo.hpp)
-    # 将文件中的 `#cmakedefine VAR ...` 替换为 `#define VAR ...`
+    # 将文件中的 `#cmakedefine VAR ...` 替换为 `#define VAR ...`或`/* #undef VAR */`（取决于cmake是否存在此变量）
     # 将文件中的 `@CMAKE_VAR@` 替换为cmake变量 `CMAKE_VAR` 的值
     # 注意添加 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 ```
-**关于cmake脚本中的变量**：
-* 变量类型均为字符串（必要时使用""来转义），一些命令会自己将字符串解析为其它类型
-* 使用未定义的变量相当于使用空字符串
-* 变量搜索会依照作用域向上进行搜索，最终还会搜索缓存变量
-* 引用普通变量`${VAR}`
-* 引用缓存变量`$CACHE{VAR}`
-* 引用环境变量`$ENV{VAR}`
 
+**关于 cmake 脚本中的变量**：
+
+- 变量类型均为字符串（必要时使用""来转义），一些命令会自己将字符串解析为其它类型
+- 使用未定义的变量相当于使用空字符串
+- 变量搜索会依照作用域向上进行搜索，最终还会搜索缓存变量
+- 引用普通变量`${VAR}`
+- 引用缓存变量`$CACHE{VAR}`
+- 引用环境变量`$ENV{VAR}`
 
 # 第三方库依赖
+
 ```cmake
 # 需要在CMAKE_MODULE_PATH中存在FindBoost.cmake文件
 find_package(Boost
@@ -165,7 +174,9 @@ find_package(Boost
 ```
 
 # 内建变量
+
 <!-- entry begin: cmake buildtype builtin-variable -->
+
 | 变量名                   | 含义                         |
 | ------------------------ | ---------------------------- |
 | CMAKE_PROJECT_NAME       | 顶级项目名称                 |
@@ -186,4 +197,5 @@ find_package(Boost
 | MinSizeRel              | `-Os -DNDEBUG`    |
 | RelWithDebInfo(default) | `-O2 -g -DNDEBUG` |
 | Debug                   | `-g`              |
+
 <!-- entry end -->

@@ -3,9 +3,9 @@
 ## Bash
 
 - 基础语法：
-  - Command `[Redirect]`
-  - `[time] [!]` Pipeline `[| ⎪ |&]`
-  - List `[; ⎪ && ⎪ || ⎪ &]`
+  - Command
+  - Pipeline
+  - List
 - 命令扩展：
   - 花括号
   - 波浪号
