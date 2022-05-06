@@ -6,6 +6,7 @@
   - Command
   - Pipeline
   - List
+  - Composite-Command
 - 命令扩展：
   - 花括号
   - 波浪号

@@ -1,4 +1,6 @@
-# 安装
+# GoLang
+
+## 安装
 
 ```txt
 $GOROOT/
@@ -21,7 +23,7 @@ $GOBIN/
 $GOCACHE/
 ```
 
-# 模块
+## 模块
 
 - 模块名：
   - 版本管理仓库根目录`golang.org/x/net`
@@ -78,15 +80,14 @@ go install [packages]           # 编译并安装当前包或指定包
 
 <!-- entry end -->
 
-# 包
+## 包
 
 - 包是模块下的一个目录所有文件集合（不包括子目录）
 - 同一包中的符号可相互引用不依赖定义的先后顺序
-- 导入包的搜索路径
+- 导入路径
   - 当前模块
   - `$GOROOT/src/`
   - `$GOPATH/pkg/mod/`
-  - 下载模块
 
 ```go
 // 源文件第一条语句必须是定义包名
@@ -114,7 +115,7 @@ func (this *Class) Method(arg T) RetT {  }
 type Base interface { Method(T) RetT }
 ```
 
-# 变量
+## 变量
 
 - 垃圾回收器：
   - 最小触发 GC 内存大小 4MB\*GOGC/100 （GOGC 默认 100，`off`关闭 GC）
@@ -128,7 +129,7 @@ variable := initializer // 类转：Type(initializer)
 a, b, _  := get_values()
 ```
 
-# 常量
+## 常量
 
 - 常量类型只能为整数、浮点数、复数、字符类型
 - 常量具有任意精度（实现可能会有限制），可以无类型
@@ -148,7 +149,7 @@ const (
 )
 ```
 
-# 表达式
+## 表达式
 
 | 操作符                       | 备注               |
 | ---------------------------- | ------------------ |
@@ -166,7 +167,7 @@ const (
 - string 支持`+`拼接字符串
 - 指针仅支持`*`、`==`、`!=`
 
-# 语句
+## 语句
 
 - **分支**
 
@@ -249,7 +250,7 @@ defer call1st()
 go jobRun(args...)
 ```
 
-# 函数
+## 函数
 
 ```go
 // 一般函数示例
@@ -280,9 +281,9 @@ func counter(i int) func() int {
 
 ```
 
-# 类
+## 类
 
-## 封装
+### 封装
 
 - 结构值底层数据结构：各字段值的聚合类
 
@@ -316,7 +317,7 @@ obj.MethodV(arg)    // Class.MethodV(obj, arg)
 p2obj.MethodV(arg)  // Class.MethodV(*p2obj, arg)
 ```
 
-## 复用
+### 复用
 
 ```go
 // 接口组合
@@ -340,9 +341,7 @@ type RW struct {    // 匿名字段的方法集会被加入外部类型的方法
 }
 ```
 
-## 多态
-
-- 接口值底层数据结构：含两个指针——一个指向类型信息，一个指向动态值
+### 多态
 
 ```go
 // 任何完整实现了接口定义的方法的类对象均可赋值给接口对象
@@ -363,7 +362,7 @@ default:
 }
 ```
 
-# 基础类型
+## 基础类型
 
 - 概念
   - 已定义类型：内置类型、type
@@ -382,22 +381,21 @@ default:
   - `string`转换为`[]byte`、`[]rune`
   - 底层类型相同的类/类指针
 - 可比较性：
-  - 支持完整比较 ：数字、字符、数组
+  - 支持完整比较 ：布尔、数字、字符、（数组、结构）
     > 结构的可比较性依赖字段，且不比较空字段
   - 仅支持相等性比较 ：接口、指针、通道
-    > 接口比较动态类型的动态值、通道比较是否为同一底层通道
+    > 接口比较动态类型的动态值、指针比较指针值、通道比较是否为同一底层通道
   - 支持与 nil 进行相等性比较：函数、接口、指针、切片、映射、通道
+- 底层实现
+  - 接口：struct{ptr2type;ptr2rvalue}（拷贝时额外拷贝 rvalue）
+  - 切片：struct{ptr;len;cap}（string 实现为只读切片）
+  - 映射：ptr2hmap
+  - 通道：ptr2hchan
 - golang 中指针的用途：
   - 避免拷贝参数
   - 修改参数原值
 
-## 指针类型
-
-```go
-var p uintptr = &T{}    // 为了垃圾回收机制而实现为“智能共享指针(shared_ptr)”
-```
-
-## 布尔类型
+### 布尔类型
 
 ```go
 var bool    // 零值为false
@@ -405,7 +403,7 @@ b = false
 b = true
 ```
 
-## 数字类型
+### 数字类型
 
 ```go
 var i int           // int8  int16  int32  int64  ，int为32或64位
@@ -423,9 +421,8 @@ f = 0x1.1p1     // 整数部分或小数部分之一可忽略
 f = 0x1p1       // 小数点可忽略，但指数部分不可忽略，基数为2
 ```
 
-## 字符类型
+### 字符类型
 
-- 字符串值底层数据结构：元素类型为 byte 的动态数组管理器`{buf, len}`
 - 字符串为 immutable 的原因是使用场景广泛需要确保其安全性（不被 caller 并发修改）
 - string 相比`[]byte`，会在修改和转换为`[]byte`时必定出现拷贝
 
@@ -451,9 +448,7 @@ s = str[:]
 len(s)
 ```
 
-## 数组
-
-- 数组值底层数据结构：包含所有元素值的聚合类
+### 数组
 
 ```go
 var array [128]int              // 元素值初始化为零值
@@ -474,9 +469,13 @@ cap(array)
 cap(&array)
 ```
 
-## 切片
+### 指针类型
 
-- 切片值底层数据结构：动态数组管理器`{buf, len, cap}`
+```go
+var p uintptr = &T{}    // 为了垃圾回收机制而实现为“智能共享指针(shared_ptr)”
+```
+
+### 切片
 
 ```go
 var slice []int                 // 零值为nil
@@ -501,11 +500,7 @@ copy(dst []T, src[]T)   // 返回int，表示min(len(dst), len(src))即赋值元
 copy(dst []byte, src string)
 ```
 
-## 映射
-
-- **映射值底层数据结构：指向哈希表管理器的指针**
-- 意味着即使底层哈希表 rehash 后，所有旧的映射值仍有效指向 rehash 后的哈希表，完全封装了内存管理
-- 相反的，当切片底层数组重新分配后，旧的切片值仍指向旧的底层数组，需要用户自行管理内存
+### 映射
 
 ```go
 // 键类型不能为函数、切片、字典，数组元素或结构字段也不能为这三种类型
@@ -524,9 +519,6 @@ delete(mapped, key)
 ```
 
 ## 通道
-
-- 通道值底层数据结构：有锁队列管理器
-- 通道还记录了待写者与待读者 goroutine 队列链表供调度算法使用
 
 ```go
 var ch chan Type    // 零值为nil，读写阻塞
@@ -565,21 +557,27 @@ default:// 使用default实现try，注意不应对无缓冲通道进行try，�
 ```
 
 - 优雅的关闭通道（通知所有接受方和发送方交流结束）
+
   - **只能由通道的唯一发送者关闭通道**，本质上是 **不能向 closed 通道 send，不能关闭 closed 通道，否则引发 panic**
   - 一个 sender：sender 作主动方，直接`close(dataChan)`即可
     > 应用上述“一对多异步事件信号”模型
   - 多个 sender 一个 receiver：receiver 作主动方，`close(stopChan)`通知 senders 都结束返回，从而`dataChan`被垃圾回收
     > 应用上述“一对多异步事件信号”模型和“select 多路复用”模型
   - 多个 sender 多个 receiver：引入中间者
+
     - 任一 sender 或 receiver 尝试发送一对一异步信号给中间者
+
     ```go
     select {
     case wannaClose <- struct{}{}:
     default:
     }
     ```
+
     - 中间者发送一对多异步信号给 senders 和 receivers
+
     ```go
     close(stopCom)
     ```
+
     - 每个 sender 或 receiver 除了串行化读/写数据外，还要监听异步事件`<-stopCom`

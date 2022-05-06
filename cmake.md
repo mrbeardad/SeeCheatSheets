@@ -1,22 +1,20 @@
-# 命令行参数
+# CMake
 
-<!-- entry begin: cmake -->
+## 命令行参数
+
+<!-- entry begin: cmake cli -->
 
 ```sh
-# 一般步骤
-cd build_dir
-cmake [options] source_dir
-cmake --build .
-cmake --install .
+# 配置
+cmake [-D CMAKE_VARIABLE=VALUE] [-S/path/to/source_dir -B/path/to/build_dir | /path/to/source_dir]
 
-# 选项
--D CMAKE_VARIABLE=value
-
+# 构建
 --build build_dir [options]
     -j n                # 指定线程数
     -t target           # 构建指定target
     --clean-first       # 构建前先清理缓存
 
+# 安装
 --install build_dir [options]
     --prefix=path       # 覆盖CMAKE_INSTALL_PREFIX
     --component=compon  # 仅安装目标组件
@@ -24,53 +22,69 @@ cmake --install .
 
 <!-- entry end -->
 
-# CMakeLists.txt 基础
+## CMakeLists.txt 基础
 
-## 添加目标
+### 项目目标
 
 ```cmake
-# CMake版本要求
-cmake_minimum_required(VERSION 3.10)
+# CMake最低版本要求
+cmake_minimum_required(VERSION 3.16)
 
-# 工程项目名称
-project(project_name VERSION <major>[.<minor>[.<patch>[.<tweak>]]])
+# 项目名称
+project(project_name
+    VERSION <major>[.<minor>[.<patch>[.<tweak>]]]
+    DESCRIPTION <project-description-string>)
 
 # 可执行文件
 add_executable(target
-    source...)
-
-# 静态库
-add_library(target STATIC
-    source...)
-
-# 动态库
-add_library(target SHARED
-    source...)
+    files...)
 
 # HeaderOnly库
 add_library(target INTERFACE) # 该target添加头文件时也只能指定INTERFACE
 
+# 静态库
+add_library(target STATIC
+    files...)
+
+# 动态库
+add_library(target SHARED
+    files...)
+
+# 插件模块：调用dlopen-like运行时动态加载
+add_library(target MODULE
+    files...)
+
 # 自定义命令
 add_custom_target(target
-    [ALL] # 表示该target应该加入default target
-    command1 args...
-    [COMMAND command2 [args...]]...
-    [DEPENDS [target...]]
-    [WORKING_DIRECTORY dir])
+    [ALL]                   # 表示该target应该加入default target
+    cmd1 args... [COMMAND cmd2 [args...]]...
+    [WORKING_DIRECTORY dir] # 默认构建目录
+    [DEPENDS [file...]]     # 3.16后若依赖文件为target副产物则将该target纳入依赖启动
+    [COMMENT "doc-string"]
+    VERBATIM)               # 保证命令字符正确转义，一般必选
 
 # 安装
-install(TARGETS   <target>... [...])
-install(FILES     <file>...   [...])
-install(DIRECTORY <dir>...    [...])
-# DESTINATION       <path>      指定安装目录的绝对或相对地址
+install(TARGETS targets...
+    RUNTIME         # 可执行程序，默认DESTINATION bin
+    ARCHIVE         # 静态库，默认DESTINATION lib
+    LIBRARY         # 动态库，默认DESTINATION lib
+    PUBLIC_HEADER   # 公共头文件，默认DESTINATION include
+    PRIVATE_HEADER  # 私有头文件，默认DESTINATION include
+    DESTINATION path    # 指定安装目录的绝对路径或相对CMAKE_INSTALL_PREFIX路径
+    COMPONENT comp)     # 指定所属安装组件，如runtime、development等
 ```
 
-## 编译参数
+### 编译参数
 
 ```cmake
 # INTERFACE :表示只用于链接到该target的其他target
 # PUBLIC    :表示用于target和链接到它的其他target
 # PRIVATE   :表示只用于target
+
+# 宏定义
+add_compile_definitions(MACRO_NAME=VAL)
+target_compile_definitions(target
+    PRIVATE MACRO_NAME=VAL)
 
 # 头文件
 include_directories(dirs...)
@@ -78,104 +92,83 @@ target_include_directories(target
     PUBLIC dirs...)
 
 # 链接库
-link_directories(dirs...)
 target_link_libraries(target
     PRIVATE item...) # 目标名、库名、路径名
 
 # 标准版本
 set(CMAKE_CXX_STANDARD 11)
 target_compile_features(target
-    PRIVATE cxx_feature_names cxx_std_11 ...)
+    PRIVATE cxx_std_11 ...)
 
 # 编译参数
 add_compile_options(options...)
 target_compile_options(target
     PRIVATE options...)
-
-# 宏定义
-add_compile_definitions(MACRO_NAME=val)
-target_compile_definitions(target
-    PRIVATE MACRO=val)
 ```
 
-## 脚本变量
+### 脚本命令
+
+<!-- entry begin: cmake variable script -->
+
+- 引用普通变量`${VAR}`，向上级作用域或目录搜索，最终搜索缓存变量
+- 引用缓存变量`$CACHE{VAR}`
+- 引用环境变量`$ENV{VAR}`
 
 ```cmake
-# 相当于在此处插入并执行子目录下的CMakeLists.txt脚本
-add_subdirectory(dir_name)
+# 执行子目录脚本
+add_subdirectory(source_dir)
 
-# 普通变量：作用于当前函数或目录
-set(<variable> <value>... [PARENT_SCOPE]) # 该选项表示为上级目录或上级函数作用域设置变量，而并非为当前作用域设置，返回后生效
-
-# 缓存变量：存储在Cmake缓存中，用于为用户提供配置。设置缓存变量成功后会删除同名的普通变量
+# 普通变量：作用于当前函数或目录（包括子目录），若未定义则搜索同名缓存变量
 set(<variable> <value>...
-    CACHE <type>    # <type>包括：BOOL、FILEPATH、PATH、STRING、INTERNAL
-    <doc-string>
+    [PARENT_SCOPE]) # 该选项表示为上级目录或上级函数作用域设置变量，而并非为当前作用域设置，离开作用域后生效
+
+# 缓存变量：持久性存储于Cmake缓存中，目的为用户提供配置选项
+# 3.21之前设置缓存变量成功后会删除同名的普通变量
+set(<variable> <value>... CACHE
+    <type>          # BOOL、STRING、FILEPATH、PATH、STRING、INTERNAL(仅用于持久化存储变量，隐式FORCE)
+    <help_text>
     [FORCE])        # 表示强制覆盖已存在的缓存变量
 
-option(OPTION "description" [OFF|ON])   # BOOL缓存变量
+# 设置BOOL缓存变量，value默认为OFF，若已存在同名普通变量或缓存变量则无效
+option(<variable> "<help_text>" [OFF|ON])
 
 # 环境变量
-set(ENV{VAR} [<value>])
+set(ENV{<variable>} [<value>])
 
-# 获取文件列表
-file(GLOB|GLOB_RECURSE <variable> [<globbing-expressions>...])
-
-# 列表操作
+# 列表操作：https://cmake.org/cmake/help/latest/command/list.html
 list()
+    # 任何需要变量列表的命令都可以正确解析列表变量
+    # 当列表变量通过configure_file()命令进行替换时，会转换为分号分割的变量列表
 
-# 条件判断
+# 条件判断：https://cmake.org/cmake/help/latest/command/if.html
 if()
 elseif()
 else()
 endif()
 
-# 打印消息
-message( [<mode>] <message-string>... )
-    # FATAL_ERROR       # 停止进程与构建
-    # SEND_ERROR        # 继续进程但不构建
-    # WARNING           # 继续进程
+# 获取文件列表
+file(GLOB|GLOB_RECURSE <variable> [<globbing-expressions>...])
 
-# 构建期配置文件，关联cmake宏与cpp宏
-configure_file(foo.h.in foo.hpp)
-    # 将文件中的 `#cmakedefine VAR ...` 替换为 `#define VAR ...`或`/* #undef VAR */`（取决于cmake是否存在此变量）
-    # 将文件中的 `@CMAKE_VAR@` 替换为cmake变量 `CMAKE_VAR` 的值
+# 打印消息
+message([<mode>] "message text" ...)
+    # <mode>:
+    #  FATAL_ERROR       # 停止进程与构建
+    #  SEND_ERROR        # 继续进程但不构建
+    #  WARNING           # 继续进程
+
+# 将CMAKE变量传递给源码
+configure_file(foo.h.in foo.hpp @ONLY)
+    # `#cmakedefine VAR ...` 替换为 `#define VAR ...` 或 `/* #undef VAR */`（取决于cmake是否定义变量VAR）
+    # `#cmakedefine01 VAR` 替换为 `#define VAR 1` 或 `#define VAR 0`（取决于cmake是否定义变量VAR）
+    # `@CMAKE_VAR@` 替换为 cmake变量 `${CMAKE_VAR}` 的值
     # 注意添加 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 ```
 
-**关于 cmake 脚本中的变量**：
+<!-- entry end -->
 
-- 变量类型均为字符串（必要时使用""来转义），一些命令会自己将字符串解析为其它类型
-- 使用未定义的变量相当于使用空字符串
-- 变量搜索会依照作用域向上进行搜索，最终还会搜索缓存变量
-- 引用普通变量`${VAR}`
-- 引用缓存变量`$CACHE{VAR}`
-- 引用环境变量`$ENV{VAR}`
+## 内建变量
 
-# 第三方库依赖
-
-```cmake
-# 需要在CMAKE_MODULE_PATH中存在FindBoost.cmake文件
-find_package(Boost
-    [version]                       # 指定最小版本，如1.75
-    [EXACT]                         # 表示指定的版本是精准版本
-    [QUIET]                         # 搜索失败直接退出
-    [REQUIRED]                      # 搜索失败报错
-    [COMPONENTS <libs>...]          # 必要组件，e.g. "date_time" for "libboost_date_time"
-    [OPTIONAL_COMPONENTS <libs>...])# 可选组件，e.g. "date_time" for "libboost_date_time"
-
-# 执行搜索后一般会设置如下变量
-# Boost_FOUND            - True if headers and requested libraries were found
-# Boost_INCLUDE_DIRS     - Boost include directories
-# Boost_LIBRARY_DIRS     - Link directories for Boost libraries
-# Boost_LIBRARIES        - Boost component libraries to be linked
-# Boost_<C>_FOUND        - True if component <C> was found (<C> is upper-case)
-# Boost_<C>_LIBRARY      - Libraries to link for component <C> (may include target_link_libraries debug/optimized keywords)
-```
-
-# 内建变量
-
-<!-- entry begin: cmake buildtype builtin-variable -->
+<!-- entry begin: cmake project buildtype builtin-variable -->
 
 | 变量名                   | 含义                         |
 | ------------------------ | ---------------------------- |
@@ -190,6 +183,7 @@ find_package(Boost
 | CMAKE_BUILD_TYPE         | 构建类型                     |
 | CMAKE_MODULE_PATH        | 默认/usr/share/cmake/Modules |
 | CMAKE_INSTALL_PREFIX     | 安装路径前缀                 |
+| BUILD_SHARED_LIBS        | 默认构建为动态库或静态库     |
 
 | 构建类型                | 编译参数          |
 | ----------------------- | ----------------- |

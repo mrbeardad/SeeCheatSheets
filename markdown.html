@@ -1,0 +1,131 @@
+<p><header>markdown.md</header></p>
+<h1>一级标题</h1>
+<h2>二级标题</h2>
+<h3>三级标题</h3>
+<h4>四级标题</h4>
+<h5>五级标题</h5>
+<h6>六级标题</h6>
+<h2>段落</h2>
+<p> Markdown 可以看作由一系列区块元素纵向排列或嵌套而组成，区块由一些特殊元素开启和关闭(也可看作不同的区块间需要不同的连接方式)。
+段落是最主要的区块，段落区块的内容即是我们试图表达信息的文字，而其它区块展示出来的一般只是符号与格式。<br>
+只要不开启下述其他区块，则便属于开启段落区块。</p>
+<h2>分割线</h2>
+<hr>
+<h2>引用</h2>
+<blockquote>
+<p>引用块</p>
+<blockquote>
+<p>引用块</p>
+<blockquote>
+<p>引用块</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<h2>列表</h2>
+<ul>
+<li>无序一<ul>
+<li>无序二<ul>
+<li>无序三<ul>
+<li>无序四</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ol>
+<li><p>有序一 1</p>
+</li>
+<li><p>有序一 2</p>
+</li>
+<li><p>有序一 3</p>
+<ol>
+<li>有序二<ol>
+<li>有序三<ol>
+<li>有序四</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>有序一</p>
+</li>
+</ol>
+<ul>
+<li><p>无序</p>
+<ol>
+<li>有序二</li>
+</ol>
+<ul>
+<li>无序<ol>
+<li>有序三</li>
+</ol>
+<ul>
+<li>无序<ol>
+<li>有序一</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>[x] 已完成任务</p>
+</li>
+<li><p>[ ] 未完成任务</p>
+</li>
+</ul>
+<h2>代码</h2>
+<pre><code>#include &lt;iostream&gt;
+using namespace std;
+int main() {
+    cout &lt;&lt; &quot;hello world!&quot; &lt;&lt; endl;
+}
+</code></pre>
+<pre><code class="language-c">#include &lt;iostream&gt;
+using namespace std;
+int main() {
+    cout &lt;&lt; &quot;hello world!&quot; &lt;&lt; endl;
+}
+</code></pre>
+<h2>公式</h2>
+<p>$$
+X_aX_bX_c
+X_a X_b X_c
+X_{ab}X_{cd}
+X_{ab} X_{cd}
+X^1X^2X^3
+X^1 X^2 X^3
+X^{12}X^{34}
+X^{12} X^{34}
+$$</p>
+<h2>制表</h2>
+<p>|         渲染结果          |            源码             |
+| :-----------------------: | :-------------------------: |
+|         <em>italic</em>          |         <code>*italic*</code>          |
+|         <strong>bold</strong>          |         <code>**bold**</code>          |
+|     <strong><em>italic&amp;bold</em></strong>     |     <code>***italic&amp;bold***</code>     |
+|        ~~delete~~         |        <code>~~delete~~</code>         |
+| <a href="URL" title="可选标题">链接名</a>  | <code>[链接名](URL &quot;可选标题&quot;)</code>  |
+| <img src="URL" alt="图片名" title="可选标题"> | <code>![图片名](URL &quot;可选标题&quot;)</code> |
+|          :star:           |          <code>:star:</code>           |
+|          <code>code</code>           |        <code>`code`</code>         |
+|       $L^{A}T_{E}X$       |       <code>$L^{A}T_{E}X$</code>       |</p>
+<h2>嵌套</h2>
+<blockquote>
+<p>引用块中嵌套<em>italic</em>或者<strong>bold</strong>还有<code>code</code>包括<a href="#%E9%93%BE%E6%8E%A5">链接</a></p>
+<ul>
+<li>还有列表<ul>
+<li>还能嵌套</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<ul>
+<li>列表里<blockquote>
+<p>嵌套引用
+如何</p>
+</blockquote>
+</li>
+</ul>

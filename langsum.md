@@ -38,6 +38,7 @@
 - C++
 
   ```cpp
+  Type var{}                          // 待初始化
   Type var{args};                     // 构造
   auto var = initializer;             // 拷贝
   auto var = static_cast<Type>(other) // 转换
@@ -47,21 +48,22 @@
   - 变量类型：强类型（变量类型不可变、函数声明不可变、没有动态符号表）
   - 生命周期：退出块作用域时销毁
   - 作用域：退出块作用域后不可见
-  - 赋值拷贝：一般为值语义，指针类型为引用语义
+  - 赋值拷贝：一般为深拷贝，指针为浅拷贝
 
 - Go
 
   ```go
+  var val Type          // 待初始化
   val := Type{fd: data} // 构造
   val := initializer    // 拷贝
   val := Type(other)    // 转换
-  val, _ := value-list  // 多元
+  a, b, _ := value-list // 多元
   ```
 
   - 变量类型：强类型
   - 生命周期：直到引用计数为零才时销毁
   - 作用域：退出块作用域后不可见
-  - 赋值拷贝：值类型为值语义，引用类型为引用语义
+  - 赋值拷贝：一般为浅拷贝，接口为深拷贝
 
 - Python
 
@@ -75,7 +77,7 @@
   - 变量类型：弱类型
   - 生命周期：直到引用计数为零时才销毁
   - 作用域：直到退出函数才不可见
-  - 赋值拷贝：所有类型变量本质为指针，均为引用语义
+  - 赋值拷贝：全为浅拷贝
 
 ## 表达式
 
@@ -130,7 +132,7 @@
 - C++
 
   ```cpp
-  char example(const string& s, int i=0) {
+  auto example(const string& s, int i=0) -> char {
       return s[i];
   }
   ```
