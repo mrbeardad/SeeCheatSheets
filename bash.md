@@ -99,6 +99,7 @@ getopts optstring name [args]
 | `~-`    | `/path/to/OLDPWD`     | `$OLDPWD`                        |
 
 ## 变量/命令/算数扩展
+* `declare NAME=VAL`, 若在函数作用域中则为局部变量
 * `paramter=val`
 * `array[0]=v0`
 * `array=(v0 v1 v2)`
