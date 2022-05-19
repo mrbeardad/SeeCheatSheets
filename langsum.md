@@ -17,20 +17,20 @@
 - C++
   - 程序入口：main 函数
   - 依赖单元：一个头文件 + 一个实现文件（可选）
-  - 依赖导入：`#include <path/to/header.hpp>`，初始化：global-constructor
-  - 依赖导出：头文件中所有宏与符号，符号限定于命名空间
+  - 依赖导出：头文件中所有宏与符号，初始化：global-constructor
+  - 依赖导入：`#include <path/to/header.hpp>`，符号限定于命名空间
   - 依赖管理：手动（git-submodule & cmake）
 - Go
   - 程序入口：main 包中 main 函数
   - 依赖单元：一个目录（不包括子目录）
-  - 依赖导入：`import "module.github.com/path/to/package"`，初始化：所有 init 函数
-  - 依赖导出：大写字母开头的符号，符号限定于包名
+  - 依赖导出：大写字母开头的符号，初始化：所有 init 函数
+  - 依赖导入：`import "module.github.com/path/to/package"`，符号限定于包名
   - 依赖管理：自动（go-mod）
 - Python
   - 程序入口：源码文件均可执行，`__init__ == "__main__"`
   - 依赖单元：一个源文件
-  - 依赖导入：`from package.subpackage import module`，初始化：`__init__.py`文件
-  - 依赖导出：非`_`开头的符号，符号限定于文件名
+  - 依赖导出：非`_`开头的符号，初始化：`__init__.py`文件
+  - 依赖导入：`from package.subpackage import module`，符号限定于文件名
   - 依赖管理：半自动（pip-install）
 
 ## 变量
@@ -46,9 +46,9 @@
   ```
 
   - 变量类型：强类型（变量类型不可变、函数声明不可变、没有动态符号表）
+  - 赋值拷贝：一般为深拷贝，指针为浅拷贝
   - 生命周期：退出块作用域时销毁
   - 作用域：退出块作用域后不可见
-  - 赋值拷贝：一般为深拷贝，指针为浅拷贝
 
 - Go
 
@@ -61,9 +61,9 @@
   ```
 
   - 变量类型：强类型
+  - 赋值拷贝：一般为浅拷贝，接口为深拷贝
   - 生命周期：直到引用计数为零才时销毁
   - 作用域：退出块作用域后不可见
-  - 赋值拷贝：一般为浅拷贝，接口为深拷贝
 
 - Python
 
@@ -75,9 +75,9 @@
   ```
 
   - 变量类型：弱类型
+  - 赋值拷贝：全为浅拷贝
   - 生命周期：直到引用计数为零时才销毁
   - 作用域：直到退出函数才不可见
-  - 赋值拷贝：全为浅拷贝
 
 ## 表达式
 
@@ -129,6 +129,15 @@
 
 ## 函数
 
+> - 注意函数的**可重入性**与**线程安全性**的保证
+> - 引用语义的目的：
+>   - (Copy) 避免拷贝
+>   - (Write) 修改对象
+>   - (Dynamic) 动态绑定
+> - 指针还是引用：
+>   - 是否需要 NULL 语义
+>   - 是否需要更改指向
+
 - C++
 
   ```cpp
@@ -138,10 +147,10 @@
   ```
 
   - 形参修饰：`const T&` ? `T` ? `T&`
-  - 函数声明：`inline` ? `noexcept` ? `this`
+  - 函数声明：`inline` ? `noexcept`
   - 函数重载：`-> T&` ? `T&&` ? `template<typename T>`
-  - 泛型变参包
   - 默认实参
+  - 泛型变参包
   - 闭包：`[&r, v] (auto& x) mutable {}`
 
 - Go
@@ -317,7 +326,7 @@ class MyClass(Base):
 
 | C++命名            | 例子                   | 备注                                                                     |
 | ------------------ | ---------------------- | ------------------------------------------------------------------------ |
-| Headers            | `lower_with_under.hpp` |                                                                          |
+| Headers            | `lower_with_under.hpp` | 引入顺序：关联、系统、标准、三方、本地                                   |
 | Implements         | `lower_with_under.cpp` |                                                                          |
 | Namespaces         | `lower_with_under`     | 顶级命名空间与项目名匹配，内嵌命名空间与目录名匹配                       |
 | Macroes            | `CAPS_WITH_UNDER`      | 尽量使用 inline 或 constexpr 代替                                        |

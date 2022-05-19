@@ -19,16 +19,17 @@ mkdir ~/.cheat/src/build
 cd ~/.cheat/src/build
 cmake -D CMAKE_BUILD_TYPE=Release ..
 cmake --build . -t see
-cmake --install .
+cp see ~/.local/bin
 ```
 
-本仓库中提供了命令行工具`see`用于快速查看笔记：
+本仓库中提供了命令行工具[see](https://github.com/mrbeardad/Markdown2Ansi)用于快速查看笔记：
 它会搜索`~/.cheat/*.md`中匹配的笔记条目并进行语法高亮后打印到终端。
 每个条目以`<!-- entry begin: .* -->`的形式开头，并以`<!-- entry end -->`结尾；
 其中`.*`表示关键字，see 便会搜索其中的关键子决定是否匹配；
 详情请使用`see -h`查看。
 
-![see](images/see.jpg)
+![see](https://github.com/mrbeardad/Markdown2Ansi/raw/master/see.png)
+![viu](https://github.com/mrbeardad/Markdown2Ansi/raw/master/viu.png)
 
 **注**：部分笔记插入了 Tex 公式，~~介于鄙人的懒惰~~ 介于 GFM 不支持 Tex，诸位就自己下个浏览器插件吧。
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")
@@ -37,7 +38,7 @@ cmake --install .
 ## 编程之道
 
 - [编码逻辑](coding.md):star:：分支、逻辑、循环、递归、下标
-- [设计模式](dspt.md):star:：依赖倒置、接口隔离、单一职责、里氏替换、开放关闭
+- [设计模式](dspt.md):star:：依赖倒置、接口分离、is-a、has-a、use-a
 
 ## 编程语言
 

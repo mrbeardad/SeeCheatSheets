@@ -146,8 +146,8 @@ elseif()
 else()
 endif()
 
-# 获取文件列表
-file(GLOB|GLOB_RECURSE <variable> [<globbing-expressions>...])
+# 获取文件列表：注意每次添加文件都需要重新构建CMake缓存，添加CONFIGURE_DEPENDS表示每次build前重新运行一次GLOB
+file(GLOB|GLOB_RECURSE <variable> CONFIGURE_DEPENDS [<globbing-expressions>...])
 
 # 打印消息
 message([<mode>] "message text" ...)
@@ -170,20 +170,22 @@ configure_file(foo.h.in foo.hpp @ONLY)
 
 <!-- entry begin: cmake project buildtype builtin-variable -->
 
-| 变量名                   | 含义                         |
-| ------------------------ | ---------------------------- |
-| CMAKE_PROJECT_NAME       | 顶级项目名称                 |
-| PROJECT_NAME             | 当前项目名称                 |
-| CMAKE_PROJECT_VERSION    | 顶级项目版本号               |
-| PROJECT_VERSION          | 当前项目版本号               |
-| CMAKE_SOURCE_DIR         | 顶级项目源码树               |
-| CMAKE_CURRENT_SOURCE_DIR | 当前项目源码树               |
-| CMAKE_BINARY_DIR         | 顶级项目构建目录             |
-| CMAKE_CURRENT_BINARY_DIR | 当前项目构建目录             |
-| CMAKE_BUILD_TYPE         | 构建类型                     |
-| CMAKE_MODULE_PATH        | 默认/usr/share/cmake/Modules |
-| CMAKE_INSTALL_PREFIX     | 安装路径前缀                 |
-| BUILD_SHARED_LIBS        | 默认构建为动态库或静态库     |
+| 变量名                     | 含义                         |
+| -------------------------- | ---------------------------- |
+| CMAKE_PROJECT_NAME         | 顶级项目名称                 |
+| PROJECT_NAME               | 当前项目名称                 |
+| CMAKE_PROJECT_VERSION      | 顶级项目版本号               |
+| PROJECT_VERSION            | 当前项目版本号               |
+| CMAKE_SOURCE_DIR           | 顶级项目源码树               |
+| CMAKE_CURRENT_SOURCE_DIR   | 当前项目源码树               |
+| project_CURRENT_SOURCE_DIR | project 项目源码树           |
+| CMAKE_BINARY_DIR           | 顶级项目构建目录             |
+| CMAKE_CURRENT_BINARY_DIR   | 当前项目构建目录             |
+| project_CURRENT_BINARY_DIR | project 项目构建目录         |
+| CMAKE_BUILD_TYPE           | 构建类型                     |
+| BUILD_SHARED_LIBS          | 默认构建为动态库或静态库     |
+| CMAKE_MODULE_PATH          | 默认/usr/share/cmake/Modules |
+| CMAKE_INSTALL_PREFIX       | 安装路径前缀                 |
 
 | 构建类型                | 编译参数          |
 | ----------------------- | ----------------- |

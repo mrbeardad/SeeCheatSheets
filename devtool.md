@@ -180,6 +180,10 @@ curl cht.sh/<lang>/<question with + instead of space>
     * origin/master：远程仓库origin中的master分支（远程分支不可修改改）
     * HEAD：指向工作区当前检出的分支或commit
 
+**重要概念**
+* `工作区`指当前检出的目录文件，`暂存区`指暂时保存到.git/index的目录文件，`仓库`指在历史记录分支模型中创建完整的commit数据节点存储目录文件
+* `远程仓库`存储与服务器的git仓库，拉取远程仓库后在本地产生只读的`远程仓库镜像`，一般需要创建一个`本地分支`来跟踪`远程分支`来修改远程分支内容
+
 **工作流程**
 * 贡献者
     1. 在github上将上游项目仓库fork成为自己的仓库
@@ -209,8 +213,9 @@ curl cht.sh/<lang>/<question with + instead of space>
 
 *.gitmodules*
 * 用于管理项目依赖，由`git submodule`命令自动创建并修改
-* git会在仓库中记录下子模块的依赖版本（即pull子模块哪个commit）
-* 更新依赖版本，需要手动进入子模块目录修改HEAD（`commit`,`pull`...）
+* git会在仓库中记录下当前子模块的依赖版本(直接存储于tree对象)，想要重新指定依赖版本需要进入子模块目录并执行git操作修改HEAD(如commit, pull等)，然后再回到父模块提交修改
+* 若只是简单的更新依赖版本，可执行`git submodule update --remote`
+* 若想跟踪特定分支（持续更新）而非固定的commit，可执行`git config -f .gitmodules submodule.<branch name>.branch stable`
 
 *.gitkeep*
 * 作为一个约定俗成的文件名，用来保留空目录

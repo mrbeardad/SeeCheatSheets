@@ -88,7 +88,7 @@ while cond:
 else:   # 若由break跳出循环则不执行else
     pass
 
-for key, value in Dict: # 范围可动态变化
+for key in Dict: # 范围可动态变化
     for elem in Seq:
         for val1, val2 in Iter:
             continue
