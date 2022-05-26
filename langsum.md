@@ -35,6 +35,14 @@
 
 ## 变量
 
+> - 引用语义的目的：
+>   - (Copy) 避免拷贝
+>   - (Write) 修改对象
+>   - (Dynamic) 动态绑定
+> - 指针还是引用：
+>   - 是否需要 **NULL** 语义
+>   - 是否需要更改指向
+
 - C++
 
   ```cpp
@@ -130,13 +138,6 @@
 ## 函数
 
 > - 注意函数的**可重入性**与**线程安全性**的保证
-> - 引用语义的目的：
->   - (Copy) 避免拷贝
->   - (Write) 修改对象
->   - (Dynamic) 动态绑定
-> - 指针还是引用：
->   - 是否需要 NULL 语义
->   - 是否需要更改指向
 
 - C++
 
@@ -276,7 +277,7 @@ func (this *MyClass) Get() int {
 ```python
 class MyClass(Base):
     def __init__(self, name: str):
-        super().__init__()  # super.(Base, self).__init__()
+        super().__init__()  # super(Base, self).__init__()
         self._name = name
 
     def __del__(self):

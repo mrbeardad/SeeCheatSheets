@@ -1,18 +1,20 @@
-**Nginx的功能在于路由转发与负载均衡**
-# 路由转发
-* 模拟若干**server**，通过**listen**与**server_name**进行匹配
-* 实现若干路由策略，通过**location**进行匹配
-* 对请求包进行操作：
-  * 接受并响应静态资源，或转发动态资源请求到后端服务，或拒绝请求
-  * 修改报文内容
-  * 协议转换
-  * 缓存资源
+# Nginx
+
+## 路由转发
+
+- 模拟若干**server**，通过**listen**与**server_name**进行匹配
+- 实现若干路由策略，通过**location**进行匹配
+- 对请求包进行操作：
+  - 接受并响应静态资源，或转发动态资源请求到后端服务，或拒绝请求
+  - 修改报文内容
+  - 协议转换
+  - 缓存资源
 
 ```nginx
 server {
   # listen命令指定该虚拟主机监听地址与端口
   # default_server表示若该监听地址端口无server_name匹配，则使用该server作为默认
-  listen (address[:port]|port) [default_server] [ssl] [http2 | spdy];
+  listen (address[:port]|port) [default_server] [ssl] [http2];
 
   # server_name命令指定用于匹配的主机名（可能是ip或domain），支持通配符与正则表达式
   # 1. 准确匹配server_name，e.g. www.example.com
@@ -53,15 +55,15 @@ server {
     try_files file ... @location
   }
 
-	location /api {
+  location /api {
     proxy_set_header Host $http_host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
-	  proxy_pass http://127.0.0.1:8080;
+    proxy_pass http://127.0.0.1:8080;
     proxy_http_version 1.1;
   }
-  
+
   location /process {
     set $variable value;
     if (condition) {
@@ -80,12 +82,12 @@ server {
 }
 ```
 
+## 负载均衡
 
-# 负载均衡
-  * 为upstream指定一组服务器
-  * 选择负载均衡策略：轮询、加权轮询、ip hash、url hash、热备
-  * 将匹配到的请求包通过负载均衡算法转发给upstream中的一个
-  
+- 为 upstream 指定一组服务器
+- 选择负载均衡策略：轮询、加权轮询、ip hash、url hash、热备
+- 将匹配到的请求包通过负载均衡算法转发给 upstream 中的一个
+
 ```nginx
 # 普通轮询
 upstream svr0 {
@@ -147,7 +149,8 @@ upstream keepalive {
 }
 ```
 
-# 全局配置示例
+## 全局配置示例
+
 ```nginx
 # file: nginx.conf
 

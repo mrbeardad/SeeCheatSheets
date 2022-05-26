@@ -1,4 +1,5 @@
 # 项目构建
+
 ```txt
 pkg_src/
 ├── __init__.py
@@ -9,8 +10,10 @@ pkg_src/
 ```
 
 # 包与模块
-* 在一个目录下创建名为`__init__.py`的文件即可形成一个package
-* 导入包前会执行`__init__.py`并将其中符号导入包命名空间
+
+- 在一个目录下创建名为`__init__.py`的文件即可形成一个 package
+- 导入包前会执行`__init__.py`并将其中符号导入包命名空间
+
 ```python
 from package.module import name
 
@@ -24,20 +27,22 @@ from module import name1, name2                     # 导入模块中指定符�
 from module import name1 as alias1, name2 as alias2 # 导入模块中指定符号，并使用符号别名
 from module import *                                # 导入模块中所有符号(deprecated)
 ```
-* 当模块做脚本执行时`__name__ == '__main__'`
-* 包与模块搜索路径：
-    1. 执行脚本所在目录（若未指定脚本则搜索当前工作目录）
-    2. `sys.path`中指定路径
 
+- 当模块做脚本执行时`__name__ == '__main__'`
+- 包与模块搜索路径：
+  1. 执行脚本所在目录（若未指定脚本则搜索当前工作目录）
+  2. `sys.path`中指定路径
 
 # 变量
-* 变量类型可动态变化，类型、类名都可动态获取
-* 第一次给变量赋值即算变量声明
-* 函数内局部变量作用域一直延续到声明所在函数退出
-* `nonlocal`指明声明的符号绑定到闭包外同名符号
-* `global`指明声明的符号绑定到同名全局符号
+
+- 变量类型可动态变化，类型、类名都可动态获取
+- 第一次给变量赋值即算变量声明
+- 函数内局部变量作用域一直延续到声明所在函数退出
+- `nonlocal`指明声明的符号绑定到闭包外同名符号
+- `global`指明声明的符号绑定到同名全局符号
 
 # 表达式
+
 | 运算符            | 描述             |
 | ----------------- | ---------------- |
 | `.` `()` `[]`     | 成员、函数、下标 |
@@ -51,23 +56,25 @@ from module import *                                # 导入模块中所有符�
 | `\|`              | 位或             |
 | `<=` `<` `>` `>=` | 大小关系         |
 | `==` `!=`         | 等值关系         |
-| `is`  `is not`    | 身份运算符       |
+| `is` `is not`     | 身份运算符       |
 | `in` `not in`     | 成员运算符       |
 | `not`             | 逻辑非           |
 | `and`             | 逻辑与           |
 | `or`              | 逻辑或           |
 
-* 赋值为语句而非表达式
-    * 连续赋值`a = b = c`的意思是`a = c; b = c`而非`b = c; a = b`
-    * 多元赋值`a, b = b, a`中，先计算等号右边产生副本，再将副本赋值给左边
-    * 解包赋值`a, b = itr`赋值itr中的元素给a, b，itr中元素数量必须刚好
-* 支持连续比较`a > b > c`即`a > b and b > c`
-* 浮点数支持`%`运算符
+- 赋值为语句而非表达式
+  - 连续赋值`a = b = c`的意思是`a = c; b = c`而非`b = c; a = b`
+  - 多元赋值`a, b = b, a`中，先计算等号右边产生副本，再将副本赋值给左边
+  - 解包赋值`a, b = itr`赋值 itr 中的元素给 a, b，itr 中元素数量必须刚好
+- 支持连续比较`a > b > c`即`a > b and b > c`
+- 浮点数支持`%`运算符
 
 # 语句
+
 注意：空语句体一定要使用`pass`语句
 
-* 分支
+- 分支
+
 ```python
 if cond:
     pass
@@ -80,8 +87,8 @@ else:
 x if cond else y
 ```
 
+- 循环
 
-* 循环
 ```python
 while cond:
     break
@@ -96,8 +103,8 @@ else:   # 若由break跳出循环则不执行else
     pass
 ```
 
+- 异常
 
-* 异常
 ```python
 # 异常捕获机制存在多态类型甄别，异常类型都应派生子ExceptionBase
 try:
@@ -125,6 +132,7 @@ with Expr as inst:
 ```
 
 # 函数
+
 ```python
 ##################################################
 # 函数定义
@@ -185,10 +193,12 @@ lambda arg1, arg2: retExpr
 ```
 
 # 类
-* python不存在真正的封装，所有属性均可动态增删改查
-* 自定义类型也是引用语义
+
+- python 不存在真正的封装，所有属性均可动态增删改查
+- 自定义类型也是引用语义
 
 ## 封装
+
 ```python
 class Base:
     """Docstring starts with upper letter and ends with dot.
@@ -218,6 +228,7 @@ class Base:
 ```
 
 ## 继承
+
 ```python
 class Derived(Base, Base2):
     def __init__(self, *args):
@@ -227,21 +238,25 @@ class Derived(Base, Base2):
 ```
 
 ## 多态
-* python中变量类型本身即可动态变化，动态绑定目的为复用
 
+- python 中变量类型本身即可动态变化，动态绑定目的为复用
 
 # 数值类型
-## 布尔值
-* 字面值`True`或`False`
-* 字面值`None`视作`False`
-* 任何数值类型的`0`视作`False`
-* 任何容器类型为空视作`False`
-* 自定义类型默认视作`True`
 
+## 布尔值
+
+- 字面值`True`或`False`
+- 字面值`None`视作`False`
+- 任何数值类型的`0`视作`False`
+- 任何容器类型为空视作`False`
+- 自定义类型默认视作`True`
 
 <!-- entry begin: python int -->
+
 ## 整数
-* **支持任意大小的整数**
+
+- **支持任意大小的整数**
+
 ```python
 # 构造
 0b10    # 二进制
@@ -264,11 +279,15 @@ Int.from_bytes(bytes,
     byteorder,
     *, signed=False)
 ```
+
 <!-- entry end -->
 
 <!-- entry begin: python float -->
+
 ## 浮点数
-* **浮点数一般使用IEEE双精度浮点数，存在精度问题**
+
+- **浮点数一般使用 IEEE 双精度浮点数，存在精度问题**
+
 ```python
 # 构造
 1.1         # 整数部分或小数部分之一可省略
@@ -281,10 +300,13 @@ float(Str)  # 支持Inf、Nan
 Float.is_integer()          # 能不丢失精度得转换为整数
 Float.as_integer_ratio()    # 返回一对整数（分子/分母）
 ```
+
 <!-- entry end -->
 
 <!-- entry begin: python fraction -->
+
 ## 分数
+
 ```python
 from fractions import Fraction
 
@@ -294,11 +316,15 @@ Fraction(Float)
 Fraction(Decimal)
 Fraction(Str)       # 格式："[sign] numerator [/ denominator]"
 ```
+
 <!-- entry end -->
 
 <!-- entry begin: python decimal -->
+
 ## 高精度数字
-* **利用字符串存储浮点值**
+
+- **利用字符串存储浮点值**
+
 ```python
 from decimal import Decimal
 
@@ -314,11 +340,13 @@ DefaultContext      # 精度28，舍入ROUND_HALF_EVEN，启用陷阱Overflow、
 BasicContext        # 精度9，舍入ROUND_HALF_UP，启动所有陷阱
 ExtendedContext     # 精度9，舍入ROUND_HALF_EVEN，关闭所有陷阱
 ```
+
 <!-- entry end -->
 
-
 <!-- entry begin: python algorithm -->
+
 # 容器类型
+
 ```python
 len(itr)                        # 返回元素数量
 enumerate(itr)                  # 返回元素为(idx, val)的迭代器
@@ -339,12 +367,17 @@ filter(func, itr)               # 返回范围包含func(elem)为True的元素
 map(func, itr)                  # 返回范围包含func(elem)返回值
 zip(*itr)                       # 返回各范围元素组合后的迭代器
 ```
+
 <!-- entry end -->
-* python中容器类型底层数据结构均为指针，指向“栈结构”，从而封装了内存重新分配（扩容与缩容）
+
+- python 中容器类型底层数据结构均为指针，指向“栈结构”，从而封装了内存重新分配（扩容与缩容）
 
 <!-- entry begin: python string -->
+
 ## 字符串
-* 字符串为只读类型，底层类型即码点数组，可转换为`byte`
+
+- 字符串为只读类型，底层类型即码点数组，可转换为`byte`
+
 ```python
 # 构造
 '可直接包含""的字符串'
@@ -419,10 +452,12 @@ Str.rsplit(sep=None             # 从右边开始分割
 Str.splitlines(keepends=False)
 ```
 
-
 <!-- entry begin: python tuple -->
+
 ## 元组
-* 元组为只读类型
+
+- 元组为只读类型
+
 ```python
 # 构造
 Tuple = tuple([itr])
@@ -438,10 +473,13 @@ elem in Tuple
 Tuple.count(v)
 Tuple.index(v[, i[, j]])
 ```
+
 <!-- entry end -->
 
 <!-- entry begin: python list heap -->
+
 ## 列表
+
 ```python
 # 构造
 List = list([itr])
@@ -452,7 +490,7 @@ List = List1 + List2
 List = List * num
 
 # 访问与搜索
-List[beg:[end[:step]]]  # 支持负数-n表示倒数第n个元素下标
+List[beg:[end[:step]]]  # 支持负数-n表示倒数第n个元素下标，浅拷贝而非视图
 elem in List
 List.count(v)
 List.index(v[, i[, j]])
@@ -471,11 +509,13 @@ del s[i:j]
 del s[i:j:k]
 List.clear()
 ```
+
 <!-- entry end -->
 
-
 <!-- entry begin: python set -->
+
 ## 集合
+
 ```python
 # 构造
 Set = set([itr])
@@ -510,10 +550,14 @@ Set -=  Other
 Set ^   Other
 Set ^=  Other
 ```
-**不可hash类型包括：list, set, dict**
+
+**不可 hash 类型包括：list, set, dict**
+
 <!-- entry end -->
 <!-- entry begin: python dict -->
+
 ## 字典
+
 ```python
 # 构造
 Dict = dict([itr])      # itr元素为键值对元组
@@ -535,11 +579,13 @@ Dict.update(itr)
 Dict |  Other           # 合并两字典，Other的键值优先
 Dict |= Other           # 合并两字典，Other的键值优先
 ```
+
 <!-- entry end -->
 
-
 # 内建函数
+
 ## 语言特性
+
 ```python
 dir(obj)                    # 返回obj的符号表
 type(obj)                   # 返回obj的类型
@@ -552,8 +598,8 @@ locals()                    # 返回局部符号表，可用于判断变量是�
 globals()                   # 返回全局符号表，可用于判断变量是否存在
 ```
 
-
 ## 数值处理
+
 ```python
 abs(v)                  # 返回绝对值
 divmod(a, b)            # 返回商和余数
@@ -562,6 +608,7 @@ round(num, ndigits=0)   # 化简num到小数点后ndigit位（向偶舍入）
 ```
 
 ## 字符处理
+
 ```python
 ascii(obj)  # 返回对象打印字符串，非ascii则用\x \u \U转义
 ord(c)      # 返回字符c对应Unicode码点
@@ -575,6 +622,7 @@ exec(code)  # 动态解析代码片段并仅产生其副作用而返回None
 ```
 
 ## 输入输出
+
 ```python
 input(prompt='')            # 遇换行停止
 
