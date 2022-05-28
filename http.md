@@ -15,8 +15,9 @@
   - [安全](#安全)
     - [HTTP 严格传输安全(HSTS)](#http-严格传输安全hsts)
     - [跨源资源共享(CORS)](#跨源资源共享cors)
-    - [嵌套框架限制](#嵌套框架限制)
     - [内容安全策略(CSP)](#内容安全策略csp)
+    - [MIME 类型嗅探限制](#mime-类型嗅探限制)
+    - [嵌套框架限制](#嵌套框架限制)
 
 ## 报文
 
@@ -60,7 +61,7 @@ Body 大致可分为三类：
 ```txt
 http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 ^------^--------------^--^------------------^-----------------------^------^
-scheme    domain      port      path                query           fragment
+scheme     host       port      path                query           fragment
 ```
 
 - 片段`#anchor`不随 http 传输，仅用于浏览器定位页面片段
@@ -130,10 +131,10 @@ scheme    domain      port      path                query           fragment
 
 ## 缓存
 
-- 缓存分为 private 缓存与 public 缓存
-- 缓存状态有 fresh 与 stale，根据`max-age`与`Date`或`Age`确定
-- fresh 缓存可直接重用，stale 缓存需要校验成功后才能重用
-- 当与源服务器断开连接时允许使用 stale 缓存
+- 缓存类型：缓存分为 private 缓存与 public 缓存
+- 缓存状态：缓存状态有 fresh 与 stale，根据`max-age`与`Date`或`Age`确定
+- 缓存校验：fresh 缓存可直接重用，stale 缓存需要校验成功后才能重用
+- 复用旧缓存：当与源服务器断开连接时允许使用 stale 缓存
 - 启发式缓存：即使未指定`Cache-Control`也可进行缓存，一般`max-age`=(`Last-Modified`-`Date`) / 10
 - 缓存折叠：缓存代理同时接收多个相同请求时，只向源服务器发送一个请求，除非指定`Cache-Control: private`
 - 缓存破坏：给静态资源名添加版本号（如哈希等），修改后 URL 不同导致缓存失效
@@ -157,15 +158,15 @@ scheme    domain      port      path                query           fragment
 | `no-cache`               | 强制缓存校验                                                      |
 | `no-transform`           | 指明不可转换响应内容，一些中介会修改响应内容比如降低图片分辨率    |
 
-| 其他相关首部        | 类型 | 备注                                                                                                |
-| ------------------- | ---- | --------------------------------------------------------------------------------------------------- |
-| `Date`              | 响应 | 响应报文创建时间                                                                                    |
-| `Last-Modified`     | 响应 | 资源上次修改时间                                                                                    |
-| `ETag`              | 响应 | 用于缓存校验，一般为哈希值                                                                          |
-| `Expires`           | 响应 | 指定缓存保持 fresh 的时间点而非流逝时间（不建议）                                                   |
-| `Vary`              | 响应 | （逗号分隔列表）加上 Vary 指定的首部作为缓存标志而非仅用 URL，应用场景如`Origin, Accept-Encoding`等 |
-| `If-Modified-Since` | 请求 | 缓存校验，对应`Last-Modified`                                                                       |
-| `If-None-Match`     | 请求 | 缓存校验，对应`Etag`，优先于上条                                                                    |
+| 其他相关首部                 | 类型 | 备注                                                                                |
+| ---------------------------- | ---- | ----------------------------------------------------------------------------------- |
+| `Date`                       | 响应 | 响应报文创建时间                                                                    |
+| `Last-Modified`              | 响应 | 资源上次修改时间                                                                    |
+| `ETag`                       | 响应 | 用于缓存校验，一般为哈希值                                                          |
+| `Expires`                    | 响应 | 指定缓存保持 fresh 的时间点而非流逝时间                                             |
+| `Vary: <header>[, <header>]` | 响应 | 加上 Vary 指定的首部作为缓存标志而非仅用 URL，应用场景如`Origin, Accept-Encoding`等 |
+| `If-Modified-Since`          | 请求 | 缓存校验，对应`Last-Modified`                                                       |
+| `If-None-Match`              | 请求 | 缓存校验，对应`Etag`，优先于上条                                                    |
 
 | 状态码 | 描述         | 备注               |
 | ------ | ------------ | ------------------ |
@@ -220,7 +221,7 @@ scheme    domain      port      path                query           fragment
 - 浏览器会阻止在 HTTP（非安全）协议下加载动态资源，如 JavaScript
 - `about://net-internals#hsts`中查看/删除 HSTS 列表
 
-| `Strict-Transport-Security`响应首部 | 备注                                 |
+| `Strict-Transport-Security`响应首部 | 备注（分号分隔列表）                 |
 | ----------------------------------- | ------------------------------------ |
 | `max-age=`                          | 指定 HSTS 记忆有效时间               |
 | `includeSubDomains`                 | 包括子域名也应用 HSTS                |
@@ -228,10 +229,10 @@ scheme    domain      port      path                query           fragment
 
 ### 跨源资源共享(CORS)
 
-浏览器请求跨源资源时，会先进行`OPTION`预检，若**目标资源服务器**允许**源服务器**跨源访问该资源后再进行正常资源访问。
-JavaScript 无法获取跨源访问出错报错信息，需要打开浏览器控制台查看。
+前端脚本请求跨源资源时，浏览器会先进行`OPTION`预检，若**目标资源服务器**允许**源服务器**跨源访问该资源后再进行正常资源访问。
+脚本无法获取跨源访问出错报错信息，需要打开浏览器控制台查看。
 
-简单请求不会触发 CORS 预检，一些典型的限制如下：
+简单请求不会触发 CORS 预检，典型的限制如下：
 
 - 仅允许使用`HEAD`、`GET`与`POST`
 - 仅允许使用简单首部（其中`Content-Type`限制为`text/plain`、`multipart/form-data`与`application/x-www-form-urlencoded`）
@@ -246,7 +247,7 @@ JavaScript 无法获取跨源访问出错报错信息，需要打开浏览器控
 
 | 响应首部                                               | 备注                                                                                                      |
 | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| `Access-Control-Allow-Origin: <origin> 或 *`           | 允许跨源请求的源服务器，若指定为`<origin>`则需要添加首部`Vary: Origin`                                    |
+| `Access-Control-Allow-Origin: <origin> 或 *`           | 允许跨源请求的源服务器，若指定为`<origin>`则应该添加首部`Vary: Origin`                                    |
 | `Access-Control-Allow-Methods: <method>[, <method>]*`  | 允许跨源请求的方法                                                                                        |
 | `Access-Control-Allow-Headers: <header>[, <header>]*`  | 允许跨源请求携带的用户自定义的非简单首部                                                                  |
 | `Access-Control-Max-Age: <delta-seconds>`              | 允许预检结果有效的时间，期间无需再次进行相同预检                                                          |
@@ -254,15 +255,21 @@ JavaScript 无法获取跨源访问出错报错信息，需要打开浏览器控
 | `Access-Control-Allow-Credentials: true`               | 允许携带 Credentials(cookie,authorization headers,TLS client certificates) 的跨源请求，否则浏览器忽略响应 |
 | `Referrer-Policy: strict-origin-when-cross-origin`     | 浏览器默认行为，同源请求发送 origin、path 和 query，跨源请求发送仅 origin，若非 HTTPS 则不发送            |
 
-### 嵌套框架限制
-
-| `X-Frame-Options`响应首部 | 备注（默认允许嵌套） |
-| ------------------------- | -------------------- |
-| `DENY`                    | 禁止任何形式的嵌套   |
-| `SAMEORIGIN`              | 允许同源请求嵌套     |
-
 ### 内容安全策略(CSP)
 
-| 响应首部                                                          | 备注                                           |
-| ----------------------------------------------------------------- | ---------------------------------------------- |
-| `Content-Security-Policy: <policy-directive>; <policy-directive>` | 限制加载资源的源服务器，这会禁用内联 js 与 css |
+| `Content-Security-Policy`响应首部        | 备注                                             |
+| ---------------------------------------- | ------------------------------------------------ |
+| `<policy-directive>; <policy-directive>` | 限制加载资源的源(Origin)，这会禁用内联 js 与 css |
+
+### MIME 类型嗅探限制
+
+| `X-Content-Type-Options`响应首部 | 备注                                                 |
+| -------------------------------- | ---------------------------------------------------- |
+| `nosniff`                        | 若嗅探的 MIME 类型与`Content-Type`不匹配，则阻止请求 |
+
+### 嵌套框架限制
+
+| `X-Frame-Options`响应首部 | 备注（默认允许跨源嵌套） |
+| ------------------------- | ------------------------ |
+| `DENY`                    | 禁止任何形式的嵌套       |
+| `SAMEORIGIN`              | 允许同源请求嵌套         |

@@ -2,199 +2,172 @@
 
 ## 路由转发
 
-- 模拟若干**server**，通过**listen**与**server_name**进行匹配
-- 实现若干路由策略，通过**location**进行匹配
-- 对请求包进行操作：
-  - 接受并响应静态资源，或转发动态资源请求到后端服务，或拒绝请求
-  - 修改报文内容
-  - 协议转换
-  - 缓存资源
+- 每条请求需要与一个虚拟主机(server)中的一条路由策略(location)匹配
+- 先将请求的 origin 与**server**的**listen**与**server_name**匹配
+- 再将请求的 path 与**server**内部的**location**匹配
+
+### 基础配置
 
 ```nginx
-server {
-  # listen命令指定该虚拟主机监听地址与端口
-  # default_server表示若该监听地址端口无server_name匹配，则使用该server作为默认
-  listen (address[:port]|port) [default_server] [ssl] [http2];
+Syntax : server { ... }
+Default: —
+Context: http
+```
 
-  # server_name命令指定用于匹配的主机名（可能是ip或domain），支持通配符与正则表达式
-  # 1. 准确匹配server_name，e.g. www.example.com
-  # 2. 通配符在开始时匹配server_name成功，e.g. *.example.com
-  # 3. 通配符在结尾时匹配server_name成功，e.g. www.example.*
-  # 4. 正则表达式匹配server_name成功，e.g. ~^www.example.com$
-  # 5. 多个同一优先级则匹配第一个出现的
-  server_name example.com ...;
+- 创建一个虚拟主机(server)
 
-  # ssl卸载
-  ssl_certificate example.com.crt
-  ssl_certificate_key example.com.key;
-  ssl_password_file password.txt;
+```nginx
+Syntax : listen address:port [default_server] [ssl] [http2];
+Default: listen *:80 | *:8000;
+Context: server
+```
 
-  # root命令指定文件系统目录用于查找静态资源
-  root /path/to/root;
-  # index命令指定用于访问目录（URL末尾为/）时内部重定向（重新匹配location）的默认文件
-  index index.html;
+- 指定当前 server 监听地址与端口
+- default_server 表示当前 server 为该监听地址与端口的默认 server
 
-  # locatin命令用于对匹配的url进行特殊操作，支持通配符与正则表达式
-  # 正常匹配规则：
-  # 1. 先匹配标准uri，记录匹配前缀最长的location；
-  # 2. 再匹配正则uri，若存在匹配则使用该正则location，否则使用之前记录的标准locaion
-  # 前缀符号：
-  # =：用于标准uri前，严格精准匹配，若匹配成功则停止
-  # ^~：用于标准uri前，若该location匹配度在标准匹配中最高则直接使用该项而不进行正则匹配
-  # ~：用于表示uri包含正则表达式，并且区分大小写。
-  # ~*：用于表示uri包含正则表达式，并且不区分大小写
-  @location [=|~|~*|^~] uri {
-    add_header Header 'value'
-  }
+```nginx
+Syntax : server_name name ...;
+Default: server_name "";
+Context: server
+```
 
-  location /file {
-    # 手动指定静态资源查找，而非nginx默认利用root与index查找
-    # 按try_files参数顺序查找，末尾/表示目录，若无则跳转uri或返回状态码code
-    try_files file ... uri;
-    try_files file ... =code;
-    try_files file ... @location
-  }
+- 指定当前 server 匹配请求的 host
+  1. 准确匹配，如 `www.example.com`
+  2. 开头通配符，如 `*.example.com`
+  3. 结尾通配符，如 `www.example.*`
+  4. 正则匹配，如 `~^www.example.com$`
+  5. 优先级从上到下，多个同优先级则匹配第一个出现的
 
-  location /api {
-    proxy_set_header Host $http_host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_pass http://127.0.0.1:8080;
-    proxy_http_version 1.1;
-  }
+```nginx
+Syntax : ssl_certificate file;
+Syntax : ssl_certificate_key file;
+Syntax : ssl_password_file file;
+Default: —
+Context: http, server
+```
 
-  location /process {
-    set $variable value;
-    if (condition) {
-      break;
-    }
-    # 修改匹配的url
-    # last: 停止当前location并重新匹配location
-    # break: 停止当前location但不重新匹配
-    # redirect: 302暂时重定向
-    # permanent: 301永久重定向
-    rewrite regex replacement [last|break|redirect|permanent];
-    return code [text];
-    return code URL;
-    return URL;
-  }
+- ssl 协议卸载
+
+```nginx
+Syntax: location [ = | ~ | ~* | ^~ ] uri { ... }
+        location @name { ... }
+Default: —
+Context: server, location
+```
+
+- 指定该路由策略匹配的 url path
+  1. 先进行前缀匹配，并记录其中最长前缀匹配的 location；
+  2. 再进行正则匹配，并记录第一个成功匹配的 location；
+  3. 最后选择，正则匹配优先级高于前缀匹配
+  - 默认前缀匹配
+  - `=` 表示精准匹配，匹配成功则停止匹配直接选择该 location（无法嵌套）
+  - `^~` 表示若当前 location 为最长前缀匹配，则停止匹配直接选择该 location
+  - `~` 表示正则匹配且区分大小写
+  - `~*` 表示正则匹配且忽略大小写
+- `@name` location 无法嵌套与被嵌套
+
+```nginx
+Syntax : root path;
+Default: root html;
+Context: http, server, location, if in location
+```
+
+- 指定 path 作为 url path 的路径前缀，再用于查找静态资源
+
+```nginx
+Syntax : alias path;
+Default: —
+Context: location
+```
+
+- 指定 path 将 url path 中匹配到的 location uri 替换掉，再用于查找静态资源。与 root 命令不相容，支持正则替换语法
+
+```nginx
+Syntax : index file ...;
+Default: index index.html;
+Context: http, server, location
+```
+
+- 指定用于请求目录（url 结尾为`/`）时内部重定向（重新匹配 location）的默认文件
+
+```nginx
+Syntax : try_files file ... uri;
+         try_files file ... =code;
+         try_files file ... @name;
+Default: —
+Context: server, location
+```
+
+- 依序尝试获取指定文件（需要经 root 与 alias 处理），若都获取失败则使用最后指定方法
+
+### 代理转发
+
+```nginx
+location /api {
+  proxy_set_header Host $http_host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_http_version 1.1;
+  proxy_pass http://127.0.0.1:8080; # 指定URL
+  proxt_pass http://upstream_name;  # 指定upstream
 }
 ```
+
+- `proxy_pass`如果包含 URI，则被 location 匹配的部分会被替换为该 URI
+- `proxy_pass`如果不包含 URI，则原封不动传递
+
+### 重定向
+
+```nginx
+Syntax : rewrite regex replacement [flag];
+Default: —
+Context: server, location, if
+```
+
+- 正则替换 url path，按顺序执行，若 replacement 以`http://`、`https://`或`$scheme`开头则停止并返回响应，可由 flag 控制：
+  - last: 停止当前 ngx_http_rewrite_module 并重新匹配 location
+  - break: 停止当前 ngx_http_rewrite_module 但不重新匹配 location
+  - redirect: 302 暂时重定向
+  - permanent: 301 永久重定向
+
+```nginx
+Syntax : return code [body_text];
+         return code URL;
+         return URL;
+Default: —
+Context: server, location, if
+```
+
+### 缓存
+
+参见<https://gist.github.com/Friz-zy/3dd2a670d8f14eac717e100d0dc7696f>
 
 ## 负载均衡
 
-- 为 upstream 指定一组服务器
-- 选择负载均衡策略：轮询、加权轮询、ip hash、url hash、热备
-- 将匹配到的请求包通过负载均衡算法转发给 upstream 中的一个
+- 根据顺序与权重轮询上游服务器，若失败则连接下一个，若均失败则返回客户端最后一个失败响应
+- 通过添加额外命令和添加 server 参数从而修改负载均衡的行为
 
 ```nginx
-# 普通轮询
-upstream svr0 {
+upstream name {
     server 192.168.80.121:80;
     server 192.168.80.122:80;
     server 192.168.80.123:80;
-}
-# 加权轮询
-upstream svr1 {
-    server 192.168.80.121:80 weight=1;
-    server 192.168.80.122:80 weight=2;
-    server 192.168.80.123:80 weight=3;
-}
-# 最少连接
-upstream svr2 {
-    least_conn;
-    server 192.168.80.121:80;
-    server 192.168.80.122:80;
-    server 192.168.80.123:80;
-}
-# 最快响应
-upstream svr3 {
-    fair;
-    server 192.168.80.121:80;
-    server 192.168.80.122:80;
-    server 192.168.80.123:80;
-}
-# ip hash
-upstream svr4 {
-    ip_hash;
-    server 192.168.80.121:80;
-    server 192.168.80.122:80;
-    server 192.168.80.123:80;
-}
-# url hash
-upstream svr5 {
-    server 192.168.80.121:80;
-    server 192.168.80.122:80;
-    server 192.168.80.123:80;
-    hash $request_uri;
-    hash_method crc32;
-}
-upstream keepalive {
-    server 192.168.80.121:80;
-    server 192.168.80.122:80;
-    server 192.168.80.123:80;
-    # 长连接控制
-    keepalive 32;           # 最大空闲长连接数
-    keepalive_requests 1000;# 每次长连接最大请求书
-    keepalive_time 1h;      # 每次长连接最长保持时间
-    keepalive_timeout 75s;  # 空闲长连接最长保持时间
-}
-# server额外参数：
-# weight：weight越大，负载的权重就越大。
-# down：表示当前的server暂时不参与负载
-# backup： 其它所有的非backup机器down或者忙的时候，请求backup机器
-# max_fails：用于健康监测，允许请求失败的次数，默认为1
-# fail_timeout：用于健康监测，max_fails次失败后暂停的时间。
 }
 ```
 
-## 全局配置示例
+| server 命令参数     | 默认值 | 备注                                           |
+| ------------------- | ------ | ---------------------------------------------- |
+| `weight=number`     | 1      | 权重                                           |
+| `max_conns=number`  | 0      | 限制最大连接数，0 表示无限制                   |
+| `max_fails=number`  | 1      | 限制失败连接数                                 |
+| `fail_timeout=time` | 10     | 连接失败后 server 在多少秒内不可用             |
+| `backup`            |        | 指定 server 为备用，当主 server 不可用时才使用 |
+| `down`              |        | 标记为永久不可用                               |
 
-```nginx
-# file: nginx.conf
-
-user www-data;
-worker_processes auto;
-pid /run/nginx.pid;
-
-events {
-    worker_connections 768;
-    multi_accept off; # 开启后每个work进程一直轮询处理连接，而非利用kernel多路复用的事件驱动
-}
-
-http {
-    # Basic Settings
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 65;
-    types_hash_max_size 2048;
-    # server_tokens off;
-    # server_names_hash_bucket_size 64;
-    # server_name_in_redirect off;
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
-
-    # SSL Settings
-    ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
-    ssl_prefer_server_ciphers on;
-
-    # Logging Settings
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
-
-    # Gzip Settings
-    gzip on;
-    # gzip_vary on;
-    # gzip_proxied any;
-    # gzip_comp_level 6;
-    # gzip_buffers 16 8k;
-    # gzip_http_version 1.1;
-    # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-
-    # Virtual Host Configs
-    include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites-enabled/*;
-}
-```
+| 其他命令                 | 备注                                                              |
+| ------------------------ | ----------------------------------------------------------------- |
+| `ip_hash;`               | 请求 ip 做 hash                                                   |
+| `hash key [consistent];` | key 可包含变量，consistent 表示添加或删除 server 尽量不重映射 key |
+| `least_conn;`            | 最少连接优先，并考虑权重                                          |
+| `least_time;`            | 最少响应时间且最少连接的 server 优先，并考虑权重                  |

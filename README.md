@@ -37,7 +37,7 @@ cp see ~/.local/bin
 
 ## 编程之道
 
-- [编码逻辑](coding.md):star:：分支、逻辑、循环、递归、下标
+- [编码逻辑](coding.md):star:：逻辑、分支、循环、递归、下标
 - [设计模式](dspt.md):star:：依赖倒置、接口分离、is-a、has-a、use-a
 
 ## 编程语言
