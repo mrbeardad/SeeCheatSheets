@@ -15,9 +15,9 @@
   - [安全](#安全)
     - [HTTP 严格传输安全(HSTS)](#http-严格传输安全hsts)
     - [跨源资源共享(CORS)](#跨源资源共享cors)
-    - [内容安全策略(CSP)](#内容安全策略csp)
-    - [MIME 类型嗅探限制](#mime-类型嗅探限制)
     - [嵌套框架限制](#嵌套框架限制)
+    - [MIME 类型嗅探限制](#mime-类型嗅探限制)
+    - [内容安全策略(CSP)](#内容安全策略csp)
 
 ## 报文
 
@@ -115,15 +115,14 @@ scheme     host       port      path                query           fragment
 
 ## 重定向
 
-| 状态码 | 描述               | 处理方法                                   | 应用场景                                                              |
-| ------ | ------------------ | ------------------------------------------ | --------------------------------------------------------------------- |
-| 301    | Moved Permanently  | GET 方法不变，其他方法有可能会变为 GET     | 网站重构                                                              |
-| 308    | Permanent Redirect | 方法和消息主体都不发生变化                 | 网站重构，用于非 GET 方法                                             |
-| 302    | Found              | GET 方法不变，其他方法有可能会变为 GET     | 网页意外不可用                                                        |
-| 307    | Temporary Redirect | 方法和消息主体都不发生变化                 | 网页意外不可用，用于非 GET 方法                                       |
-| 303    | See Other          | GET 方法不变，其他方法变为 GET（丢失主体） | 用于防止非安全请求因刷新页面而重新触发                                |
-| 300    | Multiple Choice    | 用户手动选择 html 中列出的重定向           | `<link rel="alternate" href="https://zh.example.com/" hreflang="zh">` |
-| 304    | Not Modified       | 重定向到缓存                               | 缓存校验，表明缓存仍有效                                              |
+| 状态码 | 描述               | 处理方法                               | 应用场景                                                              |
+| ------ | ------------------ | -------------------------------------- | --------------------------------------------------------------------- |
+| 301    | Moved Permanently  | GET 方法不变，其他方法有可能会变为 GET | 网站重构                                                              |
+| 308    | Permanent Redirect | 方法和消息主体都不发生变化             | 网站重构，用于非 GET 方法                                             |
+| 302    | Found              | GET 方法不变，其他方法有可能会变为 GET | 网页意外不可用                                                        |
+| 307    | Temporary Redirect | 方法和消息主体都不发生变化             | 网页意外不可用，用于非 GET 方法                                       |
+| 300    | Multiple Choice    | 用户手动选择 html 中列出的重定向       | `<link rel="alternate" href="https://zh.example.com/" hreflang="zh">` |
+| 304    | Not Modified       | 重定向到缓存                           | 缓存校验，表明缓存仍有效                                              |
 
 - HTTP 重定向：`Location: URL`
 - HTML 重定向：`<meta http-equiv="Refresh" content="0; URL=https://example.com/">`
@@ -196,7 +195,7 @@ scheme     host       port      path                query           fragment
 ## 会话
 
 - 一个 cookie 只能包含一个`<cookie-name>=<cookie-value>`对，需要多个 cookie 则应包含多个`Set-Cookie`首部
-- `Origin-same`同源表示两 URL 的 secheme, domain, port 均相同
+- `Origin-same`同源表示两 URL 的 secheme, host, port 均相同
 - `Site-same`同站表示两 URL 的 secheme 相同，且减去有效一级域名后的二级域名相同
 
 | `Set-Cookie`响应首部           | 备注（分号分隔列表）                                                                                                              |
@@ -219,6 +218,7 @@ scheme     host       port      path                query           fragment
 ### HTTP 严格传输安全(HSTS)
 
 - 浏览器会阻止在 HTTP（非安全）协议下加载动态资源，如 JavaScript
+- HSTS 表明当前站点仅允许在 HTTPS 安全协议下访问
 - `about://net-internals#hsts`中查看/删除 HSTS 列表
 
 | `Strict-Transport-Security`响应首部 | 备注（分号分隔列表）                 |
@@ -255,11 +255,12 @@ scheme     host       port      path                query           fragment
 | `Access-Control-Allow-Credentials: true`               | 允许携带 Credentials(cookie,authorization headers,TLS client certificates) 的跨源请求，否则浏览器忽略响应 |
 | `Referrer-Policy: strict-origin-when-cross-origin`     | 浏览器默认行为，同源请求发送 origin、path 和 query，跨源请求发送仅 origin，若非 HTTPS 则不发送            |
 
-### 内容安全策略(CSP)
+### 嵌套框架限制
 
-| `Content-Security-Policy`响应首部        | 备注                                             |
-| ---------------------------------------- | ------------------------------------------------ |
-| `<policy-directive>; <policy-directive>` | 限制加载资源的源(Origin)，这会禁用内联 js 与 css |
+| `X-Frame-Options`响应首部 | 备注（默认允许跨源嵌套） |
+| ------------------------- | ------------------------ |
+| `DENY`                    | 禁止任何形式的嵌套       |
+| `SAMEORIGIN`              | 允许同源请求嵌套         |
 
 ### MIME 类型嗅探限制
 
@@ -267,9 +268,8 @@ scheme     host       port      path                query           fragment
 | -------------------------------- | ---------------------------------------------------- |
 | `nosniff`                        | 若嗅探的 MIME 类型与`Content-Type`不匹配，则阻止请求 |
 
-### 嵌套框架限制
+### 内容安全策略(CSP)
 
-| `X-Frame-Options`响应首部 | 备注（默认允许跨源嵌套） |
-| ------------------------- | ------------------------ |
-| `DENY`                    | 禁止任何形式的嵌套       |
-| `SAMEORIGIN`              | 允许同源请求嵌套         |
+| `Content-Security-Policy`响应首部        | 备注                                             |
+| ---------------------------------------- | ------------------------------------------------ |
+| `<policy-directive>; <policy-directive>` | 限制加载资源的源(Origin)，这会禁用内联 js 与 css |

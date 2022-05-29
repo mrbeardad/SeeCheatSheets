@@ -16,6 +16,8 @@ Context: http
 
 - 创建一个虚拟主机(server)
 
+---
+
 ```nginx
 Syntax : listen address:port [default_server] [ssl] [http2];
 Default: listen *:80 | *:8000;
@@ -24,6 +26,8 @@ Context: server
 
 - 指定当前 server 监听地址与端口
 - default_server 表示当前 server 为该监听地址与端口的默认 server
+
+---
 
 ```nginx
 Syntax : server_name name ...;
@@ -38,6 +42,8 @@ Context: server
   4. 正则匹配，如 `~^www.example.com$`
   5. 优先级从上到下，多个同优先级则匹配第一个出现的
 
+---
+
 ```nginx
 Syntax : ssl_certificate file;
 Syntax : ssl_certificate_key file;
@@ -47,6 +53,19 @@ Context: http, server
 ```
 
 - ssl 协议卸载
+
+---
+
+```nginx
+Syntax : add_header name value [always];
+Default: —
+Context: http, server, location, if in location
+```
+
+- 添加响应首部。若不加 always，则仅在响应码为 200, 201 , 204, 206, 301, 302, 303, 304, 307 , or 308 时添加。
+- 仅当当前域没有`add_header`命令才从外部继承
+
+---
 
 ```nginx
 Syntax: location [ = | ~ | ~* | ^~ ] uri { ... }
@@ -66,6 +85,8 @@ Context: server, location
   - `~*` 表示正则匹配且忽略大小写
 - `@name` location 无法嵌套与被嵌套
 
+---
+
 ```nginx
 Syntax : root path;
 Default: root html;
@@ -73,6 +94,8 @@ Context: http, server, location, if in location
 ```
 
 - 指定 path 作为 url path 的路径前缀，再用于查找静态资源
+
+---
 
 ```nginx
 Syntax : alias path;
@@ -82,6 +105,8 @@ Context: location
 
 - 指定 path 将 url path 中匹配到的 location uri 替换掉，再用于查找静态资源。与 root 命令不相容，支持正则替换语法
 
+---
+
 ```nginx
 Syntax : index file ...;
 Default: index index.html;
@@ -89,6 +114,8 @@ Context: http, server, location
 ```
 
 - 指定用于请求目录（url 结尾为`/`）时内部重定向（重新匹配 location）的默认文件
+
+---
 
 ```nginx
 Syntax : try_files file ... uri;
