@@ -2,31 +2,177 @@
 
 ## 选择器
 
-| 选择器         | 示例                | 备注           |
-| -------------- | ------------------- | -------------- |
-| 通配选择器     | `* { }`             | 通配选择器     |
-| 类型选择器     | `h1 { }`            | 类型选择器     |
-| 类选择器       | `.box { }`          | 类选择器       |
-| ID 选择器      | `#unique { }`       | ID 选择器      |
-| 标签属性选择器 | `a[title] { }`      | 标签属性选择器 |
-| 伪类选择器     | `p:first-child { }` | 伪类           |
-| 伪元素选择器   | `p::first-line { }` | 伪元素         |
-| 后代选择器     | `article p`         | 后代运算符     |
-| 子代选择器     | `article > p`       | 子代选择器     |
-| 相邻兄弟选择器 | `h1 + p`            | 相邻兄弟       |
-| 通用兄弟选择器 | `h1 ~ p`            | 通用兄弟       |
+| 基本选择器 | 语法                     | 权重 |
+| ---------- | ------------------------ | ---- |
+| Universal  | `*`                      | 000  |
+| Element    | `elementname`            | 001  |
+| Attribute  | `[attr]` `[attr@=value]` | 010  |
+| Class      | `.classname`             | 010  |
+| ID         | `#idname`                | 100  |
+
+| 复合选择器       | 语法                    | 权重 |
+| ---------------- | ----------------------- | ---- |
+| Descendant       | `selector1 selector2`   | 0    |
+| Child            | `selector1 > selector2` | 0    |
+| General sibling  | `selector1 ~ selector2` | 0    |
+| Adjacent sibling | `selector1 + selector2` | 0    |
+
+| 伪选择器        | 示例            | 备注                   | 权重 |
+| --------------- | --------------- | ---------------------- | ---- |
+| Pseudo classes  | `button:hover`  | 指定选定元素的特定状态 | 010  |
+| Pseudo elements | `p::first-line` | 指定选定元素的特定部分 | 001  |
 
 ## 层叠与继承
 
-- 层叠：同一属性由优先者覆盖
+**层叠**：同一属性存在多个值时，先选择优先级高的样式来源，再选择优先级最高的值
 
-  - `!important`
-  - 选择器优先级
-  - 生命顺序顺序
+- 样式来源：
 
-- 继承：子元素继承父元素的某些属性
-  - `all: inherit`
-  - `all: revert`
+  1. `!important` in user style sheets
+  2. `!important` in author style sheets
+  3. normal in user style sheets
+  4. normal in author style sheets
+  5. browser default style sheets
+
+- 同源优先级：
+  1. 特异性：根据选择器权重计算优先级，权重计算无进位
+  2. 声明顺序：特异性优先级相同则靠后的声明优先
+
+**继承**：当子元素的某些属性没有指定值，默认会继承父元素的某些属性，而哪些属性会被继承很大程度上取决于常识
+
+| 控制继承属性值 | 备注                                       |
+| -------------- | ------------------------------------------ |
+| `inherit`      | 继承父元素的值                             |
+| `initial`      | 使用最原始的标准默认值                     |
+| `unset`        | 继承属性同`inherit`，非继承属性同`initial` |
+| `revert`       | 使用浏览器默认 CSS 中的值                  |
+| `revert-layer` | 使用上一层的值                             |
+
+## 布局
+
+### 盒子模型
+
+```txt
+┌─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  ─  ─┐
+  margin      ↱ border
+│   ┌─────────────────────┐   │
+    │ padding             │
+│   │  ┌  ─ ─ ─ ─ ─ ─  ┐  │   │
+    │       content       │
+│   │  └  ─ ─ ─ ─ ─ ─  ┘  │   │
+    │                     │
+│   └─────────────────────┘   │
+
+└─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┘
+```
+
+- `block`
+  - padding 和 margin 会推挤空间
+  - 宽度：由 content 宽度决定，考虑`width:`。特殊的，根元素`<body>`的宽度固定我`100vw`
+  - 高度：单行高度取子元素中 inline's content, block's border, inline-block's margin 高度中最大值，考虑`height:`。特殊的，根元素`<body>`的最小高度为`100vh`
+- `inline`
+  - 水平方向的 padding 和 margin 会推挤空间，而垂直方向不会
+  - 宽度：由 content 宽度决定，忽略`width:`
+  - 高度：由 content 高度决定，忽略`height:`
+- `inline-block`：
+  - padding 和 margin 会推挤空间
+  - 宽度：由 content 宽度决定，考虑`width:`
+  - 高度：由 content 高度决定，考虑`height:`
+
+```css
+/* box-sizing */
+box-sizing: content-box; /* width/height 表示 content width/height（默认） */
+box-sizing: border-box; /* width/height 表示 border width/height */
+
+/* width, min-width, max-width, height, min-height, max-height */
+width: auto; /* （默认）浏览器自动计算盒子模型的宽与高 */
+width: <length>;
+width: <percentage>;
+width: max-content;
+width: min-content;
+width: fit-content(<length-percentage>);
+
+/* padding */
+padding: <length>;
+padding: <percentage>;
+/* vertical | horizontal */
+padding: 5% auto;
+/* top | horizontal | bottom */
+padding: 1em auto 2em;
+/* top | right | bottom | left */
+padding: 2px 1em 0 auto;
+
+/* margin: 注意外边距折叠 */
+margin: <length>;
+margin: <percentage>;
+margin: auto; /* 浏览器自动设置值来使其居中 */
+/* vertical | horizontal */
+margin: 5% auto;
+/* top | horizontal | bottom */
+margin: 1em auto 2em;
+/* top | right | bottom | left */
+margin: 2px 1em 0 auto;
+```
+
+### 正常流布局
+
+- `display: block;`
+  - 另起一行，自动设置`margin`以单独一行
+- `display: inline;`
+  - 不会另起一行，与其他 ineline/inline-block 元素排在同一行，若空间不足则溢出到下行
+- `display: inline-block;`：
+  - 不会另起一行，与其他 ineline/inline-block 元素排在同一行，若空间不足则溢出到下行
+
+### 弹性布局
+
+![flex](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox/flex_terms.png)
+
+Flex 布局是**一维布局**，它可以随空间大小自由伸缩；默认条件下，
+
+- flex items 主轴方向尺寸为`auto`（即由浏览器计算 content 尺寸）
+- flex items 交叉轴方向尺寸为 flex container 在该方向上的 100%尺寸
+
+| flex container 属性        | 值                                                                                            | 备注                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `display: flex;`           | `flex`                                                                                        | 指定元素内部展示为弹性布局           |
+| `flex-flow: row nowrap;`   |                                                                                               | 组合`flex-direction`与`flex-wrap`    |
+| `flex-direction: row;`     | `row`,`row-reverse`,`column`,`column-reverse`                                                 | 指定内部弹性布局主轴方向             |
+| `flex-wrap: nowrap;`       | `wrap`,`nowrap`,`wrap-reverse`                                                                | 控制当主轴溢出时是否回绕到下行       |
+| `justify-content: normal;` | `flex-start`,`flex-end`,`left`,`right`,`center`,`space-between`,`space-around`,`space-evenly` | 控制内部 item 在主轴方向上如何排列   |
+| `align-items: normal;`     | `flex-start`,`flex-end`,`center`                                                              | 控制内部 item 在交叉轴方向上如何排列 |
+
+| flex item 属性          | 值                                                      | 备注                                                               |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
+| `justify-self: normal;` | 同`justify-content`                                     | 控制该 item 在主轴方向上如何排列                                   |
+| `align-self: normal;`   | 同`align-items`                                         | 控制该 item 在交叉轴方向上如何排列                                 |
+| `flex`                  |                                                         | 组合`flex-grow`、`flex-shrink`和`flex-basis`                       |
+| `flex-grow: 0;`         | `<number>`                                              | 指定 item 在主轴方向上的生长因子，用于分配剩余尺寸                 |
+| `flex-shrink: 1;`       | `<number>`                                              | 指定 item 在主轴方向的缩小因子，用于在主轴溢出时分配需要缩减的尺寸 |
+| `flex-basis: auto;`     | `<length>`,`auto`,`content`,`max-content`,`min-content` | 指定 item 在主轴方向上的尺寸，优先级高于`width:`/`height:`         |
+| `order: 0;`             | `<number>`                                              | 设置展示顺序，序号越大越靠后，同序号按元素顺序                     |
+
+### 网格布局
+
+![grid](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Grids/grid.png)
+
+Grid 布局将页面划分为一个个格子，每个格子间通常存在间隔(Gutters)，默认情况下只有一个格子。
+
+| grid container 属性 | 值     | 备注                       |
+| ------------------- | ------ | -------------------------- |
+| `display: grid`     | `grid` | 指定元素内部展示为网格布局 |
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr 2fr);
+  grid-auto-rows: minmax(100px, auto);
+  grid-gap: 20px;
+}
+.item {
+  grid-column: 1 / 3;
+  grid-row: 1;
+}
+```
 
 ## 数值与单位
 
@@ -57,91 +203,6 @@
 百分比的问题在于，它们总是相对于其他值设置的。
 例如，如果将元素的字体大小设置为百分比，那么它将是元素父元素字体大小的百分比。
 如果使用百分比作为宽度值，那么它将是父值宽度的百分比。
-
-## 布局
-
-### 基础
-
-- 盒模型
-
-  - margin: 外边距折叠，一般用于调整布局展示
-  - border: 替代模式设置长宽时的边界，一般用于显示边界框
-  - padding: 内边距，一般用于调整内容对齐
-  - content: 标准模式设置长宽时的边界，展示的主体内容
-
-- 正常布局流：浏览器默认的盒模型堆积模式
-
-  > 高度的延伸主要因为`<br>`与`wrap`
-
-  - `display: inline`
-    - 高度：同 content 高度，无法手动指定
-    - 宽度：同 content 宽度，无法手动指定
-  - `display: inline-block`
-    - 高度：同 content 高度，可手动指定
-    - 宽度：同 content 宽度，可手动指定
-  - `display: block`
-    - 高度：inline 子元素 content 高度、block 子元素 border 高度、inline-block 子元素 margin 高度中最高者
-    - 宽度：父元素宽度 100%
-
-- 排列方向：block inline
-  - `writing-mode: horizontal-tb`
-    - Top-to-bottom block flow direction. Sentences run horizontally.
-  - `writing-mode: vertical-rl`
-    - Right-to-left block flow direction. Sentences run vertically.
-  - `writing-mode: vertical-lr`
-    - Left-to-right block flow direction. Sentences run vertically.
-  - `inline-size`&`block-size`
-
-### 进阶
-
-- Float 布局
-  - `float: left`: 现在仅用于插入环绕型图片
-
-![flex](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox/flex_terms.png)
-
-- Flex 布局
-  - 默认所有 item 高度被拉伸为其中最高者同等高度
-
-```css
-.container {
-  display: flex; /* 指定该元素为flex容器，其子元素为flex项，弹性紧凑均布地按flex方向排列（默认方向row） */
-  flex-flow: column wrap; /* 设置flex容器主轴方向，并设置允许回绕下行避免溢出 */
-  align-items: center; /* 控制flex项在交叉轴上的位置 */
-  justify-content: space-around; /* 控制flex项在主轴上的位置 */
-}
-.item {
-  flex: 1 200px; /* 设置flex项的最小主轴方向长度为200px，并且剩余宽度按比例分配（交叉轴方向的宽度——即高度，与最长的flex项一致） */
-}
-```
-
-- Grid 布局
-
-```css
-.container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr 2fr);
-  grid-auto-rows: minmax(100px, auto);
-  grid-gap: 20px;
-}
-.item {
-  grid-column: 1 / 3;
-  grid-row: 1;
-}
-```
-
-- 响应式布局
-
-```css
-@media (min-width: 1200px) {
-  h1 {
-    font-size: 4rem;
-  }
-}
-
-h1 {
-  font-size: calc(1.5rem + 3vw);
-}
-```
 
 ## 定位
 

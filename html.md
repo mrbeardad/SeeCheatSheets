@@ -123,12 +123,7 @@
 <data value="001">枚举名</data><br />
 <time datetime="2016-01-20T19:30+01:00">20 January 2016, 8.30pm in France</time><br />
 <abbr title="完整词汇">缩写词汇</abbr><br />
-
-<a href="https://example.com" target="_self">Absolute URL: open in current position</a><br />
-<a href="//example.com" target="_blank">Scheme-relative URL: open in new tab</a><br />
-<a href="/en-US/docs/" target="_parent">Origin-relative URL: open in parent position</a><br />
-<a href="./p" target="_top">Directory-relative URL: open in top level position</a><br />
-<a href="#anchor">Fragment URL: position above could be: window, tab, iframe</a><br />
+<a href="https://example.com" target="_self">链接</a>
 
 <details>
   <summary>折叠简介</summary>
@@ -165,6 +160,28 @@
 
 <hr />
 ```
+
+| `<a>`属性`href`       | 备注                   |
+| --------------------- | ---------------------- |
+| `https://example.com` | 绝对 URL               |
+| `//example.com`       | Scheme-relative URL    |
+| `/en-US/docs/`        | Origin-relative URL    |
+| `./p`                 | Directory-relative URL |
+| `#anchor`             | Fragment URL           |
+
+| `<a>`属性`target` | 备注                                            |
+| ----------------- | ----------------------------------------------- |
+|                   | `browsing context` 可以是 tab, window 或 iframe |
+| `_self`           | the current browsing context. (Default)         |
+| `_blank`          | usually a new tab                               |
+| `_parent`         | the parent browsing context                     |
+| `_top`            | the topmost browsing context                    |
+
+| `<a>`属性`download` | 备注                                                                     |
+| ------------------- | ------------------------------------------------------------------------ |
+|                     | 仅适用于 same-origin URL                                                 |
+| `<no-value>`        | 浏览器根据`Content-Disposition`首部或最后一段 URL path 确定文件名/扩展名 |
+| `<filename>`        | 手动指定建议文件名                                                       |
 
 ## 表格
 
