@@ -67,42 +67,53 @@
 ```
 
 - `block`
-  - padding 和 margin 会推挤空间
-  - 宽度：由 content 宽度决定，考虑`width:`。特殊的，根元素`<body>`的宽度固定我`100vw`
-  - 高度：单行高度取子元素中 inline's content, block's border, inline-block's margin 高度中最大值，考虑`height:`。特殊的，根元素`<body>`的最小高度为`100vh`
-- `inline`
-  - 水平方向的 padding 和 margin 会推挤空间，而垂直方向不会
-  - 宽度：由 content 宽度决定，忽略`width:`
-  - 高度：由 content 高度决定，忽略`height:`
+  - padding 和 margin 会占用空间推挤元素
+  - 宽度：取子元素堆积总宽度，考虑`width:`。特殊的，根元素`<body>`的默认宽度为`100vw`
+  - 高度：取子元素堆积总高度，考虑`height:`。特殊的，根元素`<body>`的默认最小高度为`100vh`
 - `inline-block`：
-  - padding 和 margin 会推挤空间
-  - 宽度：由 content 宽度决定，考虑`width:`
-  - 高度：由 content 高度决定，考虑`height:`
+  - padding 和 margin 会占用空间推挤元素
+  - 宽度：取子元素堆积总宽度，考虑`width:`
+  - 高度：取子元素中最大高度，考虑`height:`
+- `inline`
+  - 水平方向的 padding 和 margin 会占用空间推挤元素，而垂直方向不会
+  - 宽度：取子元素堆积总宽度，忽略`width:`
+  - 高度：取子元素中最大高度，忽略`height:`
 
 ```css
 /* box-sizing */
 box-sizing: content-box; /* width/height 表示 content width/height（默认） */
 box-sizing: border-box; /* width/height 表示 border width/height */
 
-/* width, min-width, max-width, height, min-height, max-height */
-width: auto; /* （默认）浏览器自动计算盒子模型的宽与高 */
+/* 宽高：width, min-width, max-width, height, min-height, max-height */
+width: auto; /* 各布局的默认宽度 */
 width: <length>;
 width: <percentage>;
-width: max-content;
-width: min-content;
-width: fit-content(<length-percentage>);
+width: max-content; /* 子元素堆积总宽度 */
+width: min-content; /* 子元素中最大宽度 */
+/* clamp(arg, min-content, max-content) */
+width: fit-content(<length-or-percentage>);
 
-/* padding */
+/* 内边距：padding */
 padding: <length>;
 padding: <percentage>;
 /* vertical | horizontal */
-padding: 5% auto;
+padding: 5% 10%;
 /* top | horizontal | bottom */
-padding: 1em auto 2em;
+padding: 1em 2em 2em;
 /* top | right | bottom | left */
-padding: 2px 1em 0 auto;
+padding: 5px 1em 0 2em;
 
-/* margin: 注意外边距折叠 */
+/* 边界：border */
+/* style */
+border: solid;
+/* width | style */
+border: 2px dotted;
+/* style | color */
+border: outset #f33;
+/* width | style | color */
+border: medium dashed green;
+
+/* 外边距：margin */
 margin: <length>;
 margin: <percentage>;
 margin: auto; /* 浏览器自动设置值来使其居中 */
@@ -117,92 +128,79 @@ margin: 2px 1em 0 auto;
 ### 正常流布局
 
 - `display: block;`
-  - 另起一行，自动设置`margin`以单独一行
-- `display: inline;`
-  - 不会另起一行，与其他 ineline/inline-block 元素排在同一行，若空间不足则溢出到下行
-- `display: inline-block;`：
-  - 不会另起一行，与其他 ineline/inline-block 元素排在同一行，若空间不足则溢出到下行
+  - 另起一行并独占它，宽度默认为父元素宽度 100%
+- `display: inline;`与`display: inline-block`
+  - 不会另起一行，与其他元素堆积排列，若溢出则回绕到下行
 
-### 弹性布局
+### Flex 布局
 
 ![flex](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox/flex_terms.png)
 
-Flex 布局是**一维布局**，它可以随空间大小自由伸缩；默认条件下，
+Flex 布局是一维布局，它的目标注重于局部灵活地伸缩空间与对齐内容。
 
-- flex items 主轴方向尺寸为`auto`（即由浏览器计算 content 尺寸）
-- flex items 交叉轴方向尺寸为 flex container 在该方向上的 100%尺寸
+- flex items 默认主轴方向尺寸即盒子模型宽度，并考虑伸缩因子来分配空间与处理溢出
+- flex items 默认交叉轴方向尺寸为父元素高度 100%
 
-| flex container 属性        | 值                                                                                            | 备注                                 |
-| -------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------ |
-| `display: flex;`           | `flex`                                                                                        | 指定元素内部展示为弹性布局           |
-| `flex-flow: row nowrap;`   |                                                                                               | 组合`flex-direction`与`flex-wrap`    |
-| `flex-direction: row;`     | `row`,`row-reverse`,`column`,`column-reverse`                                                 | 指定内部弹性布局主轴方向             |
-| `flex-wrap: nowrap;`       | `wrap`,`nowrap`,`wrap-reverse`                                                                | 控制当主轴溢出时是否回绕到下行       |
-| `justify-content: normal;` | `flex-start`,`flex-end`,`left`,`right`,`center`,`space-between`,`space-around`,`space-evenly` | 控制内部 item 在主轴方向上如何排列   |
-| `align-items: normal;`     | `flex-start`,`flex-end`,`center`                                                              | 控制内部 item 在交叉轴方向上如何排列 |
+| flex container 属性        | 值                                                                             | 备注                                           |
+| -------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------- |
+| `display: flex;`           | `flex`                                                                         | 指定元素内部展示为弹性布局，外部展示为`block`  |
+| `display: inline-flex;`    | `inline-flex`                                                                  | 指定元素内部展示为弹性布局，外部展示为`inline` |
+| `flex-flow: row nowrap;`   |                                                                                | 组合`flex-direction`与`flex-wrap`              |
+| `flex-direction: row;`     | `row`,`row-reverse`,`column`,`column-reverse`                                  | 指定内部弹性布局主轴方向                       |
+| `flex-wrap: nowrap;`       | `wrap`,`nowrap`,`wrap-reverse`                                                 | 控制当主轴溢出时是否回绕到下行                 |
+| `justify-content: normal;` | `flex-start`,`flex-end`,`center`,`space-between`,`space-around`,`space-evenly` | 控制内部 item 在主轴方向上如何排列             |
+| `align-items: normal;`     | `flex-start`,`flex-end`,`center`                                               | 控制内部 item 在交叉轴方向上如何排列           |
 
-| flex item 属性          | 值                                                      | 备注                                                               |
-| ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
-| `justify-self: normal;` | 同`justify-content`                                     | 控制该 item 在主轴方向上如何排列                                   |
-| `align-self: normal;`   | 同`align-items`                                         | 控制该 item 在交叉轴方向上如何排列                                 |
-| `flex`                  |                                                         | 组合`flex-grow`、`flex-shrink`和`flex-basis`                       |
-| `flex-grow: 0;`         | `<number>`                                              | 指定 item 在主轴方向上的生长因子，用于分配剩余尺寸                 |
-| `flex-shrink: 1;`       | `<number>`                                              | 指定 item 在主轴方向的缩小因子，用于在主轴溢出时分配需要缩减的尺寸 |
-| `flex-basis: auto;`     | `<length>`,`auto`,`content`,`max-content`,`min-content` | 指定 item 在主轴方向上的尺寸，优先级高于`width:`/`height:`         |
-| `order: 0;`             | `<number>`                                              | 设置展示顺序，序号越大越靠后，同序号按元素顺序                     |
+| flex item 属性          | 值                  | 备注                                                               |
+| ----------------------- | ------------------- | ------------------------------------------------------------------ |
+| `justify-self: normal;` | 同`justify-content` | 控制该 item 在主轴方向上如何排列                                   |
+| `align-self: normal;`   | 同`align-items`     | 控制该 item 在交叉轴方向上如何排列                                 |
+| `flex`                  |                     | 组合`flex-grow`、`flex-shrink`和`flex-basis`                       |
+| `flex-grow: 0;`         | `<number>`          | 指定 item 在主轴方向上的伸展因子，用于分配剩余尺寸                 |
+| `flex-shrink: 1;`       | `<number>`          | 指定 item 在主轴方向的缩小因子，用于在主轴溢出时分配需要缩减的尺寸 |
+| `flex-basis: auto;`     | 类似于`width`       | 指定 item 在主轴方向上的尺寸，优先级高于`width`/`height`           |
+| `order: 0;`             | `<number>`          | 设置展示顺序，序号越大越靠后，同序号按元素顺序                     |
 
-### 网格布局
+### Grid 布局
 
 ![grid](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Grids/grid.png)
 
-Grid 布局将页面划分为一个个格子，每个格子间通常存在间隔(Gutters)，默认情况下只有一个格子。
+Grid 是二维布局，它的目标注重于整体响应式布局。
 
-| grid container 属性 | 值     | 备注                       |
-| ------------------- | ------ | -------------------------- |
-| `display: grid`     | `grid` | 指定元素内部展示为网格布局 |
+- 列轨道的宽度默认取 grid items 中宽度最大者，默认固定列轨道数
+- 行轨道的高度默认取 grid items 中高度最大者，默认隐式创建行轨道
 
-```css
-.container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr 2fr);
-  grid-auto-rows: minmax(100px, auto);
-  grid-gap: 20px;
-}
-.item {
-  grid-column: 1 / 3;
-  grid-row: 1;
-}
-```
+| grid container 属性     | 值                        | 备注                                           |
+| ----------------------- | ------------------------- | ---------------------------------------------- |
+| `display: grid`         | `grid`                    | 指定元素内部展示为网格布局，外部展示为`block`  |
+| `display: inline-grid`  | `inline-grid`             | 指定元素内部展示为网格布局，外部展示为`inline` |
+| `grid-template-columns` | 见轨道尺寸值              | 指定列轨道模板                                 |
+| `grid-template-rows`    | 见轨道尺寸值              | 指定行轨道模板                                 |
+| `grid-auto-rows`        | 见轨道尺寸值              | 指定隐式创建的行轨道的高度                     |
+| `grid-auto-columns`     | 见轨道尺寸值              | 指定隐式创建的列轨道的宽度                     |
+| `grid-template-area`    | `"h h" "n m" "n f"`       | 为网格划分区域并指定名称                       |
+| `gap`                   |                           | 组合`row-gap`与`col-gap`                       |
+| `row-gap`               | `<length>`,`<percentage>` | 行轨道间距                                     |
+| `col-gap`               | `<length>`,`<percentage>` | 列轨道间距                                     |
 
-## 数值与单位
+| 轨道尺寸值                                           | 备注                                             |
+| ---------------------------------------------------- | ------------------------------------------------ |
+| `<length>`                                           | 长度                                             |
+| `<percentage>`                                       | 父元素百分比                                     |
+| `<flex>`                                             | 单位`fr`表示伸缩因子                             |
+| `none`                                               | 所有 grid item 尺寸由`grid-auto-columns`属性决定 |
+| `max-content`                                        | 取该列所有 items 中最大的 max-content 值         |
+| `min-content`                                        | 取该列所有 items 中最大的 min-content 值         |
+| `minmax(min, max)`                                   | 定义尺寸范围                                     |
+| `auto`                                               | 类似`minmax(min-content, max-content)`           |
+| `fit-content(<length-or-percentage>)`                | 等同`clamp(arg, auto, max-content)`              |
+| `repeat(<N> or auto-fill or auto-fit, <track-list>)` | 指定重复 N 次轨道模板，或自动填充                |
 
-| 单位 | 名称         | 等价换算            |
-| ---- | ------------ | ------------------- |
-| cm   | 厘米         | 1cm = 96px/2.54     |
-| mm   | 毫米         | 1mm = 1/10th of 1cm |
-| Q    | 四分之一毫米 | 1Q = 1/40th of 1cm  |
-| in   | 英寸         | 1in = 2.54cm = 96px |
-| pc   | 十二点活字   | 1pc = 1/16th of 1in |
-| pt   | 点           | 1pt = 1/72th of 1in |
-| px   | 像素         | 1px = 1/96th of 1in |
-
-| 单位 | 相对于                                                                                        |
-| ---- | --------------------------------------------------------------------------------------------- |
-| em   | 在 font-size 中使用是相对于父元素的字体大小，在其他属性中使用是相对于自身的字体大小，如 width |
-| rem  | 根元素的字体大小                                                                              |
-| ex   | 字符“x”的高度                                                                                 |
-| ch   | 数字“0”的宽度                                                                                 |
-| lh   | 元素的 line-height                                                                            |
-| vw   | 视窗宽度的 1%                                                                                 |
-| vh   | 视窗高度的 1%                                                                                 |
-| vmin | 视窗较小尺寸的 1%                                                                             |
-| vmax | 视图大尺寸的 1%                                                                               |
-
-**百分比**：
-在许多情况下，百分比与长度的处理方法是一样的。
-百分比的问题在于，它们总是相对于其他值设置的。
-例如，如果将元素的字体大小设置为百分比，那么它将是元素父元素字体大小的百分比。
-如果使用百分比作为宽度值，那么它将是父值宽度的百分比。
+| grid item 属性           | 值               | 备注                            |
+| ------------------------ | ---------------- | ------------------------------- |
+| `grid-column: auto`      | `n`,`b/e`,`b/-1` | 指定 grid item 占据的网格空间   |
+| `grid-row: auto`         | `n`,`b/e`,`b/-1` | 指定 grid item 占据的网格空间   |
+| `grid-area: <area-name>` |                  | 指定该 grid item 占据的区域名称 |
 
 ## 定位
 
@@ -214,19 +212,41 @@ Grid 布局将页面划分为一个个格子，每个格子间通常存在间隔
 
 ## 溢出处理
 
-**什么时候会溢出**：父元素设置了固定大小，而子元素过于庞大
+| `overflow`属性值 | 备注（用于一般布局溢出） |
+| ---------------- | ------------------------ |
+| `visible`        | 可见（默认）             |
+| `hidden`         | 隐藏                     |
+| `scroll`         | 滚动条                   |
+| `auto`           | 自动隐藏或显示滚动条     |
 
-The `overflow` property has the following values:
+| `object-fit`属性值 | 备注（用于图像溢出）             |
+| ------------------ | -------------------------------- |
+| `none`             | 保持其原有的尺寸                 |
+| `contain`          | 缩放并保持长宽比，保证包含全图   |
+| `cover`            | 缩放并保持长宽比，必要时进行裁剪 |
+| `fill`             | 缩放且必要时拉伸，保证包含全图   |
+| `scale-down`       | 取 none 与 contain 中的较小者    |
 
-- visible - Default. The overflow is not clipped. The content renders outside the element's box
-- hidden - The overflow is clipped, and the rest of the content will be invisible
-- scroll - The overflow is clipped, and a scrollbar is added to see the rest of the content
-- auto - Similar to scroll, but it adds scrollbars only when necessary
+## 长度单位
 
-- 图像溢出
-  - `height: 100%; width: 100%;`
-  - `object-fit: contain`: 被替换的内容将被缩放，以在填充元素的内容框时保持其宽高比。 整个对象在填充盒子的同时保留其长宽比，因此如果宽高比与框的宽高比不匹配，该对象将被添加“黑边”。
-  - `object-fit: cover`: 被替换的内容在保持其宽高比的同时填充元素的整个内容框。如果对象的宽高比与内容框不相匹配，该对象将被剪裁以适应内容框。
-  - `object-fit: fill`: 被替换的内容正好填充元素的内容框。整个对象将完全填充此框。如果对象的宽高比与内容框不相匹配，那么该对象将被拉伸以适应内容框。
-  - `object-fit: none`: 被替换的内容将保持其原有的尺寸。
-  - `object-fit: scale-down`: 内容的尺寸与 none 或 contain 中的一个相同，取决于它们两个之间谁得到的对象尺寸会更小一些。
+| 绝对单位 | 名称         | 等价换算            |
+| -------- | ------------ | ------------------- |
+| cm       | 厘米         | 1cm = 96px/2.54     |
+| mm       | 毫米         | 1mm = 1/10th of 1cm |
+| Q        | 四分之一毫米 | 1Q = 1/40th of 1cm  |
+| in       | 英寸         | 1in = 2.54cm = 96px |
+| pc       | 十二点活字   | 1pc = 1/16th of 1in |
+| pt       | 点           | 1pt = 1/72th of 1in |
+| px       | 像素         | 1px = 1/96th of 1in |
+
+| 相对单位 | 相对于                                                                                        |
+| -------- | --------------------------------------------------------------------------------------------- |
+| em       | 在 font-size 中使用是相对于父元素的字体大小，在其他属性中使用是相对于自身的字体大小，如 width |
+| rem      | 根元素的字体大小                                                                              |
+| ex       | 字符“x”的高度                                                                                 |
+| ch       | 数字“0”的宽度                                                                                 |
+| lh       | 元素的 line-height                                                                            |
+| vw       | 视窗宽度的 1%                                                                                 |
+| vh       | 视窗高度的 1%                                                                                 |
+| vmin     | 视窗较小尺寸的 1%                                                                             |
+| vmax     | 视图大尺寸的 1%                                                                               |
