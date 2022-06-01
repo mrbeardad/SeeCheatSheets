@@ -22,6 +22,27 @@
 | Pseudo classes  | `button:hover`  | 指定选定元素的特定状态 | 010  |
 | Pseudo elements | `p::first-line` | 指定选定元素的特定部分 | 001  |
 
+## 长度单位
+
+| 绝对单位 | 名称         | 等价换算            |
+| -------- | ------------ | ------------------- |
+| cm       | 厘米         | 1cm = 96px/2.54     |
+| mm       | 毫米         | 1mm = 1/10th of 1cm |
+| Q        | 四分之一毫米 | 1Q = 1/40th of 1cm  |
+| in       | 英寸         | 1in = 2.54cm = 96px |
+| pc       | 十二点活字   | 1pc = 1/16th of 1in |
+| pt       | 点           | 1pt = 1/72th of 1in |
+| px       | 像素         | 1px = 1/96th of 1in |
+
+| 相对单位 | 相对于                                                                          |
+| -------- | ------------------------------------------------------------------------------- |
+| em       | 对于 font-size 等排版属性是相对父元素字体大小，对于其他属性是相对本元素字体大小 |
+| rem      | 相对根元素的字体大小                                                            |
+| vw       | 视窗宽度的 1%                                                                   |
+| vh       | 视窗高度的 1%                                                                   |
+| vmin     | 视窗较小边的 1%                                                                 |
+| vmax     | 视图较大边的 1%                                                                 |
+
 ## 层叠与继承
 
 **层叠**：同一属性存在多个值时，先选择优先级高的样式来源，再选择优先级最高的值
@@ -66,10 +87,12 @@
 └─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┘
 ```
 
+> 宽度与高度均指逻辑方向上的宽度与高度
+
 - `block`
   - padding 和 margin 会占用空间推挤元素
-  - 宽度：取子元素堆积总宽度，考虑`width:`。特殊的，根元素`<body>`的默认宽度为`100vw`
-  - 高度：取子元素堆积总高度，考虑`height:`。特殊的，根元素`<body>`的默认最小高度为`100vh`
+  - 宽度：取子元素堆积总宽度，考虑`width:`
+  - 高度：取子元素堆积总高度，考虑`height:`
 - `inline-block`：
   - padding 和 margin 会占用空间推挤元素
   - 宽度：取子元素堆积总宽度，考虑`width:`
@@ -78,20 +101,27 @@
   - 水平方向的 padding 和 margin 会占用空间推挤元素，而垂直方向不会
   - 宽度：取子元素堆积总宽度，忽略`width:`
   - 高度：取子元素中最大高度，忽略`height:`
+- 特殊的：
+  - 根元素`<body>`的默认宽度为`100vw`，默认最小高度为`100vh`
+  - 初始元素`<html>`的宽度固定为`100vw`，高度固定为`100vh`
 
 ```css
 /* box-sizing */
 box-sizing: content-box; /* width/height 表示 content width/height（默认） */
 box-sizing: border-box; /* width/height 表示 border width/height */
 
-/* 宽高：width, min-width, max-width, height, min-height, max-height */
+/* 宽度：width, min-width, max-width, inline-size */
 width: auto; /* 各布局的默认宽度 */
 width: <length>;
 width: <percentage>;
-width: max-content; /* 子元素堆积总宽度 */
+width: max-content; /* 子元素全部在同一行中堆积总宽度 */
 width: min-content; /* 子元素中最大宽度 */
-/* clamp(arg, min-content, max-content) */
-width: fit-content(<length-or-percentage>);
+width: fit-content(<length-or-percentage>); /* clamp(arg, min-content, max-content) */
+
+/* 高度： height, min-height, max-height, block-size */
+height: auto; /* 各布局默认高度 */
+height: <length>;
+height: <percentage>;
 
 /* 内边距：padding */
 padding: <length>;
@@ -127,18 +157,25 @@ margin: 2px 1em 0 auto;
 
 ### 正常流布局
 
-- `display: block;`
-  - 另起一行并独占它，宽度默认为父元素宽度 100%
-- `display: inline;`与`display: inline-block`
-  - 不会另起一行，与其他元素堆积排列，若溢出则回绕到下行
+Normal Flow 布局是默认的布局方式。
+
+- `block`默认宽度为父元素宽度 100%，默认高度为盒子模型高度
+- `inline`与`inline-block`默认宽度与高度即盒子模型宽度与高度
+- 宽度溢出时，适当断行并回绕到下行
+
+| 属性                        | 值                                          | 备注                       |
+| --------------------------- | ------------------------------------------- | -------------------------- |
+| `display: block`            | `block`                                     | 堆积排列时另起一行并独占它 |
+| `display: inline`           | `inline`,`inline-block`                     | 与其他元素进行堆积排列     |
+| `write-mode: horizontal-tb` | `horizontal-tb`,`vertical-rl`,`vertical-lr` | 堆积排列方向               |
 
 ### Flex 布局
 
 ![flex](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox/flex_terms.png)
 
-Flex 布局是一维布局，它的目标注重于局部灵活地伸缩空间与对齐内容。
+Flex 布局是一维布局，它的目标注重于灵活地伸缩空间与对齐内容。
 
-- flex items 默认主轴方向尺寸即盒子模型宽度，并考虑伸缩因子来分配空间与处理溢出
+- flex items 默认主轴方向尺寸即盒子模型宽度，并考虑伸缩因子来分配剩余空间与处理宽度溢出
 - flex items 默认交叉轴方向尺寸为父元素高度 100%
 
 | flex container 属性        | 值                                                                             | 备注                                           |
@@ -165,10 +202,10 @@ Flex 布局是一维布局，它的目标注重于局部灵活地伸缩空间与
 
 ![grid](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Grids/grid.png)
 
-Grid 是二维布局，它的目标注重于整体响应式布局。
+Grid 是二维布局，它的目标注重于定位并布局元素
 
-- 列轨道的宽度默认取 grid items 中宽度最大者，默认固定列轨道数
-- 行轨道的高度默认取 grid items 中高度最大者，默认隐式创建行轨道
+- 列轨道的宽度默认取 grid items 中盒子模型宽度最大者，默认只有一条列轨道
+- 行轨道的高度默认取 grid items 中盒子模型高度最大者，默认隐式创建行轨道
 
 | grid container 属性     | 值                        | 备注                                           |
 | ----------------------- | ------------------------- | ---------------------------------------------- |
@@ -202,51 +239,53 @@ Grid 是二维布局，它的目标注重于整体响应式布局。
 | `grid-row: auto`         | `n`,`b/e`,`b/-1` | 指定 grid item 占据的网格空间   |
 | `grid-area: <area-name>` |                  | 指定该 grid item 占据的区域名称 |
 
+### 响应式布局
+
+- 利用布局：Flex(`flex`) / Grid(`auto-fill`&`grid-template-area`)
+- 利用媒体查询：`@media screen and (min-width: 800px) {...}`
+- 利用相对单位：`font-size: calc(1.5rem + 3vw);`
+
 ## 定位
 
-- `position: static`静态：默认位置
-- `position: relative`相对：相对默认位置进行调整
-- `position: absolute`绝对：将元素抽出正常布局流，类似新图层（`z-index: 1;`决定上层显示）
-- `position: fixed`固定：相对浏览器视窗固定
-- `position: sticky`粘性：当出现在浏览器视窗后有静态定位变为固定定位
+| 属性值                        | 备注                                                                                                |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- |
+| `position: static`            | 默认位置                                                                                            |
+| `position: relative`          | 相对默认位置，保持原来布局中占用空间                                                                |
+| `position: absolute`          | 相对最近的设置了`position`的祖先元素位置，若都未设置则相对`<html>`，脱离原来布局                    |
+| `position: fixed`             | 相对浏览器视窗位置，脱离原来布局                                                                    |
+| `position: sticky`            | 视窗经过该元素后再相对视窗位置，保持原来布局中占用空间。祖先元素不能设置`overflow: visibable`以外值 |
+| `z-index`                     | 默认为 0，当 z 轴坐标相等且重合时，靠后元素覆盖靠前元素                                             |
+| `top`,`bottom`,`left`,`right` | 设置该元素 margin 相对于上,下,左,右 border 的间隔距离                                               |
+
+## 隐藏
+
+- `display: none`：将该元素从布局中删除（不占用空间）
+- `visibility: hidden`：将该元素设置为完全透明（仍会占用空间），不会被聚焦
+- `visibility: visibale`：设置该元素可见，即使其父元素为`visibility: hidden`
+- `visibility: collapse`：
+  - 对于表格中行与列，作用同`display: none`
+  - 对于 flex item，作用同`display: none`
+  - 对于其他元素，作用同`visibility: hidden`
 
 ## 溢出处理
 
-| `overflow`属性值 | 备注（用于一般布局溢出） |
-| ---------------- | ------------------------ |
-| `visible`        | 可见（默认）             |
-| `hidden`         | 隐藏                     |
-| `scroll`         | 滚动条                   |
-| `auto`           | 自动隐藏或显示滚动条     |
+为什么会溢出？
 
-| `object-fit`属性值 | 备注（用于图像溢出）             |
-| ------------------ | -------------------------------- |
-| `none`             | 保持其原有的尺寸                 |
-| `contain`          | 缩放并保持长宽比，保证包含全图   |
-| `cover`            | 缩放并保持长宽比，必要时进行裁剪 |
-| `fill`             | 缩放且必要时拉伸，保证包含全图   |
-| `scale-down`       | 取 none 与 contain 中的较小者    |
+- 限制了`width`而其`min-contetn`太大
+- 限制了`height`而子元素堆积总高度太大
 
-## 长度单位
+| 溢出处理            | 备注                 |
+| ------------------- | -------------------- |
+| `overflow: visible` | 可见（默认）         |
+| `overflow: hidden`  | 隐藏                 |
+| `overflow: scroll`  | 滚动条               |
+| `overflow: auto`    | 自动隐藏或显示滚动条 |
 
-| 绝对单位 | 名称         | 等价换算            |
-| -------- | ------------ | ------------------- |
-| cm       | 厘米         | 1cm = 96px/2.54     |
-| mm       | 毫米         | 1mm = 1/10th of 1cm |
-| Q        | 四分之一毫米 | 1Q = 1/40th of 1cm  |
-| in       | 英寸         | 1in = 2.54cm = 96px |
-| pc       | 十二点活字   | 1pc = 1/16th of 1in |
-| pt       | 点           | 1pt = 1/72th of 1in |
-| px       | 像素         | 1px = 1/96th of 1in |
-
-| 相对单位 | 相对于                                                                                        |
-| -------- | --------------------------------------------------------------------------------------------- |
-| em       | 在 font-size 中使用是相对于父元素的字体大小，在其他属性中使用是相对于自身的字体大小，如 width |
-| rem      | 根元素的字体大小                                                                              |
-| ex       | 字符“x”的高度                                                                                 |
-| ch       | 数字“0”的宽度                                                                                 |
-| lh       | 元素的 line-height                                                                            |
-| vw       | 视窗宽度的 1%                                                                                 |
-| vh       | 视窗高度的 1%                                                                                 |
-| vmin     | 视窗较小尺寸的 1%                                                                             |
-| vmax     | 视图大尺寸的 1%                                                                               |
+| 图像溢出处理             | 备注                             |
+| ------------------------ | -------------------------------- |
+| `object-fit: none`       | 保持其原有的尺寸                 |
+| `object-fit: contain`    | 缩放并保持长宽比，保证包含全图   |
+| `object-fit: cover`      | 缩放并保持长宽比，必要时进行裁剪 |
+| `object-fit: fill`       | 缩放且必要时拉伸，保证包含全图   |
+| `object-fit: scale-down` | 取 none 与 contain 中的较小者    |
+| `max-width: 100%`        | 仅缩小并保持长宽比               |
