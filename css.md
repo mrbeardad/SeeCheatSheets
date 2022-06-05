@@ -59,7 +59,7 @@
   1. 特异性：根据选择器权重计算优先级，权重计算无进位
   2. 声明顺序：特异性优先级相同则靠后的声明优先
 
-**继承**：当子元素的某些属性没有指定值，默认会继承父元素的某些属性，而哪些属性会被继承很大程度上取决于常识
+**继承**：当子元素的某些属性没有指定值，默认会继承父元素的属性值，而哪些属性会被继承很大程度上取决于常识
 
 | 控制继承属性值 | 备注                                       |
 | -------------- | ------------------------------------------ |
@@ -87,22 +87,24 @@
 └─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┘
 ```
 
-> 宽度与高度均指逻辑方向上的宽度与高度
+> - 宽度与高度均指逻辑方向上的内容宽度与内容高度
+> - 盒子模型的基础大小等于子元素盒子堆积排列后的挤占总空间的大小
+> - 盒子模型的最终大小依布局方式进行改变
 
 - `block`
-  - padding 和 margin 会占用空间推挤元素
-  - 宽度：取子元素堆积总宽度，考虑`width:`
-  - 高度：取子元素堆积总高度，考虑`height:`
+  - padding 和 margin 会挤占空间
+  - 宽度考虑`width:`
+  - 高度考虑`height:`
 - `inline-block`：
-  - padding 和 margin 会占用空间推挤元素
-  - 宽度：取子元素堆积总宽度，考虑`width:`
-  - 高度：取子元素中最大高度，考虑`height:`
+  - padding 和 margin 会挤占空间
+  - 宽度考虑`width:`
+  - 高度考虑`height:`
 - `inline`
-  - 水平方向的 padding 和 margin 会占用空间推挤元素，而垂直方向不会
-  - 宽度：取子元素堆积总宽度，忽略`width:`
-  - 高度：取子元素中最大高度，忽略`height:`
+  - 水平方向的 padding 和 margin 会挤占空间，而垂直方向不会
+  - 宽度忽略`width:`
+  - 高度忽略`height:`
 - 特殊的：
-  - 根元素`<body>`的默认宽度为`100vw`，默认最小高度为`100vh`
+  - 根元素`<body>`的宽度默认为`100vw`，最小高度默认为`100vh`
   - 初始元素`<html>`的宽度固定为`100vw`，高度固定为`100vh`
 
 ```css
@@ -116,7 +118,9 @@ width: <length>;
 width: <percentage>;
 width: max-content; /* 子元素全部在同一行中堆积总宽度 */
 width: min-content; /* 子元素中最大宽度 */
-width: fit-content(<length-or-percentage>); /* clamp(arg, min-content, max-content) */
+width: fit-content(
+  <length-or-percentage>
+); /* clamp(arg, min-content, max-content) */
 
 /* 高度： height, min-height, max-height, block-size */
 height: auto; /* 各布局默认高度 */
@@ -159,15 +163,11 @@ margin: 2px 1em 0 auto;
 
 Normal Flow 布局是默认的布局方式。
 
-- `block`默认宽度为父元素宽度 100%，默认高度为盒子模型高度
-- `inline`与`inline-block`默认宽度与高度即盒子模型宽度与高度
-- 宽度溢出时，适当断行并回绕到下行
-
-| 属性                        | 值                                          | 备注                       |
-| --------------------------- | ------------------------------------------- | -------------------------- |
-| `display: block`            | `block`                                     | 堆积排列时另起一行并独占它 |
-| `display: inline`           | `inline`,`inline-block`                     | 与其他元素进行堆积排列     |
-| `write-mode: horizontal-tb` | `horizontal-tb`,`vertical-rl`,`vertical-lr` | 堆积排列方向               |
+| 属性                        | 值                                          | 备注                                        |
+| --------------------------- | ------------------------------------------- | ------------------------------------------- |
+| `display: block`            | `block`                                     | 在开头和结尾换行，默认宽度为父元素宽度 100% |
+| `display: inline`           | `inline`,`inline-block`                     | 与其他元素进行堆积排列                      |
+| `write-mode: horizontal-tb` | `horizontal-tb`,`vertical-rl`,`vertical-lr` | 堆积排列方向                                |
 
 ### Flex 布局
 
@@ -175,7 +175,7 @@ Normal Flow 布局是默认的布局方式。
 
 Flex 布局是一维布局，它的目标注重于灵活地伸缩空间与对齐内容。
 
-- flex items 默认主轴方向尺寸即盒子模型宽度，并考虑伸缩因子来分配剩余空间与处理宽度溢出
+- flex items 默认主轴方向尺寸即盒子模型基础宽度，并考虑伸缩因子来分配扩展剩余空间和分配缩小溢出空间
 - flex items 默认交叉轴方向尺寸为父元素高度 100%
 
 | flex container 属性        | 值                                                                             | 备注                                           |
@@ -289,3 +289,31 @@ Grid 是二维布局，它的目标注重于定位并布局元素
 | `object-fit: fill`       | 缩放且必要时拉伸，保证包含全图   |
 | `object-fit: scale-down` | 取 none 与 contain 中的较小者    |
 | `max-width: 100%`        | 仅缩小并保持长宽比               |
+
+## 动画
+
+1. 先指定动画的基础属性
+
+   ```css
+   /* @keyframes duration | easing-function | delay | iteration-count | direction | fill-mode | play-state | name */
+   animation: 3s ease-in 1s 2 reverse both paused slidein;
+
+   /* @keyframes name | duration | easing-function | delay */
+   animation: slidein 3s linear 1s;
+
+   /* @keyframes name | duration */
+   animation: slidein 3s;
+   ```
+
+2. 再指定动画的关键帧
+
+   ```css
+   @keyframes slidein {
+     from {
+     }
+     50% {
+     }
+     to {
+     }
+   }
+   ```

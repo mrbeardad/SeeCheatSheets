@@ -1,7 +1,7 @@
 # See Cheat Sheets
 
 - [See Cheat Sheets](#see-cheat-sheets)
-  - [安装](#安装)
+  - [前言](#前言)
   - [编程之道](#编程之道)
   - [编程语言](#编程语言)
   - [Web](#web)
@@ -10,26 +10,7 @@
   - [底层原理](#底层原理)
   - [其他](#其他)
 
-## 安装
-
-```sh
-# 国内访问github不太友好的话，可以将URL中的github.com改为gitee.com
-git clone --recurse-submodules --depth=1 https://github.com/mrbeardad/SeeCheatSheets ~/.cheat
-mkdir ~/.cheat/src/build
-cd ~/.cheat/src/build
-cmake -D CMAKE_BUILD_TYPE=Release ..
-cmake --build . -t see
-cp see ~/.local/bin
-```
-
-本仓库中提供了命令行工具[see](https://github.com/mrbeardad/Markdown2Ansi)用于快速查看笔记：
-它会搜索`~/.cheat/*.md`中匹配的笔记条目并进行语法高亮后打印到终端。
-每个条目以`<!-- entry begin: .* -->`的形式开头，并以`<!-- entry end -->`结尾；
-其中`.*`表示关键字，see 便会搜索其中的关键子决定是否匹配；
-详情请使用`see -h`查看。
-
-![see](https://github.com/mrbeardad/Markdown2Ansi/raw/master/see.png)
-![viu](https://github.com/mrbeardad/Markdown2Ansi/raw/master/viu.png)
+## 前言
 
 **注**：部分笔记插入了 Tex 公式，~~介于鄙人的懒惰~~ 介于 GFM 不支持 Tex，诸位就自己下个浏览器插件吧。
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")
@@ -85,10 +66,10 @@ cp see ~/.local/bin
 - [计科八股总结](interview.md):star:：计算机基本面试知识点
 
   - [数据结构与算法](dsaa.md)
+  - [计算机组成](bus.md)
   - [处理器设计](cpu.md)
   - [信息编码](code.md)
   - [汇编语言](asm.md)
-  - [计算机组成](bus.md)
   - [操作系统](os.md)
   - [计算机网络](network.md)
   - [数据库存储](innodb.md)
@@ -98,5 +79,4 @@ cp see ~/.local/bin
 - [Markdown 语法](markdown.md)
 - [多种正则语法](regex.md)
 - [比特币系统](bitcoin.md)
-- [英文读音](english.md)
 - [色彩理论](color.md)

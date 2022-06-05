@@ -153,13 +153,14 @@ scheme     host       port      path                query           fragment
 
 | `Cache-Control` 请求首部 | 备注（逗号分隔列表）                                              |
 | ------------------------ | ----------------------------------------------------------------- |
-| `max-age=`               | 指定覆盖`max-age`，超过该限制则不能复用该缓存，一般勇士浏览器刷新 |
+| `max-age=`               | 指定覆盖`max-age`，超过该限制则不能复用该缓存，一般用于浏览器刷新 |
 | `no-cache`               | 强制缓存校验                                                      |
 | `no-transform`           | 指明不可转换响应内容，一些中介会修改响应内容比如降低图片分辨率    |
 
 | 其他相关首部                 | 类型 | 备注                                                                                |
 | ---------------------------- | ---- | ----------------------------------------------------------------------------------- |
 | `Date`                       | 响应 | 响应报文创建时间                                                                    |
+| `Age`                        | 响应 | 响应报文在代理中已缓存的时间                                                        |
 | `Last-Modified`              | 响应 | 资源上次修改时间                                                                    |
 | `ETag`                       | 响应 | 用于缓存校验，一般为哈希值                                                          |
 | `Expires`                    | 响应 | 指定缓存保持 fresh 的时间点而非流逝时间                                             |
@@ -270,6 +271,17 @@ scheme     host       port      path                query           fragment
 
 ### 内容安全策略(CSP)
 
-| `Content-Security-Policy`响应首部        | 备注                                             |
-| ---------------------------------------- | ------------------------------------------------ |
-| `<policy-directive>; <policy-directive>` | 限制加载资源的源(Origin)，这会禁用内联 js 与 css |
+| `Content-Security-Policy`响应首部        | 备注                                                       |
+| ---------------------------------------- | ---------------------------------------------------------- |
+| `<policy-directive>; <policy-directive>` | 限制加载的各类型资源的来源(Origin)，这会禁用内联 js 与 css |
+
+也可使用 HTML`<meta>`元素设置策略：
+
+```html
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; img-src https://*; child-src 'none';"
+/>
+```
+
+详细策略参见[MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy)

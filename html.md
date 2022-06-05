@@ -83,14 +83,14 @@
 </html>
 ```
 
-| 通用属性    | 备注                                          |
-| ----------- | --------------------------------------------- |
-| `id`        | 元素唯一标识符，可作为`#anchor`               |
-| `class`     | 元素的类（逗号分隔列表）                      |
-| `title`     | 元素咨询信息，通常会在提示框中展示            |
-| `autofocus` | 页面加载完成后聚焦该元素                      |
-| `hidden`    | 隐藏语义上不属于当前页面的元素，会被 CSS 覆盖 |
-| `style`     | 内联样式                                      |
+| 通用属性    | 备注                               |
+| ----------- | ---------------------------------- |
+| `id`        | 元素唯一标识符，可作为`#anchor`    |
+| `class`     | 元素的类（逗号分隔列表）           |
+| `title`     | 元素咨询信息，通常会在提示框中展示 |
+| `autofocus` | 页面加载完成后聚焦该元素           |
+| `hidden`    | 指明该元素语义上已不属于当前页面   |
+| `style`     | 内联样式                           |
 
 ## 语义元素
 
@@ -167,21 +167,19 @@
 | `//example.com`       | Scheme-relative URL    |
 | `/en-US/docs/`        | Origin-relative URL    |
 | `./p`                 | Directory-relative URL |
-| `#anchor`             | Fragment URL           |
+| `#anchor`             | Page Fragment          |
 
-| `<a>`属性`target` | 备注                                            |
-| ----------------- | ----------------------------------------------- |
-|                   | `browsing context` 可以是 tab, window 或 iframe |
-| `_self`           | the current browsing context. (Default)         |
-| `_blank`          | usually a new tab                               |
-| `_parent`         | the parent browsing context                     |
-| `_top`            | the topmost browsing context                    |
+| `<a>`属性`target` | 备注（`browsing context` 可以是 tab, window 或 iframe） |     |
+| ----------------- | ------------------------------------------------------- | --- |
+| `_self`           | the current browsing context. (Default)                 |
+| `_blank`          | usually a new tab                                       |
+| `_parent`         | the parent browsing context                             |
+| `_top`            | the topmost browsing context                            |
 
-| `<a>`属性`download` | 备注                                                                     |
-| ------------------- | ------------------------------------------------------------------------ |
-|                     | 仅适用于 same-origin URL                                                 |
-| `<no-value>`        | 浏览器根据`Content-Disposition`首部或最后一段 URL path 确定文件名/扩展名 |
-| `<filename>`        | 手动指定建议文件名                                                       |
+| `<a>`属性`download` | 备注(仅适用于 same-origin URL)                                                     |
+| ------------------- | ---------------------------------------------------------------------------------- |
+|                     | 没有值，则浏览器根据`Content-Disposition`首部或最后一段 URL path 确定扩展名/文件名 |
+| `<filename>`        | 手动指定建议文件名                                                                 |
 
 ## 表格
 
@@ -285,7 +283,7 @@
 ## 多媒体
 
 ```html
-<!-- 由 JavaScript 调用 API 来绘制图形和动画-->
+<!-- 该元素仅用于确认位置信息，然后由 JavaScript 调用 API 来绘制图形和动画-->
 <canvas id="canvas" width="100" height="100">
   An alternative text describing what your canvas displays.
 </canvas>
