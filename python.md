@@ -1,47 +1,33 @@
-# 项目构建
+# Python
 
-```txt
-pkg_src/
-├── __init__.py
-├── main.py
-├── modA.py
-├── modB.py
-└── modC/py
-```
-
-# 包与模块
-
-- 在一个目录下创建名为`__init__.py`的文件即可形成一个 package
-- 导入包前会执行`__init__.py`并将其中符号导入包命名空间
+## 依赖模块
 
 ```python
-from package.module import name
-
-import package.module       # 可将其完全当做module来编写，见下
-from package import module  # 从指定的package中导入module
-from package import *       # 导入包 __init__.py 中由 类型为list[str]的全局变量 __all__ 中指定的模块
-
-import module1, module2                             # 导入模块，隔离其符号表
-import module1 as alias1, module2 as alias2         # 导入模块，并使用模块别名
-from module import name1, name2                     # 导入模块中指定符号
-from module import name1 as alias1, name2 as alias2 # 导入模块中指定符号，并使用符号别名
-from module import *                                # 导入模块中所有符号(deprecated)
+from package.subpackage import module1, module2 as alias
 ```
 
+- 包初始化脚本：`__init__.py`
 - 当模块做脚本执行时`__name__ == '__main__'`
 - 包与模块搜索路径：
   1. 执行脚本所在目录（若未指定脚本则搜索当前工作目录）
   2. `sys.path`中指定路径
 
-# 变量
+## 变量
 
-- 变量类型可动态变化，类型、类名都可动态获取
-- 第一次给变量赋值即算变量声明
-- 函数内局部变量作用域一直延续到声明所在函数退出
+```python
+foo = Type(args)    # 构造
+foo = initializer   # 拷贝
+foo = Type(other)   # 转换
+a, b = iterable     # 解构
+```
+
+- 变量类型：引用型弱类型（第一次赋值即作变量声明）
+- 生命周期：直到引用计数为零时才销毁
+- 作用域：直到退出函数才不可见
 - `nonlocal`指明声明的符号绑定到闭包外同名符号
 - `global`指明声明的符号绑定到同名全局符号
 
-# 表达式
+## 表达式
 
 | 运算符            | 描述             |
 | ----------------- | ---------------- |
@@ -69,7 +55,7 @@ from module import *                                # 导入模块中所有符�
 - 支持连续比较`a > b > c`即`a > b and b > c`
 - 浮点数支持`%`运算符
 
-# 语句
+## 语句
 
 注意：空语句体一定要使用`pass`语句
 
@@ -131,7 +117,7 @@ with Expr as inst:
     pass
 ```
 
-# 函数
+## 函数
 
 ```python
 ##################################################
@@ -192,12 +178,12 @@ f4(*Tuple)                      # 即使解包对象是动态长度，也无需�
 lambda arg1, arg2: retExpr
 ```
 
-# 类
+## 面向对象
 
 - python 不存在真正的封装，所有属性均可动态增删改查
 - 自定义类型也是引用语义
 
-## 封装
+### 封装
 
 ```python
 class Base:
@@ -227,7 +213,7 @@ class Base:
         return self.str_
 ```
 
-## 继承
+### 继承
 
 ```python
 class Derived(Base, Base2):
@@ -237,13 +223,9 @@ class Derived(Base, Base2):
         self.mem = args
 ```
 
-## 多态
+## 数值类型
 
-- python 中变量类型本身即可动态变化，动态绑定目的为复用
-
-# 数值类型
-
-## 布尔值
+### 布尔值
 
 - 字面值`True`或`False`
 - 字面值`None`视作`False`
@@ -253,7 +235,7 @@ class Derived(Base, Base2):
 
 <!-- entry begin: python int -->
 
-## 整数
+### 整数
 
 - **支持任意大小的整数**
 
@@ -284,7 +266,7 @@ Int.from_bytes(bytes,
 
 <!-- entry begin: python float -->
 
-## 浮点数
+### 浮点数
 
 - **浮点数一般使用 IEEE 双精度浮点数，存在精度问题**
 
@@ -305,7 +287,7 @@ Float.as_integer_ratio()    # 返回一对整数（分子/分母）
 
 <!-- entry begin: python fraction -->
 
-## 分数
+### 分数
 
 ```python
 from fractions import Fraction
@@ -321,7 +303,7 @@ Fraction(Str)       # 格式："[sign] numerator [/ denominator]"
 
 <!-- entry begin: python decimal -->
 
-## 高精度数字
+### 大数
 
 - **利用字符串存储浮点值**
 
@@ -345,7 +327,7 @@ ExtendedContext     # 精度9，舍入ROUND_HALF_EVEN，关闭所有陷阱
 
 <!-- entry begin: python algorithm -->
 
-# 容器类型
+## 容器类型
 
 ```python
 len(itr)                        # 返回元素数量
@@ -370,11 +352,9 @@ zip(*itr)                       # 返回各范围元素组合后的迭代器
 
 <!-- entry end -->
 
-- python 中容器类型底层数据结构均为指针，指向“栈结构”，从而封装了内存重新分配（扩容与缩容）
-
 <!-- entry begin: python string -->
 
-## 字符串
+### 字符串
 
 - 字符串为只读类型，底层类型即码点数组，可转换为`byte`
 
@@ -454,7 +434,7 @@ Str.splitlines(keepends=False)
 
 <!-- entry begin: python tuple -->
 
-## 元组
+### 元组
 
 - 元组为只读类型
 
@@ -478,7 +458,7 @@ Tuple.index(v[, i[, j]])
 
 <!-- entry begin: python list heap -->
 
-## 列表
+### 列表
 
 ```python
 # 构造
@@ -514,15 +494,13 @@ List.clear()
 
 <!-- entry begin: python set -->
 
-## 集合
+### 集合
 
 ```python
 # 构造
 Set = set([itr])
 Set = {ex, ey, ez}
 Set = {result for x in itr if condition}
-Set = Set1 + Set2
-Set = Set * num
 
 # 访问与搜索
 ele in Set
@@ -551,12 +529,12 @@ Set ^   Other
 Set ^=  Other
 ```
 
-**不可 hash 类型包括：list, set, dict**
+**不可 hash 类型包括：list, set, dict.**
 
 <!-- entry end -->
 <!-- entry begin: python dict -->
 
-## 字典
+### 字典
 
 ```python
 # 构造
@@ -582,9 +560,9 @@ Dict |= Other           # 合并两字典，Other的键值优先
 
 <!-- entry end -->
 
-# 内建函数
+## 内建函数
 
-## 语言特性
+### 语言特性
 
 ```python
 dir(obj)                    # 返回obj的符号表
@@ -598,7 +576,7 @@ locals()                    # 返回局部符号表，可用于判断变量是�
 globals()                   # 返回全局符号表，可用于判断变量是否存在
 ```
 
-## 数值处理
+### 数值处理
 
 ```python
 abs(v)                  # 返回绝对值
@@ -607,7 +585,7 @@ pow(base, exp[, mod])
 round(num, ndigits=0)   # 化简num到小数点后ndigit位（向偶舍入）
 ```
 
-## 字符处理
+### 字符处理
 
 ```python
 ascii(obj)  # 返回对象打印字符串，非ascii则用\x \u \U转义
@@ -621,7 +599,7 @@ eval(expr)  # 动态解析单个表达式并返回结果
 exec(code)  # 动态解析代码片段并仅产生其副作用而返回None
 ```
 
-## 输入输出
+### 输入输出
 
 ```python
 input(prompt='')            # 遇换行停止

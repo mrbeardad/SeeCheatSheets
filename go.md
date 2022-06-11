@@ -1,4 +1,4 @@
-# GoLang
+# Go
 
 ## 安装
 
@@ -37,7 +37,8 @@ $GOCACHE/
   - 伪版本：特殊的预发布版本，go 自动根据 git-tag, utc-time, commit-hash 生成伪版本号
   - v0 与预发布版本均视作不稳定版本，即视其与任何版本都不兼容
   - go 根据 MVS(minimal version selection)算法计算模块依赖树
-  <!-- entry begin: go command -->
+
+<!-- entry begin: go command -->
 
 ```sh
 go env [-u] [-w] [var ...]
@@ -60,6 +61,7 @@ go mod graph                    # 列出依赖模块
 go mod why packages...          # 列出主模块到列出包的最短路径
 go mod download [all]           # 下载主模块所有依赖
 
+go install [packages]           # 下载、编译并安装包/模块，可选添加@指定版本
 go get -d golang.org/x/net      # 管理依赖，可选添加@指定版本
 # @v1.2.3       # 完整版本号
 # @v1.2         # 版本号前缀
@@ -75,7 +77,6 @@ go clean -cache                 # 清除构建缓存
 go build [-o output] [packages] # 编译当前包或指定包，参数 -gcflags='all=-N -l' 用于调试
 go run packages [arguments]     # 编译并运行指定包
 go test [packages]              # 编译并测试当前包或指定包，测试文件XXX_test.go
-go install [packages]           # 编译并安装当前包或指定包
 ```
 
 <!-- entry end -->
@@ -281,7 +282,7 @@ func counter(i int) func() int {
 
 ```
 
-## 类
+## 面向对象
 
 ### 封装
 
@@ -398,7 +399,7 @@ default:
 ### 布尔类型
 
 ```go
-var bool    // 零值为false
+var b bool    // 零值为false
 b = false
 b = true
 ```
@@ -518,7 +519,7 @@ mapped[key] = val
 delete(mapped, key)
 ```
 
-## 通道
+### 通道
 
 ```go
 var ch chan Type    // 零值为nil，读写阻塞

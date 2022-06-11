@@ -271,9 +271,9 @@ scheme     host       port      path                query           fragment
 
 ### 内容安全策略(CSP)
 
-| `Content-Security-Policy`响应首部        | 备注                                                       |
-| ---------------------------------------- | ---------------------------------------------------------- |
-| `<policy-directive>; <policy-directive>` | 限制加载的各类型资源的来源(Origin)，这会禁用内联 js 与 css |
+| `Content-Security-Policy`响应首部        | 备注                                                           |
+| ---------------------------------------- | -------------------------------------------------------------- |
+| `<policy-directive>; <policy-directive>` | 限制加载的各类型资源的来源(Origin)，这默认会禁用内联 js 与 css |
 
 也可使用 HTML`<meta>`元素设置策略：
 

@@ -1079,7 +1079,9 @@ C++20 无栈协程：
 
 - 类型参数：
   - 普通类型
-    > `template<typename T>` > `template<template<typename, auto> class T>` > `template<template<typename...> class T>` > `template<template<typename...> class T>` > `template<template<auto...> class T>`
+    > `template<typename T>`
+  - 模板类型
+    > `template<template<typename T> class C>`
 - 非类型参数：必须常量表达式
   - 显示指定
     > `template<int INT>`
@@ -1099,7 +1101,7 @@ C++20 无栈协程：
 
 - 模板类型参数解包
   - 类型修饰
-    > `(T&&... t)`与`(C<T...> t)`
+    > `(T&&... args)`与`(C<T...> v)`
   - 基类列表 <span id="bcpu"></span>
     > `template <typename... T> class Deriv: T...;`
   - [using 继承](#usingjc)

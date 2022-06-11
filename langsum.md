@@ -3,6 +3,7 @@
 - [Programing Language Summary](#programing-language-summary)
   - [依赖](#依赖)
   - [变量](#变量)
+  - [常量](#常量)
   - [表达式](#表达式)
   - [语句](#语句)
   - [函数](#函数)
@@ -23,83 +24,148 @@
 - Go
   - 程序入口：main 包中 main 函数
   - 依赖单元：一个目录（不包括子目录）
-  - 依赖导出：大写字母开头的符号，初始化：所有 init 函数
+  - 依赖导出：大写字母开头的符号，初始化：包中所有 init 函数
   - 依赖导入：`import "module.github.com/path/to/package"`，符号限定于包名
   - 依赖管理：自动（go-mod）
-- Python
-  - 程序入口：源码文件均可执行，`__init__ == "__main__"`
+- JavaScript
+  - 程序入口：任意源文件，`index.js`(React)
   - 依赖单元：一个源文件
-  - 依赖导出：非`_`开头的符号，初始化：`__init__.py`文件
+  - 依赖导出：`export`，初始化：导入即执行
+  - 依赖导入：`import * as module from 'path/to/module'`，符号限定于模块名
+  - 依赖管理：自动（npm）
+- Python
+  - 程序入口：任意源文件，`__init__ == "__main__"`
+  - 依赖单元：一个源文件
+  - 依赖导出：非`_`开头的符号，初始化：导入即执行
   - 依赖导入：`from package.subpackage import module`，符号限定于文件名
-  - 依赖管理：半自动（pip-install）
+  - 依赖管理：自动（pip）
 
 ## 变量
 
+> - 结构型：变量本身代表一块内存结构，赋值拷贝至少包括变量内存结构
+> - 引用型：变量仅仅指向一块内存结构，赋值拷贝仅针对指针值
+> - 强类型：变量类型不可变，函数签名不可变，无动态符号表
+> - 弱类型：变量类型动态可变，函数签名不固定，有动态符号表
 > - 引用语义的目的：
 >   - (Copy) 避免拷贝
 >   - (Write) 修改对象
 >   - (Dynamic) 动态绑定
-> - 指针还是引用：
->   - 是否需要 **NULL** 语义
->   - 是否需要更改指向
 
 - C++
 
   ```cpp
-  Type var{}                          // 待初始化
-  Type var{args};                     // 构造
-  auto var = initializer;             // 拷贝
-  auto var = static_cast<Type>(other) // 转换
-  auto [a, b] = aggregation;          // 多元
+  Type foo;                             // 待初始化
+  auto foo = Type(args);                // 构造，聚合式构造使用花括号
+  auto foo = initializer;               // 拷贝
+  auto foo = static_cast<Type>(other);  // 转换
+  auto [a, b]  = aggregation;           // 解构
   ```
 
-  - 变量类型：强类型（变量类型不可变、函数声明不可变、没有动态符号表）
-  - 赋值拷贝：一般为深拷贝，指针为浅拷贝
+  - 变量类型：结构型强类型
   - 生命周期：退出块作用域时销毁
   - 作用域：退出块作用域后不可见
 
 - Go
 
   ```go
-  var val Type          // 待初始化
-  val := Type{fd: data} // 构造
-  val := initializer    // 拷贝
-  val := Type(other)    // 转换
-  a, b, _ := value-list // 多元
+  var foo Type            // 待初始化
+  foo  := Type{fd: data}  // 构造
+  foo  := initializer     // 拷贝
+  foo  := Type(other)     // 转换
+  a, _ := value-list      // 解构
   ```
 
-  - 变量类型：强类型
-  - 赋值拷贝：一般为浅拷贝，接口为深拷贝
+  - 变量类型：结构型强类型
   - 生命周期：直到引用计数为零才时销毁
+  - 作用域：退出块作用域后不可见
+
+- JavaScript
+
+  ```js
+  let foo = new Type(args); // 构造
+  let foo = initializer; // 拷贝
+  let foo = Type(other); // 转换
+  ```
+
+  - 变量类型：引用型弱类型
+  - 生命周期：直到引用计数为零时才销毁
   - 作用域：退出块作用域后不可见
 
 - Python
 
   ```python
-  var = Type(args)    # 构造
-  var = initializer   # 拷贝
-  var = Type(other)   # 转换
-  a, b = iterable     # 多元
+  foo = Type(args)    # 构造
+  foo = initializer   # 拷贝
+  foo = Type(other)   # 转换
+  a, b = iterable     # 解构
   ```
 
-  - 变量类型：弱类型
-  - 赋值拷贝：全为浅拷贝
+  - 变量类型：引用型弱类型
   - 生命周期：直到引用计数为零时才销毁
   - 作用域：直到退出函数才不可见
+
+## 常量
+
+- C++
+
+  ```cpp
+  #define CONST_VALUE 1       // 宏
+  const int kConstValue = 1;  // 常量
+  enum Number {kOne, kTwo};   // 枚举
+  ```
+
+- Go
+
+  ```go
+  const BigInt = 1 << 511     // 高精度无类型常量
+  const (
+    _, _ = iota, iota         // 枚举器
+    KB = 1 << (10 * iota)
+    MB
+    GB
+  )
+  ```
+
+- JavaScript
+
+  ```js
+  const CONST_VALUE = 1; // 仅限制变量禁止被重新赋值绑定或被重新声明
+  ```
+
+- Python
+
+  ```python
+  CONST_VALUE = 1 # 非强制
+  ```
 
 ## 表达式
 
 > 优先级：成员|函数|下标 > 单目 > 算术 > 关系 > 逻辑
 
 - C++
-  - `=`为表达式
-  - 支持`? :`、`++`、`--`
+  - 算数：`*`, `/`, `%`, `+`, `-`
+  - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
+  - 逻辑：`!`, `&&`, `||`
+  - 赋值：`=`
+  - 其他：`? :`, `++`, `--`
 - Go
-  - `=`与`:=`均为语句而非表达式
-  - 支持后缀`++`与`--`且为语句
+  - 算数：`*`, `/`, `%`, `+`, `-`
+  - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
+  - 逻辑：`!`, `&&`, `||`
+  - 赋值：（语句）`=`, `:=`
+  - 其他：（语句）`i++`, `i--`
+- JavaScript
+  - 算数：`**`, `*`, `/`, `%`, `+`, `-`
+  - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `===`, `!==`
+  - 逻辑：`!`, `&&`, `||`
+  - 赋值：`=`, `??=`
+  - 其他：`? :`, `++`, `--`
 - Python
-  - `=`为语句，`:=`为表达式
-  - 支持`x if cond else y`、`a > b > c`、`a**e`
+  - 算数：`**`, `*`, `/`, `//`, `%`, `+`, `-`
+  - 关系：`a < b <= c > d >= e`, `x == y != z`
+  - 逻辑：`not`, `and`, `or`
+  - 赋值：（语句）`a = b = c`
+  - 其他：`x if cond else y`
 
 ## 语句
 
@@ -111,7 +177,7 @@
     - for
     - **for-range**
   - 异常
-    - try-catch-throw
+    - throw-try-catch
 - Go
   - 分支
     - if-else
@@ -125,6 +191,17 @@
     - defer
     - panic()
     - recover()
+- JavaScript
+  - 分支
+    - if-else
+    - switch-case-default-break
+  - 循环
+    - labeled
+    - for
+    - **for-in**
+    - **for-of**
+  - 异常
+    - throw-try-catch
 - Python
   - 分支
     - if-elif-else
@@ -132,7 +209,7 @@
     - while-else
     - **for-in-else**
   - 异常
-    - try-except-raise-else-finally
+    - raise-try-except-else-finally
     - with
 
 ## 函数
@@ -142,17 +219,18 @@
 - C++
 
   ```cpp
-  auto example(const string& s, int i=0) -> char {
-      return s[i];
+  auto example(const string& s, int i, T& t) -> char {
+      return t = s[i];
   }
+
+  auto lambda = [&r, v] (auto& elem) mutable {}
   ```
 
   - 形参修饰：`const T&` ? `T` ? `T&`
   - 函数声明：`inline` ? `noexcept`
   - 函数重载：`-> T&` ? `T&&` ? `template<typename T>`
   - 默认实参
-  - 泛型变参包
-  - 闭包：`[&r, v] (auto& x) mutable {}`
+  - 泛型变参包`typename... T`,`T...`
 
 - Go
 
@@ -165,21 +243,38 @@
 
   - 形参指针
   - 返回列表
-  - 切片变参包
-  - 闭包
+  - 切片变参包`args...`
+
+- JavaScript
+
+  ```js
+  function example(s, i) {
+    return s + i;
+  }
+
+  // 函数体仅单独return语句则可省略花括号与return
+  let lambda = (x, y) => {
+    return x + y;
+  };
+  ```
+
+  - `arguments`对象
+  - 默认实参
+  - 数组变参包`...args`
 
 - Python
 
   ```python
   def exmaple(s: str, /, l: list[int], *, d: dict[str,]) -> None:
       return True
+
+  f = lambda x, y: x + y
   ```
 
-  - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`dict[str, int]`
-  - 位置参数与键值参数
-  - 位置变参包与键值变参包：`*posargs`与`**kwargs`
+  - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
+  - 位置参数`/`与键值参数`*`
+  - 位置变参包`*posargs`与键值变参包`**kwargs`
   - 默认实参：仅定义时构造一次，注意引用类型
-  - 闭包：`lambda x, y: x * y`
 
 ## 面向对象
 
@@ -192,7 +287,7 @@
   - 构造控制：构造函数
   - 析构控制：析构函数
   - 拷贝控制：拷贝与移动函数
-  - 类型转换：内置类型（bool&Number, c-str&string），单参构造函数与 operator 转换函数
+  - 类型转换：内置类型(bool&int&float, c-str&string)，单参构造函数与 operator 转换函数
 - Go
   - 访问控制：首字母大写导出包外
   - 结构定义：实例唯一
@@ -200,15 +295,23 @@
   - 构造控制：无
   - 析构控制：无
   - 拷贝控制：无
-  - 类型转换：Number, bytes&string, type, const, nil, chan, interface
+  - 类型转换：int&float, bytes&string, type, const, nil, chan, interface
+- JavaScript
+  - 访问控制：非`#`开头导出类外
+  - 结构定义：默认实例唯一，static 类唯一
+  - 方法定义：默认实例相关，static 类相关
+  - 构造控制：`constructor()`
+  - 析构控制：无
+  - 拷贝控制：无
+  - 类型转换：->boolean, ->number, ->string
 - Python
-  - 访问控制：非`_`开头导出文件外
+  - 访问控制：非`_`开头导出文件外（非强制）
   - 结构定义：默认类唯一，实例可动态增删属性
   - 方法定义：默认实例相关，实例可动态增删方法
   - 构造控制：`__init__()`
   - 析构控制：`__del__()`
   - 拷贝控制：无
-  - 类型转换：`__bool__()`与`__str__()`
+  - 类型转换：`__nonzero__()`与`__str__()`
 
 ### 继承
 
@@ -241,7 +344,8 @@ class MyClass: public Base {
     virtual void InterfaceMethod() override;
 
    private:
-    int name_; // private! p2Impl? construct-order! alignment?
+// private! p2Impl? construct-order! alignment?
+    int name_;
 };
 // default? explicit! non-inline! never-call-virtual!
 MyClass::MyClass() : Base{}, name_{} {}
@@ -258,17 +362,38 @@ void MyClass::InterfaceMethod() {}
 
 ```go
 type Interface interface {
-    Get() int
+    InterfaceMethod() int
 }
-// 将“接口定义”与“方法继承”分开
+
 type MyClass struct {
     Base1   // MyClass与*MyClass均继承Base1方法集
     *Base2  // MyClass无法继承*Base2的方法集，而*MyClass可以
     name string
 }
 
-func (this *MyClass) Get() int {
+func (this *MyClass) InterfaceMethod() int {
     return this.name
+}
+```
+
+- JavaScript
+
+```js
+class MyClass extends Base {
+  #name;
+
+  constructor(name) {
+    super(); // 调用Base的constructor，Base的方法可直接通过this调用
+    this.#name = name;
+  }
+
+  get name() {
+    return this.#name;
+  }
+
+  set name(x) {
+    this.#name = x;
+  }
 }
 ```
 
@@ -302,6 +427,10 @@ class MyClass(Base):
   - 方法集匹配的类型可转换为相应接口类型
   - 运行时类型：`switch rt := interf.(type) {}` `rt[, ok] = interf.(RT)`
   - 通过静态符号表与反射实现
+- JavaScript
+  - 弱类型系统可直接转换为接口类型
+  - 运行时类型：`typeof`
+  - 利用动态符号表与反射实现
 - Python
   - 弱类型系统可直接转换为接口类型
   - 运行时类型：`type()`
@@ -325,33 +454,35 @@ class MyClass(Base):
 - 介词：`in`，`on`，`at`，`of`，`2`，`4`
 - 用途：`ret`，`val`，`need`，`temp`，`deal`，`src`，`dest`
 
-| C++命名            | 例子                   | 备注                                                                     |
-| ------------------ | ---------------------- | ------------------------------------------------------------------------ |
-| Headers            | `lower_with_under.hpp` | 引入顺序：关联、系统、标准、三方、本地                                   |
-| Implements         | `lower_with_under.cpp` |                                                                          |
-| Namespaces         | `lower_with_under`     | 顶级命名空间与项目名匹配，内嵌命名空间与目录名匹配                       |
-| Macroes            | `CAPS_WITH_UNDER`      | 尽量使用 inline 或 constexpr 代替                                        |
-| Classes            | `CapWords`             |                                                                          |
-| Functions          | `CapWords`             |                                                                          |
-| Method             | `CapWords`             |                                                                          |
-| Constants          | `kCapWords`            |                                                                          |
-| Static Variables   | `kCapWords`            | 注意不会调用静态生命周期对象的析构函数，使用 ref-return 代替 global 变量 |
-| Local Variables    | `lower_with_under`     |
-| struct Data Member | `lower_with_under`     | static 同                                                                |
-| class Data Member  | `lower_with_under_`    | static 同                                                                |
+| C++命名            | 形式                | 备注                                                                     |
+| ------------------ | ------------------- | ------------------------------------------------------------------------ |
+| Files, Namespaces  | `lower_with_under`  | 头文件引入顺序，目录结构命名空间                                         |
+| Classes            | `UpperCamelCase`    |                                                                          |
+| Functions, Method  | `UpperCamelCase`    |                                                                          |
+| Macroes            | `UPPER_WITH_UNDER`  | 尽量使用 inline 或 constexpr 代替                                        |
+| Constants          | `kUpperCamelCase`   |                                                                          |
+| Static Variables   | `kUpperCamelCase`   | 注意不会调用静态生命周期对象的析构函数，使用 ref-return 代替 global 变量 |
+| Local Variables    | `lower_with_under`  |
+| struct Data Member | `lower_with_under`  | static 同                                                                |
+| class Data Member  | `lower_with_under_` | static 同                                                                |
 
-| Go 命名  | Public     | Internal   |
-| -------- | ---------- | ---------- |
-| All Name | `MixedCap` | `mixedCap` |
+| Go 命名         | Public           | Internal         |
+| --------------- | ---------------- | ---------------- |
+| Packages, Files | `lowerword`      | `internal`       |
+| All Name        | `UpperCamelCase` | `lowerCamelCase` |
 
-| Python 命名            | Public                | Internal                          |
-| ---------------------- | --------------------- | --------------------------------- |
-| Packages               | `lower_with_under`    |                                   |
-| Modules                | `lower_with_under.py` | `_lower_with_under.py`            |
-| Classes                | `CapWords`            | `_CapWords`                       |
-| Functions              | `lower_with_under()`  | `_lower_with_under()`             |
-| Method                 | `lower_with_under()`  | `_lower_with_under() (protected)` |
-| Constants              | `CAPS_WITH_UNDER`     | `_CAPS_WITH_UNDER`                |
-| Global/Class Variables | `lower_with_under`    | `_lower_with_under`               |
-| Local Variables        | `lower_with_under`    | `_lower_with_under`               |
-| Instance Variables     | `lower_with_under`    | `_lower_with_under (protected)`   |
+| JavaScript 命名       | 形式               |
+| --------------------- | ------------------ |
+| Packages, Modules     | `lowerCamelCase`   |
+| Classes               | `UpperCamelCase`   |
+| Functions, Method     | `lowerCamelCase`   |
+| Constants             | `UPPER_WITH_UNDER` |
+| Variables, Properties | `lowerCamelCase`   |
+
+| Python 命名           | 形式               |
+| --------------------- | ------------------ |
+| Packages, Modules     | `lower_with_under` |
+| Classes               | `UpperCamelCase`   |
+| Functions, Method     | `UpperCamelCase`   |
+| Constants             | `UPPER_WITH_UNDER` |
+| Variables, Properties | `lower_with_under` |

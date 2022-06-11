@@ -1,105 +1,83 @@
-# 模块
+# JavaScript
+
+## 依赖模块
+
 ```js
-import defaultExport from "module-name";
-import * as name from "module-name";
-import { export } from "module-name";
-import { export as alias } from "module-name";
-import { export1 , export2 } from "module-name";
-import { foo , bar } from "module-name/path/to/specific/un-exported/file";
-import { export1 , export2 as alias2 , [...] } from "module-name";
-import defaultExport, { export [ , [...] ] } from "module-name";
-import defaultExport, * as name from "module-name";
-import "module-name";
+import * as modulename from "path/to/module.js";
+import { Foo, Bar } from "path/to/module.js";
+import defaultExport from "path/to/module.js";
+import "path/to/module.js";
 
-// 导出单个特性
-export let name1, name2, …, nameN; // also var, const
-export let name1 = …, name2 = …, …, nameN; // also var, const
-export function FunctionName(){...}
-export class ClassName {...}
-
-// 导出列表
-export { name1, name2, …, nameN };
-
-// 重命名导出
-export { variable1 as name1, variable2 as name2, …, nameN };
-
-// 解构导出并重命名
-export const { name1, name2: bar } = o;
-
-// 默认导出
-export default expression;
-export default function (…) { … } // also class, function*
-export default function name1(…) { … } // also class, function*
-export { name1 as default, … };
-
-// 导出模块合集
-export * from …; // does not set the default export
-export * as name1 from …; // Draft ECMAScript® 2O21
-export { name1, name2, …, nameN } from …;
-export { import1 as name1, import2 as name2, …, nameN } from …;
-export { default } from …;
+export const SOME_CONSTANT = ...
+export function someHelpfulFunction()
+export class Foo { }
+export default ... // Deprecated
 ```
 
+## 变量与常量
 
-# 变量
 ```js
-/* let声明的变量作用域仅限于块作用域内，若不进行初始化则初始值为undefined */
-let blcokVariable = value;
+// 若不进行初始化则初始值为 undefined
+let foo = new Type(args); // 构造
+let foo = initializer; // 拷贝
+let foo = Type(other); // 转换
 
-/* const声明常量作用域仅限于块作用域内，但无法限制更改数组与对象 */
-const constant = value;
+// 仅限制常量名无法再重新绑定引用（赋值）
+const CONST_VALUE = value;
 ```
 
+- 变量类型：引用型弱类型
+- 生命周期：直到引用计数归零时销毁
+- 作用域：退出块作用域后不可见
 
-# 表达式
-| Operator type          | Individual operators                    |
-| ---------------------- | --------------------------------------- |
-| member                 | . []                                    |
-| call / create instance | () new                                  |
-| negation/increment     | ! ~ - + ++ -- typeof void delete        |
-| multiply/divide        | * / % **                                |
-| addition/subtraction   | + -                                     |
-| bitwise shift          | << >> >>>                               |
-| relational             | < <= > >= in instanceof                 |
-| equality               | == != === !==                           |
-| bitwise-and            | &                                       |
-| bitwise-xor            | ^                                       |
-| bitwise-or             | \|                                      |
-| logical-and            | &&                                      |
-| logical-or             | \|\|                                    |
-| conditional            | ?:                                      |
-| assignment             | = += -= *= /= %= <<= >>= >>>= &= ^= \|= |
-| comma                  | ,                                       |
+## 表达式
 
-**注**：
-* `== !=`允许先进行类型转换再比较值，`=== !==`比较包括值和类型
-* `>>`算术右移，`>>>`逻辑右移
-* 字符串支持`+`连接，与数字连接时会将数字转换为字符串
-* `&&`与`||`返回结果并不强制转换为bool
-* 引用类型的`===`与`==`仅当引用同一数据时才为true
+| Operator type          | Individual operators                     |
+| ---------------------- | ---------------------------------------- |
+| member                 | . []                                     |
+| call / create instance | () new                                   |
+| negation/increment     | ! ~ - + ++ -- typeof void delete         |
+| multiply/divide        | \* / % \*\*                              |
+| addition/subtraction   | + -                                      |
+| bitwise shift          | << >> >>>                                |
+| relational             | < <= > >= in instanceof                  |
+| equality               | == != === !==                            |
+| bitwise-and            | &                                        |
+| bitwise-xor            | ^                                        |
+| bitwise-or             | \|                                       |
+| logical-and            | &&                                       |
+| logical-or             | \|\|                                     |
+| conditional            | ?:                                       |
+| assignment             | = += -= \*= /= %= <<= >>= >>>= &= ^= \|= |
+| comma                  | ,                                        |
 
+- 关系比较会隐式进行类型转换，`===`与`!==`会对类型敏感
+- 不要对 object 进行关系比较操作，结果不符合常识
+- `>>`算术右移，`>>>`逻辑右移
+- 字符串支持`+`连接，与数字连接时会将数字转换为字符串
+- `&&`返回最后一个转换为 false 的表达式的值，全 true 则返回最后一个表达式的值
+- `||`返回最后一个转换为 true 的表达式的值，全 false 则返回最后一个表达式的值
 
-# 语句
-## 分支
+## 语句
+
+- 分支
+
 ```js
 if (condition) {
-
 } else if (condition) {
-
 } else {
-
 }
 
 switch (expression) {
-    case label:
-        break;
-    default:
-        break;
+  case label:
+    break;
+  default:
+    break;
 }
 ```
 
+- 循环
 
-## 循环
 ```js
 block:
 {
@@ -118,36 +96,40 @@ block:
 }
 ```
 
+- 异常
 
-## 异常
 ```js
 try {
-    throw new Error("error message");
+  throw new Error("error message");
 } catch (identifier) {
-    return false;
+  return false;
 } finally {
-    return true; // catch语句中的return或throw会被finally中的return覆盖
+  return true; // catch语句中的return或throw会被finally中的return覆盖
 }
 ```
 
+## 函数
 
-# 函数
 ```js
-function AddMethod(x, y = 10, ...z) {   // arguments，默认实参，变参数组
-    return x + y + sum(...z);
+function AddMethod(x, y = 10, ...z) {
+  // arguments，默认实参，变参数组
+  return x + y + sum(...z);
 }
 
-let lambda = (x, y) => {x + y}; // 单参时可省略圆括号，单return语句可省略花括号与return；做闭包时可访问外部this
+let lambda = (x, y) => {
+  x + y;
+}; // 单参时可省略圆括号，单return语句可省略花括号与return；做闭包时可访问外部this
 ```
 
+## 面向对象
 
-# 面向对象
-## 封装
+### 封装
+
 ```js
 // 定义构造器
 function Person(name, age) {
-    this.name = name;
-    this.age = age;
+  this.name = name;
+  this.age = age;
 }
 
 // 将方法定义在原型中避免每个实例都创建一个函数副本
@@ -156,66 +138,64 @@ Person.prototype.greeting = () => console.log("hello.");
 // 创建实例，原型在各实例间共享
 let inst = new Person("xhc", 21);
 ```
+
 this 的值根据调用上下文而定：
-* 在方法中，this 表示该方法所属的对象；
-* 在函数中，this 表示全局对象（strict模式下为undefined）；
-* 如果单独使用，this 表示全局对象；
-* 类似 call() 和 apply() 方法可以将 this 引用到任何对象。
+
+- 在方法中，this 表示该方法所属的对象；
+- 在函数中，this 表示全局对象（strict 模式下为 undefined）；
+- 如果单独使用，this 表示全局对象；
+- 类似 call() 和 apply() 方法可以将 this 引用到任何对象。
 
 new 关键字会进行如下的操作：
-1. 创建一个空的简单JavaScript对象（即{}）；
-2. 为步骤1新创建的对象添加属性__proto__，将该属性链接至构造函数的原型对象(prototype属性) ；
-3. 将步骤1新创建的对象作为this的上下文 ；
-4. 如果该函数没有返回对象，则返回this。
 
+1. 创建一个空的简单 JavaScript 对象（即{}）；
+2. 为步骤 1 新创建的对象添加属性**proto**，将该属性链接至构造函数的原型对象(prototype 属性) ；
+3. 将步骤 1 新创建的对象作为 this 的上下文 ；
+4. 如果该函数没有返回对象，则返回 this。
 
-## 继承
+### 继承
+
 ```js
-function Parent (name) {
-    this.name = name;
-    this.colors = ['red', 'blue', 'green'];
+function Parent(name) {
+  this.name = name;
+  this.colors = ["red", "blue", "green"];
 }
 
 Parent.prototype.getName = function () {
-    console.log(this.name)
-}
+  console.log(this.name);
+};
 
-function Child (name, age) {
-    Parent.call(this, name);
-    this.age = age;
+function Child(name, age) {
+  Parent.call(this, name);
+  this.age = age;
 }
 // 不直接引用Parent.prototype是防止修改Child的prototype时影响到Patent
 Child.prototype = Object.create(Patent.prototype);
 Child.constructor = Child;
 
 Child.prototype.getName = function () {
-    console.log(this.name, this.age)
-}
+  console.log(this.name, this.age);
+};
 ```
-**注**：JS中继承关系为对象关系而非类关系，可动态变化
 
+**注**：JS 中继承关系为对象关系而非类关系，可动态变化
 
-## 多态
+## 内置类型
 
-
-# 类型
-* 基本类型：是一种既非对象也无方法的数据（不可改变）
-    * null
-    * undefined
-    * symbol
-    * boolean
-    * bigint
-    * number
-    * string
-* Object：任何 constructed 对象实例的特殊非数据结构类型；JavaScript为基础类型提供了Object包装
-    * Object
-    * Array
-    * Set
-    * Map
-    * Date
+- 基本数据类型
+  - null
+  - undefined
+  - Boolean
+  - Number
+  - BigInt
+  - String
+  - Symbol
+- Object 类型
 
 | 原始值              | 转换为数字 | 转换为字符串      | 转换为布尔值 |
 | ------------------- | ---------- | ----------------- | ------------ |
+| null                | 0          | "null"            | false        |
+| undefined           | NaN        | "undefined"       | false        |
 | false               | 0          | "false"           | false        |
 | true                | 1          | "true"            | true         |
 | 0                   | 0          | "0"               | false        |
@@ -223,8 +203,6 @@ Child.prototype.getName = function () {
 | NaN                 | NaN        | "NaN"             | false        |
 | Infinity            | Infinity   | "Infinity"        | true         |
 | -Infinity           | -Infinity  | "-Infinity"       | true         |
-| "0"                 | 0          | "0"               | true         |
-| "1"                 | 1          | "1"               | true         |
 | ""                  | 0          | ""                | false        |
 | " "                 | 0          | " "               | true         |
 | " 20 "              | 20         | " 20 "            | true         |
@@ -236,120 +214,119 @@ Child.prototype.getName = function () {
 | ["Runoob","Google"] | NaN        | "Runoob,Google"   | true         |
 | { }                 | NaN        | "[object Object]" | true         |
 | function(){}        | NaN        | "function(){}"    | true         |
-| null                | 0          | "null"            | false        |
-| undefined           | NaN        | "undefined"       | false        |
 
+### 布尔
 
-## 布尔
 ```js
-let bool = new Boolean(thing) // 注意布尔值的Object包裹转换为布尔值时为true
-let bool0 = false
-let bool1 = true
+let bool = false && true;
 
-bool.toString()
-bool.valueOf()
+// Instance
+bool.toString();
 ```
 
+### 数字
 
-## 大数
 ```js
-let bigint = new BigInt(thing)
-let bigint1 = 1n
+let int = 0b1111 + 0o777 + 99 + 0xff;
+let float = 2.5 + 2e9 + 2.5e9;
+let pinf = +Infinity;
+let ninf = -Infinity;
+let nan = NaN;
 
-BigInt.asIntN(bits, int)
-BigInt.asUintN(bits, int)
+// Static
+Number.MAX_VALUE;
+Number.MIN_VALUE;
+Number.EPSILON;
+Number.MIN_SAFE_INTEGER;
+Number.MAX_SAFE_INTEGER;
+Number.isInteger(number);
+Number.isFinite(number);
+Number.isNaN(number);
+Number.isSafeInteger(number);
+Number.isSafeInteger(number);
+Number.parseFloat(string);
+Number.parseInt(string, [radix]);
 
-bigint.toString()
-bigint.valueOf()
+// Instance
+number.toExponential([fraction]); // fraction指定小数部分位数，默认精确
+number.toFixed([fraction]); // fraction指定小数部分位数，默认为零
+number.toPrecision([precision]); // precision指定有效位数，默认精确
+number.toString([radix]); // radix指定基数，默认为10
 ```
 
+### 大数
 
-## 数字
 ```js
-let number = new Number(thing)
-let allNumberIsFloat = 0b1111 + 0777 + 999 + 0xff + 2.5 + 2. + .5 + 1e9
-let pinf = +Infinity
-let ninf = -Infinity
-let nan = NaN
+let bigint = 0b1111 + 0o777 + 99 + 0xff;
 
-Number.MAX_VALUE
-Number.MIN_VALUE
-Number.NaN
-Number.NEGATIVE_INFINITY
-Number.POSITIVE_INFINITY
-Number.EPSILON
-Number.MIN_SAFE_INTEGER
-Number.MAX_SAFE_INTEGER
-Number.parseFloat(string)
-Number.parseInt(string)
-Number.isFinite(value)
-Number.isInteger(value)
-Number.isNaN(value)
-Number.isSafeInteger(value)
+// Static
+BigInt.asIntN(bits, bigint);
+BigInt.asUintN(bits, bigint);
 
-number.toExponential(fractionDigits)
-number.toFixed(digits)
-number.toPrecision(precision)
+// Instance
+bigint.toString();
 ```
 
-## 字符串
+### 字符串
+
 ```js
-let string = new String(thing)
-let str1 = 'single quote'
-let str2 = "double quote"
-let str3 = `${expr}, and remain black charactor`
+let string = 'single "quote"' + "double 'quote'" + `
+raw string with ${expr}
+`;
 
-String.fromCharCode(...charCodes)
+let regexp = /pattern/flag
 
+// Static
+String.fromCodePoint()
+
+// Instance
 string.length
-string.charAt(idx)         // 返回string[idx]
-string.charCodeAt(idx)     // 返回unicode数字
-
-string.indexOf(searchvalue, start=0)
-string.lastIndexOf(searchvalue, start=searchvalue.length-1) // start表示最后一个字符用于匹配searchvalue的beginning
-string.startsWith(searchvalue, start=0)
-string.endsWith(searchvalue, length=searchvalue.length)
-
-let regex = /pattern/flag
-string.search(regexp)       // 返回下标
-string.match(regexp)        // 返回数组
-string.replace(regexp, newvalue)
-
-string.split(separator="regexp", limit=Infinity)
-string.concat(...strings)
-string.repeat(count)
-string.substr(start, length)
+string.charAt(idx)                // 返回string[idx]，识别 utf8
+string.charCodeAt(idx)            // 返回string[idx]对应码点
+string.slice(start, end)          // 支持负数下标
 string.substring(start, end)
-string.slice(start, end)    // 支持类似python slice
 
+string.includes(search[, from])   // 默认from为0
+string.indexOf(search[, from])    // 默认from为0
+string.lastIndexOf(search[, from])// 默认from为尾部
+string.search(regexp)             // 返回下标，不完全匹配
+string.match(regexp)              // 返回数组，不完全匹配
+string.startsWith(search[, pos])
+string.endsWith(search[, length])
+
+string.repeat(count)
+string.concat(...strings)
+string.split([regexp [, limit]]) // 默认返回数组[string]，regex为""时切分每个字符
+
+string.replace(regexp, replace)  // $1, $`, $', $&
 string.toLowerCase()
 string.toUpperCase()
+String.padStart(targetLength [, padString])
+String.padEnd(targetLength [, padString])
 string.trim()
+string.trimStart()
+string.trimEnd()
 
 JSON.parse(string)
 JSON.stringify(object)
 ```
 
-| flag | 说明                                                  |
-| ---- | ----------------------------------------------------- |
-| g    | 多次匹配                                              |
-| i    | 忽略大小写                                            |
-| m    | 多行搜索                                              |
-| s    | 允许.匹配换行符                                       |
-| u    | unicode模式                                           |
-| y    | 执行“粘性(sticky)”搜索,匹配从目标字符串的当前位置开始 |
+| flag | 说明                                      |
+| ---- | ----------------------------------------- |
+| g    | 多次匹配                                  |
+| i    | 忽略大小写                                |
+| m    | 多行搜索                                  |
+| s    | 允许`.`匹配换行符                         |
+| d    | 为子匹配生成索引                          |
+| y    | 从该 regex 记录的上次匹配位置开始这次匹配 |
 
+### 日期时间
 
-## 日期时间
 ```js
-let date = new Date(); // 当前时间
-let date1 = new Date(number); // Unix时间戳，单位ms
-let date2 = new Date(dateString);
-let date3 = new Date(year, monthIndex [, day [, hours [, minutes [, seconds [, milliseconds]]]]]);
-
-Date.now()  // 返回当前Unix时间戳，单位ms
-Date.parse(string)
-Date.UTC(year,month[,date[,hrs[,min[,sec[,ms]]]]]) // 返回返回对应Unix时间戳，单位ms
+let now = new Date();
+let unix = new Date(unix_ms);
+let utc = new Date("2006-01-02T15:04:05+08:00");
+let datetime = new Date(year, monthIndex [, day [, hours [, minutes [, seconds [, milliseconds]]]]]);
 
 date.getFullYear()      //Returns the year
 date.getMonth()         //Returns the month (from 0-11)
@@ -359,6 +336,7 @@ date.getHours()         //Returns the hour (from 0-23)
 date.getMinutes()       //Returns the minutes (from 0-59)
 date.getSeconds()       //Returns the seconds (from 0-59)
 date.getMilliseconds()  //Returns the milliseconds (from 0-999)
+
 date.getTime()          //Returns the number of milliseconds since midnight Jan 1 1970, and a specified date
 date.getTimezoneOffset()//Returns the time difference between UTC time and local time, in minutes
 
@@ -399,120 +377,76 @@ date.toLocaleTimeString()//Returns the time portion of a Date object as a string
 date.toLocaleString()   //Converts a Date object to a string, using locale conventions
 ```
 
-## 数组
+### 数组
+
 ```js
-let array = new Array(length=1)
-let arr1 = [...elements]
+let array = [...elements]
 
-let extend = [...array]         // 展开，还可用于函数调用
-let [v1, v2, ...rest] = array   // 解构，不必完全解构数组内容
+let extend = [begin, ...array, end] // 展开
+let [e0, , e2, ...rest] = array     // 解构
 
-array[idx]          // 若idx超出范围则返回undefined
-array[idx] = value  // 若idx超出范围则填充undefined；若idx非整数则作为属性
+// 注意：若 idx 不是自然数，则被当做 Object 键
+array[idx]              // 若idx超出范围则返回undefined
+array[idx] = value      // 若idx超出范围则填充undefined
 array.length
+array.at(index)         // 相对array[index]额外支持负数下标
+array.slice(start, end) // 支持负数下标
+array.push(...items)    // 尾部添加
+array.pop()             // 尾部删除
+array.unshift(...items) // 尾部添加
+array.shift()           // 头部删除
 
-Array.from(object)  // object with a length property or any iterable object
-Array.isArray(obj)
+array.includes(search[, from]])
+array.indexOf(search[, from]])
+array.lastIndexOf(search[, from])
+array.find(function(curValue[, curIndex[, array]]));      // 返回元素
+array.findIndex(function(curValue[, curIndex, [array]])); // 返回下标
+array.forEach(function(curValue[, curIndex[, array]]));
+array.every(function(curValue[, curIndex[, array]]));
+array.some(function(curValue[, curIndex[, array]]));
+array.keys()
+array.entries()
 
-array.indexOf(searchElement, start=0])
-array.lastIndexOf(searchElement, start=searchElement.length-1)
-array.find(function(curValue, curIndex=, array=), thisValue=);
-array.findIndex(function(curValue, curIndex=, array=), thisValue=);
+array.reduce(function(total[, curValue[, curIndex]]), initVal);
+array.reduceRight(function(total[, curValue[, curIndex]]), initVal);
 
-array.forEach(function(curValue, curIndex=, array=), thisValue=);
-array.filter(function(curValue, curIndex=, array=), thisValue=);
-array.map(function(curValue, curIndex=, array=), thisValue=);
-array.reduce(function(total, curValue=, curIndex=, array=), initialValue);
-array.reduceRight(function(total, curValue=, curIndex=, array=), initialValue);
-array.every(function(curValue, curIndex=, array=), thisValue=);
-array.some(function(curValue, curIndex=, array=), thisValue=);
+array.sort(compareFunction)
+array.reverse()
 
 array.join(deliminator = ',')
 array.concat(...arrays)
-array.copyWithin(target, start, end)
 
-array.push(...items)
-array.pop()
-array.unshift(...items)
-array.shift()
-array.splice(index, count_to_remove, addElement1, addElement2, ...)
-array.slice(start_index, upto_index)
-array.reverse()
-array.sort(compareFunction)
-array.fill(value, start, end)
-
-array.keys()
-array.entries()
+array.copyWithin(pos[, start[, end]])
+array.flat(depth=1)
+array.fill(value[, start[, end]])
+array.filter(function(curValue[, curIndex, array]]));
+array.map(function(curValue, curIndex=, array=), thisValue=);
+array.splice(index, count_to_remove, ...addElements)
 ```
 
-## 集合
+### 对象
+
 ```js
-let set = new Set()
-let wset = new WeakSet()    // 对象弱引用集合，key必须为object
-
-let extend = [...set];      // 展开，还可用于函数调用
-let [v1, v2, ...rest] = set;// 解构，不必完全解构数组内容
-
-set.size
-set.has(value)
-set.add(value)
-set.delete(value)
-set.clear()
-set.keys()
-set.values()
-set.entries()
-set.forEach(function(curValue, curIndex=, set=), thisValue=);
-```
-
-## 映射
-```js
-let map = new Map()
-let map = new Map([[key, val], [key, val]])
-let wmap = new WeakMap()    // 对象弱引用集合，key必须为object
-
-Array.from(map) // [[key, val], [key, val]]
-
-let extend = [...map];          // 展开，还可用于函数调用
-let [pair, [key, val]] = map;   // 解构，不必完全解构数组内容
-
-map.size
-map.has(key)
-map.set(key, val)
-map.get(key)        // 若不存在则返回undefined
-map.delete(key)
-
-map.keys()
-map.values()
-map.entries()
-map.forEach(function(curValue, curKey=, map=), thisValue=);
-```
-
-
-## 对象
-```js
+// 构造：key 类型仅限 String 与 Symbol，其他类型都会隐式转换为 String
 let obj = {
-    name: 'xhc',
-    age: 21,
-} // obj本质就是key类型为string的hashmap
+  key_name: "canonical",
+  "key-name": "non-canonical",
+  1: "id",
+  method() {}
+}
 
-obj.name    // 若key的字符串内容符合标识符规范则可用该语法
-obj['age']  // 否则只能使用方括号下标法
+let extend = {key: 1, ...obj, key: 2}     // 扩展
+let {key, ["key"]: alias, ...rest} = obj  // 解构
+function f({key = defaultValue})          // 解构实参
 
-let extend = {...obj}       // 展开，一种copy手法
-let {k1, k2, ..rest} = obj  // 解构，不必完全解构内容
-function({k1, k2})          // 解构，可用于函数调用
-let {keyName: val} = obj    // 解构，非规范属性名
-let {['keyName']: val} = obj// 同上，先计算keyName
+obj.key_name     // 成员式
+obj['key-name']  // 下标式
+obj.key = value
+delete obj.key
 
-Object.keys(o)
-Object.getOwnPropertyNames(o)
-```
-
-# 内置函数
-```js
-eval()
-encodeURI()
-decodeURI()
-encodeURIComponent()
-decodeURIComponent()
+Object.is(lhs, rhs) // 与 === 区别在于，is(NaN, NaN)与is(-0, +0)均为true
+Object.keys(obj)
+Object.entries(obj)
+Object.fromEntries(iterable);
+Object.assign(target, ...sources)
 ```

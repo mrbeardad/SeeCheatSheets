@@ -77,6 +77,5 @@
 ## 其他
 
 - [Markdown 语法](markdown.md)
-- [多种正则语法](regex.md)
+- [Regex 语法](regex.md)
 - [比特币系统](bitcoin.md)
-- [色彩理论](color.md)

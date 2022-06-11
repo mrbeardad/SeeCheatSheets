@@ -1,5 +1,9 @@
-# 单元测试
-## 断言
+# Go
+
+## 单元测试
+
+### 断言
+
 ```go
 // file: unit_test.go
 import (
@@ -48,27 +52,35 @@ func Panics(t TestingT, f PanicTestFunc, msgAndArgs ...interface{}) bool
 func PanicsWithError(t TestingT, errString string, f PanicTestFunc, msgAndArgs ...interface{}) bool
 func PanicsWithValue(t TestingT, expected interface{}, f PanicTestFunc, msgAndArgs ...interface{}) bool
 ```
-## 模拟
-## 打桩
 
-# 性能剖析
+### 模拟
+
+### 打桩
+
+## 性能剖析
+
 <!-- entry begin: go pprof perf -->
-## net/http/pprof
+
+### net/http/pprof
+
 ```go
 import _ "net/http/pprof"
 ```
-> http://localhost:6060/debug/pprof/
-* goroutine
-* heap
-* threadcreate
-* block
-* mutex
-* cmdline
-* profile
-* symbol
-* trace
 
-## runtime/pprof
+> <http://localhost:6060/debug/pprof/>
+
+- goroutine
+- heap
+- threadcreate
+- block
+- mutex
+- cmdline
+- profile
+- symbol
+- trace
+
+### runtime/pprof
+
 ```go
 import "runtime/pprof"
 
@@ -76,25 +88,31 @@ func StartCPUProfile(w io.Writer) error
 func StopCPUProfile()
 ```
 
-## go test
+### go test
+
 ```sh
 go test -cpuprofile cpu.prof -memprofile mem.prof -bench .
 ```
 
-## go tool pprof
+### go tool pprof
+
 ```sh
 go tool pprof [binary] [binary.prof]
 go tool pprof http://localhost:6060/debug/pprof/profile
 ```
-> pprof界面中常用命令
-* topN
-* list Func
-* web
+
+> pprof 界面中常用命令
+
+- topN
+- list Func
+- web
 
 <!-- entry end -->
 
-# 数值处理
-## 大数
+## 数值处理
+
+### 大数
+
 ```go
 import "math/big"
 
@@ -105,7 +123,8 @@ func NewRat(a, b int64) *Rat
 // 各大数类型提供各种方法来进行运算
 ```
 
-## 数学库
+### 数学库
+
 ```go
 import "math"
 
@@ -188,7 +207,8 @@ func Float64bits(f float64) uint64
 func Float64frombits(b uint64) float64
 ```
 
-## 随机数
+### 随机数
+
 ```go
 import "math/rand"
 
@@ -212,9 +232,10 @@ func Read(p []byte) (n int, err error)
 func Shuffle(n int, swap func(i, j int))    // i为索引[1, n]，j为随机数[0, i]
 ```
 
+## 字符处理
 
-# 字符处理
-## 字符串
+### 字符串
+
 ```go
 import "bytes"
 import "strings"
@@ -272,7 +293,8 @@ func ToUpper(s string) string
 func ToUpperSpecial(c unicode.SpecialCase, s string) string
 ```
 
-## 字符类
+### 字符类
+
 ```go
 import unicode
 
@@ -296,7 +318,8 @@ func IsPrint(r rune) bool       // 对于空白符仅包含ASCII space
 func IsControl(r rune) bool
 ```
 
-## 正则表达式
+### 正则表达式
+
 ```go
 import "regexp"
 // 构造Regexp
@@ -317,7 +340,7 @@ func (re *Regexp) SubexpIndex(name string) int
 // String   表示用string代替byte[]参数与返回
 // Submatch与Index结合只会使返回值增加一维而非两维
 func (re *Regexp) Find(All)?(String)?(Submatch)?(Index)?
-func (re *Regexp) Match(b []byte) bool              // 匹配子串，全匹配利用^$
+func (re *Regexp) Match(b []byte) bool // 不完全匹配
 func (re *Regexp) MatchString(s string) bool
 func (re *Regexp) MatchReader(r io.RuneReader) bool
 
@@ -330,7 +353,8 @@ func (re *Regexp) ReplaceAll(Func|Literal)?(String)?
 func (re *Regexp) Split(s string, n int) []string
 ```
 
-## 格式化
+### 格式化
+
 ```go
 import "fmt"
 
@@ -366,30 +390,35 @@ func Sscanf(str string, format string, a ...interface{}) (n int, err error)
 // 宽度与精度可替换为 [索引]* 从而用参数值替换
 "%对齐 符号 # 0 宽度.精度 [索引] 类型"
 ```
+
 <!-- entry begin: go fmt -->
-| 格式  | 描述                 | 支持类型             |
-| ----- | -------------------- | -------------------- |
-| %v    | 打印值               | all                  |
-| %T    | 打印类型             | all                  |
-| %t    | 打印布尔值           | bool                 |
-| %b    | 打印二进制           | 整数、浮点数         |
-| %o    | 打印八进制           | 整数                 |
-| %O    | 打印八进制带前缀0o   | 整数                 |
-| %d    | 打印十进制           | 整数                 |
-| %x    | 打印十六进制小写字母 | 整数、浮点数、string |
-| %X    | 打印十六进制大写字母 | 整数、浮点数、string |
-| %e %E | 打印科学计数法e或E   | 浮点数               |
-| %f %F | 打印定点数           | 浮点数               |
-| %g %G | 打印智能选择         | 浮点数               |
-| %c    | 打印码点对应字符     | byte、rune           |
-| %U    | 打印码点值           | byte、rune           |
-| %s    | 打印字符串           | string               |
-| %q    | 打印引用后的字符串   | string               |
-| %p    | 打印十六进制指针值   | 指针                 |
+
+| 格式  | 描述                  | 支持类型             |
+| ----- | --------------------- | -------------------- |
+| %v    | 打印值                | all                  |
+| %T    | 打印类型              | all                  |
+| %t    | 打印布尔值            | bool                 |
+| %b    | 打印二进制            | 整数、浮点数         |
+| %o    | 打印八进制            | 整数                 |
+| %O    | 打印八进制带前缀 0o   | 整数                 |
+| %d    | 打印十进制            | 整数                 |
+| %x    | 打印十六进制小写字母  | 整数、浮点数、string |
+| %X    | 打印十六进制大写字母  | 整数、浮点数、string |
+| %e %E | 打印科学计数法 e 或 E | 浮点数               |
+| %f %F | 打印定点数            | 浮点数               |
+| %g %G | 打印智能选择          | 浮点数               |
+| %c    | 打印码点对应字符      | byte、rune           |
+| %U    | 打印码点值            | byte、rune           |
+| %s    | 打印字符串            | string               |
+| %q    | 打印引用后的字符串    | string               |
+| %p    | 打印十六进制指针值    | 指针                 |
+
 <!-- entry end -->
 
-## 序列化
-### JSON
+### 序列化
+
+#### JSON
+
 ```go
 import "encoding/json"
 
@@ -415,8 +444,10 @@ type Json struct {
 }
 ```
 
-# 文件系统
-## 文件路径
+## 文件系统
+
+### 文件路径
+
 ```go
 import "path/filepath"
 
@@ -448,7 +479,8 @@ type WalkDirFunc func(path string, d DirEntry, err error) error
 // error返回SkipDir表示跳过该目录（或该文件的上级目录），返回其他non-nil则停止
 ```
 
-## 文件信息
+### 文件信息
+
 ```go
 import "os"
 
@@ -473,7 +505,8 @@ func (m FileMode) String() string
 func (m FileMode) Type() FileMode
 ```
 
-## 文件操作
+### 文件操作
+
 ```go
 import "os"
 
@@ -499,7 +532,8 @@ func Chmod(name string, mode FileMode) error
 func Chtimes(name string, atime time.Time, mtime time.Time) error
 ```
 
-## 输入输出
+### 输入输出
+
 ```go
 import "os"
 
@@ -522,9 +556,10 @@ func WriteFile(name string, data []byte, perm FileMode) error
 func Truncate(name string, size int64) error
 ```
 
+## 进程管理
 
-# 进程管理
-## 参数解析
+### 参数解析
+
 ```go
 import "flag"
 
@@ -568,7 +603,8 @@ type Value interface {
 }
 ```
 
-## 进程信息
+### 进程信息
+
 ```go
 import "os"
 
@@ -596,7 +632,8 @@ func Getppid() int
 func Hostname() (name string, err error)
 ```
 
-# 时间库
+## 时间库
+
 ```go
 import "time"
 // 时间+时区 可唯一确定一个世界通用时，当输出时的时区改变则时间也会随之改变
@@ -608,7 +645,6 @@ func Unix(sec int64, nsec int64) Time   // 接受Unix时间戳sec*1e9+nsec
 func Parse(layout, value string) (Time, error)
 func ParseInLocation(layout, value string, loc *Location) (Time, error)
 
-// 解析格式时间layout: Mon Jan 2 15:04:05 MST 2006
 // RFC3339 = "2006-01-02T15:04:05Z07:00"
 // RFC3339Nano = "2006-01-02T15:04:05.000Z07:00"
 func (t *Time) Format(layout string) string
@@ -697,7 +733,8 @@ func (t *Timer) Stop() bool
 func Sleep(d Duration)
 ```
 
-# 同步库
+## 同步库
+
 ```go
 type Mutex
     func (m *Mutex) Lock()
@@ -728,7 +765,8 @@ type Once
     func (o *Once) Do(f func())
 ```
 
-# 网络库
+## 网络库
+
 ```go
 import "net"
 
@@ -798,50 +836,53 @@ func (s *CertPool) AppendCertsFromPEM(pemCerts []byte) (ok bool)
 func (s *CertPool) Subjects() [][]byte
 ```
 
-# 日志库
+## 日志库
+
 ```go
 import "github.com/sirupsen/logrus"
 
 func init() {
     logrus.SetOutput(os.Stdout)
     logrus.SetLevel(logrus.InfoLevel)
-	logrus.SetReportCaller(true)
-	logrus.SetFormatter(&logrus.TextFormatter{
-		// DisableLevelTruncation:    true,
-		// PadLevelText:              true,
-		// ForceQuote:                false,
-		// DisableQuote:              false,
-		// QuoteEmptyFields:          false,
-		// ForceColors:               false,
-		// DisableColors:             false,
-		// EnvironmentOverrideColors: true, // CLICOLOR_FORCE and CLICOLOR
-		// DisableTimestamp:          false,
-		FullTimestamp:             true,
-		TimestampFormat:           "2006-01-02 15:04:05",
-		CallerPrettyfier: func(f *runtime.Frame) (function string, file string) {
-			file = fmt.Sprintf("%v:%v", filepath.Base(f.File), f.Line)
-			function = fmt.Sprintf("%v()", f.Function)
-			return
-		},
-	})
+    logrus.SetReportCaller(true)
+    logrus.SetFormatter(&logrus.TextFormatter{
+        // DisableLevelTruncation:    true,
+        // PadLevelText:              true,
+        // ForceQuote:                false,
+        // DisableQuote:              false,
+        // QuoteEmptyFields:          false,
+        // ForceColors:               false,
+        // DisableColors:             false,
+        // EnvironmentOverrideColors: true, // CLICOLOR_FORCE and CLICOLOR
+        // DisableTimestamp:          false,
+        FullTimestamp:             true,
+        TimestampFormat:           "2006-01-02 15:04:05",
+        CallerPrettyfier: func(f *runtime.Frame) (function string, file string) {
+            file = fmt.Sprintf("%v:%v", filepath.Base(f.File), f.Line)
+            function = fmt.Sprintf("%v()", f.Function)
+            return
+        },
+    })
 }
 
 func main() {
-	log := logrus.WithFields(logrus.Fields{})
+    log := logrus.WithFields(logrus.Fields{})
     iow := logrus.StandardLogger().Write()  // io.Writer
 
-	log.Trace("message")
-	log.Debug("message")
-	log.Info("message")
-	log.Warn("message")
-	log.Error("message")
-	log.Fatal("message")
+    log.Trace("message")
+    log.Debug("message")
+    log.Info("message")
+    log.Warn("message")
+    log.Error("message")
+    log.Fatal("message")
     log.Panic("message")
 }
 ```
 
-# Web框架
-## API注释
+## Web 框架
+
+### API 注释
+
 ```go
 // @Summary 接口简述
 // @Description 接口详情
@@ -853,65 +894,68 @@ func main() {
 // @Failure 返回码 {参数类型} 数据类型 "注释"
 // @Router /path/to/resource [Method]
 ```
-* MIME类型
-    * json
-    * mpfd
-    * xml
-* 参数类型
-    * path
-    * query
-    * header
-    * body
-* 数据类型
-    * bool
-    * int
-    * number
-    * string
-    * array
-    * object
-* 属性
-    * default(*)
-    * enums(v1, v2)
 
-# 数据库
-## MySQL
-* 定义struct/map表示数据表
-    * 结构名 => 表名
-        * `SnakeCase` => `snake_cases`
-        * `func (this *SnakeCase) TableName() string`
-    * 字段名 => 列名
-        * `SnakeCase` => `snake_case`
-        * `gorm:"column:name"`
-    * 类型转换
-        | Go数据类型         | SQL数据类型 |
-        | ------------------ | ----------- |
-        | 整数               | 整数        |
-        | 浮点数             | 浮点数      |
-        | string             | 字符        |
-        | []byte             | 字节        |
-        | time.Time          | 日期时间    |
-        | string             | 任意SQL类型 |
-        | struct,map         | 单行记录    |
-        | `[]struct`,`[]map` | 多行记录    |
-    * 标签
-        > 大多数tag用于创建表时使用，少部分会影响CRUD
-        * `gorm:"column:name"`
-        * `gorm:"type:sqltype"`
-        * `gorm:"unique"`
-        * `gorm:"not null"`
-        * `gorm:"autoIncrement"`
-        * `gorm:"default:value"`
-        * `gorm:"embedded;embeddedPrefix:prefix_"`
-        * `gorm:"<-"`                 // allow read and write (create and update)
-        * `gorm:"<-:create"`          // allow read and create
-        * `gorm:"<-:update"`          // allow read and update
-        * `gorm:"<-:false"`           // readonly
-        * `gorm:"->:false;<-:create"` // createonly (disabled read from db)
-        * `gorm:"->:false;<-:update"` // updateonly (disabled read from db)
-        * `gorm:"-"`                  // no read/write permission (ignore this field)
-        * `gorm:"primaryKey"`
-        * `gorm:"index:idx_name,priority:1"` // 构造索引idx_member，优先级默认为12，同优先级则根据字段先后顺序构造
-        * `gorm:"uniqueIndex:idx_name,priority:1"`
+- MIME 类型
+  - json
+  - mpfd
+  - xml
+- 参数类型
+  - path
+  - query
+  - header
+  - body
+- 数据类型
+  - bool
+  - int
+  - number
+  - string
+  - array
+  - object
+- 属性
+  - default(\*)
+  - enums(v1, v2)
+
+## 数据库
+
+### MySQL
+
+- 定义 struct/map 表示数据表
+  - 结构名 => 表名
+    - `SnakeCase` => `snake_cases`
+    - `func (this *SnakeCase) TableName() string`
+  - 字段名 => 列名
+    - `SnakeCase` => `snake_case`
+    - `gorm:"column:name"`
+  - 类型转换
+    | Go 数据类型 | SQL 数据类型 |
+    | ------------------ | ----------- |
+    | 整数 | 整数 |
+    | 浮点数 | 浮点数 |
+    | string | 字符 |
+    | []byte | 字节 |
+    | time.Time | 日期时间 |
+    | string | 任意 SQL 类型 |
+    | struct,map | 单行记录 |
+    | `[]struct`,`[]map` | 多行记录 |
+  - 标签
+    > 大多数 tag 用于创建表时使用，少部分会影响 CRUD
+    - `gorm:"column:name"`
+    - `gorm:"type:sqltype"`
+    - `gorm:"unique"`
+    - `gorm:"not null"`
+    - `gorm:"autoIncrement"`
+    - `gorm:"default:value"`
+    - `gorm:"embedded;embeddedPrefix:prefix_"`
+    - `gorm:"<-"` // allow read and write (create and update)
+    - `gorm:"<-:create"` // allow read and create
+    - `gorm:"<-:update"` // allow read and update
+    - `gorm:"<-:false"` // readonly
+    - `gorm:"->:false;<-:create"` // createonly (disabled read from db)
+    - `gorm:"->:false;<-:update"` // updateonly (disabled read from db)
+    - `gorm:"-"` // no read/write permission (ignore this field)
+    - `gorm:"primaryKey"`
+    - `gorm:"index:idx_name,priority:1"` // 构造索引 idx_member，优先级默认为 12，同优先级则根据字段先后顺序构造
+    - `gorm:"uniqueIndex:idx_name,priority:1"`
 
 ```go
 import "gorm.io/gorm"
