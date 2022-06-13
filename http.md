@@ -11,12 +11,12 @@
   - [重定向](#重定向)
   - [缓存](#缓存)
   - [认证](#认证)
-  - [会话](#会话)
   - [安全](#安全)
     - [HTTP 严格传输安全(HSTS)](#http-严格传输安全hsts)
-    - [跨源资源共享(CORS)](#跨源资源共享cors)
-    - [嵌套框架限制](#嵌套框架限制)
     - [MIME 类型嗅探限制](#mime-类型嗅探限制)
+    - [嵌套框架限制](#嵌套框架限制)
+    - [Cookie 安全](#cookie-安全)
+    - [跨源资源共享(CORS)](#跨源资源共享cors)
     - [内容安全策略(CSP)](#内容安全策略csp)
 
 ## 报文
@@ -59,9 +59,11 @@ Body 大致可分为三类：
 ### 资源
 
 ```txt
+        origin                                uri
+v------------------------v-------------------------------------------------v
 http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 ^------^--------------^--^------------------^-----------------------^------^
-scheme     host       port      path                query           fragment
+ scheme    host       port      path                query           fragment
 ```
 
 - 片段`#anchor`不随 http 传输，仅用于浏览器定位页面片段
@@ -138,7 +140,7 @@ scheme     host       port      path                query           fragment
 - 缓存折叠：缓存代理同时接收多个相同请求时，只向源服务器发送一个请求，除非指定`Cache-Control: private`
 - 缓存破坏：给静态资源名添加版本号（如哈希等），修改后 URL 不同导致缓存失效
 
-| `Cache-Control` 响应首部 | 备注（逗号分隔列表）                                                        |
+| `Cache-Control` 响应首部 | 备注（`,`逗号分隔列表）                                                     |
 | ------------------------ | --------------------------------------------------------------------------- |
 | `private`                | 仅限私有缓存，即浏览器本地缓存，一般需要显示指定                            |
 | `public`                 | 允许共享缓存，即反向代理缓存，当响应具有`Authorization`的请求时需要显示指定 |
@@ -151,22 +153,22 @@ scheme     host       port      path                query           fragment
 | `immutable`              | 指定缓存在 fresh 期间绝不更改而忽略客户端强制校验缓存，一般用于缓存破坏模式 |
 | `no-store`               | 禁用缓存                                                                    |
 
-| `Cache-Control` 请求首部 | 备注（逗号分隔列表）                                              |
+| `Cache-Control` 请求首部 | 备注（`,`逗号分隔列表）                                           |
 | ------------------------ | ----------------------------------------------------------------- |
 | `max-age=`               | 指定覆盖`max-age`，超过该限制则不能复用该缓存，一般用于浏览器刷新 |
 | `no-cache`               | 强制缓存校验                                                      |
 | `no-transform`           | 指明不可转换响应内容，一些中介会修改响应内容比如降低图片分辨率    |
 
-| 其他相关首部                 | 类型 | 备注                                                                                |
-| ---------------------------- | ---- | ----------------------------------------------------------------------------------- |
-| `Date`                       | 响应 | 响应报文创建时间                                                                    |
-| `Age`                        | 响应 | 响应报文在代理中已缓存的时间                                                        |
-| `Last-Modified`              | 响应 | 资源上次修改时间                                                                    |
-| `ETag`                       | 响应 | 用于缓存校验，一般为哈希值                                                          |
-| `Expires`                    | 响应 | 指定缓存保持 fresh 的时间点而非流逝时间                                             |
-| `Vary: <header>[, <header>]` | 响应 | 加上 Vary 指定的首部作为缓存标志而非仅用 URL，应用场景如`Origin, Accept-Encoding`等 |
-| `If-Modified-Since`          | 请求 | 缓存校验，对应`Last-Modified`                                                       |
-| `If-None-Match`              | 请求 | 缓存校验，对应`Etag`，优先于上条                                                    |
+| 其他相关首部                 | 类型 | 备注                                                                                    |
+| ---------------------------- | ---- | --------------------------------------------------------------------------------------- |
+| `Date`                       | 响应 | 响应报文创建时间                                                                        |
+| `Age`                        | 响应 | 响应报文在代理中已缓存的时间                                                            |
+| `Last-Modified`              | 响应 | 资源上次修改时间                                                                        |
+| `ETag`                       | 响应 | 用于缓存校验，一般为哈希值                                                              |
+| `Expires`                    | 响应 | 指定缓存保持 fresh 的时间点而非流逝时间                                                 |
+| `Vary: <header>[, <header>]` | 响应 | 加上 Vary 指定的请求首部作为缓存标志而非仅用 URL，应用场景如`Origin, Accept-Encoding`等 |
+| `If-Modified-Since`          | 请求 | 缓存校验，对应`Last-Modified`                                                           |
+| `If-None-Match`              | 请求 | 缓存校验，对应`Etag`，优先于上条                                                        |
 
 | 状态码 | 描述         | 备注               |
 | ------ | ------------ | ------------------ |
@@ -191,29 +193,6 @@ scheme     host       port      path                query           fragment
 | `Authorization: <type> <credentials>`       | 认证信息     |
 | `Proxy-Authorization: <type> <credentials>` | 认证代理信息 |
 
-> 一般使用`Basic`方案（即 base64）并搭配 HTTPS 使用
-
-## 会话
-
-- 一个 cookie 只能包含一个`<cookie-name>=<cookie-value>`对，需要多个 cookie 则应包含多个`Set-Cookie`首部
-- `Origin-same`同源表示两 URL 的 secheme, host, port 均相同
-- `Site-same`同站表示两 URL 的 secheme 相同，且减去有效一级域名后的二级域名相同
-
-| `Set-Cookie`响应首部           | 备注（分号分隔列表）                                                                                                              |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `<cookie-name>=<cookie-value>` | name 不能包含控制字符、空白符和一些符号；value 可以用双引号来转移特殊字符；分号为 name-value 对分隔符                             |
-| `Max-Age=`                     | 指定 cookie 持久化时间，默认 session cookie                                                                                       |
-| `Expires=`                     | 指定 cookie 持久化时间点，默认 session cookie                                                                                     |
-| `Domain=`                      | 指定 cookie 对应的域名且包括子域名，默认当前域名且不含子域名                                                                      |
-| `Path=`                        | 指定 cookie 对应的路径且包括子路径，默认匹配所有路径                                                                              |
-| `Secure`                       | 指定 cookie 仅在 https 协议下使用                                                                                                 |
-| `HttpOnly`                     | 指定 cookie 不能被 JS 访问                                                                                                        |
-| `SameSite=`                    | `Strict`拒绝任何跨站请求，默认`Lax`表示仅额外允许导航页面（更改浏览器地址栏）的跨站请求，`None`表示允许跨站请求但必须设置`Secure` |
-
-| `Cookie`请求首部 | 备注（分号分隔列表）                |
-| ---------------- | ----------------------------------- |
-| `<cookie-list>`  | 浏览器访问资源时会携带匹配的 cookie |
-
 ## 安全
 
 ### HTTP 严格传输安全(HSTS)
@@ -222,39 +201,17 @@ scheme     host       port      path                query           fragment
 - HSTS 表明当前站点仅允许在 HTTPS 安全协议下访问
 - `about://net-internals#hsts`中查看/删除 HSTS 列表
 
-| `Strict-Transport-Security`响应首部 | 备注（分号分隔列表）                 |
+| `Strict-Transport-Security`响应首部 | 备注（`;`分号分隔列表）              |
 | ----------------------------------- | ------------------------------------ |
 | `max-age=`                          | 指定 HSTS 记忆有效时间               |
 | `includeSubDomains`                 | 包括子域名也应用 HSTS                |
 | `preload`                           | 使用 HSTS 预加载列表，由 google 维护 |
 
-### 跨源资源共享(CORS)
+### MIME 类型嗅探限制
 
-前端脚本请求跨源资源时，浏览器会先进行`OPTION`预检，若**目标资源服务器**允许**源服务器**跨源访问该资源后再进行正常资源访问。
-脚本无法获取跨源访问出错报错信息，需要打开浏览器控制台查看。
-
-简单请求不会触发 CORS 预检，典型的限制如下：
-
-- 仅允许使用`HEAD`、`GET`与`POST`
-- 仅允许使用简单首部（其中`Content-Type`限制为`text/plain`、`multipart/form-data`与`application/x-www-form-urlencoded`）
-- 等等
-
-| 请求首部                                                        | 备注                       |
-| --------------------------------------------------------------- | -------------------------- |
-| `Origin: <origin>`                                              | 指明跨源请求的源 Domain    |
-| `Referer: <url>`                                                | 指明跨源请求的源 URL       |
-| `Access-Control-Request-Method: <method>`                       | 预检时指明方法             |
-| `Access-Control-Request-Headers: <field-name>[, <field-name>]*` | 预检时指明携带的自定义首部 |
-
-| 响应首部                                               | 备注                                                                                                      |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| `Access-Control-Allow-Origin: <origin> 或 *`           | 允许跨源请求的源服务器，若指定为`<origin>`则应该添加首部`Vary: Origin`                                    |
-| `Access-Control-Allow-Methods: <method>[, <method>]*`  | 允许跨源请求的方法                                                                                        |
-| `Access-Control-Allow-Headers: <header>[, <header>]*`  | 允许跨源请求携带的用户自定义的非简单首部                                                                  |
-| `Access-Control-Max-Age: <delta-seconds>`              | 允许预检结果有效的时间，期间无需再次进行相同预检                                                          |
-| `Access-Control-Expose-Headers: <header>[, <header>]*` | 允许`getResponseHeader`访问获取非基本首部                                                                 |
-| `Access-Control-Allow-Credentials: true`               | 允许携带 Credentials(cookie,authorization headers,TLS client certificates) 的跨源请求，否则浏览器忽略响应 |
-| `Referrer-Policy: strict-origin-when-cross-origin`     | 浏览器默认行为，同源请求发送 origin、path 和 query，跨源请求发送仅 origin，若非 HTTPS 则不发送            |
+| `X-Content-Type-Options`响应首部 | 备注                                                 |
+| -------------------------------- | ---------------------------------------------------- |
+| `nosniff`                        | 若嗅探的 MIME 类型与`Content-Type`不匹配，则阻止请求 |
 
 ### 嵌套框架限制
 
@@ -263,11 +220,65 @@ scheme     host       port      path                query           fragment
 | `DENY`                    | 禁止任何形式的嵌套       |
 | `SAMEORIGIN`              | 允许同源请求嵌套         |
 
-### MIME 类型嗅探限制
+### Cookie 安全
 
-| `X-Content-Type-Options`响应首部 | 备注                                                 |
-| -------------------------------- | ---------------------------------------------------- |
-| `nosniff`                        | 若嗅探的 MIME 类型与`Content-Type`不匹配，则阻止请求 |
+> `Site`表示两 URL 的 secheme 相同且 host 中的可注册域名相同（表示网站来自同一组织）
+
+| `Set-Cookie`响应首部 | 备注（`;`分号分隔列表）                                                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `<name>=<value>`     | name 不能包含控制字符、空白符和一些符号；value 可以用双引号来转移特殊字符；若需多个 name=value 对则添加多个`Set-Cookie`               |
+| `Max-Age=`           | 指定 cookie 持久化时间，默认 session cookie                                                                                           |
+| `Expires=`           | 指定 cookie 持久化时间点，默认 session cookie                                                                                         |
+| `Domain=`            | 指定 cookie 对应的域名且包括子域名，默认当前域名且不含子域名                                                                          |
+| `Path=`              | 指定 cookie 对应的路径且包括子路径，默认匹配所有路径                                                                                  |
+| `Secure`             | 指定 cookie 仅在 https 协议下使用                                                                                                     |
+| `HttpOnly`           | 指定 cookie 不能被 JS 访问                                                                                                            |
+| `SameSite=`          | `Strict`拒绝任何跨站请求，（默认）`Lax`表示仅额外允许导航页面（更改浏览器地址栏）的跨站请求，`None`表示允许跨站请求但必须设置`Secure` |
+
+| `Cookie`请求首部 | 备注（`;`分号分隔列表）             |
+| ---------------- | ----------------------------------- |
+| `<cookie-list>`  | 浏览器访问资源时会携带匹配的 cookie |
+
+### 跨源资源共享(CORS)
+
+- `XMLHttpRequest` 或 Fetch APIs 发起的跨源 HTTP 请求
+- `drawImage()` 将 Images/video 画面绘制到 canvas。
+- WebGL 贴图
+- CSS 中通过 `@font-face` 使用跨源字体资源
+- CSS Shape from images
+- 可使用`crossorigin`属性的元素，如：`<link>`, `<img>`等等
+
+由以上途径发起的跨源资源请求时，浏览器会先进行`OPTION`预检，若**目标资源服务器**允许**源服务器**跨源访问该资源后再进行正常资源访问。
+脚本无法获取跨源访问出错报错信息，需要打开浏览器控制台查看。
+
+简单请求不会触发 CORS 预检，典型的限制如下：
+
+- 仅允许使用`HEAD`、`GET`与`POST`
+- 仅允许使用简单首部（其中`Content-Type`限制为`text/plain`、`multipart/form-data`与`application/x-www-form-urlencoded`）
+- 等等
+
+| `crossorigin`属性 | 备注                                                                         |
+| ----------------- | ---------------------------------------------------------------------------- |
+|                   | 默认不会限制 html 标签链接的跨源访问                                         |
+| `""`,`anonymous`  | 允许 CORS 预检                                                               |
+| `use-credentials` | 允许跨源访问携带凭证(Cookie, Authorization Headers, TLS Client Certificates) |
+
+| 请求首部                                                        | 备注                       |
+| --------------------------------------------------------------- | -------------------------- |
+| `Origin: <origin>`                                              | 指明跨源请求的源 Domain    |
+| `Referer: <url>`                                                | 指明跨源请求的源 URL       |
+| `Access-Control-Request-Method: <method>`                       | 预检时指明方法             |
+| `Access-Control-Request-Headers: <field-name>[, <field-name>]*` | 预检时指明携带的自定义首部 |
+
+| 响应首部                                               | 备注                                                                                           |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `Access-Control-Allow-Origin: <origin> 或 *`           | 允许跨源请求的源服务器，若指定为`<origin>`则应该添加首部`Vary: Origin`                         |
+| `Access-Control-Allow-Methods: <method>[, <method>]*`  | 允许跨源请求的方法                                                                             |
+| `Access-Control-Allow-Headers: <header>[, <header>]*`  | 允许跨源请求携带的用户自定义的非简单首部                                                       |
+| `Access-Control-Max-Age: <delta-seconds>`              | 允许预检结果有效的时间，期间无需再次进行相同预检                                               |
+| `Access-Control-Expose-Headers: <header>[, <header>]*` | 允许`getResponseHeader`访问获取非基本首部                                                      |
+| `Access-Control-Allow-Credentials: true`               | 允许跨源请求携带凭证，否则浏览器忽略响应                                                       |
+| `Referrer-Policy: strict-origin-when-cross-origin`     | 浏览器默认行为，同源请求发送 origin、path 和 query，跨源请求发送仅 origin，若非 HTTPS 则不发送 |
 
 ### 内容安全策略(CSP)
 

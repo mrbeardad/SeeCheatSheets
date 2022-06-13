@@ -9,13 +9,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="Description of the page less than 150 characters" />
+    <title>页面标题</title>
+    <link rel="icon" type="image/png" href="https://example.com/favicon-32x32.png" />
 
-    <link rel="dns-prefetch" href="//example.com/" />
-    <link rel="preconnect" href="https://www.example.com/" />
-    <link rel="prefetch" href="https://www.example.com/" />
-    <link rel="subresource" href="styles/styles.css" />
-    <link rel="prerender" href="https://example.com/" />
-    <link rel="preload" href="images/image.png" as="image" />
+    <link rel="preload" href="images/image.png" as="image" type="image/png" />
+    <!-- 预加载：https://developer.mozilla.org/en-US/docs/Web/HTML/Link_types/preload -->
+    <!-- 懒加载：https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading -->
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://example.com/page.html" />
@@ -39,13 +38,10 @@
     <script>
       // inline javascript
     </script>
-
-    <title>页面标题</title>
-    <link rel="icon" type="image/png" href="https://example.com/favicon-32x32.png" />
   </head>
 
   <body>
-    <noscript>Sorry! Your browser does not support JavaScript!</noscript>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
 
     <header>
       <h1>网站标题信息</h1>
@@ -376,6 +372,8 @@
 ## 表单
 
 ```html
+<dialog open>对话框</dialog>
+
 <form method="post" action="URL">
   <fieldset>
     <legend>Input</legend>

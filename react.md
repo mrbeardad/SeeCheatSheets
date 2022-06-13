@@ -1,43 +1,50 @@
-# 系统构建
+# React
 
-## 项目初始化
+## 系统构建
+
+### 项目初始化
+
 ```sh
-npx create-react-app react-app
-cd react-app
-npm install -S eslint eslint-plugin-unused-imports htmlhint
+pnpx create-react-app react-app && cd react-app
+
+eslint --init
+
 npx install-peerdeps --dev eslint-config-airbnb
 npm install -S redux react-redux @reduxjs/toolkit immutable redux-immutable \
   react-router-dom react-hook-form \
   @mui/material @mui/icons-material @mui/system @emotion/react @emotion/styled
 ```
 
-## 目录结构
+### 目录结构
+
 ```txt
-my-app/
-  README.md
-  node_modules/
-  package.json
-  public/       // index.html导入的文件，不会被编译处理
-    index.html    /* page template */
-    favicon.ico
-    manifest.json
-    robots.txt
-  src/          // index.js导入的文件，需要编译处理
-    index.js      /* entry point */
-    App.js
+react-app/
+    README.md
+    node_modules/
+    package.json
+    public/           编译打包后位于目录顶层
+        index.html
+        favicon.ico
+        manifest.json
+        robots.txt
+    src/          // index.js导入的文件，需要编译处理
+        index.js      /* entry point */
+        App.js
 ```
 
-# 组件基础
+## 组件基础
 
-## 核心思想
-* 传统做法将HTML（语义）、CSS（样式）、JS（动态控制前两者）分开，而React将三者结合封装到JSX组件中（利用JSX可更简洁直观的在JS中插入HTML，同时在HTML中调用JS表达式、组件，CSS则通过导入JSX的方式）
-* 组件被一层层的嵌套导入，形成一个组件树，最终生成完整的html然后被渲染成网页。动态组件通常会注册事件处理函数，当执行时更新了组件内容(props, state)时，会触发react render来更新生成的html
-* 通过JSX导入src目录下的js、css、image、font等文件的优点
-  * 尽量合并文件从而减少网络IO
-  * 缺失的文件导致编译错误而非给用户显示404
-  * 编译结果文件名包含hash值从而防止客户端浏览器缓存旧网页
-  
-## 声明语法
+### 核心思想
+
+- 传统做法将 HTML（语义）、CSS（样式）、JS（动态控制前两者）分开，而 React 将三者结合封装到 JSX 组件中（利用 JSX 可更简洁直观的在 JS 中插入 HTML，同时在 HTML 中调用 JS 表达式、组件，CSS 则通过导入 JSX 的方式）
+- 组件被一层层的嵌套导入，形成一个组件树，最终生成完整的 html 然后被渲染成网页。动态组件通常会注册事件处理函数，当执行时更新了组件内容(props, state)时，会触发 react render 来更新生成的 html
+- 通过 JSX 导入 src 目录下的 js、css、image、font 等文件的优点
+  - 尽量合并文件从而减少网络 IO
+  - 缺失的文件导致编译错误而非给用户显示 404
+  - 编译结果文件名包含 hash 值从而防止客户端浏览器缓存旧网页
+
+### 声明语法
+
 ```js
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -93,54 +100,64 @@ ReactDOM.render(
 );
 ```
 
-* JSX组件的编译需要导入`react`以引用`React.createElement`
-* 用户定义组件必须首字母大写
-* 注意`props`的只读属性以及如何传递
-* 注意`state`的可写属性以及如何修改
-* JSX 中的 JavaScript 表达式将会被计算为字符串、React组件元素或者是列表
-* false, null, undefined, and true 是合法的子元素，但它们并不会被渲染。
+- JSX 组件的编译需要导入`react`以引用`React.createElement`
+- 用户定义组件必须首字母大写
+- 注意`props`的只读属性以及如何传递
+- 注意`state`的可写属性以及如何修改
+- JSX 中的 JavaScript 表达式将会被计算为字符串、React 组件元素或者是列表
+- false, null, undefined, and true 是合法的子元素，但它们并不会被渲染。
 
+## 生命周期
 
-# 生命周期
-## 核心思想
-* React自身维护一个**虚拟DOM**，每次组件触发react render后，会利用diff算法检查虚拟DOM与浏览器DOM的区别，从而仅修改部分浏览器DOM而非完全替换导致重新渲染整个页面
-* 每个React组件相当于一个状态机：
-  1. 当注册的浏览器事件处理函数调用时，一般会调用setState()
-  2. 当调用setState()时，re-render该组件
-  3. 当修改了子组件的props时，re-render该子组件
-  4. 当修改了子组件的类型时，卸载旧组件并挂载新组件render
-> 详情见[react lifecycle](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
-  
-## Hooks
+### 核心思想
+
+- React 自身维护一个**虚拟 DOM**，每次组件触发 react render 后，会利用 diff 算法检查虚拟 DOM 与浏览器 DOM 的区别，从而仅修改部分浏览器 DOM 而非完全替换导致重新渲染整个页面
+- 每个 React 组件相当于一个状态机：
+  1. 当注册的浏览器事件处理函数调用时，一般会调用 setState()
+  2. 当调用 setState()时，re-render 该组件
+  3. 当修改了子组件的 props 时，re-render 该子组件
+  4. 当修改了子组件的类型时，卸载旧组件并挂载新组件 render
+     > 详情见[react lifecycle](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
+
+### Hooks
+
 Hook 就是 JavaScript 函数，但是使用它们会有两个额外的规则：
-* 只能在函数最外层调用 Hook。不要在循环、条件判断或者子函数中调用。
-* 只能在 React 的函数组件和自定义Hook中调用 Hook。不要在其他 JavaScript 函数中调用。
 
-### useState
+- 只能在函数最外层调用 Hook。不要在循环、条件判断或者子函数中调用。
+- 只能在 React 的函数组件和自定义 Hook 中调用 Hook。不要在其他 JavaScript 函数中调用。
+
+#### useState
+
 ```jsx
 const [state, setState] = useState(initialState);
 const [state, setState] = useState(() => someExpensiveComputation(props));
-setState(newState);                   // 全量更新而非增量更新
-setState(prevState => prevState + 1); // 依赖旧值进行更新
+setState(newState); // 全量更新而非增量更新
+setState((prevState) => prevState + 1); // 依赖旧值进行更新
 ```
-* useState在初始渲染期间，返回的状态 (state) 与传入的第一个参数 (initialState) 值相同。
-* useState在后续的重新渲染中，返回的第一个值将始终是更新后最新的 state。
-* 调用setState将跳过子组件的渲染及 effect 的执行。（React 使用 Object.is 比较算法 来比较 state），但可能仍需要在跳过渲染前渲染该组件。
 
-### useEffect
+- useState 在初始渲染期间，返回的状态 (state) 与传入的第一个参数 (initialState) 值相同。
+- useState 在后续的重新渲染中，返回的第一个值将始终是更新后最新的 state。
+- 调用 setState 将跳过子组件的渲染及 effect 的执行。（React 使用 Object.is 比较算法 来比较 state），但可能仍需要在跳过渲染前渲染该组件。
+
+#### useEffect
+
 ```jsx
 useEffect(() => {
   // 执行副作用
   const subscription = props.source.subscribe();
   // 清除订阅
-  return () => { subscription.unsubscribe(); };
+  return () => {
+    subscription.unsubscribe();
+  };
 });
 ```
-* `useEffect`默认 effect 将在每轮渲染结束后执行，`useLayoutEffect`则在DOM更新后且在浏览器渲染前同步调用
-* 可传递 effect 所依赖的值数组而在只有某些值改变的时候 才执行，传递`[]`表示只在初次渲染时调用。
-* 返回的清除函数会在组件卸载前执行，如果组件多次渲染，则在执行下一个 effect 之前，上一个 effect 就已被清除。
 
-### useContext
+- `useEffect`默认 effect 将在每轮渲染结束后执行，`useLayoutEffect`则在 DOM 更新后且在浏览器渲染前同步调用
+- 可传递 effect 所依赖的值数组而在只有某些值改变的时候 才执行，传递`[]`表示只在初次渲染时调用。
+- 返回的清除函数会在组件卸载前执行，如果组件多次渲染，则在执行下一个 effect 之前，上一个 effect 就已被清除。
+
+#### useContext
+
 ```jsx
 const ThemeContext = React.createContext(themes.light);
 
@@ -158,7 +175,8 @@ function Toolbar() {
 }
 ```
 
-### useRef
+#### useRef
+
 ```jsx
 const MyInput = React.forwardRef((props, ref) => (
   <input ref={ref} type="text" className="FancyButton" />
@@ -179,44 +197,47 @@ function TextInputWithFocusButton() {
 }
 ```
 
-### useCallback
+#### useCallback
+
 ```jsx
-const memoizedCallback = useCallback(
-  () => { doSomething(a, b); },
-  [a, b],
-);
+const memoizedCallback = useCallback(() => {
+  doSomething(a, b);
+}, [a, b]);
 ```
-* memoizedCallback只在依赖项更新时才会调用
 
-### useMemo
+- memoizedCallback 只在依赖项更新时才会调用
+
+#### useMemo
+
 ```jsx
-const memoizedValue = useMemo(
-  () => computeExpensiveValue(a, b),
-  [a, b]
-);
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
 ```
-* memoizedValue只在依赖项更新时才重新计算
 
+- memoizedValue 只在依赖项更新时才重新计算
 
-# 技巧方法
-## 减少渲染
-* `<il key=id>`：为`<il>`指定key属性可优化diff算法
-* `class Component extends React.PureComponent`：默认shouldComponentUpdate()浅比较props与state
-* `const Component = React.memo(ComponentCore)`：同上
-* `import {List, Set, Map, OrderedSet, OrderedMap, fromJS, is} from 'immutable-js'`
+## 技巧方法
+
+### 减少渲染
+
+- `<il key=id>`：为`<il>`指定 key 属性可优化 diff 算法
+- `class Component extends React.PureComponent`：默认 shouldComponentUpdate()浅比较 props 与 state
+- `const Component = React.memo(ComponentCore)`：同上
+- `import {List, Set, Map, OrderedSet, OrderedMap, fromJS, is} from 'immutable-js'`
   > 该库提供了一些容器集合类，这些类是不可变类型，即任何试图修改其内容的操作都会返回一个新对象； 使用了结构共享技术，返回的新对象会尽量与原对象共享子对象引用节点，同时做深度值比较也更快速； 特别的，当修改操作后的值并未变化时，直接返回原对象引用
 
+### 代码分割
 
-## 代码分割
-正常情况下build操作会将import的包合并到一个文件中，有时代码过于庞大则需要一点技巧来提示打包器分割代码
+正常情况下 build 操作会将 import 的包合并到一个文件中，有时代码过于庞大则需要一点技巧来提示打包器分割代码
+
 ```js
-import React  from 'react';
-import MyErrorBoundary from './MyErrorBoundary';
+import React from "react";
+import MyErrorBoundary from "./MyErrorBoundary";
 
-const OtherComponent = React.lazy(() => import('./OtherComponent'));    // 懒加载模块defult export
-const AnotherComponent = React.lazy(() => import('./AnotherComponent'));
+const OtherComponent = React.lazy(() => import("./OtherComponent")); // 懒加载模块defult export
+const AnotherComponent = React.lazy(() => import("./AnotherComponent"));
 
-const MyComponent = () => ( // 将懒加载组件作为Suspense子组件实现优雅降级UI
+const MyComponent = () => (
+  // 将懒加载组件作为Suspense子组件实现优雅降级UI
   <div>
     <MyErrorBoundary>
       <React.Suspense fallback={<div>Loading...</div>}>
@@ -230,12 +251,15 @@ const MyComponent = () => ( // 将懒加载组件作为Suspense子组件实现�
 );
 ```
 
-## 错误边界
+### 错误边界
+
 错误边界无法捕获以下场景中产生的错误：
-* 事件处理
-* 异步代码（例如 setTimeout 或 requestAnimationFrame 回调函数）
-* 服务端渲染
-* 它自身抛出来的错误（并非它的子组件）
+
+- 事件处理
+- 异步代码（例如 setTimeout 或 requestAnimationFrame 回调函数）
+- 服务端渲染
+- 它自身抛出来的错误（并非它的子组件）
+
 ```js
 class MyErrorBoundary extends React.Component {
   constructor(props) {
@@ -243,11 +267,13 @@ class MyErrorBoundary extends React.Component {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) { // 更新 state 使下一次渲染能够显示降级后的 UI
+  static getDerivedStateFromError(error) {
+    // 更新 state 使下一次渲染能够显示降级后的 UI
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) { // 打印错误信息
+  componentDidCatch(error, errorInfo) {
+    // 打印错误信息
     logErrorToMyService(error, errorInfo);
   }
 
@@ -260,19 +286,21 @@ class MyErrorBoundary extends React.Component {
 }
 ```
 
-## 环境变量
-* js中调用：`process.env.NODE_ENV`
-* public/html中调用：`<a href="%PUBLIC_URL%">%REACT_APP_WEBSITE%</p>`
+### 环境变量
 
-| 变量          | 值                                                                                                   |
-| ------------- | ---------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`    | development, test, production                                                                        |
-| `PUBLIC_URL`  | public目录中的文件资源在编译构建后的路径前缀，通过修改*package.json*中的`homepage`可修改该环境变量值 |
-| `REACT_APP_*` | react app环境变量                                                                                    |
+- js 中调用：`process.env.NODE_ENV`
+- public/html 中调用：`<a href="%PUBLIC_URL%">%REACT_APP_WEBSITE%</p>`
 
+| 变量          | 值                                                                                                    |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`    | development, test, production                                                                         |
+| `PUBLIC_URL`  | public 目录中的文件资源在编译构建后的路径前缀，通过修改*package.json*中的`homepage`可修改该环境变量值 |
+| `REACT_APP_*` | react app 环境变量                                                                                    |
 
-# 第三方库
-## 状态管理
+## 第三方库
+
+### 状态管理
+
 ```js
 // tree.js
 import { fromJS } from 'immutable';
@@ -318,14 +346,17 @@ export default function App() {
   ...
 }
 ```
-为实现父子组件双向通讯，需将state提升至全局，利用redux来管理该全局状态
-* Store：存储State的容器
-* State：集成所有应用中组件的state
-* Action：提供操作State的元数据
-* Reducer：注册于Store而根据(state, action)来实际操作State
-* Listener：当State改变时调用Listener
 
-## 网页路由
+为实现父子组件双向通讯，需将 state 提升至全局，利用 redux 来管理该全局状态
+
+- Store：存储 State 的容器
+- State：集成所有应用中组件的 state
+- Action：提供操作 State 的元数据
+- Reducer：注册于 Store 而根据(state, action)来实际操作 State
+- Listener：当 State 改变时调用 Listener
+
+### 网页路由
+
 ```js
 // 原理：<BrowserRouter> creates a history, puts the initial location in to state, and subscribes to the URL.
 ReactDOM.render(
@@ -349,24 +380,26 @@ ReactDOM.render(
   document.getElementById("root")
 );
 ```
-* `<Link>`or`<NavLink>`：跳转链接
-  * `to="pathname"`：目标路径名
-  * `replace`：替换而非添加到history stack中
 
-* `<Routes>`：路由配置树
-  * 从所有路由策略路线中匹配最优策略分支
-  * 渲染整个匹配分支需要父级element使用`<Outlet />`代替`props.children`）
+- `<Link>`or`<NavLink>`：跳转链接
 
-* `<Route>`：路由策略
-  * `path="pathname"`：自动添加前缀为父级path，支持`/static`、`/:param`、`/global/*`；若无该属性则作为布局路由不参与匹配（单其子路由会参与，若子路由匹配则渲染该布局路由）
-  * `index`：当恰好完全匹配父级路由path时，该条路由作为父级`<Outlet />`
-  * `caseSensitive`
-  * `element={<Component />}`
-  
-* Hooks
-  * useParams()
-  * useSearchParams()
-  * useLocation()
+  - `to="pathname"`：目标路径名
+  - `replace`：替换而非添加到 history stack 中
+
+- `<Routes>`：路由配置树
+
+  - 从所有路由策略路线中匹配最优策略分支
+  - 渲染整个匹配分支需要父级 element 使用`<Outlet />`代替`props.children`）
+
+- `<Route>`：路由策略
+  - `path="pathname"`：自动添加前缀为父级 path，支持`/static`、`/:param`、`/global/*`；若无该属性则作为布局路由不参与匹配（单其子路由会参与，若子路由匹配则渲染该布局路由）
+  - `index`：当恰好完全匹配父级路由 path 时，该条路由作为父级`<Outlet />`
+  - `caseSensitive`
+  - `element={<Component />}`
+- Hooks
+  - useParams()
+  - useSearchParams()
+  - useLocation()
   ```jsx
   {
     key: 'default',
@@ -377,7 +410,8 @@ ReactDOM.render(
   }
   ```
 
-## 表单控制
+### 表单控制
+
 ```js
 import { useForm, Controller } from "react-hook-form";
 import Input from "@material-ui/core/Input";
@@ -386,9 +420,9 @@ const App = () => {
   // 创建表单控制器，提供方法统一存储、访问、操作表单数据
   const {
     handleSubmit, // 用于处理submit成功或失败
-    register,     // 用于为<input>设置属性
-    getValue,     // 获取表单值
-    setValue,     // 修改表单值
+    register, // 用于为<input>设置属性
+    getValue, // 获取表单值
+    setValue, // 修改表单值
     formState: {
       isDirty,
       dirtyFields,
@@ -400,7 +434,7 @@ const App = () => {
       isValid,
       isValidating,
       errors,
-    }
+    },
   } = useForm();
 
   // 订阅change事件，用户每次输入都会触发render与validation
@@ -418,14 +452,16 @@ const App = () => {
       <Controller
         name="iceCreamType"
         control={control}
-        render={({ field }) => <Select 
-          {...field} 
-          options={[
-            { value: "chocolate", label: "Chocolate" },
-            { value: "strawberry", label: "Strawberry" },
-            { value: "vanilla", label: "Vanilla" }
-          ]} 
-        />}
+        render={({ field }) => (
+          <Select
+            {...field}
+            options={[
+              { value: "chocolate", label: "Chocolate" },
+              { value: "strawberry", label: "Strawberry" },
+              { value: "vanilla", label: "Vanilla" },
+            ]}
+          />
+        )}
       />
       <input type="submit" />
     </form>
@@ -433,10 +469,13 @@ const App = () => {
 };
 ```
 
-## UI
+### UI
+
 主题：配色、物件形状、图片、图标、字体、动画
-### 布局
-* Box: 默认block布局，用于包裹其他组件来使用sx属性
-* Container: 默认block布局，用于限宽居中布局
-* Grid: 默认flex布局，用于二维响应式布局
-* Stack: 默认flex布局，用于一维响应式布局
+
+#### 布局
+
+- Box: 默认 block 布局，用于包裹其他组件来使用 sx 属性
+- Container: 默认 block 布局，用于限宽居中布局
+- Grid: 默认 flex 布局，用于二维响应式布局
+- Stack: 默认 flex 布局，用于一维响应式布局

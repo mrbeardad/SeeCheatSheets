@@ -57,6 +57,19 @@ Context: http, server
 ---
 
 ```nginx
+Syntax : if (condition) { ... }
+Default: —
+Context: server, location
+```
+
+- `=`, `~`, `~*`
+- `!=`, `!~`, `!~*`,
+- `-f`, `-d`, `-e`, `-x`
+- `!-f`, `!-d`, `!-e`, `!-x`
+
+---
+
+```nginx
 Syntax : add_header name value [always];
 Default: —
 Context: http, server, location, if in location
@@ -103,7 +116,7 @@ Default: —
 Context: location
 ```
 
-- 指定 path 将 url path 中匹配到的 location uri 替换掉，再用于查找静态资源。与 root 命令不相容，支持正则替换语法
+- 指定 path 替换 url path 中被 location uri 匹配到的部分 ，再用于查找静态资源。与 root 命令不相容，支持正则替换语法
 
 ---
 
@@ -118,7 +131,7 @@ Context: http, server, location
 ---
 
 ```nginx
-Syntax : try_files file ... uri;
+Syntax : try_files file ... uri;    # 内部重定向
          try_files file ... =code;
          try_files file ... @name;
 Default: —
@@ -126,23 +139,6 @@ Context: server, location
 ```
 
 - 依序尝试获取指定文件（需要经 root 与 alias 处理），若都获取失败则使用最后指定方法
-
-### 代理转发
-
-```nginx
-location /api {
-  proxy_set_header Host $http_host;
-  proxy_set_header X-Real-IP $remote_addr;
-  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  proxy_set_header X-Forwarded-Proto $scheme;
-  proxy_http_version 1.1;
-  proxy_pass http://127.0.0.1:8080; # 指定URL
-  proxt_pass http://upstream_name;  # 指定upstream
-}
-```
-
-- `proxy_pass`如果包含 URI，则被 location 匹配的部分会被替换为该 URI
-- `proxy_pass`如果不包含 URI，则原封不动传递
 
 ### 重定向
 
@@ -152,11 +148,13 @@ Default: —
 Context: server, location, if
 ```
 
-- 正则替换 url path，按顺序执行，若 replacement 以`http://`、`https://`或`$scheme`开头则停止并返回响应，可由 flag 控制：
-  - last: 停止当前 ngx_http_rewrite_module 并重新匹配 location
-  - break: 停止当前 ngx_http_rewrite_module 但不重新匹配 location
-  - redirect: 302 暂时重定向
-  - permanent: 301 永久重定向
+- 正则替换 uri，按顺序执行
+  - last: 停止当前 ngx_http_rewrite_module 并重新匹配 location（内部重定向）
+  - break: 停止当前 ngx_http_rewrite_module 但不重新匹配 location（内部重定向）
+  - redirect: 302 暂时重定向（外部重定向）
+  - permanent: 301 永久重定向（外部重定向）
+- 若 replacement 以`http://`、`https://`或`$scheme`开头则停止并返回响应
+- 若 replacement 包含新的 query 部分，则默认将之前的 query 添加到后面。在 replacement 尾部添加`?`避免自动添加
 
 ```nginx
 Syntax : return code [body_text];
@@ -166,9 +164,38 @@ Default: —
 Context: server, location, if
 ```
 
-### 缓存
+`try_files files ... uri`与`index index.html`也可实现内部重定向
 
-参见<https://gist.github.com/Friz-zy/3dd2a670d8f14eac717e100d0dc7696f>
+### 反向代理
+
+```nginx
+http {
+  # /var/run/nginx-cache      - 缓存目录路径
+  # levels=1:2                - 缓存子目录目录层数以及子目录名长度
+  # keys_zone=PROXYCACHE:100m - 缓存唯一标识与临时内存池大小
+  # inactive=6h               - 缓存不活跃时间，超过则驱逐之
+  # max_size=1g               - 缓存大小
+  proxy_cache_path /var/run/nginx-proxy-cache levels=1:2 keys_zone=PROXYCACHE:100m inactive=6h max_size=1g;
+
+  server {
+    location /api/ {
+      proxy_cache PROXYCACHE;   # 使用对应缓存
+      proxy_cache_valid 200 1d; # 覆盖HTTP Cache Control有效时间
+      proxy_cache_use_stale error timeout invalid_header http_500; # 覆盖HTTP复用旧缓存策略
+
+      proxy_set_header Host $http_host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_http_version 1.1;
+      proxy_pass http://127.0.0.1:8080; # 指定URL
+      proxt_pass http://upstream_name;  # 指定upstream
+    }
+  }
+}
+```
+
+- `proxy_pass`如果包含 URI 则被 location 匹配的部分会被替换为该 URI，否则按原请求 URL 传递
 
 ## 负载均衡
 

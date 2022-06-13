@@ -298,7 +298,7 @@ string.repeat(count)
 string.concat(...strings)
 string.split([regexp [, limit]]) // 默认返回数组[string]，regex为""时切分每个字符
 
-string.replace(regexp, replace)  // $1, $`, $', $&
+string.replace(regexp, replace)  // $`, $', $&, $1, $<name>
 string.toLowerCase()
 string.toUpperCase()
 String.padStart(targetLength [, padString])

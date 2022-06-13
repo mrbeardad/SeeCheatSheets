@@ -2,10 +2,9 @@
 
 - [See Cheat Sheets](#see-cheat-sheets)
   - [前言](#前言)
-  - [编程之道](#编程之道)
-  - [编程语言](#编程语言)
   - [Web](#web)
   - [Server](#server)
+  - [Coding](#coding)
   - [Linux](#linux)
   - [底层原理](#底层原理)
   - [其他](#其他)
@@ -16,14 +15,28 @@
 [github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
-## 编程之道
+## Web
 
-- [编码逻辑](coding.md):star:：逻辑、分支、循环、递归、下标
+- [HTML](html.md)：超文本标记语言
+- [CSS](css.md)：层叠样式表
+- [HTTP](http.md)：超文本传输协议
+- [安全防护](security.md)
+- [搜索引擎优化](seo.md)
+
+## Server
+
+- [Nginx](nginx.md)：用于路由与负载均衡
+- K8S：用于动态编排容器集群
+- [Docker](docker.md)：提供进程隔离的运行环境
+- [MySQL](sql.md)：关系型数据库
+- [Redis](redis.md)：数据结构化内存存储
+- Kafka：消息队列
+
+## Coding
+
+- [代码经验](coding.md):star:：逻辑、分支、循环、递归、下标
 - [设计模式](dspt.md):star:：依赖倒置、接口分离、is-a、has-a、use-a
-
-## 编程语言
-
-- [编程语言总结](langsum.md):star:
+- [语言总结](langsum.md):star:
 
   - C++
     - [C++语法特性](cpp.md)
@@ -34,23 +47,9 @@
     - [Go 程序库](goman.md)
   - Python
     - [Python 语言基础](python.md)
-
-## Web
-
-- [HTTP](http.md)：超文本传输协议
-- [HTML](html.md)：超文本标记语言
-- [CSS](css.md)：层叠样式表
-- [JaveScript](js.md)：前端编程语言
-- [React](react.md)：前端 UI 框架
-
-## Server
-
-- K8S：用于动态编排容器集群
-- [Docker](docker.md)：提供进程隔离的运行环境
-- [Nginx](nginx.md)：用于路由与负载均衡
-- [MySQL](sql.md)：关系型数据库
-- [Redis](redis.md)：数据结构化内存存储
-- Kafka：消息队列
+  - JavaScript
+    - [JS 语言基础](js.md)
+    - [React 框架](react.md)
 
 ## Linux
 
