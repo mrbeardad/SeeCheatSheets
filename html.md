@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="Description of the page less than 150 characters" />
     <title>页面标题</title>
-    <link rel="icon" type="image/png" href="https://example.com/favicon-32x32.png" />
+    <link rel="icon" type="image/png" href="favicon-32x32.png" />
 
     <link rel="preload" href="images/image.png" as="image" type="image/png" />
     <!-- 预加载：https://developer.mozilla.org/en-US/docs/Web/HTML/Link_types/preload -->
@@ -25,9 +25,6 @@
     <meta property="og:locale" content="en_US" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-
-    <link rel="alternate" href="https://zh.example.com/" hreflang="zh" />
-    <link rel="alternate" href="https://example.com/" hreflang="x-default" />
 
     <link rel="stylesheet" type="text/css" href="styles/style.css" />
     <style>
@@ -309,6 +306,7 @@
 <img
   src="https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions/canvas_default_grid.png"
   alt="alternative content"
+  loading="lazy"
 />
 
 <hr />
@@ -565,5 +563,10 @@
 ## 嵌套框架
 
 ```html
-<iframe src="https://www.runoob.com/html/html-tutorial.html" width="800" height="500"></iframe>
+<iframe
+  src="https://www.runoob.com/html/html-tutorial.html"
+  width="800"
+  height="500"
+  loading="lazy"
+></iframe>
 ```

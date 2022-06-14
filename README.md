@@ -19,9 +19,11 @@
 
 - [HTML](html.md)：超文本标记语言
 - [CSS](css.md)：层叠样式表
+- [JavaScript](js.md)：Web 平台脚本
+- [React](react.md)：Web 前端框架
 - [HTTP](http.md)：超文本传输协议
-- [安全防护](security.md)
-- [搜索引擎优化](seo.md)
+- [WAS](security.md)：Web 应用安全
+- [SEO](seo.md)：搜索引擎优化
 
 ## Server
 
@@ -45,11 +47,10 @@
   - Go
     - [Go 语言基础](go.md)
     - [Go 程序库](goman.md)
-  - Python
-    - [Python 语言基础](python.md)
   - JavaScript
     - [JS 语言基础](js.md)
-    - [React 框架](react.md)
+  - Python
+    - [Python 语言基础](python.md)
 
 ## Linux
 
@@ -66,8 +67,8 @@
 
   - [数据结构与算法](dsaa.md)
   - [计算机组成](bus.md)
-  - [处理器设计](cpu.md)
   - [信息编码](code.md)
+  - [处理器设计](cpu.md)
   - [汇编语言](asm.md)
   - [操作系统](os.md)
   - [计算机网络](network.md)

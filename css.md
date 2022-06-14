@@ -103,7 +103,7 @@
   - 水平方向的 padding 和 margin 会挤占空间，而垂直方向不会
   - 宽度忽略`width:`
   - 高度忽略`height:`
-- 特殊的：
+- **特殊的**：
   - 根元素`<body>`的宽度默认为`100vw`，最小高度默认为`100vh`
   - 初始元素`<html>`的宽度固定为`100vw`，高度固定为`100vh`
 
@@ -118,9 +118,7 @@ width: <length>;
 width: <percentage>;
 width: max-content; /* 子元素全部在同一行中堆积总宽度 */
 width: min-content; /* 子元素中最大宽度 */
-width: fit-content(
-  <length-or-percentage>
-); /* clamp(arg, min-content, max-content) */
+width: fit-content(<length-or-percentage>); /* clamp(arg, min-content, max-content) */
 
 /* 高度： height, min-height, max-height, block-size */
 height: auto; /* 各布局默认高度 */
@@ -161,7 +159,7 @@ margin: 2px 1em 0 auto;
 
 ### 正常流布局
 
-Normal Flow 布局是默认的布局方式。
+Normal Flow 布局是一种垂直排列布局，时默认的布局方式。
 
 | 属性                        | 值                                          | 备注                                        |
 | --------------------------- | ------------------------------------------- | ------------------------------------------- |
@@ -202,7 +200,7 @@ Flex 布局是一维布局，它的目标注重于灵活地伸缩空间与对齐
 
 ![grid](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Grids/grid.png)
 
-Grid 是二维布局，它的目标注重于定位并布局元素
+Grid 是二维布局，它的目标注重于整体规划区域并定位元素。
 
 - 列轨道的宽度默认取 grid items 中盒子模型宽度最大者，默认只有一条列轨道
 - 行轨道的高度默认取 grid items 中盒子模型高度最大者，默认隐式创建行轨道
@@ -241,7 +239,10 @@ Grid 是二维布局，它的目标注重于定位并布局元素
 
 ### 响应式布局
 
-- 利用布局：Flex(`flex`) / Grid(`auto-fill`&`grid-template-area`)
+- 利用布局：
+  - NormalFlow(`block`&`inline`)
+  - Flex(`flex`)
+  - Grid(`auto-fill`&`grid-template-area`)
 - 利用媒体查询：`@media screen and (min-width: 800px) {...}`
 - 利用相对单位：`font-size: calc(1.5rem + 3vw);`
 
@@ -267,7 +268,7 @@ Grid 是二维布局，它的目标注重于定位并布局元素
   - 对于 flex item，作用同`display: none`
   - 对于其他元素，作用同`visibility: hidden`
 
-## 溢出处理
+## 溢出
 
 为什么会溢出？
 
