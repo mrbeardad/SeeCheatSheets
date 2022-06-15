@@ -18,9 +18,10 @@ export default ... // Deprecated
 
 ```js
 // 若不进行初始化则初始值为 undefined
+let foo; // 待初始化
 let foo = new Type(args); // 构造
 let foo = initializer; // 拷贝
-let foo = Type(other); // 转换
+let foo = new Type(other); // 转换
 
 // 仅限制常量名无法再重新绑定引用（赋值）
 const CONST_VALUE = value;
@@ -84,9 +85,9 @@ block:
     outerLoop:
     for (initializer; condition; iterator) {
         forInLoop:
-        for (const idxOrKey in arrayOrObject) {
+        for (const keyOrIndex in objectOrIterable) {
             forOfLoop:
-            for (const element of arrayOrObject) {
+            for (const element of iterable) {
                 break forinLoop;    // break跳出forinLoop对应的循环体
                 break block;        // break还可用于跳出块作用域
                 continue outerLoop; // continue仅用于跳过该次循环迭代

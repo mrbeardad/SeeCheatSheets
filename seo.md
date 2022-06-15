@@ -10,7 +10,7 @@
 
 ### 优化
 
-- 对于复杂的大型网站，可提供[站点地图](https://developers.google.com/search/docs/advanced/sitemaps/overview?hl=zh-cn)
+- 对于复杂的大型网站，可提供[站点地图](https://developers.google.com/search/docs/advanced/sitemaps/overview)
 
   ```html
   <?xml version="1.0" encoding="UTF-8"?>
@@ -89,4 +89,4 @@
 用户搜索结果与数百个因素有关，比如用户位置、语言和使用设备等等。
 你可以控制如何呈现搜索结果
 
-详情参见 [google 搜索结果呈现主题概览](https://developers.google.com/search/docs/advanced/appearance/overview?hl=zh-cn)
+详情参见 [google 搜索结果呈现主题概览](https://developers.google.com/search/docs/advanced/appearance/overview)

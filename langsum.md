@@ -79,6 +79,20 @@
   - 生命周期：直到引用计数为零才时销毁
   - 作用域：退出块作用域后不可见
 
+- JavaScript
+
+  ```js
+  let foo; // 待初始化
+  let foo = new Type(args); // 构造
+  let foo = initializer; // 拷贝
+  let foo = new Type(other); // 转换
+  let [a, , ...rest] = array; // 解构
+  ```
+
+  - 变量类型：引用型弱类型
+  - 生命周期：直到引用计数为零时才销毁
+  - 作用域：退出块作用域后不可见
+
 - Python
 
   ```python
@@ -91,19 +105,6 @@
   - 变量类型：引用型弱类型
   - 生命周期：直到引用计数为零时才销毁
   - 作用域：直到退出函数才不可见
-
-- JavaScript
-
-  ```js
-  let foo; // 待初始化
-  let foo = new Type(args); // 构造
-  let foo = initializer; // 拷贝
-  let foo = Type(other); // 转换
-  ```
-
-  - 变量类型：引用型弱类型
-  - 生命周期：直到引用计数为零时才销毁
-  - 作用域：退出块作用域后不可见
 
 ## 常量
 
@@ -127,16 +128,16 @@
   )
   ```
 
-- Python
-
-  ```python
-  CONST_VALUE = 1 # 非强制
-  ```
-
 - JavaScript
 
   ```js
   const CONST_VALUE = 1; // 仅限制变量禁止被重新赋值绑定或被重新声明
+  ```
+
+- Python
+
+  ```python
+  CONST_VALUE = 1 # 非强制
   ```
 
 ## 表达式
@@ -155,18 +156,18 @@
   - 逻辑：`!`, `&&`, `||`
   - 赋值：（语句）`=`, `:=`
   - 其他：（语句）`i++`, `i--`
-- Python
-  - 算数：`**`, `*`, `/`, `//`, `%`, `+`, `-`
-  - 关系：`a < b <= c > d >= e`, `x == y != z`
-  - 逻辑：`not`, `and`, `or`
-  - 赋值：（语句）`a = b = c`
-  - 其他：`x if cond else y`
 - JavaScript
   - 算数：`**`, `*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `===`, `!==`
   - 逻辑：`!`, `&&`, `||`
   - 赋值：`=`, `??=`
   - 其他：`? :`, `++`, `--`
+- Python
+  - 算数：`**`, `*`, `/`, `//`, `%`, `+`, `-`
+  - 关系：`a < b <= c > d >= e`, `x == y != z`
+  - 逻辑：`not`, `and`, `or`
+  - 赋值：（语句）`a = b = c`
+  - 其他：`x if cond else y`
 
 ## 语句
 
@@ -192,15 +193,6 @@
     - defer
     - panic()
     - recover()
-- Python
-  - 分支
-    - if-elif-else
-  - 循环
-    - while-else
-    - **for-in-else**
-  - 异常
-    - raise-try-except-else-finally
-    - with
 - JavaScript
   - 分支
     - if-else
@@ -212,6 +204,15 @@
     - **for-of**
   - 异常
     - throw-try-catch
+- Python
+  - 分支
+    - if-elif-else
+  - 循环
+    - while-else
+    - **for-in-else**
+  - 异常
+    - raise-try-except-else-finally
+    - with
 
 ## 函数
 
@@ -246,20 +247,6 @@
   - 返回列表
   - 切片变参包`args...`
 
-- Python
-
-  ```python
-  def exmaple(s: str, /, l: list[int], *, d: dict[str,]) -> None:
-      return True
-
-  f = lambda x, y: x + y
-  ```
-
-  - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
-  - 位置参数`/`与键值参数`*`
-  - 位置变参包`*posargs`与键值变参包`**kwargs`
-  - 默认实参：仅定义时构造一次，注意引用类型
-
 - JavaScript
 
   ```js
@@ -276,6 +263,20 @@
   - `arguments`对象
   - 默认实参
   - 数组变参包`...args`
+
+- Python
+
+  ```python
+  def exmaple(s: str, /, l: list[int], *, d: dict[str,]) -> None:
+      return True
+
+  f = lambda x, y: x + y
+  ```
+
+  - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
+  - 位置参数`/`与键值参数`*`
+  - 位置变参包`*posargs`与键值变参包`**kwargs`
+  - 默认实参：仅定义时构造一次，注意引用类型
 
 ## 面向对象
 
@@ -377,26 +378,6 @@ func (this *MyClass) InterfaceMethod() int {
 }
 ```
 
-- Python
-
-```python
-class MyClass(Base):
-    def __init__(self, name: str):
-        super().__init__()  # super(Base, self).__init__()
-        self._name = name
-
-    def __del__(self):
-        super().__del__()
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        self._name = name
-```
-
 - JavaScript
 
 ```js
@@ -418,6 +399,26 @@ class MyClass extends Base {
 }
 ```
 
+- Python
+
+```python
+class MyClass(Base):
+    def __init__(self, name: str):
+        super().__init__()  # super(Base, self).__init__()
+        self._name = name
+
+    def __del__(self):
+        super().__del__()
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+```
+
 ### 多态
 
 - C++：
@@ -428,13 +429,13 @@ class MyClass extends Base {
   - 方法集匹配的类型可转换为相应接口类型
   - 运行时类型：`switch rt := interf.(type) {}` `rt[, ok] = interf.(RT)`
   - 通过静态符号表与反射实现
-- Python
-  - 弱类型系统可直接转换为接口类型
-  - 运行时类型：`type()`
-  - 利用动态符号表与反射实现
 - JavaScript
   - 弱类型系统可直接转换为接口类型
   - 运行时类型：`typeof`
+  - 利用动态符号表与反射实现
+- Python
+  - 弱类型系统可直接转换为接口类型
+  - 运行时类型：`type()`
   - 利用动态符号表与反射实现
 
 ## 命名规范
@@ -472,14 +473,6 @@ class MyClass extends Base {
 | Packages, Files | `lowerword`      | `internal`       |
 | All Name        | `UpperCamelCase` | `lowerCamelCase` |
 
-| Python 命名           | 形式               |
-| --------------------- | ------------------ |
-| Packages, Modules     | `lower_with_under` |
-| Classes               | `UpperCamelCase`   |
-| Functions, Method     | `UpperCamelCase`   |
-| Constants             | `UPPER_WITH_UNDER` |
-| Variables, Properties | `lower_with_under` |
-
 | JavaScript 命名       | 形式               |
 | --------------------- | ------------------ |
 | Packages, Modules     | `lowerCamelCase`   |
@@ -487,3 +480,11 @@ class MyClass extends Base {
 | Functions, Method     | `lowerCamelCase`   |
 | Constants             | `UPPER_WITH_UNDER` |
 | Variables, Properties | `lowerCamelCase`   |
+
+| Python 命名           | 形式               |
+| --------------------- | ------------------ |
+| Packages, Modules     | `lower_with_under` |
+| Classes               | `UpperCamelCase`   |
+| Functions, Method     | `UpperCamelCase`   |
+| Constants             | `UPPER_WITH_UNDER` |
+| Variables, Properties | `lower_with_under` |

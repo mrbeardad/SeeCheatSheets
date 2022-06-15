@@ -65,14 +65,14 @@
 
 - [计科八股总结](interview.md):star:：计算机基本面试知识点
 
-  - [数据结构与算法](dsaa.md)
-  - [计算机组成](bus.md)
   - [信息编码](code.md)
   - [处理器设计](cpu.md)
   - [汇编语言](asm.md)
   - [操作系统](os.md)
+  - [计算机组成](bus.md)
   - [计算机网络](network.md)
   - [数据库存储](innodb.md)
+  - [数据结构与算法](dsaa.md)
 
 ## 其他
 
