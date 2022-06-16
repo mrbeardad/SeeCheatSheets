@@ -54,7 +54,7 @@
 - C++
 
   ```cpp
-  Type foo;                             // 待初始化
+  Type foo{};                           // 待初始化
   auto foo = Type(args);                // 构造，聚合式构造使用花括号
   auto foo = initializer;               // 拷贝
   auto foo = static_cast<Type>(other);  // 转换
