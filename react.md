@@ -2,7 +2,7 @@
 
 ## 系统构建
 
-### 项目初始化
+### 初始化
 
 ```sh
 pnpx create-react-app react-app && cd react-app
@@ -34,11 +34,22 @@ react-app/
    └─ App.css       3. 编译结果文件名包含了hash，从而利用缓存破坏机制
 ```
 
+### 环境变量
+
+- js 中调用：`process.env.NODE_ENV`
+- public/html 中调用：`<a href="%PUBLIC_URL%">%REACT_APP_WEBSITE%</p>`
+
+| 变量          | 值                                                                                                    |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`    | development, test, production                                                                         |
+| `PUBLIC_URL`  | public 目录中的文件资源在编译构建后的路径前缀，通过修改*package.json*中的`homepage`可修改该环境变量值 |
+| `REACT_APP_*` | react app 环境变量                                                                                    |
+
 ## 核心思想
 
-- 组件：传统做法将 HTML（结构）、CSS（样式）、JS（行为）分开，而 React 将三者灵活地结合封装到组件中。每个组件返回一组 HTML，动态组件可通过注册异步回调函数来更改`props`或`state`导致触发重新渲染，并通过 Hooks 来每次获取最新的状态，从而可动态改变组件返回的 HTML；
+- 组件树：传统做法将 HTML（结构）、CSS（样式）、JS（行为）分开，而 React 将三者灵活地结合封装到组件中，每个组件负责生成一组 HTML。
 
-- VDOM：组件树被一层层的递归导入最终生成 VDOM，再由此生成浏览器 DOM 并渲染网页。每当触发 render 会重新生成 VDOM，然后仅将 diff 作用于浏览器 DOM 而非完全重新渲染；
+- VDOM：组件树被一层层地递归调用最终生成 VDOM，再由此生成浏览器 DOM 并渲染网页。每当触发 render 会重新生成 VDOM，然后仅将 diff 作用于浏览器 DOM 而非完全重新渲染；
 
 - [生命周期](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)：每个组件都是一个状态机：
   1. 当组件首次被调用时，挂载并渲染组件；
@@ -59,6 +70,7 @@ function MyComponent(props) {
         Click Here
       </button>
       : {state}
+      {props.children}
     </>
   )
 }
@@ -186,6 +198,127 @@ export default configureStore({
 - Reducer：注册于 Store 而根据(state, action)来实际操作 State
 - Listener：当 State 改变时调用 Listener
 
+## Router
+
+```js
+import ReactDOM from "react-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />}>
+        <Route index element={<Home />} />
+        <Route path="teams" element={<Teams />}>
+          <Route path=":teamId" element={<Team />} />
+          <Route path="new" element={<NewTeamForm />} />
+          <Route index element={<LeagueStandings />} />
+        </Route>
+      </Route>
+    </Routes>
+  </BrowserRouter>
+);
+```
+
+- `<BrowserRouter>`：负责利用 history API 管理浏览器当前地址栏状态 URL
+- `<Routes>`：负责当地址栏更改时重新渲染路径匹配且优先级最高的一条路由上的所有组件，由嵌套`<Route>`形成的路由组件树的某条分支共同参与路径匹配。父路由组件需要返回`<Outlet/>`才能渲染子路由组件
+- `<Route path="pathname" element={<Component/>}/>`：路由组件，路径匹配支持`static`, `:dynamic`, `global/*`
+  - `index`：当仅匹配父路由组件时，将该路由组件也加入渲染
+  - `caseSensitive`：大小写敏感
+- `<Link to="pathname">`：路由链接
+- `<NavLink to="pathname">`：路由链接，若`pathname`匹配当前 URL 则会添加属性`class="active"`
+  - `end`表示精准匹配，而非默认的前缀匹配
+  - `className`与`style`：可以接受函数`({isActive})=>{}`来条件设置 class 与 style
+
+Hooks
+
+```js
+// useParams
+<Route path=":userId" element={<ProfilePage />} />;
+
+let { userId } = useParams();
+
+// useLocation
+let location = useLocation();
+
+interface Location {
+  pathname: string;
+  search: string;
+  hash: string;
+  state: unknown;
+  key: string;
+}
+
+// useNavigate
+let navigate = useNavigate();
+
+navigate(-1); // 后退 history
+navigate("../success", { replace: true }); // 追加或替换 history
+
+// useSearchParams
+let [searchParams, setSearchParams] = useSearchParams();
+setSearchParams(params);
+```
+
+## Form
+
+```js
+import { useForm, Controller } from "react-hook-form";
+import Input from "@material-ui/core/Input";
+
+const App = () => {
+  // 创建表单控制器，提供方法统一存储、访问、操作表单数据
+  const {
+    handleSubmit, // 用于处理submit成功或失败
+    register, // 用于为<input>设置属性
+    getValue, // 获取表单值
+    setValue, // 修改表单值
+    formState: {
+      isDirty,
+      dirtyFields,
+      touchedFields,
+      isSubmitted,
+      isSubmitSuccessful,
+      isSubmitting,
+      submitCount,
+      isValid,
+      isValidating,
+      errors,
+    },
+  } = useForm();
+
+  // 订阅change事件，用户每次输入都会触发render与validation
+  const onSubmit = (data, event) => console.log(data);
+  const onError = (errors, event) => console.log(errors);
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit, onError)}>
+      <Controller
+        name="firstName"
+        control={control}
+        defaultValue=""
+        render={({ field }) => <Input {...field} />}
+      />
+      <Controller
+        name="iceCreamType"
+        control={control}
+        render={({ field }) => (
+          <Select
+            {...field}
+            options={[
+              { value: "chocolate", label: "Chocolate" },
+              { value: "strawberry", label: "Strawberry" },
+              { value: "vanilla", label: "Vanilla" },
+            ]}
+          />
+        )}
+      />
+      <input type="submit" />
+    </form>
+  );
+};
+```
+
 ## 技巧方法
 
 ### 减少渲染
@@ -255,133 +388,4 @@ class MyErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
-```
-
-### 环境变量
-
-- js 中调用：`process.env.NODE_ENV`
-- public/html 中调用：`<a href="%PUBLIC_URL%">%REACT_APP_WEBSITE%</p>`
-
-| 变量          | 值                                                                                                    |
-| ------------- | ----------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`    | development, test, production                                                                         |
-| `PUBLIC_URL`  | public 目录中的文件资源在编译构建后的路径前缀，通过修改*package.json*中的`homepage`可修改该环境变量值 |
-| `REACT_APP_*` | react app 环境变量                                                                                    |
-
-## 第三方库
-
-### 网页路由
-
-```js
-// 原理：<BrowserRouter> creates a history, puts the initial location in to state, and subscribes to the URL.
-ReactDOM.render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<App />}>
-        <Route index element={<Home />} />
-        <Route path="teams" element={<Teams />}>
-          <Route path=":teamId" element={<Team />} />
-          <Route path="new" element={<NewTeamForm />} />
-          <Route index element={<LeagueStandings />} />
-        </Route>
-      </Route>
-      <Route element={<PageLayout />}>
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/tos" element={<Tos />} />
-      </Route>
-      <Route path="contact-us" element={<Contact />} />
-    </Routes>
-  </BrowserRouter>,
-  document.getElementById("root")
-);
-```
-
-- `<Link>`or`<NavLink>`：跳转链接
-
-  - `to="pathname"`：目标路径名
-  - `replace`：替换而非添加到 history stack 中
-
-- `<Routes>`：路由配置树
-
-  - 从所有路由策略路线中匹配最优策略分支
-  - 渲染整个匹配分支需要父级 element 使用`<Outlet />`代替`props.children`）
-
-- `<Route>`：路由策略
-  - `path="pathname"`：自动添加前缀为父级 path，支持`/static`、`/:param`、`/global/*`；若无该属性则作为布局路由不参与匹配（单其子路由会参与，若子路由匹配则渲染该布局路由）
-  - `index`：当恰好完全匹配父级路由 path 时，该条路由作为父级`<Outlet />`
-  - `caseSensitive`
-  - `element={<Component />}`
-- Hooks
-
-  - useParams()
-  - useSearchParams()
-  - useLocation()
-
-  ```js
-  {
-    key: 'default',
-    pathname: '/somewhere'
-    search: '?some=search-string',
-    hash: '#howdy',
-    state: null,
-  }
-  ```
-
-### 表单控制
-
-```js
-import { useForm, Controller } from "react-hook-form";
-import Input from "@material-ui/core/Input";
-
-const App = () => {
-  // 创建表单控制器，提供方法统一存储、访问、操作表单数据
-  const {
-    handleSubmit, // 用于处理submit成功或失败
-    register, // 用于为<input>设置属性
-    getValue, // 获取表单值
-    setValue, // 修改表单值
-    formState: {
-      isDirty,
-      dirtyFields,
-      touchedFields,
-      isSubmitted,
-      isSubmitSuccessful,
-      isSubmitting,
-      submitCount,
-      isValid,
-      isValidating,
-      errors,
-    },
-  } = useForm();
-
-  // 订阅change事件，用户每次输入都会触发render与validation
-  const onSubmit = (data, event) => console.log(data);
-  const onError = (errors, event) => console.log(errors);
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit, onError)}>
-      <Controller
-        name="firstName"
-        control={control}
-        defaultValue=""
-        render={({ field }) => <Input {...field} />}
-      />
-      <Controller
-        name="iceCreamType"
-        control={control}
-        render={({ field }) => (
-          <Select
-            {...field}
-            options={[
-              { value: "chocolate", label: "Chocolate" },
-              { value: "strawberry", label: "Strawberry" },
-              { value: "vanilla", label: "Vanilla" },
-            ]}
-          />
-        )}
-      />
-      <input type="submit" />
-    </form>
-  );
-};
 ```
