@@ -41,7 +41,7 @@ react-app/
 
 | 变量          | 值                                                                                                    |
 | ------------- | ----------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`    | development, test, production                                                                         |
+| `NODE_ENV`    | `development`, `test`, `production`                                                                   |
 | `PUBLIC_URL`  | public 目录中的文件资源在编译构建后的路径前缀，通过修改*package.json*中的`homepage`可修改该环境变量值 |
 | `REACT_APP_*` | react app 环境变量                                                                                    |
 
@@ -53,11 +53,15 @@ react-app/
 
 - [生命周期](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)：每个组件都是一个状态机：
   1. 当组件首次被调用时，挂载并渲染组件；
-  2. 当组件调用`setState()`时，尝试重新渲染整个子组件树
-     - 尝试重新渲染组件前会先调用`shouldComponentUpdate`，返回`true`才会重新渲染
-     - `React.Component`均返回`true`
-     - `React.PureComponent`返回新旧`props`（比较每个属性）与`state`浅比较(`Object.is()`)结果
+  2. 当异步调用组件的`setState()`时，若更改了`state`则尝试重新渲染整个子组件树
+     - 若`shouldComponentUpdate()`返回`true`才会重新渲染
+     - `React.Component`默认返回`true`
+     - `React.PureComponent`则会浅比较`props`和`state`
+     - 普通函数组件会浅比较`state`
+     - `React.memo`会浅比较`props`的每个字段和`state`
   3. 当组件不再被调用时（根据子组件的类型与数量判断是否有新增或删减的组件），卸载子组件。
+
+> **严格模式下的开发模式中，setState()等生命周期函数可能会被连续调用两次！**
 
 ## Components
 
@@ -82,7 +86,7 @@ function MyComponent(props) {
   - 标签属性会做为组件参数`props`的子属性传递
   - 子标签元素会作为组件参数子属性`props.children`传递
 - 合法子元素：null, undefined, Boolean, Number, String, Array, JSX，其中前三者不会被渲染
-- 用户定义组件必须首字母大写，且必须返回一个 JSX 表达式（可以用`<>...</>`封装多个表达式
+- 用户定义组件必须首字母大写，且必须返回一个 JSX 表达式（可以用`<>...</>`封装多个表达式）
 
 ## Hooks
 
@@ -92,6 +96,7 @@ Hook 就是 JavaScript 函数，但是使用它们会有两个额外的规则：
 - 只能在 React 的函数组件和自定义 Hook 中调用 Hook。不要在其他 JavaScript 函数中调用。
 
 ```js
+// useState() 用于获取/更新组件状态
 const [state, setState] = useState(initialState);
 const [state, setState] = useState(() => lazyInit());
 setState(newState); // 全量替换旧状态
@@ -99,20 +104,26 @@ setState((prevState) => prevState + 1); // 依赖旧值进行更新
 ```
 
 ```js
+// useEffect() 用于每次渲染后执行副作用
 useEffect(() => {
-  // 执行副作用
   const subscription = props.source.subscribe();
-  // 返回清除函数
+  // 返回的清理函数会在组件下一次调用 effect 前以及卸载前执行
   return () => {
     subscription.unsubscribe();
   };
-}, [a]);
+  // 第二参数传递 memo 数组，表示仅当 memo 更改时调用 effect，[]空数组表示仅在首次渲染后调用
+}, [memo]);
 ```
 
-- `useEffect`默认在每轮渲染结束后调用`effect`
-- `useLayoutEffect`默认在 DOM 更新后且在浏览器渲染前同步调用`effect`
-- 第二参数传递数组，表示仅当数组中值更改时才调用，`[]`表示只在初次渲染时调用
-- 返回的清除函数会在组件卸载前与下一次调用`effect`执行
+```js
+// useMemo() 用于缓存计算结果数据
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
+
+// useCallback() 用于缓存临时闭包函数
+const memoizedCallback = useCallback(() => {
+  doSomething(a, b);
+}, [a, b]);
+```
 
 ## Redux
 
@@ -319,15 +330,7 @@ const App = () => {
 };
 ```
 
-## 技巧方法
-
-### 减少渲染
-
-- `<il key=id>`：为`<il>`指定 key 属性可优化 diff 算法
-- `class Component extends React.PureComponent`：默认 shouldComponentUpdate()浅比较 props 与 state
-- `const Component = React.memo(ComponentCore)`：同上
-- `import {List, Set, Map, OrderedSet, OrderedMap, fromJS, is} from 'immutable-js'`
-  > 该库提供了一些容器集合类，这些类是不可变类型，即任何试图修改其内容的操作都会返回一个新对象； 使用了结构共享技术，返回的新对象会尽量与原对象共享子对象引用节点，同时做深度值比较也更快速； 特别的，当修改操作后的值并未变化时，直接返回原对象引用
+## Others
 
 ### 代码分割
 
