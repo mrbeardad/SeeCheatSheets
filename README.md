@@ -20,7 +20,8 @@
 - [HTML](html.md)：超文本标记语言
 - [CSS](css.md)：层叠样式表
 - [JavaScript](js.md)：Web 平台脚本
-- [React](react.md)：Web 前端框架
+- [React](react.md)：Web UI 框架
+- [Next.js](nextjs.md)：基于 React 的应用框架
 - [HTTP](http.md)：超文本传输协议
 - [WAS](security.md)：Web 应用安全
 - [SEO](seo.md)：搜索引擎优化

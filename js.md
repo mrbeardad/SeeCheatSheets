@@ -433,6 +433,7 @@ let obj = {
   key_name: "canonical",
   "key-name": "non-canonical",
   1: "id",
+  value,
   method() {}
 }
 
