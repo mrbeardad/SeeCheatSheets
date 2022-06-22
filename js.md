@@ -33,24 +33,25 @@ const CONST_VALUE = value;
 
 ## 表达式
 
-| Operator type          | Individual operators                     |
-| ---------------------- | ---------------------------------------- |
-| member                 | . []                                     |
-| call / create instance | () new                                   |
-| negation/increment     | ! ~ - + ++ -- typeof void delete         |
-| multiply/divide        | \* / % \*\*                              |
-| addition/subtraction   | + -                                      |
-| bitwise shift          | << >> >>>                                |
-| relational             | < <= > >= in instanceof                  |
-| equality               | == != === !==                            |
-| bitwise-and            | &                                        |
-| bitwise-xor            | ^                                        |
-| bitwise-or             | \|                                       |
-| logical-and            | &&                                       |
-| logical-or             | \|\|                                     |
-| conditional            | ?:                                       |
-| assignment             | = += -= \*= /= %= <<= >>= >>>= &= ^= \|= |
-| comma                  | ,                                        |
+| Operator type          | Individual operators                         |
+| ---------------------- | -------------------------------------------- |
+| member                 | . ?. []                                      |
+| call / create instance | () new                                       |
+| negation/increment     | ! ~ - + ++ -- typeof void delete             |
+| multiply/divide        | \* / % \*\*                                  |
+| addition/subtraction   | + -                                          |
+| bitwise shift          | << >> >>>                                    |
+| relational             | < <= > >= in instanceof                      |
+| equality               | == != === !==                                |
+| bitwise-and            | &                                            |
+| bitwise-xor            | ^                                            |
+| bitwise-or             | \|                                           |
+| logical-and            | &&                                           |
+| logical-or             | \|\|                                         |
+| Nullish Coalescing     | ??                                           |
+| conditional            | ?:                                           |
+| assignment             | = += -= \*= /= %= <<= >>= >>>= &= ^= \|= ??= |
+| comma                  | ,                                            |
 
 - 关系比较会隐式进行类型转换，`===`与`!==`会对类型敏感
 - object 仅支持相等性引用比较

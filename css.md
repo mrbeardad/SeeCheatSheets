@@ -24,6 +24,11 @@
 
 ## 长度单位
 
+- 屏幕分辨率：单位 ppi (pixels per inch)
+- 显示分辨率：单位 px × px（默认为屏幕原始分辨率，可由操作系统调整）
+- 逻辑像素：一个逻辑像素在屏幕上占据的物理尺寸取决于屏幕分辨率与显示分辨率（一个逻辑像素映射为多少个屏幕栅格）
+- CSS 像素：一个 CSS 像素在屏幕上占据的物理尺寸固定为 1/96 英寸，与屏幕分辨率和显示分辨率无关。
+
 | 绝对单位 | 名称         | 等价换算            |
 | -------- | ------------ | ------------------- |
 | cm       | 厘米         | 1cm = 96px/2.54     |
@@ -32,7 +37,7 @@
 | in       | 英寸         | 1in = 2.54cm = 96px |
 | pc       | 十二点活字   | 1pc = 1/16th of 1in |
 | pt       | 点           | 1pt = 1/72th of 1in |
-| px       | 像素         | 1px = 1/96th of 1in |
+| px       | CSS pixel    | 1px = 1/96th of 1in |
 
 | 相对单位 | 相对于                                                                          |
 | -------- | ------------------------------------------------------------------------------- |
@@ -118,7 +123,9 @@ width: <length>;
 width: <percentage>;
 width: max-content; /* 子元素全部在同一行中堆积总宽度 */
 width: min-content; /* 子元素中最大宽度 */
-width: fit-content(<length-or-percentage>); /* clamp(arg, min-content, max-content) */
+width: fit-content(
+  <length-or-percentage>
+); /* clamp(arg, min-content, max-content) */
 
 /* 高度： height, min-height, max-height, block-size */
 height: auto; /* 各布局默认高度 */
