@@ -298,6 +298,8 @@ Grid 是二维布局，它的目标注重于整体规划区域并定位元素。
 | `object-fit: scale-down` | 取 none 与 contain 中的较小者    |
 | `max-width: 100%`        | 仅缩小并保持长宽比               |
 
+> `object-fit`需要设置`width`生效
+
 ## 动画
 
 1. 先指定动画的基础属性

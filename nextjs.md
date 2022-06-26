@@ -9,7 +9,7 @@ pnpx create-next-app next-app
 pnpm install -S redux react-redux @reduxjs/toolkit \
   swr \
   react-hook-form \
-  @mui/material @mui/icons-material @mui/system @emotion/react @emotion/styled
+  normalize.css @mui/material @mui/icons-material @mui/system @emotion/react @emotion/styled
 ```
 
 ### 目录结构
@@ -228,7 +228,13 @@ import mountains from "../public/mountains.jpg";
 const Intrinsic = () => (
   <div>
     <h1>Image Component With Layout Intrinsic</h1>
-    <Image alt="Mountains" src={mountains} layout="intrinsic" width={700} height={475} />
+    <Image
+      alt="Mountains"
+      src={mountains}
+      layout="intrinsic"
+      width={700}
+      height={475}
+    />
   </div>
 );
 

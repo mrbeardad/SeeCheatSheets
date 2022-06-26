@@ -279,6 +279,13 @@
   - 位置变参包`*posargs`与键值变参包`**kwargs`
   - 默认实参：仅定义时构造一次，注意引用类型
 
+## 异步
+
+- 监听异步事件：异步事件实现可能依赖于多线程或系统调用（异步事件完成后唤醒并通知前摄器）
+- 注册回调函数：回调函数实现可能依赖于回调链或协程句柄（需要重新监听异步事件并注册回调函数）
+
+以上两步通常由语言或框架执行，用户仅需提供回调函数链，或者手动切换协程；
+
 ## 面向对象
 
 ### 封装
@@ -477,7 +484,7 @@ class MyClass(Base):
 | JavaScript 命名       | 形式               |
 | --------------------- | ------------------ |
 | Packages, Modules     | `lowerCamelCase`   |
-| Classes               | `UpperCamelCase`   |
+| Classes, Component    | `UpperCamelCase`   |
 | Functions, Method     | `lowerCamelCase`   |
 | Constants             | `UPPER_WITH_UNDER` |
 | Variables, Properties | `lowerCamelCase`   |

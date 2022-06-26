@@ -9,7 +9,7 @@ pnpx create-react-app react-app && cd react-app
 
 eslint --init
 
-npm install -S redux react-redux @reduxjs/toolkit \
+pnpm add redux react-redux @reduxjs/toolkit \
   react-router-dom \
   react-hook-form \
   @mui/material @mui/icons-material @mui/system @emotion/react @emotion/styled
@@ -104,7 +104,7 @@ setState((prevState) => prevState + 1); // 依赖旧值进行更新
 ```
 
 ```js
-// useEffect() 用于每次渲染后执行副作用
+// useEffect() 用于每次渲染后执行副作用（组件应该是纯函数，所有副作用都应通过 useEffect 执行
 useEffect(() => {
   const subscription = props.source.subscribe();
   // 返回的清理函数会在组件下一次调用 effect 前以及卸载前执行
@@ -159,7 +159,7 @@ export function App() {
 ```
 
 ```js
-// features/counter/counterSlice.js
+// features/counterSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 export const counterSlice = createSlice({
