@@ -7,6 +7,7 @@
   - [表达式](#表达式)
   - [语句](#语句)
   - [函数](#函数)
+  - [异步](#异步)
   - [面向对象](#面向对象)
     - [封装](#封装)
     - [继承](#继承)
@@ -27,18 +28,18 @@
   - 依赖导出：大写字母开头的符号，初始化：包中所有 init 函数
   - 依赖导入：`import "module.github.com/path/to/package"`，符号限定于包名
   - 依赖管理：自动（go-mod）
+- JavaScript
+  - 程序入口：任意源文件
+  - 依赖单元：一个源文件
+  - 依赖导出：`export`，初始化：导入即执行
+  - 依赖导入：`import * as module from 'path/to/module'`，符号限定于模块名
+  - 依赖管理：自动（npm）
 - Python
   - 程序入口：任意源文件(`__init__ == "__main__"`)
   - 依赖单元：一个源文件
   - 依赖导出：非`_`开头的符号，初始化：导入即执行
   - 依赖导入：`from package.subpackage import module`，符号限定于文件名
   - 依赖管理：自动（pip）
-- JavaScript
-  - 程序入口：任意源文件(React: index.js)
-  - 依赖单元：一个源文件
-  - 依赖导出：`export`，初始化：导入即执行
-  - 依赖导入：`import * as module from 'path/to/module'`，符号限定于模块名
-  - 依赖管理：自动（npm）
 
 ## 变量
 
@@ -281,10 +282,20 @@
 
 ## 异步
 
-- 监听异步事件：异步事件实现可能依赖于多线程或系统调用（异步事件完成后唤醒并通知前摄器）
+- 启动并监听异步事件：异步事件实现可能依赖于多线程或系统调用（异步事件完成后唤醒并通知前摄器）
 - 注册回调函数：回调函数实现可能依赖于回调链或协程句柄（需要重新监听异步事件并注册回调函数）
 
-以上两步通常由语言或框架执行，用户仅需提供回调函数链，或者手动切换协程；
+以上两步通常由语言或框架提供的函数执行（见下“调用”）
+
+- C++ asio
+  - 调用：`co_spawn(executor, async_func, handler)`/`asio::*::async_*`
+  - 实现：`co_await asio::*::async_*(asio::use_awaitable)`/`asio::*::async_*`
+- Go goroutine
+  - 调用：`go async_func()`
+  - 实现：`any_async_func()`
+- JS promise
+  - 调用：`async/await`/`promise.then()`
+  - 实现：`async/await`/`promise.then()`
 
 ## 面向对象
 

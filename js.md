@@ -11,7 +11,7 @@ import "path/to/module.js";
 export const SOME_CONSTANT = ...
 export function someHelpfulFunction()
 export class Foo { }
-export default ... // Deprecated
+export default ...
 ```
 
 ## 变量与常量

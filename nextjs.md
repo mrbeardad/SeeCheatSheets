@@ -96,6 +96,30 @@ NEXT_PUBLIC_ANALYTICS_ID=abcdefghijk
 
 ## 核心特性
 
+### 客户端路由
+
+#### pages
+
+按优先级顺序匹配路由，经过代码拆分后每个页面仅需加载首页渲染需要的代码，其他代码延迟加载。
+
+- `pages/blog.js` → `/blog` or `/blog/`
+- `pages/blog/index.js` → `/blog` or `/blog/`
+- `pages/blog/[slug].js` → `/blog/:slug` (`/blog/hello-world`)
+- `pages/[username]/settings.js` → `/:username/settings` (`/foo/settings`)
+- `pages/post/[...all].js` → `/post/*` (`/post/2020/id/title`)
+
+#### next/link
+
+#### next/router
+
+#### api
+
+```js
+export default function handler(req, res) {
+  res.status(200).json({ text: "Hello" });
+}
+```
+
 ### 预渲染
 
 - 静态站点生成(SSG)：SEO 友好，编译时就获取数据
@@ -191,30 +215,6 @@ export default function Profile() {
 }
 ```
 
-### 客户端路由
-
-#### pages
-
-按优先级顺序匹配路由，经过代码拆分后每个页面仅需加载首页渲染需要的代码，其他代码延迟加载。
-
-- `pages/blog.js` → `/blog` or `/blog/`
-- `pages/blog/index.js` → `/blog` or `/blog/`
-- `pages/blog/[slug].js` → `/blog/:slug` (`/blog/hello-world`)
-- `pages/[username]/settings.js` → `/:username/settings` (`/foo/settings`)
-- `pages/post/[...all].js` → `/post/*` (`/post/2020/id/title`)
-
-#### next/link
-
-#### next/router
-
-#### api
-
-```js
-export default function handler(req, res) {
-  res.status(200).json({ text: "Hello" });
-}
-```
-
 ### 图像优化
 
 - 自动提供多分辨率版本并转换为现代化图像格式
@@ -228,13 +228,7 @@ import mountains from "../public/mountains.jpg";
 const Intrinsic = () => (
   <div>
     <h1>Image Component With Layout Intrinsic</h1>
-    <Image
-      alt="Mountains"
-      src={mountains}
-      layout="intrinsic"
-      width={700}
-      height={475}
-    />
+    <Image alt="Mountains" src={mountains} layout="intrinsic" width={700} height={475} />
   </div>
 );
 
