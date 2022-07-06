@@ -7,8 +7,14 @@
 <html lang="en-US">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="description" content="Description of the page less than 150 characters" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Description of the page less than 150 characters"
+    />
     <title>页面标题</title>
     <link rel="icon" type="image/png" href="favicon-32x32.png" />
 
@@ -62,16 +68,17 @@
           <aside>相关旁白</aside>
         </section>
       </article>
-      <footer>
-        <p>&copy; 2022 版权信息</p>
-        <p>联系方式</p>
-        <address>
-          <a href="mailto:mrbeardad@qq.com">mrbeardad@qq.com</a><br />
-          <a href="tel:+13115552368">(311) 555-2368</a><br />
-          Chengdu, Sichuan, China
-        </address>
-      </footer>
     </main>
+
+    <footer>
+      <p>&copy; 2022 版权信息</p>
+      <p>联系方式</p>
+      <address>
+        <a href="mailto:mrbeardad@qq.com">mrbeardad@qq.com</a><br />
+        <a href="tel:+13115552368">(311) 555-2368</a><br />
+        Chengdu, Sichuan, China
+      </address>
+    </footer>
   </body>
 </html>
 ```
@@ -114,7 +121,8 @@
 <samp>程序输出</samp><br />
 正常<sup>上标</sup><sub>下标</sub><br />
 <data value="001">枚举名</data><br />
-<time datetime="2016-01-20T19:30+01:00">20 January 2016, 8.30pm in France</time><br />
+<time datetime="2016-01-20T19:30+01:00">20 January 2016, 8.30pm in France</time
+><br />
 <abbr title="完整词汇">缩写词汇</abbr><br />
 <a href="https://example.com" target="_self">链接</a>
 
@@ -147,7 +155,7 @@
 </pre>
 
 <figure>
-  主文中引用的图片，表格，代码等等
+  <!-- 主文中引用的图片，表格，代码等等 -->
   <figcaption>Fig.1 - The Caption of the Figure.</figcaption>
 </figure>
 
@@ -351,7 +359,12 @@
   height="126"
 />
 <map name="planetmap">
-  <area shape="rect" coords="0,0,82,126" href="https://www.runoob.com/images/sun.gif" alt="Sun" />
+  <area
+    shape="rect"
+    coords="0,0,82,126"
+    href="https://www.runoob.com/images/sun.gif"
+    alt="Sun"
+  />
   <area
     shape="circle"
     coords="90,58,3"
@@ -384,14 +397,23 @@
     <div>
       <label>
         Password:
-        <input type="password" name="password" placeholder="enter yout password" />
+        <input
+          type="password"
+          name="password"
+          placeholder="enter yout password"
+        />
       </label>
     </div>
     <div>
       <label>
         Email:
         <!--允许空格或逗号分隔列表给出多个email，且允许为空即使指定required-->
-        <input type="email" name="email" placeholder="user@example.com" multiple />
+        <input
+          type="email"
+          name="email"
+          placeholder="user@example.com"
+          multiple
+        />
       </label>
     </div>
     <div>
@@ -421,7 +443,12 @@
     <div>
       <label>
         Text:
-        <input type="text" name="text" placeholder="enter text" list="datalist" />
+        <input
+          type="text"
+          name="text"
+          placeholder="enter text"
+          list="datalist"
+        />
         <datalist id="datalist">
           <option value="Internet Explorer"></option>
           <option value="Firefox"></option>
@@ -432,7 +459,9 @@
       </label>
     </div>
     <div>
-      <textarea name="textarea" rows="10" cols="50">This is predefined value in textarea</textarea>
+      <textarea name="textarea" rows="10" cols="50">
+This is predefined value in textarea</textarea
+      >
     </div>
   </fieldset>
   <fieldset>
@@ -440,7 +469,11 @@
     <div>
       <label>
         Datetime-local:
-        <input type="datetime-local" name="datetime" value="2006-01-02T15:04:05" />
+        <input
+          type="datetime-local"
+          name="datetime"
+          value="2006-01-02T15:04:05"
+        />
       </label>
       <label>
         Date:
@@ -501,7 +534,12 @@
       </label>
     </div>
     <div>
-      <input type="file" name="file" accept=".doc,.docx,application/msword" multiple />
+      <input
+        type="file"
+        name="file"
+        accept=".doc,.docx,application/msword"
+        multiple
+      />
     </div>
     <div>
       <label>
@@ -528,7 +566,9 @@
 
   <div>
     Meter:
-    <meter min="0" max="100" value="50" low="33" high="66" optimum="100">50</meter>
+    <meter min="0" max="100" value="50" low="33" high="66" optimum="100">
+      50
+    </meter>
   </div>
   <div>
     Progress:

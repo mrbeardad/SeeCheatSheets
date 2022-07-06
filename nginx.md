@@ -164,8 +164,6 @@ Default: —
 Context: server, location, if
 ```
 
-`try_files files ... uri`与`index index.html`也可实现内部重定向
-
 ### 反向代理
 
 ```nginx

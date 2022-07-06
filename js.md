@@ -395,7 +395,7 @@ array.at(index)         // 相对array[index]额外支持负数下标
 array.slice(start, end) // 支持负数下标
 array.push(...items)    // 尾部添加
 array.pop()             // 尾部删除
-array.unshift(...items) // 尾部添加
+array.unshift(...items) // 头部添加
 array.shift()           // 头部删除
 
 array.includes(search[, from]])
