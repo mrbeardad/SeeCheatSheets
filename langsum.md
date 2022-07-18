@@ -287,15 +287,9 @@
 
 以上两步通常由语言或框架提供的函数执行（见下“调用”）
 
-- C++ asio
-  - 调用：`co_spawn(executor, async_func, handler)`/`asio::*::async_*`
-  - 实现：`co_await asio::*::async_*(asio::use_awaitable)`/`asio::*::async_*`
-- Go goroutine
-  - 调用：`go async_func()`
-  - 实现：`any_async_func()`
-- JS promise
-  - 调用：`async/await`/`promise.then()`
-  - 实现：`async/await`/`promise.then()`
+- C++ asio / JS promise 都是在调用异步函数的时候自动注册异步事件对应回调函数，返回继续执行逻辑，而异步流程交给前摄器控制；
+- Go goroutine 则是在调用异步函数的时候自动交出线程控制权（切换协程），待异步事件完成时再继续执行。
+
 
 ## 面向对象
 
