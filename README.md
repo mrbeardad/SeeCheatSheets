@@ -53,7 +53,7 @@
   - Python
     - [Python 语言基础](python.md)
 
-## Linux
+## 开发平台
 
 - [Linux 系统总结](linuxsum.md):star:：Linux 系统必备知识与技能
 
