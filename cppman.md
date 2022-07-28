@@ -2315,6 +2315,8 @@ std::string                 between(str, to_charset, from_charset);
 
 ![Proactor](images/proactor.png)
 
+<https://think-async.com/Asio/asio-1.22.2/doc/asio/overview/core/async.html>
+
 - 引发器(Initiator)
   > 如 socket
   1. 启动异步操作，如低速 IO、计时器等等，利用系统调用或多线程实现异步，保证快速完成返回
