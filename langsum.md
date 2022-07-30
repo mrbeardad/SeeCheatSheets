@@ -31,8 +31,8 @@
 - JavaScript
   - 程序入口：任意源文件
   - 依赖单元：一个源文件
-  - 依赖导出：`export`，初始化：导入即执行
-  - 依赖导入：`import * as module from 'path/to/module'`，符号限定于模块名
+  - 依赖导出：`export`声明导出，初始化：导入即执行
+  - 依赖导入：`import { name } from 'root/path/to/module'`，符号限定于模块名
   - 依赖管理：自动（npm）
 - Python
   - 程序入口：任意源文件(`__init__ == "__main__"`)
