@@ -2317,21 +2317,6 @@ std::string                 between(str, to_charset, from_charset);
 
 <https://think-async.com/Asio/asio-1.22.2/doc/asio/overview/core/async.html>
 
-- 引发器(Initiator)
-  > 如 socket
-  1. 启动异步操作，如低速 IO、计时器等等，利用系统调用或多线程实现异步，保证快速完成返回
-  2. 注册该异步事件，同时记录其回调函数
-- 前摄器(Proactor)
-  > 如 io_context
-  - 如果完成事件队列中存在任务则取出（线程安全）
-    1. 执行其回调函数
-    2. 若底层为 Reactor 模式实现，可能需要执行额外的流程（如读取执行数目的数据）
-    3. 回调函数作为 Initiator 再次启动异步操作、注册异步事件
-  - 如果完成事件队列中无任务则阻塞
-    1. 利用操作系统接口（如 epoll）实现多路复用阻塞监听
-    2. 当异步操作完成时，会触发监听事件，唤醒线程
-    3. 循环往复（此时已存在队列）
-
 服务器一般存在三类状态机：
 
 - io_context 为其一，负责运转其他状态机

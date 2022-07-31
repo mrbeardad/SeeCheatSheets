@@ -47,23 +47,10 @@ react-app/
 
 ## 核心思想
 
-- 组件树：传统做法将 HTML（结构）、CSS（样式）、JS（行为）分开，而 React 将三者灵活地结合封装到组件中，每个组件负责生成一组 HTML。
+### 组件树
 
-- VDOM：组件树被一层层地递归调用最终生成 VDOM，再由此生成浏览器 DOM 并渲染网页。每当触发 render 会重新生成 VDOM，然后仅将 diff 作用于浏览器 DOM 而非完全重新渲染；
-
-- [生命周期](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)：每个组件都是一个状态机：
-  1. 当组件首次被调用时，挂载并渲染组件；
-  2. 当异步调用组件的`setState()`时，若更改了`state`则尝试重新渲染整个子组件树
-     - 若`shouldComponentUpdate()`返回`true`才会重新渲染
-     - `React.Component`默认返回`true`
-     - `React.PureComponent`则会浅比较`props`和`state`
-     - 普通函数组件会浅比较`state`
-     - `React.memo`会浅比较`props`的每个字段和`state`
-  3. 当组件不再被调用时（根据子组件的类型与数量判断是否有新增或删减的组件），卸载子组件。
-
-> **严格模式下的开发模式中，setState()等生命周期函数可能会被连续调用两次！**
-
-## Components
+- 每个组件负责生成一段网页，组件们被根组件一层层递归包含并最终生成完整 VDOM
+- 每次 render 更新 VDOM 并将 diff 更新于浏览器 DOM 而非完全重新渲染
 
 ```js
 function MyComponent(props) {
@@ -88,15 +75,17 @@ function MyComponent(props) {
 - 合法子元素：null, undefined, Boolean, Number, String, Array, JSX，其中前三者不会被渲染
 - 用户定义组件必须首字母大写，且必须返回一个 JSX 表达式（可以用`<>...</>`封装多个表达式）
 
-## Hooks
+### [生命周期](https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
 
-Hook 就是 JavaScript 函数，但是使用它们会有两个额外的规则：
+1. 当组件首次被调用时，挂载并渲染组件；
+2. 当异步调用组件的`setState()`且更改了`state`，则尝试重新渲染整个子组件树
+   - 利用`React.PureComponent`与`React.memo()`会在重新渲染前浅比较`props`的每个属性和`state`，若无变化则无需重新渲染
+3. 当组件不再被调用时卸载子组件。
 
-- 只能在函数最外层调用 Hook。不要在循环、条件判断或者子函数中调用。
-- 只能在 React 的函数组件和自定义 Hook 中调用 Hook。不要在其他 JavaScript 函数中调用。
+> **严格模式下的开发模式中，setState()等生命周期函数可能会被连续调用两次！**
 
 ```js
-// useState() 用于获取/更新组件状态
+// useState() （基础Hook）用于获取/更新组件状态
 const [state, setState] = useState(initialState);
 const [state, setState] = useState(() => lazyInit());
 setState(newState); // 全量替换旧状态
@@ -104,7 +93,7 @@ setState((prevState) => prevState + 1); // 依赖旧值进行更新
 ```
 
 ```js
-// useEffect() 用于每次渲染后执行副作用（组件应该是纯函数，所有副作用都应通过 useEffect 执行
+// useEffect() （基础Hook）用于每次渲染后执行副作用（组件应该是纯函数，所有副作用都应通过 useEffect 执行
 useEffect(() => {
   const subscription = props.source.subscribe();
   // 返回的清理函数会在组件下一次调用 effect 前以及卸载前执行
@@ -124,6 +113,11 @@ const memoizedCallback = useCallback(() => {
   doSomething(a, b);
 }, [a, b]);
 ```
+
+Hook 就是 JavaScript 函数，但是使用它们会有两个额外的规则：
+
+- 只能在 React 的函数组件和自定义 Hook 中调用 Hook。不要在其他 JavaScript 函数中调用。
+- 只能在函数最外层调用 Hook。不要在循环、条件判断或者子函数中调用。
 
 ## Redux
 

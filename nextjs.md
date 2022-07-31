@@ -5,8 +5,8 @@
 ### 初始化
 
 ```sh
-pnpx create-next-app next-app
-pnpm install -S redux react-redux @reduxjs/toolkit \
+pnpx create-next-app next-app && cd next-app
+pnpm add redux react-redux @reduxjs/toolkit \
   swr \
   react-hook-form \
   normalize.css @mui/material @mui/icons-material @mui/system @emotion/react @emotion/styled
@@ -16,7 +16,7 @@ pnpm install -S redux react-redux @reduxjs/toolkit \
 
 ```txt
 next-app/
-├─ public/              编译后位于顶层目录的资源
+├─ public/
 │  └─ favicon.ico
 ├─ pages/               每个文件的默认导出组件对应一个页面，其相对路径就是路由 URL
 │  ├─ _document.js      用于更改全局标签<html>,<head>,<body>
@@ -25,11 +25,11 @@ next-app/
 │  ├─ 404.js            404 页面
 │  ├─ 500.js            500 页面
 │  └─ api/...
-├─ components/          可复用的组件
-│  └─ layout.js
-├─ lib/                 可复用的业务逻辑
+├─ models/
 │  └─ fetch_data.js
-└─ styles/              样式
+├─ views/
+│  └─ layout.js
+└─ styles/
    ├─ global.css
    └─ layout.module.css
 ```
@@ -73,8 +73,6 @@ export default function App({ Component, pageProps }) {
 ```
 
 ### 环境变量
-
-环境变量配置文件：
 
 > $(NODE_ENV): development, production, test
 
@@ -228,7 +226,13 @@ import mountains from "../public/mountains.jpg";
 const Intrinsic = () => (
   <div>
     <h1>Image Component With Layout Intrinsic</h1>
-    <Image alt="Mountains" src={mountains} layout="intrinsic" width={700} height={475} />
+    <Image
+      alt="Mountains"
+      src={mountains}
+      layout="intrinsic"
+      width={700}
+      height={475}
+    />
   </div>
 );
 
