@@ -176,7 +176,7 @@ Normal Flow 布局是一种垂直排列布局，时默认的布局方式。
 
 ### Flex 布局
 
-![flex](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox/flex_terms.png)
+![flex](images/flex_terms.png)
 
 Flex 布局是一维布局，它的目标注重于灵活地伸缩空间与对齐内容。
 
@@ -205,7 +205,7 @@ Flex 布局是一维布局，它的目标注重于灵活地伸缩空间与对齐
 
 ### Grid 布局
 
-![grid](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Grids/grid.png)
+![grid](images/grid.png)
 
 Grid 是二维布局，它的目标注重于整体规划区域并定位元素。
 

@@ -349,7 +349,7 @@ SELECT [DISTINCT] expr [AS fd_alias], ...       -- expr表示选择列或表达�
 <!-- entry end -->
 
 ## 联结查询
-![JOIN](https://www.runoob.com/wp-content/uploads/2019/01/sql-join.png)
+![JOIN](images/sql-join.png)
 ```sql
 -- 自联结 --
 SELECT ...

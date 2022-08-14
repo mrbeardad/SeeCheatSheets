@@ -79,7 +79,7 @@ function MyComponent(props) {
 
 1. 当组件首次被调用时，挂载并渲染组件；
 2. 当异步调用组件的`setState()`且更改了`state`，则尝试重新渲染整个子组件树
-   - 利用`React.PureComponent`与`React.memo()`会在重新渲染前浅比较`props`的每个属性和`state`，若无变化则无需重新渲染
+   - 利用`React.PureComponent`与`React.memo()`会在重新渲染前浅比较`props`的每个子属性，若无变化则无需重新渲染
 3. 当组件不再被调用时卸载子组件。
 
 > **严格模式下的开发模式中，setState()等生命周期函数可能会被连续调用两次！**
