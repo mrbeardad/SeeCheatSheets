@@ -23,17 +23,16 @@
 - [React](react.md)：Web UI 框架
 - [Next.js](nextjs.md)：基于 React 的应用框架
 - [HTTP](http.md)：超文本传输协议
-- [WAS](security.md)：Web 应用安全
+- [WAS](was.md)：Web 应用安全
 - [SEO](seo.md)：搜索引擎优化
 
 ## Server
 
-- [Nginx](nginx.md)：用于路由与负载均衡
-- K8S：用于动态编排容器集群
-- [Docker](docker.md)：提供进程隔离的运行环境
+- [Nginx](nginx.md)：路由转发与负载均衡
+- [K8S](k8s.md)：动态编排容器集群
+- [Docker](docker.md)：打包并隔离进程的运行环境
 - [MySQL](sql.md)：关系型数据库
-- [Redis](redis.md)：数据结构化内存存储
-- Kafka：消息队列
+- [Redis](redis.md)：结构型数据缓存
 
 ## Coding
 
@@ -43,22 +42,22 @@
 
   - C++
     - [C++语法特性](cpp.md)
-    - [C++程序库](cppman.md)
+    - [C++程序库](cpplib.md)
     - [CMake 构建系统](cmake.md)
   - Go
     - [Go 语言基础](go.md)
-    - [Go 程序库](goman.md)
+    - [Go 程序库](golib.md)
   - JavaScript
     - [JS 语言基础](js.md)
   - Python
-    - [Python 语言基础](python.md)
+    - [Python 语言基础](py.md)
 
 ## 开发平台
 
 - [Linux 系统总结](linuxsum.md):star:：Linux 系统必备知识与技能
 
   - [Linux 知识体系](linux.md)
-  - [Linux 系统接口](apue.md)
+  - [Linux 系统接口](linuxapi.md)
   - [Shell 命令行](bash.md)
   - [开发者工具](devtool.md)
 
@@ -70,7 +69,6 @@
   - [处理器设计](cpu.md)
   - [汇编语言](asm.md)
   - [操作系统](os.md)
-  - [计算机组成](bus.md)
   - [计算机网络](network.md)
   - [数据库存储](innodb.md)
   - [数据结构与算法](dsaa.md)
