@@ -15,8 +15,8 @@
     - [HTTP 严格传输安全(HSTS)](#http-严格传输安全hsts)
     - [MIME 类型嗅探限制](#mime-类型嗅探限制)
     - [嵌套框架限制](#嵌套框架限制)
-    - [Cookie 安全](#cookie-安全)
     - [跨源资源共享(CORS)](#跨源资源共享cors)
+    - [Cookie 安全](#cookie-安全)
     - [内容安全策略(CSP)](#内容安全策略csp)
 
 ## 报文
@@ -220,25 +220,6 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 | `DENY`                    | 禁止任何形式的嵌套       |
 | `SAMEORIGIN`              | 允许同源请求嵌套         |
 
-### Cookie 安全
-
-> `Site`表示两 URL 的 secheme 相同且 host 中的可注册域名相同（表示网站来自同一组织）
-
-| `Set-Cookie`响应首部 | 备注（`;`分号分隔列表）                                                                                                               |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `<name>=<value>`     | name 不能包含控制字符、空白符和一些符号；value 可以用双引号来转移特殊字符；若需多个 name=value 对则添加多个`Set-Cookie`               |
-| `Max-Age=`           | 指定 cookie 持久化时间，默认 session cookie                                                                                           |
-| `Expires=`           | 指定 cookie 持久化时间点，默认 session cookie                                                                                         |
-| `Domain=`            | 指定 cookie 对应的域名且包括子域名，默认当前域名且不含子域名                                                                          |
-| `Path=`              | 指定 cookie 对应的路径且包括子路径，默认匹配所有路径                                                                                  |
-| `Secure`             | 指定 cookie 仅在 https 协议下使用                                                                                                     |
-| `HttpOnly`           | 指定 cookie 不能被 JS 访问                                                                                                            |
-| `SameSite=`          | `Strict`拒绝任何跨站请求，（默认）`Lax`表示仅额外允许导航页面（更改浏览器地址栏）的跨站请求，`None`表示允许跨站请求但必须设置`Secure` |
-
-| `Cookie`请求首部 | 备注（`;`分号分隔列表）             |
-| ---------------- | ----------------------------------- |
-| `<cookie-list>`  | 浏览器访问资源时会携带匹配的 cookie |
-
 ### 跨源资源共享(CORS)
 
 - `XMLHttpRequest` 或 Fetch APIs 发起的跨源 HTTP 请求
@@ -279,6 +260,25 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 | `Access-Control-Expose-Headers: <header>[, <header>]*` | 允许`getResponseHeader`访问获取非基本首部                                                      |
 | `Access-Control-Allow-Credentials: true`               | 允许跨源请求携带凭证，否则浏览器忽略响应                                                       |
 | `Referrer-Policy: strict-origin-when-cross-origin`     | 浏览器默认行为，同源请求发送 origin、path 和 query，跨源请求发送仅 origin，若非 HTTPS 则不发送 |
+
+### Cookie 安全
+
+> `Site`表示两 URL 的 secheme 相同且 host 中的可注册域名相同（表示网站来自同一组织）
+
+| `Set-Cookie`响应首部 | 备注（`;`分号分隔列表）                                                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `<name>=<value>`     | name 不能包含控制字符、空白符和一些符号；value 可以用双引号来转移特殊字符；若需多个 name=value 对则添加多个`Set-Cookie`               |
+| `Max-Age=`           | 指定 cookie 持久化时间，默认 session cookie                                                                                           |
+| `Expires=`           | 指定 cookie 持久化时间点，默认 session cookie                                                                                         |
+| `Domain=`            | 指定 cookie 对应的域名且包括子域名，默认当前域名且不含子域名                                                                          |
+| `Path=`              | 指定 cookie 对应的路径且包括子路径，默认匹配所有路径                                                                                  |
+| `Secure`             | 指定 cookie 仅在 https 协议下使用                                                                                                     |
+| `HttpOnly`           | 指定 cookie 不能被 JS 访问                                                                                                            |
+| `SameSite=`          | `Strict`拒绝任何跨站请求，（默认）`Lax`表示仅额外允许导航页面（更改浏览器地址栏）的跨站请求，`None`表示允许跨站请求但必须设置`Secure` |
+
+| `Cookie`请求首部 | 备注（`;`分号分隔列表）             |
+| ---------------- | ----------------------------------- |
+| `<cookie-list>`  | 浏览器访问资源时会携带匹配的 cookie |
 
 ### 内容安全策略(CSP)
 

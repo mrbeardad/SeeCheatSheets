@@ -1,49 +1,55 @@
 # 目录
+
 <!-- vim-markdown-toc GFM -->
 
 - [目录](#目录)
-- [安装与使用](#安装与使用)
-- [SQL基础](#sql基础)
-  - [系统信息](#系统信息)
-  - [用户管理](#用户管理)
-  - [库](#库)
-  - [表](#表)
-  - [模式](#模式)
-  - [行记录](#行记录)
-  - [数据类型](#数据类型)
-    - [整数类型](#整数类型)
-    - [实数类型](#实数类型)
-    - [枚举类型](#枚举类型)
-    - [字符类型](#字符类型)
-    - [时间日期](#时间日期)
-  - [类型约束](#类型约束)
-  - [运算符](#运算符)
-  - [函数](#函数)
-- [SQL查询](#sql查询)
-  - [查询语句](#查询语句)
-  - [联结查询](#联结查询)
-  - [嵌套查询](#嵌套查询)
-  - [全文查询](#全文查询)
-- [视图](#视图)
-- [分区](#分区)
-- [事务](#事务)
+  - [安装与使用](#安装与使用)
+  - [SQL 基础](#sql-基础)
+    - [系统信息](#系统信息)
+    - [用户管理](#用户管理)
+    - [库](#库)
+    - [表](#表)
+    - [模式](#模式)
+    - [行记录](#行记录)
+    - [数据类型](#数据类型)
+      - [整数类型](#整数类型)
+      - [实数类型](#实数类型)
+      - [枚举类型](#枚举类型)
+      - [字符类型](#字符类型)
+      - [时间日期](#时间日期)
+    - [类型约束](#类型约束)
+    - [运算符](#运算符)
+    - [函数](#函数)
+  - [SQL 查询](#sql-查询)
+    - [查询语句](#查询语句)
+    - [联结查询](#联结查询)
+    - [嵌套查询](#嵌套查询)
+    - [全文查询](#全文查询)
+  - [视图](#视图)
+  - [分区](#分区)
+  - [事务](#事务)
 
 <!-- vim-markdown-toc -->
 
-# 安装与使用
-<!-- entry begin: mysql mysqld initialize install -->
-**初始化mysql**
-* `mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
-* `mysqld --initialize --user=mysql --basedir=/usr --datadir=/var/lib/mysql`
+## 安装与使用
 
-**连接mysql**
-* `mysql -h 主机名 -P 端口号 -D 数据库名 -u 用户名 -p密码`
+<!-- entry begin: mysql mysqld initialize install -->
+
+```sh
+# 初始化 mariadb
+mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+# 初始化 mysql
+mysqld --initialize --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+# 连接数据库
+mysql -h 主机名 -P 端口号 -D 数据库名 -u 用户名 -p密码
+```
+
 <!-- entry end -->
 
+## SQL 基础
 
-# SQL基础
-## 系统信息
-<!-- entry begin: sql variable status engines charset collation -->
+### 系统信息
+
 ```sql
 -- 默认变量作用域为SESSION
 SHOW VARAIABLES [LIKE 'pattern'];
@@ -58,10 +64,9 @@ SET  NAMES charset;
     -- SET character_set_connection = charset;  -- 服务器处理请求时使用的字符集
     -- SET character_set_results    = charset;  -- 回传给客户端时使用的字符集
 ```
-<!-- entry end -->
 
-## 用户管理
-<!-- entry begin: sql user grant -->
+### 用户管理
+
 ```sql
 SELECT * FROM mysql.user;                                   -- 查询用户
 CREATE USER username [IDENTIFIED BY [PASSWORD] 'passwd'];   -- 创建用户
@@ -85,10 +90,9 @@ FLUSH PRIVILEGES;                                           -- 刷新权限
     -- SELECT
     -- ...
 ```
-<!-- entry end -->
 
-## 库
-<!-- entry begin: sql database db -->
+### 库
+
 ```sql
 SHOW   DATABASES [LIKE 'pattern'];          -- 查询数据库
 CREATE DATABASE  [IF NOT EXISTS] db_name    -- 创建数据库
@@ -97,9 +101,9 @@ ALTER  DATABASE  db_name option             -- 修改数据库选项
 
 USE    db_name;                             -- 选择数据库
 ```
-<!-- entry end -->
 
-## 表
+### 表
+
 ```sql
 SHOW   TABLES [LIKE 'pattern'];                         -- 查询数据表
 SHOW   TABLE  STATUS [LIKE 'pattern']                   -- 查询数据表详情
@@ -117,10 +121,13 @@ DROP    TABLE tbl_name;                                 -- 删除数据表
 ALTER   TABLE tbl_name option=val;                      -- 修改表选项
 RENAME  TABLE tbl_name TO [new_db_name.]new_tbl_name;   -- 修改表名
 ```
+
 <!-- entry end -->
 
-## 模式
+### 模式
+
 <!-- entry begin: sql table index metadata -->
+
 ```sql
 -- field
 SHOW COLUMNS FROM tbl_name;
@@ -138,10 +145,13 @@ ALTER TABLE tbl_name DROP INDEX idx_name;
 ALTER TABLE tbl_name ADD  FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name);
 ALTER TABLE tbl_name DROP FOREIGN KEY fk_name;
 ```
+
 <!-- entry end -->
 
-## 行记录
+### 行记录
+
 <!-- entry begin: sql insert delete 事务 -->
+
 ```sql
 -- 插入
 INSERT INTO tbl_name [(fd_name, ...)]   -- 外键列需要指定为该键所指向的列中已存在的值以进行关联
@@ -160,13 +170,17 @@ UPDATE [IGNORE] tbl_name                -- IGNORE表示失败时不回滚而继�
 SET fd_name=value, ...
 [WHERE clause] ;                        -- 默认修改所有行
 ```
+
 <!-- entry end -->
 
-## 数据类型
-### 整数类型
-> * 支持在其后添加`(N)`，指定十进制显示时的最小显示位数，最大255（不影响存储与计算） **deprecated**
-* 支持在其后添加`UNSIGNED`，指定为无符型整数
-* 计算时统一使用`BIGINT`类型
+### 数据类型
+
+#### 整数类型
+
+> - 支持在其后添加`(N)`，指定十进制显示时的最小显示位数，最大 255（不影响存储与计算） **deprecated**
+
+- 支持在其后添加`UNSIGNED`，指定为无符型整数
+- 计算时统一使用`BIGINT`类型
 
 | 类型      | 字节 |
 | --------- | ---- |
@@ -176,10 +190,12 @@ SET fd_name=value, ...
 | INT       | 4    |
 | BIGINT    | 8    |
 
-### 实数类型
-> * 对于FLOAT与DOUBLE，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（影响存储大小限制） **deprecated**
-* 对于DECIMAL，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（默认`(10, 0)`）
-* 计算时统一使用`DOUBLE`类型
+#### 实数类型
+
+> - 对于 FLOAT 与 DOUBLE，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（影响存储大小限制） **deprecated**
+
+- 对于 DECIMAL，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（默认`(10, 0)`）
+- 计算时统一使用`DOUBLE`类型
 
 | 类型    | 字节 |
 | ------- | ---- |
@@ -187,47 +203,50 @@ SET fd_name=value, ...
 | DOUBLE  | 8    |
 | DECIMAL | ∞    |
 
-### 枚举类型
-* 支持在其后添加`('str1', 'str2')`来设置枚举字符
-    * 对于ENUM，枚举字符映射为1个整数
-    * 对于SET，枚举字符映射为1个bit
-* 对于ENUM，存储、计算、比较、索引时使用数字，显示时使用映射的字符。
-特别注意排序时也是按数字大小来，所以最好映射的字符顺序与数字顺序相对应
+#### 枚举类型
+
+- 支持在其后添加`('str1', 'str2')`来设置枚举字符
+  - 对于 ENUM，枚举字符映射为 1 个整数
+  - 对于 SET，枚举字符映射为 1 个 bit
+- 对于 ENUM，存储、计算、比较、索引时使用数字，显示时使用映射的字符。
+  特别注意排序时也是按数字大小来，所以最好映射的字符顺序与数字顺序相对应
 
 | 类型 | 说明                                       |
 | ---- | ------------------------------------------ |
 | ENUM | 数字与字符串间的双射，尽量使用整数代替枚举 |
 | SET  | 给每一位取个可读性高的名称                 |
 
-### 字符类型
-* 对于CHAR，支持在其后添加`(N)`，指定固定字符数（字节数最小为N）
-* 对于VARCHAY，支持在其后添加`(N)`，指定最大字符数
-* 对于BINARY，支持在其后添加`(N)`，指定固定字节数
-* 对于VARBINAY，支持在其后添加`(N)`，指定最大字节数
-* 对于TEXT族与BLOB族，排序时仅比较前`max_sort_length`字节，且可能使用外部空间存储数据而在表中存储指针
+#### 字符类型
 
-| 类型            | 长度             | 说明                                 |
-| --------------- | ---------------- | ------------------------------------ |
-| CHAR            | 0~255       字符 | 固定字符数，忽略输入的尾后空格       |
-| VARCHAR         | 0~65535     字节 | 可变字符数                           |
-| BINARY          | 0~255       字节 | 类似CHAR，但用`\0`填充且索引时不忽略 |
-| VARBINARY       | 0~65535     字节 | 类似VARCHAR                          |
-| TINYTEXT        | 0~255       字符 | 大字符串数据                         |
-| SMALLTEXT(TEXT) | 0~65535     字符 | 大字符串数据                         |
-| MEDIUMTEXT      | 0~16777215  字符 | 大字符串数据                         |
-| LONGTEXT        | 0~4294967286字符 | 大字符串数据                         |
-| TINYBLOB        | 0~255       字节 | 大二进制数据                         |
-| SMALLBLOB(BLOB) | 0~65535     字节 | 大二进制数据                         |
-| MEDIUMBLOB      | 0~16777215  字节 | 大二进制数据                         |
-| LONGBLOB        | 0~4294967286字节 | 大二进制数据                         |
+- 对于 CHAR，支持在其后添加`(N)`，指定固定字符数（字节数最小为 N）
+- 对于 VARCHAY，支持在其后添加`(N)`，指定最大字符数
+- 对于 BINARY，支持在其后添加`(N)`，指定固定字节数
+- 对于 VARBINAY，支持在其后添加`(N)`，指定最大字节数
+- 对于 TEXT 族与 BLOB 族，排序时仅比较前`max_sort_length`字节，且可能使用外部空间存储数据而在表中存储指针
 
-### 时间日期
-* 尽量选择TIMESTAMP
-    * 根据客户端时区`time_zone`将timestamp转换为UTC存储，返回给客户端时又转换为客户端时区的时间
-    * 支持`DEFAULT CURRENT_TIMESTAMP`
-    * 支持`ON UPDATE CURRENT_TIMESTAMP`
-    * 默认情况开启选项`explicit_defaults_for_timestamp`，表示第一个timestamp列默认具有上述两属性
-* 除DATE外，其余类型支持在其后添加`(fps)`表示秒级小数位数
+| 类型            | 长度              | 说明                                  |
+| --------------- | ----------------- | ------------------------------------- |
+| CHAR            | 0~255 字符        | 固定字符数，忽略输入的尾后空格        |
+| VARCHAR         | 0~65535 字节      | 可变字符数                            |
+| BINARY          | 0~255 字节        | 类似 CHAR，但用`\0`填充且索引时不忽略 |
+| VARBINARY       | 0~65535 字节      | 类似 VARCHAR                          |
+| TINYTEXT        | 0~255 字符        | 大字符串数据                          |
+| SMALLTEXT(TEXT) | 0~65535 字符      | 大字符串数据                          |
+| MEDIUMTEXT      | 0~16777215 字符   | 大字符串数据                          |
+| LONGTEXT        | 0~4294967286 字符 | 大字符串数据                          |
+| TINYBLOB        | 0~255 字节        | 大二进制数据                          |
+| SMALLBLOB(BLOB) | 0~65535 字节      | 大二进制数据                          |
+| MEDIUMBLOB      | 0~16777215 字节   | 大二进制数据                          |
+| LONGBLOB        | 0~4294967286 字节 | 大二进制数据                          |
+
+#### 时间日期
+
+- 尽量选择 TIMESTAMP
+  - 根据客户端时区`time_zone`将 timestamp 转换为 UTC 存储，返回给客户端时又转换为客户端时区的时间
+  - 支持`DEFAULT CURRENT_TIMESTAMP`
+  - 支持`ON UPDATE CURRENT_TIMESTAMP`
+  - 默认情况开启选项`explicit_defaults_for_timestamp`，表示第一个 timestamp 列默认具有上述两属性
+- 除 DATE 外，其余类型支持在其后添加`(fps)`表示秒级小数位数
 
 | 类型      | 字节 | 格式                |
 | --------- | ---- | ------------------- |
@@ -236,50 +255,51 @@ SET fd_name=value, ...
 | DATETIME  | 8    | YYYY-mm-dd HH:MM:SS |
 | TIMESTAMP | 4    | YYYY-mm-dd HH:MM:SS |
 
+### 类型约束
 
-## 类型约束
-| 约束             | 说明         | 备注                                                |
-| ---------------- | ------------ | --------------------------------------------------- |
-| `UNIQUE`         | 不能重复     | PRIMARY KEY的必要条件，UNIQUE KEY的充分条件         |
-| `NOT NULL`       | 不能为空     | PRIMARY KEY的必要条件                               |
-| `AUTO_INCREMENT` | 自动增加数值 | 隐含UNIQUE，一个表只能有一个列为该限制且必须作为key |
-| `DEFAULT val`    | 设置默认值   | 仅支持常量默认值                                    |
+| 约束             | 说明         | 备注                                                  |
+| ---------------- | ------------ | ----------------------------------------------------- |
+| `UNIQUE`         | 不能重复     | PRIMARY KEY 的必要条件，UNIQUE KEY 的充分条件         |
+| `NOT NULL`       | 不能为空     | PRIMARY KEY 的必要条件                                |
+| `AUTO_INCREMENT` | 自动增加数值 | 隐含 UNIQUE，一个表只能有一个列为该限制且必须作为 key |
+| `DEFAULT val`    | 设置默认值   | 仅支持常量默认值                                      |
 
+### 运算符
 
-## 运算符
 <!-- entry begin: sql operator -->
-* sql运算符
-    * 逻辑：`NOT` `AND` `OR` `XOR`          ：注意运算符优先级问题
-    * 算术：`+` `-` `*` `/` `%`             ：可以用`()`来改变优先级
-    * 比较：
-        * `=` `<>` `<` `<=` `>` `=>`        ：任意一边为NULL则会返回false
-        * `<=>`                             ：当两边相等或均为NULL返回true
-        * `IS [NOT] NULL value`
-    * 关系：
-        * `[NOT] LIKE   'pattern'`          ：支持通配符`_`和`%`，匹配完整字符串
-        * `[NOT] REGEXP 'pattern'`          ：转义序列使用类似`\\.`，匹配子串
-        * `[NOT] BETWEEN value1 AND value2`
-        * `[NOT] IN     (val, ...)`
-        * `[NOT] EXISTS (SELECT 语句)`      ：判断子查询是否检索出数据
-        * `<OP> ALL     (val, ...)`         ：列表中所有行都符合`<OP>`
-        * `<OP> ANY     (val, ...)`         ：列表中有一行符合`<OP>`
+
+- 算术：`+` `-` `*` `/` `%` ：可以用`()`来改变优先级
+- 关系：
+- `=` `<>` `<` `<=` `>` `=>` ：任意一边为 NULL 则会返回 false
+- `<=>` ：当两边相等或均为 NULL 返回 true
+- `IS [NOT] NULL value`
+- `[NOT] LIKE 'pattern'` ：支持通配符`_`和`%`，匹配完整字符串
+- `[NOT] REGEXP 'pattern'` ：转义序列使用类似`\\.`，匹配子串
+- `[NOT] BETWEEN value1 AND value2`
+- `[NOT] IN (val, ...)`
+- `[NOT] EXISTS (SELECT 语句)` ：判断子查询是否检索出数据
+- `<OP> ALL (val, ...)` ：列表中所有行都符合`<OP>`
+- `<OP> ANY (val, ...)` ：列表中有一行符合`<OP>`
+- 逻辑：`NOT` `AND` `OR` `XOR` ：注意运算符优先级问题
 <!-- entry end -->
 
-## 函数
+### 函数
+
 <!-- entry begin: sql function -->
-| 字符处理函数             | 描述                |
-| ------------------------ | ------------------- |
-| CONCAT(s, s)             | 拼接两数据          |
-| LEFT(s, l)               | 左边l个字符         |
-| RIGHT(s, l)              | 右边l个字符         |
-| SUBSTRING(s, i, l)       | 返回子串，下标1开始 |
-| LOCATE(substr, s[, pos]) | 返回子串起始下标    |
-| LENGTH(s)                | 返回字符串长度      |
-| UPPER(s)                 | 转为大写            |
-| LOWER(s)                 | 转为小写            |
-| LTRIM(s)                 | 删除左侧空白符      |
-| RTRIM(s)                 | 删除右侧空白符      |
-| TRIM(s)                  | 删除两侧空白符      |
+
+| 字符处理函数             | 描述                  |
+| ------------------------ | --------------------- |
+| CONCAT(s, s)             | 拼接两数据            |
+| LEFT(s, l)               | 左边 l 个字符         |
+| RIGHT(s, l)              | 右边 l 个字符         |
+| SUBSTRING(s, i, l)       | 返回子串，下标 1 开始 |
+| LOCATE(substr, s[, pos]) | 返回子串起始下标      |
+| LENGTH(s)                | 返回字符串长度        |
+| UPPER(s)                 | 转为大写              |
+| LOWER(s)                 | 转为小写              |
+| LTRIM(s)                 | 删除左侧空白符        |
+| RTRIM(s)                 | 删除右侧空白符        |
+| TRIM(s)                  | 删除两侧空白符        |
 
 | 时间处理函数                     | 描述                   |
 | -------------------------------- | ---------------------- |
@@ -310,21 +330,24 @@ SET fd_name=value, ...
 | Rand()       | 随机数 |
 | PI()         | 圆周率 |
 
-| 聚合函数 | 描述                      |
-| -------- | ------------------------- |
-| FIRST(f) | 返回第一个值              |
-| LAST(f)  | 返回最后一个值            |
-| MAX(f)   | 返回最大值                |
-| MIN(f)   | 返回最小值                |
-| SUM(f)   | 返回总和                  |
-| COUNT(f) | 返回行数，`*`会计算NULL行 |
-| AVG(f)   | 返回平均值                |
+| 聚合函数 | 描述                        |
+| -------- | --------------------------- |
+| FIRST(f) | 返回第一个值                |
+| LAST(f)  | 返回最后一个值              |
+| MAX(f)   | 返回最大值                  |
+| MIN(f)   | 返回最小值                  |
+| SUM(f)   | 返回总和                    |
+| COUNT(f) | 返回行数，`*`会计算 NULL 行 |
+| AVG(f)   | 返回平均值                  |
 
 <!-- entry end -->
 
-# SQL查询
-## 查询语句
+## SQL 查询
+
+### 查询语句
+
 <!-- entry begin: sql select -->
+
 ```sql
 SELECT [DISTINCT] expr [AS fd_alias], ...       -- expr表示选择列或表达式列
 [FROM tbl_name [AS tbl_alias], ...]             -- 若有多个表则expr中列名必须加上表名
@@ -346,10 +369,13 @@ SELECT [DISTINCT] expr [AS fd_alias], ...       -- expr表示选择列或表达�
 [UNION [ALL]]                                   -- 合并两查询结果（上下连接）。ALL表示允许重复，默认删掉重复值
 [SELECT 语句];                                  -- 列数要相同，且类型可互相转换。组合查询仅能在最后一条SELECT语句有ORDER BY子句
 ```
+
 <!-- entry end -->
 
-## 联结查询
+### 联结查询
+
 ![JOIN](images/sql-join.png)
+
 ```sql
 -- 自联结 --
 SELECT ...
@@ -357,14 +383,16 @@ FROM tbl AS t1, tbl AS t2
 WHERE t1.id = t2.id AND t2.grade > 60   -- 查询grade大于60的id对应的信息
 ```
 
-## 嵌套查询
+### 嵌套查询
+
 ```sql
 SELECT id, (SELECT 语句) AS expr
 FROM ...
 WHERE fd_name IN (SELECT 语句)
 ```
 
-## 全文查询
+### 全文查询
+
 ```sql
 -- 需要先设置全文索引
 SELECT ...
@@ -372,14 +400,16 @@ FROM ...
 WHERE MATCH(fulltext) AGAINST('word1 word2' [WITH QUERY EXPANSION | IN BOOLEAN MODE])
 ```
 
-# 视图
+## 视图
+
 ```sql
 CREATE VIEW view_name AS SELECT 语句;
 DROP   VIEW view_name;
 SHOW CREATE VIEW view_name;
 ```
 
-# 分区
+## 分区
+
 ```sql
 CREATE TABLE ( ... )
     [PARTITION BY RANGE (expr) (PARTITION part_name VALUES LESS THAN (val|MAXVALUE), ...)]  -- 仅支持单列的整数比较
@@ -395,7 +425,8 @@ ALTER TABLE tbl_name REORGANIZE PARTITION part_name,... into(
 SELECT ... FROM tbl_name PARTITION (part_name);
 ```
 
-# 事务
+## 事务
+
 ```sql
 BEGIN;                                  -- 开启事务
 ...

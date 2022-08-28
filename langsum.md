@@ -7,7 +7,6 @@
   - [表达式](#表达式)
   - [语句](#语句)
   - [函数](#函数)
-  - [异步](#异步)
   - [面向对象](#面向对象)
     - [封装](#封装)
     - [继承](#继承)
@@ -18,23 +17,29 @@
 ## 依赖
 
 - C++
+
   - 程序入口：main 函数
   - 依赖单元：一个头文件 + 一个实现文件（可选）
   - 依赖导出：头文件中所有宏与符号，初始化：global-constructor
   - 依赖导入：`#include <path/to/header.hpp>`，符号限定于命名空间
   - 依赖管理：手动（git-submodule & cmake）
+
 - Go
+
   - 程序入口：main 包中 main 函数
   - 依赖单元：一个目录（不包括子目录）
   - 依赖导出：大写字母开头的符号，初始化：包中所有 init 函数
   - 依赖导入：`import "module.github.com/path/to/package"`，符号限定于包名
   - 依赖管理：自动（go-mod）
+
 - JavaScript
+
   - 程序入口：任意源文件
   - 依赖单元：一个源文件
   - 依赖导出：`export`声明导出，初始化：导入即执行
   - 依赖导入：`import { name } from 'root/path/to/module'`，符号限定于模块名
   - 依赖管理：自动（npm）
+
 - Python
   - 程序入口：任意源文件(`__init__ == "__main__"`)
   - 依赖单元：一个源文件
@@ -224,18 +229,19 @@
 - C++
 
   ```cpp
-  auto example(const string& s, int i, T& t) -> char {
+  char example(const string& s, int i, T& t) {
       return t = s[i];
   }
 
   auto lambda = [&r, v] (auto& elem) mutable {}
   ```
 
-  - 形参修饰：`const T&` ? `T` ? `T&`
-  - 函数声明：`inline` ? `noexcept`
-  - 函数重载：`-> T&` ? `T&&` ? `template<typename T>`
+  - 签名修饰：`inline`, `constexpr`, `noexcept`
+  - 形参列表
+  - 单返回值
   - 默认实参
-  - 泛型变参包`typename... T`,`T...`
+  - 函数重载
+  - 泛型
 
 - Go
 
@@ -246,9 +252,9 @@
   }
   ```
 
-  - 形参指针
-  - 返回列表
-  - 切片变参包`args...`
+  - 形参列表
+    - 切片变参包：`args...`
+  - 返回值列表
 
 - JavaScript
 
@@ -263,7 +269,8 @@
   };
   ```
 
-  - `arguments`对象
+  - 形参列表
+  - 单返回值
   - 默认实参
   - 数组变参包`...args`
 
@@ -276,9 +283,11 @@
   f = lambda x, y: x + y
   ```
 
-  - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
-  - 位置参数`/`与键值参数`*`
-  - 位置变参包`*posargs`与键值变参包`**kwargs`
+  - 形参列表
+    - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
+    - 位置参数`/`与键值参数`*`
+    - 位置变参包`*posargs`与键值变参包`**kwargs`
+  - 单返回值
   - 默认实参：仅定义时构造一次，注意引用类型
 
 ## 面向对象
@@ -286,7 +295,7 @@
 ### 封装
 
 - C++
-  - 访问控制：public, private, protected
+  - 访问控制：public, protected, private
   - 结构定义：默认实例唯一，static 类唯一
   - 方法定义：默认实例相关，static 类相关
   - 构造控制：构造函数

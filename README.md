@@ -37,12 +37,12 @@
 ## Coding
 
 - [代码经验](coding.md):star:：逻辑、分支、循环、递归、下标
-- [设计模式](dspt.md):star:：依赖倒置、接口分离、is-a、has-a、use-a
+- [设计模式](dspt.md):star:：面向接口、职责划分、关系确定
 - [语言总结](langsum.md):star:
 
   - C++
-    - [C++语法特性](cpp.md)
-    - [C++程序库](cpplib.md)
+    - [C++ 语法特性](cpp.md)
+    - [C++ 程序库](cpplib.md)
     - [CMake 构建系统](cmake.md)
   - Go
     - [Go 语言基础](go.md)
@@ -58,8 +58,12 @@
 
   - [Linux 知识体系](linux.md)
   - [Linux 系统接口](linuxapi.md)
-  - [Shell 命令行](bash.md)
+  - [Bash 命令行](bash.md)
   - [开发者工具](devtool.md)
+
+- Windows 系统
+  - Windows 知识体系
+  - Cmd 命令行
 
 ## 底层原理
 
@@ -77,4 +81,5 @@
 
 - [Markdown 语法](markdown.md)
 - [Regex 语法](regex.md)
+- [Protobuf 语法](protobuf.md)
 - [比特币系统](bitcoin.md)

@@ -4,28 +4,28 @@
 
 - [目录](#目录)
 - [系统启动](#系统启动)
-  - [MBR 与 GPT](#mbr与gpt)
+  - [MBR 与 GPT](#mbr-与-gpt)
     - [MBR](#mbr)
     - [GPT](#gpt)
-  - [BIOS 与 UEFI](#bios与uefi)
+  - [BIOS 与 UEFI](#bios-与-uefi)
     - [BIOS](#bios)
     - [UEFI](#uefi)
   - [grub](#grub)
-    - [grub 启动流程](#grub启动流程)
-    - [grub 配置](#grub配置)
-    - [grub 脚本](#grub脚本)
-    - [grub 安全](#grub安全)
+    - [grub 启动流程](#grub-启动流程)
+    - [grub 配置](#grub-配置)
+    - [grub 脚本](#grub-脚本)
+    - [grub 安全](#grub-安全)
   - [kernel](#kernel)
-    - [kernel 启动流程](#kernel启动流程)
-    - [kernel 引导参数](#kernel引导参数)
+    - [kernel 启动流程](#kernel-启动流程)
+    - [kernel 引导参数](#kernel-引导参数)
   - [systemd](#systemd)
-    - [systemd 启动流程](#systemd启动流程)
-    - [systemd 管理命令](#systemd管理命令)
-    - [systemd 单元配置](#systemd单元配置)
-      - [Unit 小节](#unit小节)
-      - [Install 小节](#install小节)
-      - [Service 小节](#service小节)
-      - [Timer 小节](#timer小节)
+    - [systemd 启动流程](#systemd-启动流程)
+    - [systemd 管理命令](#systemd-管理命令)
+    - [systemd 单元配置](#systemd-单元配置)
+      - [Unit 小节](#unit-小节)
+      - [Install 小节](#install-小节)
+      - [Service 小节](#service-小节)
+      - [Timer 小节](#timer-小节)
   - [getty&login](#gettylogin)
 - [用户管理](#用户管理)
 - [日志管理](#日志管理)
@@ -35,9 +35,9 @@
   - [语系与字符集](#语系与字符集)
   - [网络与防火墙](#网络与防火墙)
 - [硬盘管理](#硬盘管理)
-  - [GPT 分区](#gpt分区)
-  - [LVM 逻辑卷](#lvm逻辑卷)
-  - [XFS 文件系统](#xfs文件系统)
+  - [GPT 分区](#gpt-分区)
+  - [LVM 逻辑卷](#lvm-逻辑卷)
+  - [XFS 文件系统](#xfs-文件系统)
   - [归档包](#归档包)
 - [文件系统](#文件系统)
   - [文件描述符](#文件描述符)
@@ -53,12 +53,12 @@
   - [进程环境](#进程环境)
   - [信号机制](#信号机制)
   - [资源限制](#资源限制)
-    - [CGroup 机制](#cgroup机制)
-    - [ulimit 机制](#ulimit机制)
+    - [CGroup 机制](#cgroup-机制)
+    - [ulimit 机制](#ulimit-机制)
 - [终端](#终端)
-  - [终端结构](#终端结构)
-  - [作业控制](#作业控制)
-  - [伪终端](#伪终端)
+    - [终端结构](#终端结构)
+    - [作业控制](#作业控制)
+    - [伪终端](#伪终端)
 
 <!-- vim-markdown-toc -->
 
@@ -1059,11 +1059,11 @@ _ -s ：只还原指定的文件或目录 \* -I ：查询基础数据库/var/lib
 
 <!-- entry begin: xfs_repair -->
 
-- xfs_repair
-_ -f ：对 image-file 修复
+- xfs*repair
+* -f ：对 image-file 修复
 _ -n ：只检测
 _ -l ：指定 logdev
-_ -d ：用于单用户模式强制恢复以 ro 挂载的/
+\_ -d ：用于单用户模式强制恢复以 ro 挂载的/
 <!-- entry end -->
 
 ## 归档包
@@ -1259,7 +1259,7 @@ _ -h ：人性化 size \* -i ：显示 inode 使用情况
 
 典型的文件信息，由`stat`命令打印
 
-```
+```txt
   File: /dev/tty
   Size: 0               Blocks: 0          IO Block: 4096   character special file
 Device: 6h/6d   Inode: 14344       Links: 1     Device type: 5,0
@@ -1699,9 +1699,9 @@ _ -u ：实际用户可拥有的最大进程数
 
   - `\033[${fg_bg};5;${ID}m`
 
-- true color > `${fg_bg}`：前景为`38`，背景为`48`  
- > `${red|green|blue}`：见系统调色板 \* `\033[${fg_bg};2;${red};${green};${blue}m`
-<!-- entry end -->
+- true color > `${fg_bg}`：前景为`38`，背景为`48`
+  > `${red|green|blue}`：见系统调色板 \* `\033[${fg_bg};2;${red};${green};${blue}m`
+  <!-- entry end -->
 
 <!-- entry begin: ansi escape -->
 
