@@ -1347,8 +1347,22 @@ MetaFunc<T, N>          // 直接利用`变量模板`取代`::value`，但无法
 
 ### 成员指针
 
-- `Type Class::* mp {Class.member}`
-- `Class.*mp或Classptr->*mp`
+```cpp
+struct S {
+  void Foo();
+  int bar_;
+};
+
+int main() {
+  S s{1};
+  S* pS{&s};
+  
+  void (S::* mp2f)() = &S::Foo;
+  int S::* mp2v = &S::bar_;
+  
+  (s.*mp2f)();
+  sP->*mp2v;
+```
 
 ### volatile
 
