@@ -18,17 +18,17 @@
     - [适配器模式(Adapter)](#适配器模式adapter)
     - [装饰器模式(Decorator)](#装饰器模式decorator)
   - [行为型](#行为型)
-    - [解释器模式(Interpreter)](#解释器模式interpreter)
-    - [迭代器模式(Iterator)](#迭代器模式iterator)
-    - [责任链模式(Chain of Responsibility)](#责任链模式chain-of-responsibility)
-    - [命令模式(Command)](#命令模式command)
-    - [备忘录模式(Memento)](#备忘录模式memento)
-    - [中介者模式(Mediator)](#中介者模式mediator)
-    - [观察者模式(Observer)](#观察者模式observer)
     - [状态模式(State)](#状态模式state)
     - [策略模式(Strategy)](#策略模式strategy)
     - [模板方法模式(Template Method)](#模板方法模式template-method)
     - [访问者模式(Visitor)](#访问者模式visitor)
+    - [解释器模式(Interpreter)](#解释器模式interpreter)
+    - [迭代器模式(Iterator)](#迭代器模式iterator)
+    - [备忘录模式(Memento)](#备忘录模式memento)
+    - [责任链模式(Chain of Responsibility)](#责任链模式chain-of-responsibility)
+    - [命令模式(Command)](#命令模式command)
+    - [中介者模式(Mediator)](#中介者模式mediator)
+    - [观察者模式(Observer)](#观察者模式observer)
 
 ## 学习网站
 
@@ -38,18 +38,21 @@
 
 ## 设计原则
 
-开放关闭原则：设计模式最终目的为实现一个高可复用系统，能够在不修改原有系统前提下扩展功能
+开放关闭原则：设计模式最终目的为实现一个高可复用系统，能够在不修改原有系统前提下修改或扩展功能
 
 - 设计模式总方针：
   - 面向接口：调用方与实现方都面向接口编程
   - 职责划分：将功能拆分为粒度更小的功能，并分配到不同类中去负责
   - 关系确定：将各个类按照一定设计模式组装起来
-    - 实现关系：基类仅定义一个纯虚函数方法集合
-    - 泛化关系：基类实现基本功能并由派生类修改或扩展
-    - 依赖关系：A 依赖 B，B 作为 A 方法的局部变量或函数形参
-    - 关联关系：A 关联 B，B 作为 A 的成员变量且 A 与 B 平等
-    - 聚合关系：A 聚合 B，B 作为 A 的成员变量且 A 具有 B
-    - 组合关系：A 组合 B，B 作为 A 的成员变量且 A 管理 B
+
+| 关系     | 抽象概念                                               | 代码实现                                     |
+| -------- | ------------------------------------------------------ | -------------------------------------------- |
+| A 实现 B | B 无具体实例，仅作为抽象概念，                         | B 声明了纯虚函数方法，用作接口定义           |
+| A 泛化 B | B 存在具体实例，本身可完整运作                         | B 声明了非纯虚函数且提供了实现，用作基础实现 |
+| A 组合 B | A 作为整体不能没有部分 B，B 作为部分不能离开整体 A     | B 作为 A 的值类型成员变量                    |
+| A 聚合 B | A 作为整体可以没有部分 B，B 作为部分可独立存在且可共享 | B 作为 A 的指针类型成员变量                  |
+| A 关联 B | A 长久的使用 B                                         | B 作为 A 的指针类型成员变量                  |
+| A 依赖 B | A 临时的使用 B                                         | B 作为 A 方法的局部变量或函数形参            |
 
 ## 创建型
 
@@ -159,52 +162,6 @@
 
 行为型设计模式特别关注对象之间的通信。
 
-### 解释器模式(Interpreter)
-
-利用组合模式实现语法解析器，若语言支持还可利用重载操作符。满足以下条件才适用：
-
-- 业务规则频繁变化
-- 类似的结构不断重复出现
-- 并且容易抽象为语法规则的问题
-
-![Interpreter](images/Interpreter.webp)
-
-### 迭代器模式(Iterator)
-
-按顺序访问对象的元素，而不暴露其底层表示。
-
-![Iterator](images/Iterator.webp)
-
-### 责任链模式(Chain of Responsibility)
-
-赋予多个对象处理请求的机会，最终只有一个负责处理。
-
-![Chain of Responsibility](images/Chain_of_Responsibility.png)
-
-### 命令模式(Command)
-
-使用命令对象来传递请求，将请求的发送方与接收方解耦。类似制定通讯协议。
-
-![Command](images/Command.webp)
-
-### 备忘录模式(Memento)
-
-在外部存储内部状态以届时恢复
-
-![Memento](images/Memento.png)
-
-### 中介者模式(Mediator)
-
-利用中介对象来隔离一系列对象的复杂交互，使同事类对象之间无需显示相互引用
-
-![Mediator](images/Mediator.jpg)
-
-### 观察者模式(Observer)
-
-是一种发布/订阅模式，允许多个观察者对象查看事件。
-
-![Observer](images/Obeserver.jpg)
-
 ### 状态模式(State)
 
 利用更改内部抽象对象来实现状态切换。
@@ -228,3 +185,49 @@
 访问者允许你定义一个新的操作，而不需要改变它所操作的元素的类。双分派技术缺点是当添加元素类时需要修改所有访问者。
 
 ![Visitor](images/Visitor.png)
+
+### 解释器模式(Interpreter)
+
+利用组合模式实现语法解析器，若语言支持还可利用重载操作符。满足以下条件才适用：
+
+- 业务规则频繁变化
+- 类似的结构不断重复出现
+- 并且容易抽象为语法规则的问题
+
+![Interpreter](images/Interpreter.webp)
+
+### 迭代器模式(Iterator)
+
+按顺序访问对象的元素，而不暴露其底层表示。
+
+![Iterator](images/Iterator.webp)
+
+### 备忘录模式(Memento)
+
+在外部存储内部状态以届时恢复
+
+![Memento](images/Memento.png)
+
+### 责任链模式(Chain of Responsibility)
+
+赋予多个对象处理请求的机会，最终只有一个负责处理。
+
+![Chain of Responsibility](images/Chain_of_Responsibility.png)
+
+### 命令模式(Command)
+
+使用命令对象来传递请求，将请求的发送方与接收方解耦。类似制定通讯协议。
+
+![Command](images/Command.webp)
+
+### 中介者模式(Mediator)
+
+利用中介对象来隔离一系列对象的复杂交互，使同事类对象之间无需显示相互引用
+
+![Mediator](images/Mediator.jpg)
+
+### 观察者模式(Observer)
+
+是一种发布/订阅模式，允许多个观察者对象查看事件。
+
+![Observer](images/Obeserver.jpg)
