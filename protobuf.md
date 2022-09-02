@@ -52,37 +52,67 @@ enum Enumerations {
 ```
 
 ```cpp
-// numberic type
+// 使用 arana 一次性申请和释放内存可提高性能
+#include <google/protobuf/arena.h>
+
+Arena arena;
+
+MyFeatureMessage* arena_message = google::protobuf::Arena::CreateMessage<MyFeatureMessage>(&arena);
+
+// Numeric or Enum
 pb.foo();
 pb.set_foo(value);
 pb.clear_foo();
-
-// string type
+// Repeated
+pb.foo_size();
+pb.foo(index);
+pb.set_foo(index, value);
+pb.add_foo(value);
+pb.clear_foo();
 pb.foo();
 pb.mutable_foo();
+
+// String
+pb.foo();
 pb.set_foo(value);
+pb.mutable_foo();             // 暴露内部成员
+pb.clear_foo();
+pb.set_allocated_foo(&value); // 手动release_foo释放内存
+pb.release_foo();
+// Repeated
+pb.foo_size();
+pb.foo(index);
+pb.set_foo(index, value);
+pb.mutable_foo(index);
+pb.add_foo(value);
+pb.add_foo();                 // 添加并暴露元素
+pb.clear_foo();
+pb.foo();
+pb.mutable_foo();
+
+// Message
+pb.has_foo();
+pb.foo();
+pb.mutable_foo();
+pb.clear_foo();
 pb.set_allocated_foo(&value)
 pb.release_foo();
-pb.clear_foo();
-
-// repeated type
+// Repeated
 pb.foo_size();
-pb.foo();
-pb.mutable_foo();
 pb.foo(index);
 pb.mutable_foo(index);
-pb.set_foo(index, value); // message type无
-pb.add_foo(value);        // message type无
 pb.add_foo();
 pb.clear_foo();
+pb.foo();
+pb.mutable_foo();
 
-// map type
+// Map: 类似 C++ std::map
 
-// any type
+// Any
 any.Is<Type>();
 any.UnpackTo(&message);
 any.PackFrom(message);
 
-// oneof type
-pb.has_foo();
+// Oneof
+oneof.has_foo();
 ```
