@@ -36,7 +36,7 @@ project(project_name
     DESCRIPTION <project-description-string>)
 
 # 可执行文件
-add_executable(target
+add_executable(target [WIN32] [MACOSX_BUNDLE]
     files...)
 
 # HeaderOnly库
@@ -77,9 +77,20 @@ install(TARGETS targets...
 ### 编译参数
 
 ```cmake
-# INTERFACE :表示只用于链接到该target的其他target
-# PUBLIC    :表示用于target和链接到它的其他target
 # PRIVATE   :表示只用于target
+# PUBLIC    :表示用于target和链接到它的其他target
+# INTERFACE :表示只用于链接到该target的其他target
+
+# 标准版本
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+target_compile_features(target
+    PRIVATE cxx_std_11 ...)
+
+# 编译参数
+add_compile_options(options...)
+target_compile_options(target
+    PRIVATE options...)
 
 # 宏定义
 add_compile_definitions(MACRO_NAME=VAL)
@@ -89,21 +100,13 @@ target_compile_definitions(target
 # 头文件
 include_directories(dirs...)
 target_include_directories(target
-    PUBLIC dirs...)
+    PUBLIC dirs...      # 要导出作为接口的头文件设为PUBLIC
+    PRIVATE dirs...)    # 不导出的头文件设为PRIVATE
 
-# 链接库
+# 链接库：指定目标名、库名、路径名
 target_link_libraries(target
-    PRIVATE item...) # 目标名、库名、路径名
-
-# 标准版本
-set(CMAKE_CXX_STANDARD 11)
-target_compile_features(target
-    PRIVATE cxx_std_11 ...)
-
-# 编译参数
-add_compile_options(options...)
-target_compile_options(target
-    PRIVATE options...)
+    PIBLIC item...      # 若接口文件导入了该库的接口文件，则PUBLIC继承
+    PRIVATE item...)    # 若接口文件未导入该库的接口文件，则PRIVATE继承
 ```
 
 ### 脚本命令

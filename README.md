@@ -36,8 +36,8 @@
 
 ## Coding
 
-- [代码经验](coding.md):star:：逻辑、分支、循环、递归、下标
-- [设计模式](dspt.md):star:：面向接口、职责划分、关系确定
+- [设计模式](dspt.md):star:
+- [代码经验](coding.md):star:
 - [语言总结](langsum.md):star:
 
   - C++
@@ -63,7 +63,7 @@
 
 - Windows 系统
   - Windows 知识体系
-  - Cmd 命令行
+  - [CMD 命令行](cmd.md)
 
 ## 底层原理
 

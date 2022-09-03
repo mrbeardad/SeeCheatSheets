@@ -238,9 +238,9 @@
 
   - 签名修饰：`inline`, `constexpr`, `noexcept`
   - 形参列表
-  - 单返回值
-  - 默认实参
+    - 默认实参
   - 函数重载
+  - 单返回值
   - 泛型
 
 - Go
@@ -270,9 +270,9 @@
   ```
 
   - 形参列表
+    - 数组变参包`...args`
+    - 默认实参
   - 单返回值
-  - 默认实参
-  - 数组变参包`...args`
 
 - Python
 
@@ -287,8 +287,8 @@
     - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
     - 位置参数`/`与键值参数`*`
     - 位置变参包`*posargs`与键值变参包`**kwargs`
+    - 默认实参：仅定义时构造一次，注意引用类型
   - 单返回值
-  - 默认实参：仅定义时构造一次，注意引用类型
 
 ## 面向对象
 
@@ -470,7 +470,7 @@ class MyClass(Base):
 
 | C++命名            | 形式                | 备注                                                                     |
 | ------------------ | ------------------- | ------------------------------------------------------------------------ |
-| Files, Namespaces  | `lower_with_under`  | 头文件引入顺序，目录结构命名空间                                         |
+| Namespaces, Files  | `lower_with_under`  | 头文件引入顺序，目录结构命名空间                                         |
 | Classes            | `UpperCamelCase`    |                                                                          |
 | Functions, Method  | `UpperCamelCase`    |                                                                          |
 | Macroes            | `UPPER_WITH_UNDER`  | 尽量使用 inline 或 constexpr 代替                                        |
@@ -487,7 +487,7 @@ class MyClass(Base):
 
 | JavaScript 命名       | 形式               |
 | --------------------- | ------------------ |
-| Packages, Modules     | `lowerCamelCase`   |
+| Packages, Files     | `lowerCamelCase`   |
 | Classes, Component    | `UpperCamelCase`   |
 | Functions, Method     | `lowerCamelCase`   |
 | Constants             | `UPPER_WITH_UNDER` |
@@ -495,7 +495,7 @@ class MyClass(Base):
 
 | Python 命名           | 形式               |
 | --------------------- | ------------------ |
-| Packages, Modules     | `lower_with_under` |
+| Packages, Files     | `lower_with_under` |
 | Classes               | `UpperCamelCase`   |
 | Functions, Method     | `UpperCamelCase`   |
 | Constants             | `UPPER_WITH_UNDER` |
@@ -531,7 +531,7 @@ class MyClass(Base):
 ---
 
 - 并发与同步
-- 异步框架
+- 异步框架（网络IO、文件IO、IPC、IOC、Timer、Tasks）
 
 ---
 
