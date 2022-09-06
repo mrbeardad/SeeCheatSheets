@@ -54,7 +54,7 @@
 
 ## 开发平台
 
-- [Linux 系统总结](linuxsum.md):star:：Linux 系统必备知识与技能
+- [Linux 系统总结](linuxsum.md):star:
 
   - [Linux 知识体系](linux.md)
   - [Linux 系统接口](linuxapi.md)
@@ -67,7 +67,7 @@
 
 ## 底层原理
 
-- [计科八股总结](interview.md):star:：计算机基本面试知识点
+- [计科八股总结](interview.md):star:
 
   - [信息编码](code.md)
   - [处理器设计](cpu.md)
