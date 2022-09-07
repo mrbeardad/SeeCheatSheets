@@ -1,33 +1,16 @@
 # Win32
 
-## 常见类型
-
-```cpp
-// 匈牙利命名法
-
-BYTE DWORD BOOL P*
-
-PSTR PCSTR PWSTR PCWSTR
-
-TCHAR TEXT
-
-SetWindowText SetWindowTextA SetWindowTextW
-```
-
 ## 窗口
 
 - 窗口类型
 
-  - Desktop Window
-  - Top-Level Window
-    - Overlapped Window
-      - `WS_OVERLAPPED`: title bar, border
-      - `WS_OVERLAPPEDWINDOW`: title bar, window menu, window buttions, sizing border
-    - Pop-up Window
-      - `WS_POPUP`: only client area
-      - `WS_POPUP | WS_CAPTION`: title bar
-      - `WS_POPUPWINDOW`: title bar, border
-      - `WS_POPUPWINDOW | WS_CAPTION`: title bar, window menu, border
+  - Desktop Window | Top-Level Window
+  - Overlapped Window
+    - `WS_OVERLAPPED`: title bar, border
+    - `WS_OVERLAPPEDWINDOW`: title bar, sizing border, window menu, window buttions
+  - Pop-up Window
+    - `WS_POPUP`: only client area
+    - `WS_POPUPWINDOW`: title bar, border
   - Child Window
     - `WS_CHILD`: only client area
     - parent client area related coordinate
@@ -38,50 +21,29 @@ SetWindowText SetWindowTextA SetWindowTextW
     - always above owern
     - destroy with owern
     - hide when owern minimize and show when owern resotre
-  - Layerd Windows:
-    - 扩展样式设为`WS_EX_LAYERED`
+  - Layerd Windows
+    - `WS_EX_LAYERED`
     - 复杂形状、动画形状、alpha 混合
-    - 0 alpha 像素透过鼠标事件
-    - `WS_EX_TRANSPARENT`窗口透过鼠标事件
-  - Message-Only Windows:
+    - 0 alpha 像素透过鼠标事件，`WS_EX_TRANSPARENT`整个窗口透过鼠标事件
+  - Message-Only Windows
     - 父窗口设为`HWND_MESSAGE`
-
-- Owned Window
-
-  - always in front of owner
-  - hidden and destroyed with owner
 
 - 窗口区域
 
   - Application Window (Main Window)
     - Nonclient Areas
-      - title bar
-      - window menu
-      - minimize, maximize and restore buttons
-      - menu bar
-      - (sizing) border
-      - scroll bars
+      - `WS_CAPTION`: title bar, border
+      - `WS_THICKFRAME`: sizing border
+      - `WS_SYSMENU`: window menu
+      - `WS_MINIMIZEBOX | WS_MAXIMIZEBOX`: minimize, restore and maximize buttons
+      - `WS_HSCROLL | WS_VSCROLL`: scroll bars
     - Client Area
 
-```cpp
-WS_POPUP
-WS_POPUPWINDOW
-WS_CAPTION
-WS_CHILD
-```
-
-- 窗口样式
-  - `WS_OVERLAPPED`
-    - title bar
-    - border
-  - `WS_OVERLAPPEDWINDOW`
-    - title bar
-    - minimize and maximize buttons
-    - window menu
-    - sizing border
-  - Control
-  - Dialog Boxes
-  - Message Boxes
+- 窗口状态
+  - position
+  - size
+  - z-order
+  - foreground(global) and active(thread-queue)
 
 ## 流程
 
