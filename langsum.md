@@ -197,7 +197,7 @@
   - 循环
     - for
     - **for-range**
-  - 延迟
+  - 异常
     - defer
     - panic()
     - recover()
@@ -487,7 +487,7 @@ class MyClass(Base):
 
 | JavaScript 命名       | 形式               |
 | --------------------- | ------------------ |
-| Packages, Files     | `lowerCamelCase`   |
+| Packages, Files       | `lowerCamelCase`   |
 | Classes, Component    | `UpperCamelCase`   |
 | Functions, Method     | `lowerCamelCase`   |
 | Constants             | `UPPER_WITH_UNDER` |
@@ -495,7 +495,7 @@ class MyClass(Base):
 
 | Python 命名           | 形式               |
 | --------------------- | ------------------ |
-| Packages, Files     | `lower_with_under` |
+| Packages, Files       | `lower_with_under` |
 | Classes               | `UpperCamelCase`   |
 | Functions, Method     | `UpperCamelCase`   |
 | Constants             | `UPPER_WITH_UNDER` |
@@ -514,8 +514,7 @@ class MyClass(Base):
 - 正则表达式
 - 格式化
 - 序列化
-- 国际化
-- 编码转换
+- 本地化与国际化
 - 标准输入输出
 - 文件系统
 
@@ -531,7 +530,7 @@ class MyClass(Base):
 ---
 
 - 并发与同步
-- 异步框架（网络IO、文件IO、IPC、IOC、Timer、Tasks）
+- 异步框架（网络 IO、文件 IO、IPC、IOC、Timer、Tasks）
 
 ---
 

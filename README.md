@@ -19,7 +19,7 @@
 
 - [HTML](html.md)：超文本标记语言
 - [CSS](css.md)：层叠样式表
-- [JavaScript](js.md)：Web 平台脚本
+- [JavaScript](js.md)：Web 脚本语言
 - [React](react.md)：Web UI 框架
 - [Next.js](nextjs.md)：基于 React 的应用框架
 - [HTTP](http.md)：超文本传输协议
@@ -62,7 +62,7 @@
   - [开发者工具](devtool.md)
 
 - Windows 系统
-  - Windows 知识体系
+  - [Win32 API](win32.md)
   - [CMD 命令行](cmd.md)
 
 ## 底层原理

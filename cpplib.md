@@ -165,11 +165,11 @@ class error_code {
     // 重载了与错误码的比较
     operator<=>
 };
-##include <cerrno>
+#include <cerrno>
 enum class errc;
-##include <ios>
+#include <ios>
 enum class io_errc;
-##include <future>
+#include <future>
 enum class future_errc;
 
 // 异常挂起
@@ -186,7 +186,7 @@ void            rethrow_exception(exceptr)  // 重抛挂起的异常
 #### new 与 delete 操作符
 
 ```cpp
-##include <new>
+#include <new>
 void*   operator new(size_t);
 void*   operator new(size_t, align_val_t);
 void*   operator new(size_t, user-def-args...);
@@ -216,7 +216,7 @@ new_handler set_new_handler(nh);
 <!-- entry begin: memory unique_ptr 智能指针 -->
 
 ```cpp
-##include <memory>
+#include <memory>
 class unique_ptr<T, Deleter=default_delete<T> > {
     // 构造函数：支持move，拒绝copy
     unique_ptr(ptr);
@@ -293,7 +293,7 @@ class weak_ptr<T> {
 #### 系统工具
 
 ```cpp
-##include <cstdlib>
+#include <cstdlib>
 // 进程终止
 void    exit(int exit_code);                            // 正常终止进程，进行清理
 void    quick_exit(int exit_code);                      // 正常终止进程，进行非完全清理
@@ -324,7 +324,7 @@ double  strtod(const char* str, char** str_end);
 #### 基础设施
 
 ```cpp
-##include <functional>
+#include <functional>
 struct hash<T> {
     // 特化包括有：
     // 整型、浮点型、指针、
@@ -362,7 +362,7 @@ Functor bind(Callable, args...);
 #### 时间库
 
 ```cpp
-##include <chrono>
+#include <chrono>
 using namespace chrono;
 
 class Clock {   // 预定义有 system_clock 与 steady_clock 等
@@ -437,7 +437,7 @@ time_point      round(tp);
 <!-- entry begin: initializer_list -->
 
 ```cpp
-##include <initializer_list>
+#include <initializer_list>
 class initializer_list<T> {
     // 构造函数
     initializer_list(); // 语言特性支持的列表初始化的默认类型
@@ -453,7 +453,7 @@ class initializer_list<T> {
 <!-- entry begin: utility integer_sequence -->
 
 ```cpp
-##include <utility>
+#include <utility>
 struct integer_sequence<T, T... INTS> {
     // 成员函数
     static size_t size();
@@ -468,7 +468,7 @@ using make_index_sequence<N>      = integer_sequence<size_t, 0..N-1>
 <!-- entry begin: utility pair -->
 
 ```cpp
-##include <utility>
+#include <utility>
 class pair<T1, T2> {
     // 成员对象
     T1 first;
@@ -494,7 +494,7 @@ typename tuple_element<size_t, pair>::type
 <!-- entry begin: utility tuple -->
 
 ```cpp
-##include <tuple>
+#include <tuple>
 class tuple<Types...> {
     // 构造函数
     tuple();                            // 默认构造
@@ -516,7 +516,7 @@ typename tuple_element<size_t, tuple>::type
 <!-- entry begin: any -->
 
 ```cpp
-##include <any>
+#include <any>
 class any {
     // 构造函数
     any();                          // 默认构造。空对象
@@ -540,7 +540,7 @@ T*      any_cast<T>(any*);
 <!-- entry begin: variant -->
 
 ```cpp
-##include <variant>
+#include <variant>
 class variant<Types...> {
     // 构造函数
     variant();                  // 默认构造第一个类型。可用std::monostate作占位符类型
@@ -570,7 +570,7 @@ typename variant_alternative<size_t, variant>::type
 <!-- entry begin: optional -->
 
 ```cpp
-##include <optional>
+#include <optional>
 class optional<T> {
     // 构造函数
     optional();                         // 默认构造为std::nullopt
@@ -597,7 +597,7 @@ class optional<T> {
 <!-- entry begin: bitset -->
 
 ```cpp
-##include <bitset>
+#include <bitset>
 class bitset<size_t> {  // std::vector<bool>特化可做动态版bitset
     // 构造函数
     bitset();
@@ -641,7 +641,7 @@ class bitset<size_t> {  // std::vector<bool>特化可做动态版bitset
 #### 数值极限
 
 ```cpp
-##include <limits>
+#include <limits>
 class numeric_limits<T> {
     // 常用静态成员常量
   S radix             // 给定类型的表示所用的基或整数底
@@ -670,7 +670,7 @@ class numeric_limits<T> {
 #### 静态期分数
 
 ```cpp
-##include <ratio>
+#include <ratio>
 // 预定义有 pico nano micro centi deci deca hecto kilo mega giga tera peta exa
 class ratio<Num, Den=1> {
     // 成员对象
@@ -697,7 +697,7 @@ ratio_greater_equal <r1, r2>::value
 #### 数学库
 
 ```cpp
-##include <cmath>
+#include <cmath>
 // 三角函数
 f   sin(x);             // 求 sin(x)
 f   cos(x);             // 求 cos(x)
@@ -762,7 +762,7 @@ f   nextafter(from, to);// 求 from 趋向 to 的下个可表示的浮点值
 > bOp(e)二元操作符只有一个参数表示和
 
 ```cpp
-##include <numeric>
+#include <numeric>
 void    iota(b, e, v);                                      // destEle=v++
 T       accumulate(b, e, init, bOp=plus);                   // bOp(e)
 T       reduce(b, e, init=0, bOp=plus);                     // bOp(e)。支持policy
@@ -791,7 +791,7 @@ T       midpoint(a, b);                                     // 求中间值
 #### 随机数
 
 ```cpp
-##include <random>
+#include <random>
 // 常用引擎：有成员函数`void seed(val)`作种
 typename    minstd_rand             // 快
 typename    mt19937_64              // 广
@@ -815,7 +815,7 @@ typename    normal_distribution(u=0, o=1)               // 正态分布
 #### 字符分类
 
 ```cpp
-##include <cctype>
+#include <cctype>
 bool isalnum(c);
 bool isalpha(c);
 bool islower(c);
@@ -831,7 +831,7 @@ bool isprint(c);
 int  toupper(c);
 int  tolower(c);
 
-##include <cwctype>
+#include <cwctype>
 // 形如 bool iswalnum() 等等
 ```
 
@@ -842,7 +842,7 @@ int  tolower(c);
 #### 字符串
 
 ```cpp
-##include <string>
+#include <string>
 class String {
     // 目标：(str, pos=0, len=npos) (cstr, len=auto) (char) (n, char)
     // 构造函数
@@ -896,7 +896,7 @@ double  stod(str, size_t*=nullptr, base=10);
 #### 字符串视图
 
 ```cpp
-##include <string_view>
+#include <string_view>
 class String_view {
     // 构造函数
     string_view(str);
@@ -963,7 +963,7 @@ class String_view {
 <!-- entry begin: cpp regex regex_contants regex_flag 正则表达式 -->
 
 ```cpp
-##include <regex>
+#include <regex>
 namespace std::regex_contants {
     // 即sflag，用于构造regex。默认为ECMAScript
     icase;              // 忽略大小写
@@ -1285,7 +1285,7 @@ ers_num remove_if(uOp)
 #### 辅助函数
 
 ```cpp
-##include <iterator>
+#include <iterator>
 // 不改变原来迭代器
 itr     next(itr, n=1)
 itr     prev(itr, n=1)
@@ -1300,7 +1300,7 @@ void    iter_swap(itr1, itr2)
 #### 流迭代器
 
 ```cpp
-##include <iterator>
+#include <iterator>
 class istream_iterator<T, CharT = char> {
     // 构造函数
     istream_iterator()      // 默认构造尾后迭代器
@@ -1332,7 +1332,7 @@ class ostreambuf_iterator<CharT> {
 #### 反向迭代器
 
 ```cpp
-##include <iterator>
+#include <iterator>
 class reverse_iterator<Iter> {
     // 构造函数
     reverse_iterator()
@@ -1354,7 +1354,7 @@ ritr crend()
 #### 移动迭代器
 
 ```cpp
-##include <iterator>
+#include <iterator>
 class move_iterator<Iter> {
     // 构造函数
     move_iterator()
@@ -1370,7 +1370,7 @@ mitr make_move_iterator(itr)
 #### 插入迭代器
 
 ```cpp
-##include <iterator>
+#include <iterator>
 class insert_iterator<Container> {
     // 构造函数
     insert_iterator()
@@ -1401,7 +1401,7 @@ biitr   back_inserter(Cont)
 #### 执行策略
 
 ```cpp
-##include <execution>
+#include <execution>
 // 执行策略常量
 exe_policy std::execution::seq;
 exe_policy std::execution::par;
@@ -1589,17 +1589,17 @@ destE   swap_ranges(b, e, destB)
 <!-- entry begin: iostream iosfwd 组件总览 -->
 
 ```cpp
-##include <iosfwd>       // 输入输出库中所有类的前置声明
-##include <streambuf>    // std::basic_streambuf 类模板
-##include <ios>          // std::ios_base类、 std::basic_ios类模板与数个typedef
-##include <istream>      // std::basic_istream 、std::basic_iostream 类模板与数个 typedef
-##include <ostream>      // std::basic_ostream 类模板与数个 typedef
-##include <iostream>     // 数个标准流全局对象。构造需要开销，若不使用则无需引入该头文件
-##include <fstream>      // std::basic_fstream 、 std::basic_ifstream 、 std::basic_ofstream 类模板及数个 typedef
-##include <sstream>      // std::basic_stringstream 、 std::basic_istringstream 、 std::basic_ostringstream 类模板与数个 typedef
-##include <syncstream>   // std::basic_osyncstream 、 std::basic_syncbuf 及 typedef
-##include <iomanip>      // 格式化输入与输出的辅助函数
-##include <cstdio>       // C 风格输入输出函数
+#include <iosfwd>       // 输入输出库中所有类的前置声明
+#include <streambuf>    // std::basic_streambuf 类模板
+#include <ios>          // std::ios_base类、 std::basic_ios类模板与数个typedef
+#include <istream>      // std::basic_istream 、std::basic_iostream 类模板与数个 typedef
+#include <ostream>      // std::basic_ostream 类模板与数个 typedef
+#include <iostream>     // 数个标准流全局对象。构造需要开销，若不使用则无需引入该头文件
+#include <fstream>      // std::basic_fstream 、 std::basic_ifstream 、 std::basic_ofstream 类模板及数个 typedef
+#include <sstream>      // std::basic_stringstream 、 std::basic_istringstream 、 std::basic_ostringstream 类模板与数个 typedef
+#include <syncstream>   // std::basic_osyncstream 、 std::basic_syncbuf 及 typedef
+#include <iomanip>      // 格式化输入与输出的辅助函数
+#include <cstdio>       // C 风格输入输出函数
 
 typename std::ios_base  // (定义了一些标志位)
 typename streambuf      // (系统I/O并缓存数据, 提供位置信息)
@@ -1705,7 +1705,7 @@ class basic_iostream<CharT>
 #### 操作符
 
 ```cpp
-##include <iomanip>  // 操作符的原型为 strm& iomanip(strm&);
+#include <iomanip>  // 操作符的原型为 strm& iomanip(strm&);
 // 输入
 ws                  // 立刻丢弃前导空白
 noskipws            // 不忽略前导空白
@@ -1745,7 +1745,7 @@ setw(n)             // 设定下次输出的栏宽，或下次输入的字符限
 <!-- entry begin: quoted iomanip -->
 
 ```cpp
-##include <iomanip>
+#include <iomanip>
 // 输出时，将str用delim引用起来，并用escape转义其中包含的delim
 std::cout << std::quoted(str, delim='"', escape='\\');
 // 输入时，将str两边的delim引用取消，并反转义其中用escape转义的delim
@@ -1759,7 +1759,7 @@ std::cin  >> std::quoted(str, delim='"', escape='\\');
 #### 文件流
 
 ```cpp
-##include <fstream>
+#include <fstream>
 class basic_iofstream { // 预定义有 fstream ifstream ofstream wfstream wifstream wofstream
     // 构造函数
     basic_iofstream(filename, oflag)
@@ -1789,7 +1789,7 @@ class basic_iofstream { // 预定义有 fstream ifstream ofstream wfstream wifst
 #### 字符流
 
 ```cpp
-##include <sstream>
+#include <sstream>
 class iostringstream {  // 预定义有stringstream istringstream ostringstream wstringstream wistringstream wostringstream
     // 构造函数
     stringstream(str)
@@ -1807,7 +1807,7 @@ class iostringstream {  // 预定义有stringstream istringstream ostringstream 
 #### 流缓冲区
 
 ```cpp
-##include <streambuf>
+#include <streambuf>
 
 class basic_streambuf<CharT> {
     // 析构时
@@ -1827,9 +1827,9 @@ class basic_streambuf<CharT> {
 // 利用streambuf*预定义的输入输出操作进行直接I/O
 
 // 利用streambuf来通过文件描述符构造
-##include <ext/stdio_filebuf.h>
-##include <ios>
-##include <cstdio>
+#include <ext/stdio_filebuf.h>
+#include <ios>
+#include <cstdio>
 /* ... */
 auto fd = fileno(file);
 __gnu_cxx::stdio_filebuf<char> buf{fd, std::ios_base::in};
@@ -1843,7 +1843,7 @@ std::istream istrm{&buf};
 #### 本地环境
 
 ```cpp
-##include <locale>
+#include <locale>
 class locale {
     // 构造函数
     locale()                // 默认构造为std::locale::classic。或为最近一次调用std::locale::global的参数locale
@@ -1866,7 +1866,7 @@ class locale {
 <!-- entry begin: future shared_future async -->
 
 ```cpp
-##include <future>
+#include <future>
 class future<T> {
     // 特种成员：支持move拒绝copy
     // 成员函数
@@ -1889,7 +1889,7 @@ future  async(launch_policy, function, args...);    // std::launch::async或std:
 <!-- entry begin: this_thread thread -->
 
 ```cpp
-##include <thread>
+#include <thread>
 class thread {
     // 构造函数
     thread();
@@ -1925,8 +1925,8 @@ namespace std::this_thread {
 <!-- entry begin: mutex lock try_lock call_once lock_guard scoped_lock unique_guard shared_guard 互斥锁管理器 -->
 
 ```cpp
-##include <mutex>
-##include <shared_mutex>
+#include <mutex>
+#include <shared_mutex>
 // 互斥锁：不可copy不可move
 typename mutex                                       // 支持前3个操作
 typename timed_mutex                                 // 支持前5个操作
@@ -1984,7 +1984,7 @@ class Lock {
 <!-- entry begin: cv condition_variable 条件量  -->
 
 ```cpp
-##include <condition_variable>
+#include <condition_variable>
 class condition_variable {
     // 构造函数：不可copy不可move
 
@@ -2011,7 +2011,7 @@ void    notify_all_at_thread_exit(condition_variable, unique_lock)
 #### 原子操作库
 
 ```cpp
-##include <atomic>
+#include <atomic>
 struct atomic<T> {  // 内置类型均有预定义别名，C++20针对shared_ptr与weak_ptr有特化以支持原子访问其指向的数据
     // 构造
     atomic()        // 构造时初始化lock
@@ -2079,7 +2079,7 @@ struct atomic_ref<T> {
 #### 路径与文件表示
 
 ```cpp
-##include <filesystem>
+#include <filesystem>
 class path {
     // 构造函数
     path()
@@ -2141,7 +2141,7 @@ class directory_entry { // 存储一个path作为成员，并可能附带文件�
 <!-- entry begin: permissions is_character_file is_block_file is_fifo is_socket is_symlink is_directory is_regular_file symlink_status status permissions file_status file_type perms -->
 
 ```cpp
-##include <filesystem>
+#include <filesystem>
 class file_status {
     // 成员函数
     ft      type();             // 返回文件类型
@@ -2200,7 +2200,7 @@ void        permissions(path, perms, perm_options)  // 修改权限
 <!-- entry begin: fs filesystem relative canonical absolute exists equivalent temp_directory_path current_path hard_link_count last_write_time resize_file file_size space  -->
 
 ```cpp
-##include <filesystem>
+#include <filesystem>
 struct space_info
 {
     uintmax_t   capacity;   // 文件系统总字节大小
@@ -2291,7 +2291,7 @@ enum class copy_options {
 ### 编码转换
 
 ```cpp
-##include <boost/locale.hpp> // -lboost_locale
+#include <boost/locale.hpp> // -lboost_locale
 using namespace boost::locale::conv;
 // from端的utf编码由Str的类型推知，to端编码由to_charset指出且只能为char类型
 std::string                 from_utf(b, e, to_charset);
@@ -2333,8 +2333,8 @@ std::string                 between(str, to_charset, from_charset);
 <!-- entry begin: boost asio io_context 异步 -->
 
 ```cpp
-##include <boost/asio.hpp>   // 集成于boost库中的asio，命名空间boost::asio
-##include <asio.hpp>         // 独立于boost库的asio  ，命名空间asio::
+#include <boost/asio.hpp>   // 集成于boost库中的asio，命名空间boost::asio
+#include <asio.hpp>         // 独立于boost库的asio  ，命名空间asio::
 class io_context {
     // 构造函数
     io_context()
@@ -2531,7 +2531,7 @@ transfer_exactly(n)
 <!-- entry begin: 网络 asio ssl -->
 
 ```cpp
-##include <asio/ssl.hpp>
+#include <asio/ssl.hpp>
 class ssl::context {
     // 构造函数
     context(method);                // method一般为ssl::sslv23
@@ -2588,7 +2588,7 @@ class ssl::stream<Socket> {
 <!-- entry begin: asio co_spawn awaitable use_await 协程 -->
 
 ```cpp
-##include <asio/co_spawn.hpp>
+#include <asio/co_spawn.hpp>
 asio::awaitable<void> test_asio_with_coroutine()
 {
     // 异步获取当前协程的executor，通过某处调用co_spawn(executor, awaitable, token);实现
@@ -2653,7 +2653,7 @@ class basic_waitable_timer {    // 预定义有steady_timer、system_timer等
 ### 日志库
 
 ```cpp
-##include <glog/logging.h>
+#include <glog/logging.h>
 int main(int argc, char* argv[]) {
     // 初始化glog
     google::InitGoogleLogging(argv[0]);
@@ -2713,7 +2713,7 @@ int main(int argc, char* argv[]) {
 <!-- entry begin: 单元测试 测试库 gtest -->
 
 ```cpp
-##include <gtets/gtest.h>
+#include <gtets/gtest.h>
 TEST(TestSuiteName, TestName) { // 注册一个单元测试，名字不能含下划线'_'
     // 输出字符类型可不必为char，输出时自动转换为utf8
     EXPECT_*(exp)   << "Something goes wrong!";  // EXPECT系列，失败则继续执行
@@ -2763,7 +2763,7 @@ int main(int argc, char* argv[]) {  // 或者直接链接libgtest_main.so而避�
 <!-- entry begin: 单元测试 测试库 gmock -->
 
 ```cpp
-##include <gmock/gmock.h>
+#include <gmock/gmock.h>
 // 一、修改接口源码，将感兴趣的方法声明为纯虚函数（可继承且无需定义），
 // 特别是析构函数必须是虚函数且必须提供定义）
 struct MockClass: public Class { // 二、继承自需要模仿的类
@@ -2905,11 +2905,11 @@ yas::load<yas::file | yas::Format>(filename, yas_object)
 <!-- entry begin: serialization boost 序列化 -->
 
 ```cpp
-##include <boost/archive/binary_iarchive.hpp>
-##include <boost/archive/binary_oarchive.hpp>
-##include <boost/serialization/string.hpp>
-##include <fstream>
-##include <iostream>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/string.hpp>
+#include <fstream>
+#include <iostream>
 
 class Test
 {

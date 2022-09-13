@@ -1,6 +1,6 @@
-# Design Pattern
+# 设计模式
 
-- [Design Pattern](#design-pattern)
+- [设计模式](#设计模式)
   - [学习网站](#学习网站)
   - [设计原则](#设计原则)
   - [创建型](#创建型)

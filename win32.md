@@ -68,7 +68,7 @@ Application Window:
   - `WM_GETMINMAXINFO`：当位置与大小改变时发送该消息，`MINMAXINFO`包含最大化位置与尺寸、最大最小可变尺寸
   - `WM_WINDOWPOSCHANGING`：当位置、大小、Z-Order、显示状态改变时发送该消息，`WINDOWPOS`包含新的位置、大小、Z-Order 和显示状态
 - Z-Order：
-  - `WS_EX_TOPMOST`：每级 Z 轴分两段——普通与置顶
+  - `WS_EX_TOPMOST`：每级 Z 轴分两段 —— 普通与置顶
   - `GetNextWindow()`
   - `SetWindowPos()`
   - `BringWindowToTop()`：将窗口置于同段 Z 轴顶部
