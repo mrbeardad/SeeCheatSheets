@@ -58,7 +58,7 @@ Application Window:
 
 - `GetWindowLong()`/`SetWindowLong()`
 
-- 位置与大小：
+- 坐标系中的位置与大小：
   - `CW_USEDEFAULT`：默认位置与大小
   - `SetWindowPlacement()`：设置最小化位置、最大化位置与还原位置与大小，还有显示状态
   - `SetWindowPos()`：设置位置与大小，还有显示状态
