@@ -468,17 +468,17 @@ class MyClass(Base):
 - 介词：`in`，`on`，`at`，`of`，`2`，`4`
 - 用途：`ret`，`val`，`need`，`temp`，`deal`，`src`，`dest`
 
-| C++命名            | 形式                | 备注                                                                     |
-| ------------------ | ------------------- | ------------------------------------------------------------------------ |
-| Namespaces, Files  | `lower_with_under`  | 头文件引入顺序，目录结构命名空间                                         |
-| Classes            | `UpperCamelCase`    |                                                                          |
-| Functions, Method  | `UpperCamelCase`    |                                                                          |
-| Macroes            | `UPPER_WITH_UNDER`  | 尽量使用 inline 或 constexpr 代替                                        |
-| Constants          | `kUpperCamelCase`   |                                                                          |
-| Static Variables   | `kUpperCamelCase`   | 注意不会调用静态生命周期对象的析构函数，使用 ref-return 代替 global 变量 |
+| C++ 命名           | 形式                |
+| ------------------ | ------------------- |
+| Namespaces, Files  | `lower_with_under`  |
+| Classes            | `UpperCamelCase`    |
+| Functions, Method  | `UpperCamelCase`    |
+| Macroes            | `UPPER_WITH_UNDER`  |
+| Constants          | `kUpperCamelCase`   |
+| Static Variables   | `kUpperCamelCase`   |
 | Local Variables    | `lower_with_under`  |
-| struct Data Member | `lower_with_under`  | static 同                                                                |
-| class Data Member  | `lower_with_under_` | static 同                                                                |
+| struct Data Member | `lower_with_under`  |
+| class Data Member  | `lower_with_under_` |
 
 | Go 命名         | Public           | Internal         |
 | --------------- | ---------------- | ---------------- |
@@ -514,7 +514,9 @@ class MyClass(Base):
 - 正则表达式
 - 格式化
 - 序列化
-- 本地化与国际化
+- 本地化
+- 国际化
+- 命令行参数解析
 - 标准输入输出
 - 文件输入输出
 - 文件系统
