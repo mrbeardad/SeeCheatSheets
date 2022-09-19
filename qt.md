@@ -1,5 +1,30 @@
 # QT6
 
+## 构建
+
+```cmake
+# 至少需要 c++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# 导入 qt cmake 资源包
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+qt_standard_project_setup()
+
+add_executable(mainwin WIN32 mainwin.cpp)
+target_link_libraries(mainwin PRIVATE Qt6::Widgets)
+
+# 添加资源文件，如UI文件(.ui)、图像、翻译文件(.ts)、
+qt_add_resources(mainwin images
+    PREFIX /images
+    LANG zh_CN
+    FILES image1.png image2.png)
+```
+
+```cpp
+QIcon(":/images/image1.png");
+```
+
 ## Widgets
 
 - 无 parent 的 widgets 为窗口
@@ -29,8 +54,37 @@ secondTableView->setSelectionModel(firstTableView->selectionModel());
 
 ## Object Model
 
-- signal and slot
-- object properties
-- events and events filters
-- i18n string
-- timer
+```cpp
+class MyClass : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
+
+public:
+    enum Priority { High, Low, VeryHigh, VeryLow };
+    Q_ENUM(Priority)
+
+    MyClass(QObject *parent = nullptr);
+    ~MyClass();
+
+    void setPriority(Priority priority)
+    {
+        m_priority = priority;
+        emit priorityChanged(priority);
+    }
+    Priority priority() const
+    { return m_priority; }
+
+signals:
+    void priorityChanged(Priority);
+
+private:
+    Priority m_priority;
+};
+```
+
+- View 与用户交互：event()
+- View 与设计师交互：Q_PROPERTY()
+- View 与 View 交互：eventFilter()
+- View 与 Model 交互：signal & slots
+- Model 与 Model 交互
