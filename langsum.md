@@ -516,10 +516,10 @@ class MyClass(Base):
 - 序列化
 - 本地化
 - 国际化
-- 命令行参数解析
 - 标准输入输出
 - 文件输入输出
 - 文件系统
+- 命令行参数解析
 
 ---
 
@@ -580,3 +580,5 @@ class MyClass(Base):
   - View：负责展示状态数据并响应 UI 事件
   - ViewModel：负责数据绑定并提供响应逻辑
   - Model：负责维护并提供业务数据与业务逻辑
+
+![framework](images/framework.png)

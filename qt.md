@@ -83,8 +83,9 @@ private:
 };
 ```
 
+- `Q_OBJECT`
+- `Q_PROPERTY()`
 - View 与用户交互：event()
-- View 与设计师交互：Q_PROPERTY()
 - View 与 View 交互：eventFilter()
 - View 与 Model 交互：signal & slots
 - Model 与 Model 交互
