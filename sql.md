@@ -370,6 +370,17 @@ SELECT [DISTINCT] expr [AS fd_alias], ...       -- expr表示选择列或表达�
 [SELECT 语句];                                  -- 列数要相同，且类型可互相转换。组合查询仅能在最后一条SELECT语句有ORDER BY子句
 ```
 
+执行顺序：
+
+1. FROM 子句组装数据（包括通过 ON 进行连接）；
+2. WHERE 子句进行条件筛选；
+3. GROUP BY 分组 ；
+4. 使用聚集函数进行计算；
+5. HAVING 筛选分组；
+6. 计算所有的表达式；
+7. SELECT 的字段；
+8. ORDER BY 排序；
+9. LIMIT 筛选。
 <!-- entry end -->
 
 ### 联结查询
