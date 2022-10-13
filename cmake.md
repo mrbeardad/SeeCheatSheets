@@ -179,11 +179,11 @@ configure_file(foo.h.in foo.hpp @ONLY)
 | PROJECT_NAME               | 当前项目名称                 |
 | CMAKE_PROJECT_VERSION      | 顶级项目版本号               |
 | PROJECT_VERSION            | 当前项目版本号               |
-| CMAKE_SOURCE_DIR           | 顶级项目源码树               |
-| CMAKE_CURRENT_SOURCE_DIR   | 当前项目源码树               |
+| CMAKE_SOURCE_DIR           | 顶级目录源码树               |
+| CMAKE_CURRENT_SOURCE_DIR   | 当前目录源码树               |
 | project_CURRENT_SOURCE_DIR | project 项目源码树           |
-| CMAKE_BINARY_DIR           | 顶级项目构建目录             |
-| CMAKE_CURRENT_BINARY_DIR   | 当前项目构建目录             |
+| CMAKE_BINARY_DIR           | 顶级目录构建目录             |
+| CMAKE_CURRENT_BINARY_DIR   | 当前目录构建目录             |
 | project_CURRENT_BINARY_DIR | project 项目构建目录         |
 | CMAKE_BUILD_TYPE           | 构建类型                     |
 | BUILD_SHARED_LIBS          | 默认构建为动态库或静态库     |
