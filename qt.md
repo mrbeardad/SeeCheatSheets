@@ -85,7 +85,12 @@ private:
 
 - `Q_OBJECT`
 - `Q_PROPERTY()`
-- View 与用户交互：event()
-- View 与 View 交互：eventFilter()
-- View 与 Model 交互：signal & slots
-- Model 与 Model 交互
+- View 层（由 Design Studio 构建）
+  - 展示状态数据：`set_property()`, slot
+  - 响应 UI 事件：eventFilter, signal
+- ViewModel 层
+  - 双向数据绑定：`set_property()`, `connect()`
+  - 提供响应逻辑：eventFilter, `connect()`
+- Model 层
+  - 提供业务数据：signal
+  - 提供业务逻辑：slot
