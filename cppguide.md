@@ -212,7 +212,7 @@ vector<int>& v = T{}.Get(); // compile error
 const T& ret(const T& i) {return i;}
 const T& val = ret(1);  // 这条语句结束后，val指向的变量就被销毁了
 
-// 解决方案：无。基本上不会i出这种逻辑
+// 解决方案：重载右值引用
 ```
 
 # 面向对象
