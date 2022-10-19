@@ -240,7 +240,7 @@
   auto lambda = [&r, v] (auto& elem) mutable {}
   ```
 
-  - 签名修饰：`inline`, `constexpr`, `noexcept`
+  - 签名修饰：`inline`, `constexpr`, `const & &&`, `noexcept`
   - 形参列表
     - 默认实参
   - 函数重载
@@ -537,7 +537,7 @@ class MyClass(Base):
 ---
 
 - 并发与同步
-- 异步框架（网络 IO、文件 IO、IPC、IOC、Timer、Tasks）
+- 异步框架（文件 IO、网络 IO、IPC、IOC、Timer、Tasks）
 
 ---
 
