@@ -65,8 +65,8 @@
   // 构造函数初始化的缺点：无法返回错误，无法安全调用虚函数（除非显式final）
   // 工厂方法初始化的缺点：无法被派生子类使用
   // Init方法初始化的缺点：在构造与初始化间存在不可用的中间态
-  Type foo{};                           // 待初始化
-  Type foo{args};                       // 构造
+  auto foo = Type{};                    // 待初始化
+  auto foo = Types{args};               // 构造
   auto foo = initializer;               // 拷贝
   auto foo = static_cast<Type>(other);  // 转换
   auto [a, b]  = aggregation;           // 解构
