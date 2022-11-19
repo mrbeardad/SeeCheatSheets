@@ -65,8 +65,8 @@
   // 构造函数初始化的缺点：无法返回错误，无法安全调用虚函数（除非显式final）
   // 工厂方法初始化的缺点：无法被派生子类使用
   // Init方法初始化的缺点：在构造与初始化间存在不可用的中间态
-  auto foo = Type{};                    // 待初始化
-  auto foo = Types{args};               // 构造
+  auto foo = Type();                    // 待初始化
+  auto foo = Types(args);               // 构造
   auto foo = initializer;               // 拷贝
   auto foo = static_cast<Type>(other);  // 转换
   auto [a, b]  = aggregation;           // 解构
@@ -124,8 +124,8 @@
 
   ```cpp
   #define CONST_VALUE 1       // 宏
-  const int kConstValue = 1;  // 常量
-  enum Number {kOne, kTwo};   // 枚举
+  const int CONST_VALUE = 1;  // 常量
+  enum Number {ONE, TWO};     // 枚举
   ```
 
 - Go
@@ -478,8 +478,8 @@ class MyClass(Base):
 | Classes            | `UpperCamelCase`    |
 | Functions, Method  | `UpperCamelCase`    |
 | Macroes            | `UPPER_WITH_UNDER`  |
-| Constants          | `kUpperCamelCase`   |
-| Static Variables   | `kUpperCamelCase`   |
+| Constants          | `UPPER_WITH_UNDER`  |
+| Static Variables   | `UPPER_WITH_UNDER`  |
 | Local Variables    | `lower_with_under`  |
 | struct Data Member | `lower_with_under`  |
 | class Data Member  | `lower_with_under_` |
