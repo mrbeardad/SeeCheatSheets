@@ -185,8 +185,8 @@ Child.prototype.getName = function () {
 ## 内置类型
 
 - 基本数据类型
-  - null
   - undefined
+  - null
   - Boolean
   - Number
   - BigInt
@@ -196,8 +196,8 @@ Child.prototype.getName = function () {
 
 | 原始值              | 转换为数字 | 转换为字符串      | 转换为布尔值 |
 | ------------------- | ---------- | ----------------- | ------------ |
-| null                | 0          | "null"            | false        |
 | undefined           | NaN        | "undefined"       | false        |
+| null                | 0          | "null"            | false        |
 | false               | 0          | "false"           | false        |
 | true                | 1          | "true"            | true         |
 | 0                   | 0          | "0"               | false        |
