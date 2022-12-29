@@ -39,7 +39,7 @@
   - 程序入口：main 函数
   - 依赖单元：一个源文件
   - 依赖导出：非`_`开头的符号
-  - 依赖导入：`import 'package:path/to/module'`
+  - 依赖导入：`import 'package:lib/lib.dart'`
   - 依赖初始化：
   - 依赖管理：
 
@@ -62,10 +62,10 @@
 
 ## 变量
 
-> - 结构型：变量本身代表一块内存结构，赋值拷贝至少包括变量内存结构
-> - 引用型：变量仅仅指向一块内存结构，赋值拷贝仅针对指针值
-> - 强类型：变量类型不可变，函数签名不可变，无动态符号表
-> - 弱类型：变量类型动态可变，函数签名不固定，有动态符号表
+> - 结构型：变量本身代表一块包含数据结构的内存，赋值拷贝至少包括该内存
+> - 引用型：变量仅仅指向一块包含数据结构的内存，赋值拷贝仅针对该指针值
+> - 强类型：变量类型不可变，函数签名不可变
+> - 弱类型：变量类型动态可变，函数签名不固定
 > - 引用语义的目的：
 >   - (Copy) 避免拷贝
 >   - (Write) 修改对象
@@ -78,10 +78,10 @@
   // 构造函数初始化的缺点：无法返回错误，无法安全调用虚函数（除非显式final）
   // 工厂方法初始化的缺点：无法被派生子类使用
   // Init方法初始化的缺点：在构造与初始化间存在不可用的中间态
-  auto foo = Type();                    // 待初始化
-  auto foo = Types(args);               // 构造
+  auto foo = Bar();                     // 待初始化
+  auto foo = Bar(args);                 // 构造
   auto foo = initializer;               // 拷贝
-  auto foo = static_cast<Type>(other);  // 转换
+  auto foo = static_cast<Bar>(other);   // 转换
   auto [a, b]  = aggregation;           // 解构
   ```
 
@@ -92,11 +92,11 @@
 - Go
 
   ```go
-  var foo Type            // 待初始化
-  foo  := Type{fd: data}  // 构造
+  var foo Bar             // 待初始化
+  foo  := Bar{fd: data}   // 构造
   foo  := initializer     // 拷贝
-  foo  := Type(other)     // 转换
-  a, _ := value-list      // 解构
+  foo  := Bar(other)      // 转换
+  a, _ := value, list     // 解构
   ```
 
   - 变量类型：结构型强类型
@@ -106,18 +106,24 @@
 - Dart
 
   ```dart
-  var foo
+  Bar foo;                // 待初始化
+  var foo = Bar(args);    // 构造
+  var foo = initializer;  // 拷贝
+  var foo = other as Bar; // 转换
   ```
+
+  - 变量类型：引用型强类型
+  - 生命周期：直到引用计数为零时才销毁
+  - 作用域：退出块作用域后不可见
 
 - JavaScript
 
   ```js
   let foo; // 待初始化
-  let foo = new Type(args); // 构造
+  let foo = new Bar(args); // 构造
   let foo = initializer; // 拷贝
-  let foo = new Type(other); // 转换
-  let [a, , ...rest] = array; // 解构
-  let { a, ["1"]: b, ...rest } = obj; // 解构
+  let foo = new Bar(other); // 转换
+  let [a, ["1"]: b, ...rest] = array; // 解构
   ```
 
   - 变量类型：引用型弱类型
@@ -127,9 +133,9 @@
 - Python
 
   ```python
-  foo = Type(args)    # 构造
+  foo = Bar(args)     # 构造
   foo = initializer   # 拷贝
-  foo = Type(other)   # 转换
+  foo = Bar(other)    # 转换
   a, b = iterable     # 解构
   ```
 
@@ -157,6 +163,14 @@
     MB
     GB
   )
+  ```
+
+- Dart
+
+  ```dart
+  // Although a final object cannot be modified, its fields can be changed. In comparison, a const object and its fields cannot be changed: they’re immutable.
+  final map = {if (i is int) i: 'int'};
+  const set = {if (list is List<int>) ...list};
   ```
 
 - JavaScript
@@ -187,12 +201,18 @@
   - 逻辑：`!`, `&&`, `||`
   - 赋值：（语句）`=`, `:=`
   - 其他：（语句）`i++`, `i--`
+- Dart
+  - 算数：`*`, `/`, `~/`, `%`, `+`, `-`
+  - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
+  - 逻辑：`!`, `&&`, `||`, `is`, `is!`
+  - 赋值：`=`, `??=`
+  - 其他：`? :`, `??`, `++`, `--`, `..`, `?..`, `expr!`
 - JavaScript
   - 算数：`**`, `*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `===`, `!==`
   - 逻辑：`!`, `&&`, `||`
   - 赋值：`=`, `??=`
-  - 其他：`??`, `? :`, `++`, `--`
+  - 其他：`? :`, `??`, `++`, `--`
 - Python
   - 算数：`**`, `*`, `/`, `//`, `%`, `+`, `-`
   - 关系：`a < b <= c > d >= e`, `x == y != z`
@@ -208,7 +228,7 @@
     - switch-case-default-break
   - 循环
     - for
-    - **for-range**
+    - for-range
   - 异常
     - throw-try-catch
 - Go
@@ -219,11 +239,20 @@
     - switch-case:type
   - 循环
     - for
-    - **for-range**
+    - for-range
   - 异常
     - defer
     - panic()
     - recover()
+- Dart
+  - 分支
+    - if-else
+    - switch-case-default-break-continue
+  - 循环
+    - for
+    - for-in
+  - 异常
+    - throw-try-on-catch-finally
 - JavaScript
   - 分支
     - if-else
@@ -231,8 +260,8 @@
   - 循环
     - labeled
     - for
-    - **for-in**
-    - **for-of**
+    - for-in
+    - for-of
   - 异常
     - throw-try-catch
 - Python
@@ -240,7 +269,7 @@
     - if-elif-else
   - 循环
     - while-else
-    - **for-in-else**
+    - for-in-else
   - 异常
     - raise-try-except-else-finally
     - with
@@ -252,18 +281,16 @@
 - C++
 
   ```cpp
-  char example(const string& s, int i, T& t) {
-      return t = s[i];
+  auto example(const string& s, int i) -> char {
+      return s[i];
   }
 
-  auto lambda = [&r, v] (auto& elem) mutable {}
+  auto lambda = [&r, v, m = std::move(l)] (auto& elem) mutable {}
   ```
 
   - 签名修饰：`inline`, `constexpr`, `const & &&`, `noexcept`
-  - 形参列表
-    - 默认实参
+  - 默认实参
   - 函数重载
-  - 单返回值
   - 泛型
 
 - Go
@@ -275,9 +302,22 @@
   }
   ```
 
-  - 形参列表
-    - 切片变参包：`args...`
+  - 类型折叠
+  - 切片变参包：`args...`
   - 返回值列表
+
+- Dart
+
+  ```dart
+  String example(String r1, String? r2 [String o1 = "optional", String? o2]) {...}
+
+  String example({required String r1, required String? r2, String o1 = "optional", String? o2}) {...}
+
+  (arg) => expression;
+  ```
+
+  - 位置参数与命名参数
+  - 显式指定`optional`或`required`
 
 - JavaScript
 
@@ -292,10 +332,8 @@
   };
   ```
 
-  - 形参列表
-    - 数组变参包`...args`
-    - 默认实参
-  - 单返回值
+  - 默认实参
+  - 数组变参包：`...args`
 
 - Python
 
@@ -306,18 +344,17 @@
   f = lambda x, y: x + y
   ```
 
-  - 形参列表
-    - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
-    - 位置参数`/`与键值参数`*`
-    - 位置变参包`*posargs`与键值变参包`**kwargs`
-    - 默认实参：仅定义时构造一次，注意引用类型
-  - 单返回值
+  - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
+  - 位置参数与键值参数
+  - 位置变参包`*posargs`与键值变参包`**kwargs`
+  - 默认实参：仅定义时构造一次，注意引用类型
 
 ## 面向对象
 
 ### 封装
 
 - C++
+
   - 访问控制：public, protected, private
   - 结构定义：默认实例唯一，static 类唯一
   - 方法定义：默认实例相关，static 类相关
@@ -325,7 +362,30 @@
   - 析构控制：析构函数
   - 拷贝控制：拷贝与移动函数
   - 类型转换：内置类型(bool&int&float, c-str&string)，单参构造函数与 operator 转换函数
+
+  ```cpp
+  class MyClass {
+     public:
+      MyClass() = default;
+      MyClass(MyClass&&) = default;
+      MyClass(const MyClass&) = default;
+      auto operator=(MyClass&&) -> MyClass& = default;
+      auto operator=(const MyClass&) -> MyClass& = default;
+      ~MyClass() = default;
+      auto operator<=>(const MyClass&) -> std::strong_ordering = default;
+      explicit operator bool() const { return _name.size(); }
+
+      auto name() -> string { return _name; }
+      auto set_name(string name) -> void { _name = std::move(name); }
+      void Method();
+
+     private:
+      string _name;
+  };
+  ```
+
 - Go
+
   - 访问控制：首字母大写导出包外
   - 结构定义：实例唯一
   - 方法定义：实例相关
@@ -333,15 +393,51 @@
   - 析构控制：无
   - 拷贝控制：无
   - 类型转换：int&float, bytes&string, type, const, nil, chan, interface
-- Python
-  - 访问控制：非`_`开头导出文件外（非强制）
-  - 结构定义：默认类唯一，实例可动态增删属性
-  - 方法定义：默认实例相关，实例可动态增删方法
-  - 构造控制：`__init__()`
-  - 析构控制：`__del__()`
+
+  ```go
+  type MyClass struct {
+      name string
+  }
+
+  func (this *MyClass) Method() {
+      doSomething(this.name)
+  }
+  ```
+
+- Dart
+
+  - 访问控制：非`_`开头导出类外
+  - 结构定义：默认实例唯一，static 类唯一
+  - 方法定义：默认实例相关，static 类相关
+  - 构造控制：构造函数与命名构造函数
+  - 析构控制：无
   - 拷贝控制：无
-  - 类型转换：`__nonzero__()`与`__str__()`
+  - 类型转换：
+
+  ```dart
+  class MyClass {
+    String _name;
+
+    MyClass(String name) {
+      this._name = name;
+    }
+
+    MyClass(this._name);
+
+    MyClass.named(String name) : _name = name;
+
+    MyClass.redirecting(String name) : this(name);
+
+    @override
+    bool operator ==(Object other) => other is MyClass && other._name = name;
+
+    String get name => name;
+    set name(String value) => name = value;
+  }
+  ```
+
 - JavaScript
+
   - 访问控制：非`#`开头导出类外
   - 结构定义：默认实例唯一，static 类唯一
   - 方法定义：默认实例相关，static 类相关
@@ -350,6 +446,58 @@
   - 拷贝控制：无
   - 类型转换：->boolean, ->number, ->string
 
+  ```js
+  class MyClass {
+    #name;
+
+    constructor(name) {
+      this.#name = name;
+    }
+
+    get name() {
+      return this.#name;
+    }
+
+    set name(x) {
+      this.#name = x;
+    }
+
+    method() {
+      doSomething(this.#name);
+    }
+  }
+  ```
+
+- Python
+
+  - 访问控制：非`_`开头导出文件外（非强制）
+  - 结构定义：默认类唯一，实例可动态增删属性
+  - 方法定义：默认实例相关，实例可动态增删方法
+  - 构造控制：`__init__()`
+  - 析构控制：`__del__()`
+  - 拷贝控制：无
+  - 类型转换：`__nonzero__()`与`__str__()`
+
+  ```python
+  class MyClass:
+      def __init__(self, name: str):
+          self._name = name
+
+      def __del__(self):
+          self._name.__del__()
+
+      @property
+      def name(self):
+          return self._name
+
+      @name.setter
+      def name(self, name):
+          self._name = name
+
+      def method(self):
+          do_something(self._name)
+  ```
+
 ### 继承
 
 - C++
@@ -357,55 +505,31 @@
 ```cpp
 class Base {
    public:
-    Base() = default;
-    Base(Base&&) = default;
-    Base(const Base&) = default;
-    Base& operator=(Base&&) = default;
-    Base& operator=(const Base&) = default;
     virtual ~Base() = default;
 
+    virtual void Method();
     virtual void InterfaceMethod() = 0;
 };
 
 class MyClass: public Base {
    public:
-    MyClass();
-    MyClass(MyClass&&) = default;
-    MyClass(const MyClass&) = default;
-    MyClass& operator=(MyClass&&) = default;
-    MyClass& operator=(const MyClass&) = default;
-    virtual ~MyClass() override;
-
-    explicit operator int() const;
+    virtual ~MyClass() override = default;
 
     virtual void InterfaceMethod() override;
-
-   private:
-// private! p2Impl? construct-order! alignment?
-    int name_;
 };
-// default? explicit! non-inline! never-call-virtual!
-MyClass::MyClass() : Base{}, name_{} {}
-// virtual-def! noexcept! non-inline! never-call-virtual!
-MyClass::~MyClass() {}
-// explicit! bool? only-one-cvt-number!
-MyClass::operator int() const {
-    return id_;
-}
-void MyClass::InterfaceMethod() {}
 ```
 
 - Go
 
 ```go
-type Interface interface {
-    InterfaceMethod() int
+type MyClass struct {
+    Base1   // Base1 的方法集可由 MyClass 与 *MyClass 继承
+    *Base2  // *Base2 的方法集仅可由 *MyClass 继承而非 MyClass
 }
 
-type MyClass struct {
-    Base1   // MyClass与*MyClass均继承Base1方法集
-    *Base2  // MyClass无法继承*Base2的方法集，而*MyClass可以
-    name string
+// go将继承与多态的使用解耦
+type Interface interface {
+    InterfaceMethod() int
 }
 
 func (this *MyClass) InterfaceMethod() int {
@@ -417,20 +541,7 @@ func (this *MyClass) InterfaceMethod() int {
 
 ```js
 class MyClass extends Base {
-  #name;
-
-  constructor(name) {
-    super(); // 调用Base的constructor，Base的方法可直接通过this调用
-    this.#name = name;
-  }
-
-  get name() {
-    return this.#name;
-  }
-
-  set name(x) {
-    this.#name = x;
-  }
+  // ...
 }
 ```
 
@@ -438,20 +549,11 @@ class MyClass extends Base {
 
 ```python
 class MyClass(Base):
-    def __init__(self, name: str):
+    def __init__(self):
         super().__init__()  # super(Base, self).__init__()
-        self._name = name
 
     def __del__(self):
         super().__del__()
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        self._name = name
 ```
 
 ### 多态
