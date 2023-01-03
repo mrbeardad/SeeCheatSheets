@@ -1,6 +1,6 @@
-# Programing Language Summary
+# 编程语言总结
 
-- [Programing Language Summary](#programing-language-summary)
+- [编程语言总结](#编程语言总结)
   - [依赖](#依赖)
   - [变量](#变量)
   - [常量](#常量)
@@ -53,7 +53,7 @@
   - 依赖管理：自动（npm）
 
 - Python
-  - 程序入口：任意源文件(`__init__ == "__main__"`)
+  - 程序入口：任意源文件（`__init__ == "__main__"`）
   - 依赖单元：一个源文件
   - 依赖导出：非`_`开头的符号
   - 依赖导入：`from package.subpackage import module`，符号限定于文件名
@@ -62,23 +62,23 @@
 
 ## 变量
 
-> - 结构型：变量本身代表一块包含数据结构的内存，赋值拷贝至少包括该内存
-> - 引用型：变量仅仅指向一块包含数据结构的内存，赋值拷贝仅针对该指针值
-> - 强类型：变量类型不可变，函数签名不可变
-> - 弱类型：变量类型动态可变，函数签名不固定
+> - 结构型：变量本身代表一块包含数据结构的内存，拷贝时至少包括该内存
+> - 引用型：变量仅仅指向一块包含数据结构的内存，拷贝时仅针对该指针值
+> - 强类型：变量类型静态确定且不可随意变
+> - 弱类型：变量类型动态确定且可随意变
 > - 引用语义的目的：
 >   - (Copy) 避免拷贝
 >   - (Write) 修改对象
->   - (Dynamic) 动态绑定
+>   - (Polymorphism) 多态
 
 - C++
 
   ```cpp
   // C++ 初始化方法：
-  // 构造函数初始化的缺点：无法返回错误，无法安全调用虚函数（除非显式final）
-  // 工厂方法初始化的缺点：无法被派生子类使用
-  // Init方法初始化的缺点：在构造与初始化间存在不可用的中间态
-  auto foo = Bar();                     // 待初始化
+  // 构造函数初始化的缺点：无法返回错误，无法安全调用虚函数（除非显式 final）
+  // 工厂方法初始化的场景：解决构造函数初始化的问题
+  // Init方法初始化的场景：仅在接口天然就适合两段式初始化时使用，因为在构造与初始化间存在不可用的中间态
+  auto foo = Bar();                     // 默认
   auto foo = Bar(args);                 // 构造
   auto foo = initializer;               // 拷贝
   auto foo = static_cast<Bar>(other);   // 转换
@@ -92,7 +92,7 @@
 - Go
 
   ```go
-  var foo Bar             // 待初始化
+  var foo Bar             // 默认
   foo  := Bar{fd: data}   // 构造
   foo  := initializer     // 拷贝
   foo  := Bar(other)      // 转换
@@ -106,7 +106,7 @@
 - Dart
 
   ```dart
-  Bar foo;                // 待初始化
+  var foo = Bar();        // 默认
   var foo = Bar(args);    // 构造
   var foo = initializer;  // 拷贝
   var foo = other as Bar; // 转换
@@ -150,7 +150,7 @@
   ```cpp
   #define CONST_VALUE 1       // 宏
   const int CONST_VALUE = 1;  // 常量
-  enum Number {ONE, TWO};     // 枚举
+  enum Number { ONE, TWO };   // 枚举
   ```
 
 - Go
@@ -158,7 +158,7 @@
   ```go
   const BigInt = 1 << 511     // 高精度无类型常量
   const (
-    _, _ = iota, iota         // 枚举器
+    _, _ = iota, iota         // 枚举器，从0开始
     KB = 1 << (10 * iota)
     MB
     GB
@@ -168,9 +168,9 @@
 - Dart
 
   ```dart
-  // Although a final object cannot be modified, its fields can be changed. In comparison, a const object and its fields cannot be changed: they’re immutable.
-  final map = {if (i is int) i: 'int'};
-  const set = {if (list is List<int>) ...list};
+  final map = {if (i is int) i: 'int'};         // final 不可改变变量本身，但可以改变其字段内容
+  const set = {if (list is List<int>) ...list}; // const 两者都不可改变
+  enum Color { red, green, blue }
   ```
 
 - JavaScript
@@ -223,56 +223,276 @@
 ## 语句
 
 - C++
+
   - 分支
-    - if-else
-    - switch-case-default-break
+
+    ```cpp
+    // if else
+    if (condition) {
+      statement;
+    } else {
+      statement;
+    }
+
+    // switch
+    switch (int_or_enum) {
+    case constant:
+      statement;
+      break;
+    default:
+      statement;
+    }
+    ```
+
   - 循环
-    - for
-    - for-range
+
+    ```cpp
+    // for
+    for (declaration; condition; expression) {
+      statement;
+    }
+
+    // range based for
+    for (auto elem : iterabal) {
+      statement;
+    }
+    ```
+
   - 异常
-    - throw-try-catch
+
+    ```cpp
+    // try and function try
+    // throw and rethrow
+    // catch and catch all
+    [void func()] try {
+      throw std::exception();
+    } catch (const std::exception& e) {
+      statement;
+    } catch (...) {
+      throw;
+    }
+    ```
+
 - Go
+
   - 分支
-    - if-else
-    - switch-case-default-fallthrough
-    - switch-case:condition
-    - switch-case:type
+
+    ```go
+    // if else
+    if condition {
+      statement
+    } else {
+      statement
+    }
+
+    // switch expr
+    switch expr {
+    case expr1, expr2:
+      fallthrough
+    default:
+      statement
+    }
+
+    // switch condition
+    switch {
+    case condition:
+      fallthrough
+    default:
+      statement
+    }
+
+    // switch runtime type
+    switch rt := intf.(type) {
+    case Type:
+      fallthrough
+    default:
+      statement
+    }
+    ```
+
   - 循环
-    - for
-    - for-range
+
+    ```go
+    // for
+    for declaration; condition; expression {
+      statement
+    }
+
+    // for range
+    for elem := range iterabal {
+      statement
+    }
+    ```
+
   - 异常
-    - defer
-    - panic()
-    - recover()
+
+    ```go
+    panic("throw a panic!")
+
+    defer call3rd()
+    defer call2nd()
+    defer call1st()
+
+    defer func() {
+      panic = recover()
+      if panic != nil {
+        statement
+      }
+    }()
+    ```
+
 - Dart
+
   - 分支
-    - if-else
-    - switch-case-default-break-continue
+
+    ```dart
+    // if else
+    if (condition) {
+      statement;
+    } else {
+      statement;
+    }
+
+    // switch
+    switch (comparable) {
+      case constant1:
+        continue fallthrough;
+      fallthrough:
+      case constant2:
+        statement;
+        break;
+      default:
+        statement;
+    }
+    ```
+
   - 循环
-    - for
-    - for-in
+
+    ```dart
+    // for
+    for (declaration; condition; expression) {
+      statement;
+    }
+
+    // for in
+    for (final elem in iterabal) {
+      statement;
+    }
+    ```
+
   - 异常
-    - throw-try-on-catch-finally
+
+    ```dart
+    try {
+      throw FormatException('exception');
+    } on FormatException catch (e) {
+      statement;
+    } catch (e, s) {
+      print('Exception details:\n $e');
+      print('Stack trace:\n $s');
+      rethrow;
+    } finally {
+      cleanup();
+    }
+    ```
+
 - JavaScript
+
   - 分支
-    - if-else
-    - switch-case-default-break
+
+    ```js
+    // if else
+    if (condition) {
+      statement;
+    } else {
+      statement;
+    }
+
+    // switch
+    switch (expr) {
+      case expr:
+        statement;
+        break;
+      default:
+        statement;
+    }
+    ```
+
   - 循环
-    - labeled
-    - for
-    - for-in
-    - for-of
+
+    ```js
+    // for
+    for (declaration; condition; expression) {
+      statement;
+    }
+
+    // for in
+    for (const keyOrIndex in iterable) {
+      statement;
+    }
+
+    // for of
+    for (const element of iterable) {
+      statement;
+    }
+    ```
+
   - 异常
-    - throw-try-catch
+
+    ```js
+    try {
+      throw new Error("error message");
+    } catch (identifier) {
+      statement;
+    } finally {
+      statement;
+    }
+    ```
+
 - Python
+
   - 分支
-    - if-elif-else
+
+  ```python
+  # if elif else
+  if condition:
+    pass
+  elif condition:
+    pass
+  else:
+    pass
+  ```
+
   - 循环
-    - while-else
-    - for-in-else
+
+  ```python
+  while condition:
+    pass
+  else:
+    pass
+
+  for val1, val2 in iterable:
+    pass
+  else:
+    pass
+  ```
+
   - 异常
-    - raise-try-except-else-finally
-    - with
+
+  ```python
+  try:
+      raise Exception('error0')
+  except Exception:
+      raise Exception('error1')
+  except Exception as excep:
+      raise Exception('error2') from Exception('__cause__')
+  except:
+      raise
+  else:
+      pass
+  finally:
+      pass
+  ```
 
 ## 函数
 
@@ -281,14 +501,14 @@
 - C++
 
   ```cpp
-  auto example(const string& s, int i) -> char {
+  auto foo(const string& s, int i) -> char {
       return s[i];
   }
 
-  auto lambda = [&r, v, m = std::move(l)] (auto& elem) mutable {}
+  auto bar = [&r, v, m = std::move(l)] (auto& elem) mutable {}
   ```
 
-  - 签名修饰：`inline`, `constexpr`, `const & &&`, `noexcept`
+  - 签名修饰：`const &|&&`, `inline`, `constexpr`, `noexcept`
   - 默认实参
   - 函数重载
   - 泛型
@@ -296,7 +516,7 @@
 - Go
 
   ```go
-  func example(s string, i int) (x, y int) {
+  func foo(s string, i int) (x, y int) {
       x, y = s[i], s[i + 1]
       return
   }
@@ -309,9 +529,11 @@
 - Dart
 
   ```dart
-  String example(String r1, String? r2 [String o1 = "optional", String? o2]) {...}
+  String foo(String r1, String? r2 [String o1 = "optional", String? o2]) {...}
 
-  String example({required String r1, required String? r2, String o1 = "optional", String? o2}) {...}
+  String bar({required String r1, required String? r2, String o1 = "optional", String? o2}) {...}
+
+  (arg) {statements;}
 
   (arg) => expression;
   ```
@@ -322,12 +544,12 @@
 - JavaScript
 
   ```js
-  function example(s, i) {
+  function foo(s, i) {
     return s + i;
   }
 
   // 函数体仅单独return语句则可省略花括号与return
-  let lambda = (x, y) => {
+  let bar = (x, y) => {
     return x + y;
   };
   ```
@@ -338,10 +560,10 @@
 - Python
 
   ```python
-  def exmaple(s: str, /, l: list[int], *, d: dict[str,]) -> None:
+  def foo(s: str, /, l: list[int], *, d: dict[str,]) -> None:
       return True
 
-  f = lambda x, y: x + y
+  bar = lambda x, y: x + y
   ```
 
   - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
@@ -356,11 +578,12 @@
 - C++
 
   - 访问控制：public, protected, private
-  - 结构定义：默认实例唯一，static 类唯一
-  - 方法定义：默认实例相关，static 类相关
+  - 结构定义：实例唯一，static 类唯一
+  - 方法定义：实例相关，static 类相关
   - 构造控制：构造函数
   - 析构控制：析构函数
   - 拷贝控制：拷贝与移动函数
+  - 比较操作：三相比较运算符
   - 类型转换：内置类型(bool&int&float, c-str&string)，单参构造函数与 operator 转换函数
 
   ```cpp
@@ -391,7 +614,8 @@
   - 方法定义：实例相关
   - 构造控制：无
   - 析构控制：无
-  - 拷贝控制：无
+  - 拷贝控制：拷贝字段
+  - 比较操作：比较字段
   - 类型转换：int&float, bytes&string, type, const, nil, chan, interface
 
   ```go
@@ -407,26 +631,37 @@
 - Dart
 
   - 访问控制：非`_`开头导出类外
-  - 结构定义：默认实例唯一，static 类唯一
-  - 方法定义：默认实例相关，static 类相关
+  - 结构定义：实例唯一，static 类唯一
+  - 方法定义：实例相关，static 类相关
   - 构造控制：构造函数与命名构造函数
   - 析构控制：无
   - 拷贝控制：无
+  - 比较操作：重载操作符
   - 类型转换：
 
   ```dart
   class MyClass {
     String _name;
 
+    // constructor likes function but no return type
     MyClass(String name) {
       this._name = name;
     }
 
-    MyClass(this._name);
+    // named constructor beacase no funtion overload
+    MyClass.named(String name) {
+      this._name = name;
+    }
 
-    MyClass.named(String name) : _name = name;
+    // using this in constructor, a syntax sugar
+    MyClass.useThis(this._name);
 
-    MyClass.redirecting(String name) : this(name);
+    // initializer lists: final fields must have values before the constructor body executes
+    MyClass.initList(String name) : _name = name;
+
+    // redirect to another constructor
+    MyClass.redirecting1(String name) : this(name);
+    MyClass.redirecting2(String name) : this.named(name);
 
     @override
     bool operator ==(Object other) => other is MyClass && other._name = name;
@@ -444,6 +679,7 @@
   - 构造控制：`constructor()`
   - 析构控制：无
   - 拷贝控制：无
+  - 比较操作：无
   - 类型转换：->boolean, ->number, ->string
 
   ```js
@@ -476,6 +712,7 @@
   - 构造控制：`__init__()`
   - 析构控制：`__del__()`
   - 拷贝控制：无
+  - 比较操作：无
   - 类型转换：`__nonzero__()`与`__str__()`
 
   ```python
@@ -564,7 +801,7 @@ class MyClass(Base):
   - 通过虚指针与虚表实现
 - Go：
   - 方法集匹配的类型可转换为相应接口类型
-  - 运行时类型：`switch rt := interf.(type) {}` `rt[, ok] = interf.(RT)`
+  - 运行时类型：`switch type` `rt, ok = interf.(RT)`
   - 通过静态符号表与反射实现
 - JavaScript
   - 弱类型系统可直接转换为接口类型
