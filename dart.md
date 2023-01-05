@@ -25,12 +25,56 @@ import 'path/to/my_other_file.dart';
 ## 变量与常量
 
 ```dart
+var foo = Bar();        // 默认
+var foo = Bar(args);    // 构造
+var foo = initializer;  // 拷贝
+var foo = other as Bar; // 转换
 
+final map = {if (i is int) i: 'int'};         // final 不可改变变量本身，但可以改变其字段内容
+const set = {if (list is List<int>) ...list}; // const 两者都不可改变
+enum Color { red, green, blue }               // 支持定义拥有字段的enum类
 ```
 
 ## 语句
 
-- **异常**
+- 分支
+
+  ```dart
+  // if else
+  if (condition) {
+    statement;
+  } else {
+    statement;
+  }
+
+  // switch
+  switch (comparable) {
+    case constant1:
+      continue fallthrough;
+    fallthrough:
+    case constant2:
+      statement;
+      break;
+    default:
+      statement;
+  }
+  ```
+
+- 循环
+
+  ```dart
+  // for
+  for (declaration; condition; expression) {
+    statement;
+  }
+
+  // for in
+  for (final elem in iterabal) {
+    statement;
+  }
+  ```
+
+- 异常
 
 ```dart
 try {
@@ -62,7 +106,9 @@ String fn({required String r1, required String? r2, String o1 = "optional", Stri
 
 String fn(String r1, String? r2 [String o1 = "optional", String? o2]) {...}
 
-(arg) => expression;
+(arg) {return ...}
+
+(arg) => expression
 ```
 
 ## 面向对象
@@ -70,25 +116,34 @@ String fn(String r1, String? r2 [String o1 = "optional", String? o2]) {...}
 ### 封装
 
 ```dart
-class Point {
-  double x = 0;
-  double y = 0;
+class MyClass {
+  String _name;
 
-  Point(double x, double y) {
-    // See initializing formal parameters for a better way
-    // to initialize instance variables.
-    this.x = x;
-    this.y = y;
+  // constructor likes function but no return type
+  MyClass(String name) {
+    this._name = name;
   }
 
-  // Sets the x and y instance variables
-  // before the constructor body runs.
-  Point(this.x, this.y);
+  // named constructor beacase no funtion overload
+  MyClass.named(String name) {
+    this._name = name;
+  }
 
-  // Named constructor
-  Point.origin()
-      : x = xOrigin,
-        y = yOrigin;
+  // using this in constructor, a syntax sugar
+  MyClass.useThis(this._name);
+
+  // initializer lists: final fields must have values before the constructor body executes
+  MyClass.initList(String name) : _name = name;
+
+  // redirect to another constructor
+  MyClass.redirecting1(String name) : this(name);
+  MyClass.redirecting2(String name) : this.named(name);
+
+  @override
+  bool operator ==(Object other) => other is MyClass && other._name = name;
+
+  String get name => name;
+  set name(String value) => name = value;
 }
 ```
 

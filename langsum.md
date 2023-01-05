@@ -41,7 +41,7 @@
   - 依赖导出：非`_`开头的符号
   - 依赖导入：`import 'package:lib/lib.dart'`
   - 依赖初始化：
-  - 依赖管理：
+  - 依赖管理：自动（flutter-pub）
 
 - JavaScript
 
@@ -501,11 +501,13 @@
 - C++
 
   ```cpp
-  auto foo(const string& s, int i) -> char {
-      return s[i];
+  auto foo() -> void {}
+
+  auto bar(const string& src, char& dest, int idx) -> char {
+      return (dest = src[idx]);
   }
 
-  auto bar = [&r, v, m = std::move(l)] (auto& elem) mutable {}
+  auto y = [&r, v, m = std::move(l)] (auto& elem) mutable {}
   ```
 
   - 签名修饰：`const &|&&`, `inline`, `constexpr`, `noexcept`
@@ -516,7 +518,10 @@
 - Go
 
   ```go
-  func foo(s string, i int) (x, y int) {
+  func foo() {
+  }
+
+  func bar(s string, i int) (x, y int) {
       x, y = s[i], s[i + 1]
       return
   }
@@ -529,9 +534,15 @@
 - Dart
 
   ```dart
-  String foo(String r1, String? r2 [String o1 = "optional", String? o2]) {...}
+  void voidFn() {}
 
-  String bar({required String r1, required String? r2, String o1 = "optional", String? o2}) {...}
+  String foo(String r1, String? r2 [String o1 = "optional", String? o2]) {
+    // ...
+  }
+
+  String bar({required String r1, required String? r2, String o1 = "optional", String? o2}) {
+    // ...
+  }
 
   (arg) {statements;}
 
@@ -739,129 +750,148 @@
 
 - C++
 
-```cpp
-class Base {
-   public:
-    virtual ~Base() = default;
+  ```cpp
+  class MyClass: public ExtendsBase, public WithMixin {
+     public:
+      MyClass() : ExtendsBase(), WithMixin() {}
 
-    virtual void Method();
-    virtual void InterfaceMethod() = 0;
-};
+      virtual ~MyClass() override = default;
 
-class MyClass: public Base {
-   public:
-    virtual ~MyClass() override = default;
-
-    virtual void InterfaceMethod() override;
-};
-```
+      virtual void BaseMethod() override {
+        ExtendsBase::BaseMethod();
+        // ...
+      }
+  };
+  ```
 
 - Go
 
-```go
-type MyClass struct {
-    Base1   // Base1 的方法集可由 MyClass 与 *MyClass 继承
-    *Base2  // *Base2 的方法集仅可由 *MyClass 继承而非 MyClass
-}
+  ```go
+  type MyClass struct {
+      ExtendsBase   // ExtendsBase 的方法集可由 MyClass 与 *MyClass 继承
+      *WithMixin    // *WithMixin  的方法集仅可由 *MyClass 继承而 MyClass 不行
+  }
+  ```
 
-// go将继承与多态的使用解耦
-type Interface interface {
-    InterfaceMethod() int
-}
+- Dart
 
-func (this *MyClass) InterfaceMethod() int {
-    return this.name
-}
-```
+  ```dart
+  class Base {
+    int key;
+    void baseMethod() {}
+  }
+
+  class MyClass2 extends Base {
+    MyClass2(super.key);
+
+    @override
+    void baseMethod() {
+      super.baseMethod();
+      // ...
+    }
+  }
+
+  mixin Mixin {
+    void functionalMethod() {}
+  }
+  class MyClass3 with Mixin {}
+  ```
 
 - JavaScript
 
-```js
-class MyClass extends Base {
-  // ...
-}
-```
+  ```js
+  class MyClass extends Base {
+    // ...
+  }
+  ```
 
 - Python
 
-```python
-class MyClass(Base):
-    def __init__(self):
-        super().__init__()  # super(Base, self).__init__()
+  ```python
+  class MyClass(Base):
+      def __init__(self):
+          super().__init__()  # super(Base, self).__init__()
 
-    def __del__(self):
-        super().__del__()
-```
+      def __del__(self):
+          super().__del__()
+  ```
 
 ### 多态
 
-- C++：
-  - 派生类的引用或指针可转换为基类的引用或指针
-  - 运行时类型：`typeid()` `dynamic_cast<>()`
-  - 通过虚指针与虚表实现
-- Go：
-  - 方法集匹配的类型可转换为相应接口类型
-  - 运行时类型：`switch type` `rt, ok = interf.(RT)`
-  - 通过静态符号表与反射实现
+- C++
+
+  ```cpp
+  class Implemented {
+   public:
+    virtual ~Implemented() = defatul;
+    virtual abstractMethod() = 0;
+  }
+
+  class MyClass: public Implemented {
+   public:
+    virtual ~MyClass() override = default;
+    virtual abstractMethod() override {}
+  };
+
+  Implemented* pintf = new MyClass();
+  Implemented& rintf = *pintf;
+  ```
+
+- Go
+
+  ```go
+  type Implemented interface {
+      abstractMethod()
+  }
+
+  type MyClass struct {
+  }
+
+  func (this *MyClass) abstractMethod() {
+  }
+
+  var intf Implemented = MyClass{}
+  ```
+
+- Dart
+
+  ```dart
+  abstract class Interface {
+    void abstractMethod();
+  }
+
+  class MyClass1 implements Interface {
+    @override
+    void abstractMethod() {}
+  }
+  ```
+
 - JavaScript
-  - 弱类型系统可直接转换为接口类型
-  - 运行时类型：`typeof`
-  - 利用动态符号表与反射实现
 - Python
-  - 弱类型系统可直接转换为接口类型
-  - 运行时类型：`type()`
-  - 利用动态符号表与反射实现
 
 ## 命名规范
 
-名字规范的要点：
-
-1. 不要节省字母，实现代码自解释
-2. 作用域越广越远命名要越详细，反之作用域很小的变量可简写（比如循环变量 idx）
+- 通用命名规范
+  1. 作用域越宽泛，命名要越详细，且避免使用缩写词；反之作用域很狭窄的变量可简写，比如循环变量 `i`
+  2. 让代码读起来像完整句子
+- 变量、属性命名：
+  1. 将最具描述性的名词放在标识符最后
+  2. 若为非布尔类型，尽量使用名词短语
+  3. 若为布尔类型，尽量使用非祈使动词短语，如使用 be 动词或助动词，且尽量使用“正向”的语义，如`isConnected`而非`isDisconnected`
+- 函数、方法命名：
+  1. 若有副作用，尽量使用祈使动词短语
+  2. 若无副作用，命名参考变量、属性命名
 
 常用命名前后缀：
 
+- 布尔：`is`，`not`，`any`，`all`，`none`，`has`，`can`，`should`，`must`
 - 位置：`idx`，`pos`，`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`
 - 计数：`count`，`size`，`length`，`width`，`height`，`depth`
 - 时间：`new`，`old`，`orig`，`cur`，`before`，`after`
 - 循环：`idx`，`pos`
 - 序数：`number`，`1st`，`2nd`，`3rd`
-- 布尔：`is`，`not`，`any`，`all`，`none`，`has`
 - 介词：`in`，`on`，`at`，`of`，`2`，`4`
 - 用途：`ret`，`val`，`need`，`temp`，`deal`，`src`，`dest`
-
-| C++ 命名           | 形式                |
-| ------------------ | ------------------- |
-| Namespaces, Files  | `lower_with_under`  |
-| Classes            | `UpperCamelCase`    |
-| Functions, Method  | `UpperCamelCase`    |
-| Macroes            | `UPPER_WITH_UNDER`  |
-| Constants          | `UPPER_WITH_UNDER`  |
-| Static Variables   | `UPPER_WITH_UNDER`  |
-| Local Variables    | `lower_with_under`  |
-| struct Data Member | `lower_with_under`  |
-| class Data Member  | `lower_with_under_` |
-
-| Go 命名         | Public           | Internal         |
-| --------------- | ---------------- | ---------------- |
-| Packages, Files | `lowerword`      | `internal`       |
-| All Name        | `UpperCamelCase` | `lowerCamelCase` |
-
-| JavaScript 命名       | 形式               |
-| --------------------- | ------------------ |
-| Packages, Files       | `lowerCamelCase`   |
-| Classes, Component    | `UpperCamelCase`   |
-| Functions, Method     | `lowerCamelCase`   |
-| Constants             | `UPPER_WITH_UNDER` |
-| Variables, Properties | `lowerCamelCase`   |
-
-| Python 命名           | 形式               |
-| --------------------- | ------------------ |
-| Packages, Files       | `lower_with_under` |
-| Classes               | `UpperCamelCase`   |
-| Functions, Method     | `UpperCamelCase`   |
-| Constants             | `UPPER_WITH_UNDER` |
-| Variables, Properties | `lower_with_under` |
 
 ## 基础库与框架
 
@@ -910,16 +940,16 @@ class MyClass(Base):
 - 窗口：坐标系中位置与大小、Z 轴顺序、显示状态、最大最小化状态、激活状态、禁用状态
 
   - 主窗口
-  - 对话窗
-  - 提示框
-  - 菜单
+  - 对话弹窗
+  - 提示弹窗
+  - 菜单弹窗
   - 基础控件
 
 - 内容
 
-  - 基础数据视图：List, Table, Tree
   - 文本
-  - 图像：多分辨率、矢量图缩放
+  - 图标
+  - 图像
   - 视频
   - 音频
   - 2D 绘制
@@ -927,13 +957,13 @@ class MyClass(Base):
 
 - 呈现
 
-  - 布局：位置、堆积、伸缩、网格
+  - 布局：图层、堆积、伸缩、网格、表格、树图
   - 样式：大小、方向、颜色、形状
   - 动画
 
 - 事件
 
-  - 鼠标事件：移动、点击、双击、拖拽、选择、右键、滚轮
+  - 鼠标事件：悬停、点击、双击、拖拽、选择、右键、滚轮
   - 键盘事件：快捷键、焦点切换
   - 系统事件
 
