@@ -47,7 +47,7 @@
 - [语言总结](langsum.md):star:
 
   - C++
-    - [C++ 语法特性](cpp.md)
+    - [C++ 语法大全](cpp.md)
     - [C++ 程序库](cpplib.md)
     - [CMake 构建系统](cmake.md)
   - Go
@@ -70,7 +70,7 @@
   - [开发者工具](devtool.md)
 
 - Windows 系统
-  - [Win32 API](win32.md)
+  - [Win32 系统接口](win32.md)
   - [CMD 命令行](cmd.md)
 
 ## 底层原理

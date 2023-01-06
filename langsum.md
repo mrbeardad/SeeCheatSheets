@@ -12,7 +12,7 @@
     - [继承](#继承)
     - [多态](#多态)
   - [命名规范](#命名规范)
-  - [基础库与框架](#基础库与框架)
+  - [基础类库与框架](#基础类库与框架)
 
 ## 依赖
 
@@ -40,7 +40,7 @@
   - 依赖单元：一个源文件
   - 依赖导出：非`_`开头的符号
   - 依赖导入：`import 'package:lib/lib.dart'`
-  - 依赖初始化：
+  - 依赖初始化：无
   - 依赖管理：自动（flutter-pub）
 
 - JavaScript
@@ -69,7 +69,7 @@
 > - 引用语义的目的：
 >   - (Copy) 避免拷贝
 >   - (Write) 修改对象
->   - (Polymorphism) 多态
+>   - (Dynamic) 动态绑定
 
 - C++
 
@@ -119,7 +119,6 @@
 - JavaScript
 
   ```js
-  let foo; // 待初始化
   let foo = new Bar(args); // 构造
   let foo = initializer; // 拷贝
   let foo = new Bar(other); // 转换
@@ -170,7 +169,7 @@
   ```dart
   final map = {if (i is int) i: 'int'};         // final 不可改变变量本身，但可以改变其字段内容
   const set = {if (list is List<int>) ...list}; // const 两者都不可改变
-  enum Color { red, green, blue }
+  enum Color { red, green, blue }               // 支持定义拥有字段的枚举
   ```
 
 - JavaScript
@@ -501,13 +500,15 @@
 - C++
 
   ```cpp
-  auto foo() -> void {}
-
-  auto bar(const string& src, char& dest, int idx) -> char {
-      return (dest = src[idx]);
+  auto return_nothing() -> void {
+    return;
   }
 
-  auto y = [&r, v, m = std::move(l)] (auto& elem) mutable {}
+  auto normal_function(const string& s, int i) -> char {
+      return s[i];
+  }
+
+  auto closure = [&r, v, m = std::move(l)] (auto& elem) mutable {}
   ```
 
   - 签名修饰：`const &|&&`, `inline`, `constexpr`, `noexcept`
@@ -518,12 +519,17 @@
 - Go
 
   ```go
-  func foo() {
+  func ReturnNothing() {
+    return
   }
 
-  func bar(s string, i int) (x, y int) {
+  func NormalFunction(s string, i int) (x, y string) {
       x, y = s[i], s[i + 1]
       return
+  }
+
+  closure := func() {
+    return
   }
   ```
 
@@ -534,19 +540,21 @@
 - Dart
 
   ```dart
-  void voidFn() {}
+  void returnNothing() {
+    return;
+  }
 
-  String foo(String r1, String? r2 [String o1 = "optional", String? o2]) {
+  String positionalParameter(String r1, String? r2 [String o1 = "optional", String? o2]) {
     // ...
   }
 
-  String bar({required String r1, required String? r2, String o1 = "optional", String? o2}) {
+  String namedParameter({required String r1, required String? r2, String o1 = "optional", String? o2}) {
     // ...
   }
 
-  (arg) {statements;}
+  (args) {statements;}
 
-  (arg) => expression;
+  (args) => expression;
   ```
 
   - 位置参数与命名参数
@@ -555,14 +563,19 @@
 - JavaScript
 
   ```js
-  function foo(s, i) {
-    return s + i;
+  function returnNothing() {
+    return;
   }
 
-  // 函数体仅单独return语句则可省略花括号与return
-  let bar = (x, y) => {
-    return x + y;
+  function normalFunction(s, i) {
+    return s[i];
+  }
+
+  let closure = (args) => {
+    return;
   };
+
+  let closure = (args) => expr;
   ```
 
   - 默认实参
@@ -571,10 +584,13 @@
 - Python
 
   ```python
-  def foo(s: str, /, l: list[int], *, d: dict[str,]) -> None:
-      return True
+  def return_nothing() -> None:
+    pass
 
-  bar = lambda x, y: x + y
+  def normalFunction(pos: str, /, pos_or_name: str, *, name: str) -> str:
+      return pos + pos_or_name + name
+
+  closure = lambda x, y: x + y
   ```
 
   - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
@@ -611,7 +627,7 @@
 
       auto name() -> string { return _name; }
       auto set_name(string name) -> void { _name = std::move(name); }
-      void Method();
+      void method();
 
      private:
       string _name;
@@ -893,10 +909,13 @@
 - 介词：`in`，`on`，`at`，`of`，`2`，`4`
 - 用途：`ret`，`val`，`need`，`temp`，`deal`，`src`，`dest`
 
-## 基础库与框架
+## 基础类库与框架
 
-- 分数
+- 布尔
+- 整数
+- 浮点数
 - 大数
+- 分数
 - 数学库
 - 随机数
 
@@ -908,10 +927,6 @@
 - 序列化
 - 本地化
 - 国际化
-- 标准输入输出
-- 文件输入输出
-- 文件系统
-- 命令行参数解析
 
 ---
 
@@ -919,21 +934,26 @@
 
 ---
 
-- 容器（数组，栈，队列，堆，链表，树，哈希表）
-- 算法（搜索，集合，数值，变序，更易）
+- 容器：表，栈，队列，堆，链表，树，哈希表
+- 算法：搜索，集合，数值，变序，更易
 
 ---
 
-- 并发与同步
-- 异步框架（文件 IO、网络 IO、IPC、IOC、Timer、Tasks）
+- 异步框架：文件 IO、网络 IO、IPC、IOC、Timer、Lock、Tasks
 
 ---
 
 - 错误处理
-- 日志收集
+- 日志记录
 - 数据埋点
-- 性能剖析
 - 单元测试
+- 性能剖析
+
+---
+
+- 环境变量
+- 命令行参数
+- 标准输入输出
 
 ---
 
@@ -957,7 +977,7 @@
 
 - 呈现
 
-  - 布局：图层、堆积、伸缩、网格、表格、树图
+  - 布局：堆积与伸缩（一维布局）、网格（二维布局）、图层（三维布局）、列表-表格-树图（常用高级视图）
   - 样式：大小、方向、颜色、形状
   - 动画
 

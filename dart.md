@@ -32,7 +32,7 @@ var foo = other as Bar; // 转换
 
 final map = {if (i is int) i: 'int'};         // final 不可改变变量本身，但可以改变其字段内容
 const set = {if (list is List<int>) ...list}; // const 两者都不可改变
-enum Color { red, green, blue }               // 支持定义拥有字段的enum类
+enum Color { red, green, blue }               // 支持定义拥有字段的枚举
 ```
 
 ## 语句
