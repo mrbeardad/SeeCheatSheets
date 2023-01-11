@@ -78,10 +78,10 @@
   // 构造函数初始化的缺点：无法返回错误，无法安全调用虚函数（除非显式 final）
   // 工厂方法初始化的场景：解决构造函数初始化的问题
   // Init方法初始化的场景：仅在接口天然就适合两段式初始化时使用，因为在构造与初始化间存在不可用的中间态
-  auto foo = Bar();                     // 默认
-  auto foo = Bar(args);                 // 构造
+  auto foo = bar();                     // 默认
+  auto foo = bar(args);                 // 构造
   auto foo = initializer;               // 拷贝
-  auto foo = static_cast<Bar>(other);   // 转换
+  auto foo = static_cast<bar>(other);   // 转换
   auto [a, b]  = aggregation;           // 解构
   ```
 
@@ -132,9 +132,9 @@
 - Python
 
   ```python
-  foo = Bar(args)     # 构造
+  foo = bar(args)     # 构造
   foo = initializer   # 拷贝
-  foo = Bar(other)    # 转换
+  foo = bar(other)    # 转换
   a, b = iterable     # 解构
   ```
 
@@ -147,9 +147,9 @@
 - C++
 
   ```cpp
-  #define CONST_VALUE 1       // 宏
-  const int CONST_VALUE = 1;  // 常量
-  enum Number { ONE, TWO };   // 枚举
+  #define KVALUE 1          // 宏
+  const int kvalue = 1;     // 常量
+  enum number { one, two }; // 枚举
   ```
 
 - Go
@@ -175,13 +175,13 @@
 - JavaScript
 
   ```js
-  const CONST_VALUE = 1; // 仅限制变量禁止被重新赋值绑定或被重新声明
+  const kvalue = 1; // 仅限制变量禁止被重新赋值绑定或被重新声明
   ```
 
 - Python
 
   ```python
-  CONST_VALUE = 1 # 非强制
+  KVALUE = 1 # 非强制
   ```
 
 ## 表达式
@@ -235,11 +235,11 @@
 
     // switch
     switch (int_or_enum) {
-    case constant:
-      statement;
-      break;
-    default:
-      statement;
+      case constant:
+        statement;
+        break;
+      default:
+        statement;
     }
     ```
 
@@ -286,26 +286,26 @@
 
     // switch expr
     switch expr {
-    case expr1, expr2:
-      fallthrough
-    default:
-      statement
+      case expr1, expr2:
+        fallthrough
+      default:
+        statement
     }
 
     // switch condition
     switch {
-    case condition:
-      fallthrough
-    default:
-      statement
+      case condition:
+        fallthrough
+      default:
+        statement
     }
 
     // switch runtime type
     switch rt := intf.(type) {
-    case Type:
-      fallthrough
-    default:
-      statement
+      case Type:
+        fallthrough
+      default:
+        statement
     }
     ```
 
@@ -328,16 +328,16 @@
     ```go
     panic("throw a panic!")
 
-    defer call3rd()
-    defer call2nd()
-    defer call1st()
-
     defer func() {
       panic = recover()
       if panic != nil {
         statement
       }
     }()
+
+    defer call3rd()
+    defer call2nd()
+    defer call1st()
     ```
 
 - Dart
@@ -480,17 +480,17 @@
 
   ```python
   try:
-      raise Exception('error0')
+    raise Exception('error0')
   except Exception:
-      raise Exception('error1')
+    raise Exception('error1')
   except Exception as excep:
-      raise Exception('error2') from Exception('__cause__')
+    raise Exception('error2') from Exception('__cause__')
   except:
-      raise
+    raise
   else:
-      pass
+    pass
   finally:
-      pass
+    pass
   ```
 
 ## 函数
@@ -505,7 +505,7 @@
   }
 
   auto normal_function(const string& s, int i) -> char {
-      return s[i];
+    return s[i];
   }
 
   auto closure = [&r, v, m = std::move(l)] (auto& elem) mutable {}
@@ -524,8 +524,8 @@
   }
 
   func NormalFunction(s string, i int) (x, y string) {
-      x, y = s[i], s[i + 1]
-      return
+    x, y = s[i], s[i + 1]
+    return
   }
 
   closure := func() {
@@ -587,8 +587,8 @@
   def return_nothing() -> None:
     pass
 
-  def normalFunction(pos: str, /, pos_or_name: str, *, name: str) -> str:
-      return pos + pos_or_name + name
+  def normal_function(pos: str, /, pos_or_name: str, *, name: str) -> str:
+    return pos + pos_or_name + name
 
   closure = lambda x, y: x + y
   ```
@@ -614,23 +614,23 @@
   - 类型转换：内置类型(bool&int&float, c-str&string)，单参构造函数与 operator 转换函数
 
   ```cpp
-  class MyClass {
-     public:
-      MyClass() = default;
-      MyClass(MyClass&&) = default;
-      MyClass(const MyClass&) = default;
-      auto operator=(MyClass&&) -> MyClass& = default;
-      auto operator=(const MyClass&) -> MyClass& = default;
-      ~MyClass() = default;
-      auto operator<=>(const MyClass&) -> std::strong_ordering = default;
-      explicit operator bool() const { return _name.size(); }
+  class myclass {
+   public:
+    myclass() = default;
+    myclass(myclass&&) = default;
+    myclass(const myclass&) = default;
+    auto operator=(myclass&&) -> myclass& = default;
+    auto operator=(const myclass&) -> myclass& = default;
+    ~myclass() = default;
+    auto operator<=>(const myclass&) -> std::strong_ordering = default;
+    explicit operator bool() const { return _name.size(); }
 
-      auto name() -> string { return _name; }
-      auto set_name(string name) -> void { _name = std::move(name); }
-      void method();
+    auto name() -> string { return _name; }
+    auto set_name(string name) -> void { _name = std::move(name); }
+    void method();
 
-     private:
-      string _name;
+   private:
+    string _name;
   };
   ```
 
@@ -647,11 +647,11 @@
 
   ```go
   type MyClass struct {
-      name string
+    name string
   }
 
   func (this *MyClass) Method() {
-      doSomething(this.name)
+    doSomething(this.name)
   }
   ```
 
@@ -743,23 +743,23 @@
   - 类型转换：`__nonzero__()`与`__str__()`
 
   ```python
-  class MyClass:
-      def __init__(self, name: str):
-          self._name = name
+  class myclass:
+    def __init__(self, name: str):
+      self._name = name
 
-      def __del__(self):
-          self._name.__del__()
+    def __del__(self):
+      self._name.__del__()
 
-      @property
-      def name(self):
-          return self._name
+    @property
+    def name(self):
+      return self._name
 
-      @name.setter
-      def name(self, name):
-          self._name = name
+    @name.setter
+    def name(self, name):
+      self._name = name
 
-      def method(self):
-          do_something(self._name)
+    def method(self):
+      do_something(self._name)
   ```
 
 ### 继承
@@ -767,16 +767,16 @@
 - C++
 
   ```cpp
-  class MyClass: public ExtendsBase, public WithMixin {
-     public:
-      MyClass() : ExtendsBase(), WithMixin() {}
+  class myclass: public base, public mixin {
+   public:
+    myclass() : base(), mixin() {}
 
-      virtual ~MyClass() override = default;
+    virtual ~myclass() override = default;
 
-      virtual void BaseMethod() override {
-        ExtendsBase::BaseMethod();
-        // ...
-      }
+    virtual void base_method() override {
+      base::base_method();
+      // ...
+    }
   };
   ```
 
@@ -784,8 +784,12 @@
 
   ```go
   type MyClass struct {
-      ExtendsBase   // ExtendsBase 的方法集可由 MyClass 与 *MyClass 继承
-      *WithMixin    // *WithMixin  的方法集仅可由 *MyClass 继承而 MyClass 不行
+    Base    // Base 的方法集可由 MyClass 与 *MyClass 继承
+    *Mixin  // *Mixin 的方法集仅可由 *MyClass 继承而 MyClass 不行
+  }
+
+  func (this *MyClass) baseMethod() {
+    // ...
   }
   ```
 
@@ -794,11 +798,19 @@
   ```dart
   class Base {
     int key;
-    void baseMethod() {}
+    void baseMethod() {
+      // ...
+    }
   }
 
-  class MyClass2 extends Base {
-    MyClass2(super.key);
+  mixin Mixin {
+    void mixinMethod() {
+      // ...
+    }
+  }
+
+  class MyClass extends Base with Mixin {
+    MyClass(super.key);
 
     @override
     void baseMethod() {
@@ -806,11 +818,6 @@
       // ...
     }
   }
-
-  mixin Mixin {
-    void functionalMethod() {}
-  }
-  class MyClass3 with Mixin {}
   ```
 
 - JavaScript
@@ -824,12 +831,14 @@
 - Python
 
   ```python
-  class MyClass(Base):
-      def __init__(self):
-          super().__init__()  # super(Base, self).__init__()
+  class myclass(base, mixin):
+    def __init__(self):
+      super(base, self).__init__()
+      super(mixin, self).__init__()
 
-      def __del__(self):
-          super().__del__()
+    def __del__(self):
+      super(base, self).__del__()
+      super(mixin, self).__del__()
   ```
 
 ### 多态
@@ -837,48 +846,52 @@
 - C++
 
   ```cpp
-  class Implemented {
+  class abstract {
    public:
-    virtual ~Implemented() = defatul;
-    virtual abstractMethod() = 0;
+    virtual ~abstract() = defatul;
+    virtual abstract_method() = 0;
   }
 
-  class MyClass: public Implemented {
+  class myclass: public abstract {
    public:
-    virtual ~MyClass() override = default;
-    virtual abstractMethod() override {}
+    virtual ~myclass() override = default;
+    virtual abstract_method() override {
+      // ...
+    }
   };
 
-  Implemented* pintf = new MyClass();
-  Implemented& rintf = *pintf;
+  abstract* pintf = new myclass();
+  abstract& rintf = *pintf;
   ```
 
 - Go
 
   ```go
-  type Implemented interface {
+  type Abstract interface {
       abstractMethod()
   }
 
-  type MyClass struct {
-  }
+  type MyClass struct {}
 
   func (this *MyClass) abstractMethod() {
+    // ...
   }
 
-  var intf Implemented = MyClass{}
+  var intf Abstract = MyClass{}
   ```
 
 - Dart
 
   ```dart
-  abstract class Interface {
+  abstract class Abstract {
     void abstractMethod();
   }
 
-  class MyClass1 implements Interface {
+  class MyClass implements Abstract {
     @override
-    void abstractMethod() {}
+    void abstractMethod() {
+      // ...
+    }
   }
   ```
 
@@ -959,10 +972,11 @@
 
 - 窗口：坐标系中位置与大小、Z 轴顺序、显示状态、最大最小化状态、激活状态、禁用状态
 
-  - 主窗口
-  - 对话弹窗
-  - 提示弹窗
-  - 菜单弹窗
+  - Main Window
+  - Dialog
+  - Tips
+  - Menu
+  - Tooltip
   - 基础控件
 
 - 内容
@@ -975,16 +989,17 @@
   - 2D 绘制
   - 3D 绘制
 
-- 呈现
+- 展示
 
-  - 布局：堆积与伸缩（一维布局）、网格（二维布局）、图层（三维布局）、列表-表格-树图（常用高级视图）
+  - 布局：位置、伸缩（一维布局）、网格（二维布局）、图层（三维布局）、列表-表格-树图（常用高级视图）
   - 样式：大小、方向、颜色、形状
-  - 动画
+  - 动画：随时间更改布局与样式的状态
 
-- 事件
+- 输入
 
-  - 鼠标事件：悬停、点击、双击、拖拽、选择、右键、滚轮
-  - 键盘事件：快捷键、焦点切换
+  - 鼠标事件：enter, leave, down, up, move
+  - 高级手势：轻触、长按、双击、三击、拖拽、选择、右键、滚动
+  - 键盘事件：焦点交互、快捷键
   - 系统事件
 
 - MVVM 模式
