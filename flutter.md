@@ -1,5 +1,22 @@
 # Flutter
 
+## Widgets
+
+- Flutter 使用声明式语法将 Widgets 组装成树并最终渲染成可视画面
+- Widgets 的主要任务是负责展示状态数据与响应 UI 交互
+- Widgets 的状态数据来源
+  - 父组件
+  - 上下文
+  - UI 交互：`Controller`
+- Widgets 的 UI 响应逻辑来源
+  - 父组件
+  - 当前组件方法
+  - `Controller`
+- 子节点属性名通常为
+  - `child`: 单个子组件
+  - `children`: 多个子组件
+  - `builder`: 回调函数的形式通常用于提高性能或者父组件为子组件提供额外状态数据
+
 ## 窗口
 
 ## 内容
@@ -23,15 +40,15 @@ flutter:
 
 ## 展示
 
-### 布局
-
 核心概念：
 
 - 位置：由父组件决定子组件位置
 - 约束：由父组件传递给子组件从而约束其尺寸大小，tight 指最大约束与最小约束相等，loose 指只有最大约束
 - 尺寸：由子组件根据约束计算尺寸再返回给父组件
 
----
+### 布局
+
+通过布局容器包裹子组件从而调整子组件位置与大小
 
 - `UnconstrainedBox`, `ConstranedBox`, `LimitedBox`, `SizedBox`, `FittedBox`
 - `Container`, `Center`, `Align`
@@ -43,25 +60,30 @@ flutter:
 
 ### 样式
 
-大多由组件的构造参数控制，如`style`, `color`等
+大多由组件的属性控制，如`style`, `color`等
 
 ### 动画
 
 ```dart
-AnimationController controller = AnimationController(
-    duration: const Duration(milliseconds: 500), vsync: this);
-final Animation<double> curve =
-    CurvedAnimation(parent: controller, curve: Curves.easeOut);
-Animation<int> alpha = IntTween(begin: 0, end: 255).animate(curve);
+final controller = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
+final animation = IntTween(begin: 0, end: 255).animate(CurvedAnimation(parent: controller, curve: Curves.easeOut));
 ```
 
-- implicit animations: 单个组件的状态改变时自动触发过渡动画
-  - `AnimatedFoo`
-  - use `TweenAnimationBuilder`
+动画组件由三部分组成：
+
+- `Tween`：负责在两个值间计算插值
+- `Animation`：负责维护动画状态
+- `AnimationController`：负责控制动画状态，在必要时才更新渲染动画
+
+最终目的为其他组件提供状态数据`animation.value`
+
+- implicit animations
+  - `AnimatedFoo(foo: , duration: , curve: , child: )`
+  - use `TweenAnimationBuilder(tween: , duration: , curve: , builder: )`
 - explicit animations
-  - `FooTransition`
-  - subclass `AnimatedWidget` for single widget
-  - use `AnimatedBuilder` for multiple midgets
+  - `FooTransition(foo: animation, child: )`
+  - subclass `AnimatedWidget(listenable: animation)`
+  - use `AnimatedBuilder(animation: , builder: )`
 
 ## 输入
 
