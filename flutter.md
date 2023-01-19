@@ -7,15 +7,19 @@
 - Widgets 的状态数据来源
   - 父组件
   - 上下文
-  - UI 交互：`Controller`
+  - 当前组件的成员
+  - UI Controller
 - Widgets 的 UI 响应逻辑来源
   - 父组件
-  - 当前组件方法
-  - `Controller`
+  - 当前组件的方法
+  - UI Controller
 - 子节点属性名通常为
   - `child`: 单个子组件
   - `children`: 多个子组件
-  - `builder`: 回调函数的形式通常用于提高性能或者父组件为子组件提供额外状态数据
+  - `builder`: 回调函数的形式通常用于
+    - 提高性能
+    - 父组件为子组件提供额外状态数据
+    - 为子组件产生新的 context
 
 ## 窗口
 
@@ -82,11 +86,44 @@ final animation = IntTween(begin: 0, end: 255).animate(CurvedAnimation(parent: c
   - use `TweenAnimationBuilder(tween: , duration: , curve: , builder: )`
 - explicit animations
   - `FooTransition(foo: animation, child: )`
-  - subclass `AnimatedWidget(listenable: animation)`
   - use `AnimatedBuilder(animation: , builder: )`
+  - subclass `AnimatedWidget(listenable: animation)`
 
 ## 输入
 
-- 鼠标：`Listener`, `MouseRegion`, `GestureDetector`
+- 鼠标事件：`Listener`, `MouseRegion`
 
-- 键盘：`Focus`, `Shortcuts`, `Actions`
+- 手势检测：`GestureDetector`
+
+- 键盘焦点：`Focus`, `FocusScope`
+
+- 快捷键：`Shortcuts`, `Intent`, `Actions`
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Shortcuts(
+    shortcuts: <ShortcutActivator, Intent>{
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyA): SelectAllIntent(),
+      SingleActivator(LogicalKeyboardKey.keyC, control: true): CopyIntent(),
+      CharacterActivator('?'): HelpIntent(),
+    },
+    child: Actions(
+      actions: <Type, Action<Intent>>{
+        SelectAllIntent: SelectAllAction(model),
+        CopyIntent: CopyAction(model),
+        HelpIntent: HelpAction(model),
+      },
+      child: Builder(
+        builder: (context) => TextButton(
+          child: const Text('SELECT ALL'),
+          onPressed: Actions.handler<SelectAllIntent>(
+            context,
+            SelectAllIntent(),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+```
