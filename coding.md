@@ -45,10 +45,10 @@
   - 检查任何可能出错的地方，并尝试恢复或报错
     - 空指针
     - 整型溢出：截断、转换、加减、除零
-    - 浮点精度：有效位、非法运算、除零、阶码上溢与下溢（[详见 INF&NAN](https://www.gnu.org/software/libc/manual/html_node/FP-Exceptions.html)）
-- 程序可用
+    - 浮点精度：有效位、非法运算、INF、NAN（[详见 INF&NAN](https://www.gnu.org/software/libc/manual/html_node/FP-Exceptions.html)）
+- 异步安全
   - 任何 IO 和不可预期计算量的任务都需要异步执行
-  - non-const 方法需要注意线程安全性的保证
+  - 注意函数对可重入性与线程安全性的保证
 - 信息安全
   - 输出的敏感信息必须加密
   - 重要的数据记录必须持久化
