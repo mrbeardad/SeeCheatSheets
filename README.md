@@ -3,8 +3,8 @@
 - [See Cheat Sheets](#see-cheat-sheets)
   - [前言](#前言)
   - [Web](#web)
-  - [Server](#server)
   - [Client](#client)
+  - [Server](#server)
   - [Coding](#coding)
   - [开发平台](#开发平台)
   - [底层原理](#底层原理)
@@ -27,24 +27,24 @@
 - [WAS](was.md)：Web 应用安全
 - [SEO](seo.md)：搜索引擎优化
 
-## Server
-
-- [Nginx](nginx.md)：路由转发与负载均衡
-- [K8S](k8s.md)：动态编排容器集群
-- [Docker](docker.md)：打包并隔离进程的运行环境
-- [MySQL](sql.md)：关系型数据库
-- [Redis](redis.md)：结构型数据缓存
-
 ## Client
 
 - [Flutter](flutter.md)
 - [QT](qt.md)
 
+## Server
+
+- [Nginx](nginx.md)：路由转发与负载均衡
+- [Docker](docker.md)：打包并隔离进程的运行环境
+- [K8S](k8s.md)：动态编排容器集群
+- [MySQL](sql.md)：关系型数据库
+- [Redis](redis.md)：结构型数据缓存
+
 ## Coding
 
+- [编码逻辑](coding.md):star:
 - [设计模式](dspt.md):star:
-- [代码经验](coding.md):star:
-- [语言总结](langsum.md):star:
+- [编程语言](langsum.md):star:
 
   - C++
     - [C++ 语法大全](cpp.md)
@@ -62,7 +62,7 @@
 
 ## 开发平台
 
-- [Linux 系统总结](linuxsum.md):star:
+- [Linux 系统](linuxsum.md):star:
 
   - [Linux 知识体系](linux.md)
   - [Linux 系统接口](linuxapi.md)
@@ -75,7 +75,7 @@
 
 ## 底层原理
 
-- [计科八股总结](interview.md):star:
+- [计科八股](interview.md):star:
 
   - [信息编码](code.md)
   - [处理器设计](cpu.md)
