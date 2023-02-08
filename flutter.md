@@ -2,7 +2,7 @@
 
 ## Widgets
 
-- Flutter 使用声明式语法编写 Widgets 树，然后计算出 RenderObject 树，最终渲染成画面
+- Flutter 使用声明式语法编写 Widgets 树，然后生成 RenderObject 树，最终渲染成画面
 
 - Widgets 的主要任务是负责展示状态数据与响应 UI 交互（以及提供配置数据）
 
@@ -18,15 +18,6 @@
     - 父组件
     - 内部方法
     - UI Controller
-
-- 子节点属性名通常为
-
-  - `child`: 单个子组件
-  - `children`: 多个子组件
-  - `builder`: 回调函数的形式通常用于
-    - 必要时才构建以提高性能
-    - 父组件为子组件提供额外状态数据
-    - 为子组件产生新的 context
 
 ## 窗口
 
@@ -76,41 +67,95 @@ flutter:
 
 ### 样式
 
-- 局部样式一般由组件的属性控制，如`style`, `color`等
+- 局部样式一般由组件的属性控制，如`style`, `color`, `shape`等
+
+  ```dart
+  Color(0xFF42A5F5);
+  Color.fromARGB(0xFF, 0x42, 0xA5, 0xF5);
+  Color.fromARGB(255, 66, 165, 245);
+  Color.fromRGBO(66, 165, 245, 1.0);
+  Colors.blue;
+  Colors.blue[200];
+  ColorScheme.fromSwatch(primarySwatch: Colors.purpl);
+  ColorScheme.fromSeed(seedColor: Colors.purpl);
+  ```
+
 - 全局样式一般由`MaterialApp.theme`控制
 
 ```dart
 MaterialApp(
-  theme: ThemeData(
-    colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.green),
-    textTheme: const TextTheme(bodyMedium: TextStyle(color: Colors.purple)),
-  ),
+  theme: ThemeData.light(),
   // ...
 )
 ```
 
 ### 动画
 
-```dart
-final controller = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
-final animation = IntTween(begin: 0, end: 255).animate(CurvedAnimation(parent: controller, curve: Curves.easeOut));
-```
-
-动画组件由三部分组成：
-
-- `Tween`：负责在两个值间计算插值
-- `Animation`：负责维护动画状态
-- `AnimationController`：负责控制动画状态，在必要时才更新渲染动画
-
-最终目的为其他组件提供状态数据`animation.value`
-
 - implicit animations
+
   - `AnimatedFoo(foo: , duration: , curve: , child: )`
   - use `TweenAnimationBuilder(tween: , duration: , curve: , builder: )`
+
 - explicit animations
+
   - `FooTransition(foo: animation, child: )`
   - use `AnimatedBuilder(animation: , builder: )`
-  - subclass `AnimatedWidget(listenable: animation)`
+
+```dart
+class Foo extends StatefulWidget {
+  const Foo({ super.key, required this.duration, required this.tween, curve = Curves.linear });
+
+  final Duration duration;
+  final Tween<Double> tween;
+  final Curve curve;
+
+  @override
+  State<Foo> createState() => _FooState();
+}
+
+class _FooState extends State<Foo> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this, // the SingleTickerProviderStateMixin
+      duration: widget.duration,
+    );
+    _animation = widget.tween.animation(_controller).chain(widget.curve);
+  }
+
+  @override
+  void didUpdateWidget(Foo oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _controller.duration = widget.duration;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.red,
+      width: _animation.value,
+      height: _animation.value,
+    ); // ...
+  }
+}
+```
+
+动画三要素：`Duration`, `Tween`, `Curve`
+
+- `AnimationController`：维护并控制动画状态与数据，在渲染新帧时更新
+  - `Duration`由用户指定
+  - `Tween`默认`Tween<Double>(begin: 0.0, end: 1.0)`
+  - `Curve`默认`Curves.linear`
 
 ## 输入
 
