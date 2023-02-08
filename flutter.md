@@ -82,21 +82,21 @@ flutter:
 
 - 全局样式一般由`MaterialApp.theme`控制
 
-```dart
-MaterialApp(
-  theme: ThemeData.light(),
-  // ...
-)
-```
+  ```dart
+  MaterialApp(
+    theme: ThemeData.light(),
+    // ...
+  )
+  ```
 
 ### 动画
 
-- implicit animations
+- implicit animations：改变属性时自动生成`Animation`来控制动画
 
   - `AnimatedFoo(foo: , duration: , curve: , child: )`
   - use `TweenAnimationBuilder(tween: , duration: , curve: , builder: )`
 
-- explicit animations
+- explicit animations：由用户提供`Animation`来控制动画
 
   - `FooTransition(foo: animation, child: )`
   - use `AnimatedBuilder(animation: , builder: )`
@@ -150,12 +150,17 @@ class _FooState extends State<Foo> with SingleTickerProviderStateMixin {
 }
 ```
 
-动画三要素：`Duration`, `Tween`, `Curve`
+动画三要素（动画的本质即随时间变化而更改布局与样式）：
 
-- `AnimationController`：维护并控制动画状态与数据，在渲染新帧时更新
-  - `Duration`由用户指定
-  - `Tween`默认`Tween<Double>(begin: 0.0, end: 1.0)`
-  - `Curve`默认`Curves.linear`
+- `Duration`：指定动画运行时长
+- `Tween`：指定样式数据的类型与变化范围
+- `Curve`：应用时间-曲线函数得到不同的动画效果
+
+`AnimationController`：维护并控制动画状态与数据，在渲染新帧时更新
+
+- `Duration`由用户指定
+- `Tween`默认`Tween<Double>(begin: 0.0, end: 1.0)`
+- `Curve`默认`Curves.linear`
 
 ## 输入
 
