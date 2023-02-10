@@ -6,14 +6,14 @@
 
 - Widgets 的主要任务是负责展示状态数据与响应 UI 交互（以及提供配置数据）
 
-  - Widgets 的状态数据来源
+  - 状态数据来源
 
     - 父组件
     - 内部状态
     - UI Controller
     - context
 
-  - Widgets 的 UI 响应逻辑来源
+  - I 响应逻辑来源
 
     - 父组件
     - 内部方法
@@ -38,6 +38,7 @@
 - 文本：`Text`
 - 图标：`Icon`
 - 图像：`Image`
+- 2D 绘制：`CustomPaint`
 
 ```yaml
 # pubspec.yaml
@@ -47,7 +48,7 @@ flutter:
   assets:
     - images/background.png
     - images/2.0x/background.png
-    - icons/
+    - fonts/
 ```
 
 ## 展示
@@ -91,31 +92,21 @@ flutter:
   - `SliverList`, `SliverFixedExtentList`, `SliverPrototypeExtentList`
   - `SliverGrid`
   - `SliverChildBuilderDelegate`, `SliverChildListDelegate`
-  - `Scrollbar`, `SingleChildScrollView`, `NestedScrollView`, `ListView`, `ReorderableListView`, `GridView`, `PageView`, `RefreshIndicator`
+  - `Scrollbar`, `SingleChildScrollView`, `ListView`, `ReorderableListView`, `GridView`, `PageView`, `RefreshIndicator`
 
 ### 样式
 
-- 局部样式一般由组件的属性控制，如`style`, `color`, `shape`等
+- 全局样式，`MaterialApp(theme: ThemeData.from(colorScheme: c, textTheme: t))`
+- 局部样式，由组件的诸如`style`, `color`, `shape`等属性控制
+- 视效容器
 
-  ```dart
-  Color(0xFF42A5F5);
-  Color.fromARGB(0xFF, 0x42, 0xA5, 0xF5);
-  Color.fromARGB(255, 66, 165, 245);
-  Color.fromRGBO(66, 165, 245, 1.0);
-  Colors.blue;
-  Colors.blue[200];
-  ColorScheme.fromSwatch(primarySwatch: Colors.purpl);
-  ColorScheme.fromSeed(seedColor: Colors.purpl);
-  ```
-
-- 全局样式一般由`MaterialApp.theme`控制
-
-  ```dart
-  MaterialApp(
-    theme: ThemeData.light(),
-    // ...
-  )
-  ```
+  - `BackdropFilter`, `ImageFilter`
+  - `Opacity`, `Visibility`
+  - `ShaderMask`
+  - `ClipRect`, `ClipRRect`, `ClipOval`, `ClipPath`
+  - `DecoratedBox`, `BoxDecoration`, `LinearGradient`, `RadialGradient`, `SweepGradient`
+  - `RotatedBox`
+  - `Transform`
 
 ### 动画
 
@@ -172,10 +163,14 @@ class _FooState extends State<Foo> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.red,
-      width: _animation.value,
-      height: _animation.value,
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) => Container(
+        color: Colors.red,
+        width: _animation.value,
+        height: _animation.value,
+        child: child,
+      ),
     ); // ...
   }
 }
@@ -195,9 +190,9 @@ class _FooState extends State<Foo> with SingleTickerProviderStateMixin {
 
 ## 输入
 
-- 鼠标事件：`Listener`, `MouseRegion`
+- 鼠标事件：`Listener`, `MouseRegion`, `AbsorbPointer`, `IgnorePointer`
 
-- 手势检测：`GestureDetector`
+- 手势检测：`GestureDetector`, `Draggable`, `LongPressDraggable`, `DragTarget`, `InteractiveViewer`, `Dismissible`
 
 - 键盘焦点：`Focus`, `FocusScope`
 
