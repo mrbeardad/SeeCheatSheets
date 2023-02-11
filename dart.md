@@ -156,7 +156,7 @@ var i = 10 + 0xFF;
 
 var d = 1.1 + 1.1e5;
 
-var s = 'with " ' + "with ' " + "both with ${name}" + r"with raw without any \e and $name";
+var s = 'with " ' + "with ' " + "with ${name}" + r"with raw without any \e and $name";
 var s1 = '''
 You can create
 multi-line strings like this one.
@@ -164,9 +164,34 @@ multi-line strings like this one.
 var s2 = """This is also a
 multi-line string.""";
 
-var list = [1, 2, 3];
-var list2 = [0, ...list];
+vat list0 = <String>[]
+var list1 = [1, 2, 3];
+var list2 = [0, ...list1];
+var list3 = [0, ...?list1];
+var list4 = ['Home', 'Plants', if (promoActive) 'Outlet'];
+var list5 = ['#0', for (var i in list1) '#$i'];
 
-var set1 = {'fluorine', 'chlorine', 'bromine', 'iodine', 'astatine'};
-var set2 = <String>{};
+var set0 = <String>{};
+var set1 = {1, 2, 3};
+var set2 = {0, ...set1};
+var set3 = {0, ...?set1};
+var set4 = {'Home', 'Plants', if (promoActive) 'Outlet'};
+var set5 = {'#0', for (var i in set1) '#$i'};
+
+var map0 = <int, String>{};
+var map1 = {1: 'one', 2: 'two', 3: 'three'};
+var map2 = {0: 'zero', ...map1};
+var map3 = {0: 'zero', ...?map1};
+var map4 = {'Home', 'Plants', if (promoActive) 'Outlet'};
+var map5 = {'#0', for (var i in map1.entries) i.key: i.value};
+
+var record = ("ape", a: "bat", "cat", b: "dog");
+print(record.$1); // Prints "ape".
+print(record.a);  // Prints "bat".
+print(record.$2); // Prints "cat".
+print(record.b);  // Prints "dog".
+var number = (123);  // The number 123.
+var record = (123,); // A record containing the number 123.
+var (bool, num id, {int n, String s}) quad;
+var t = (int, String); // No record type literals
 ```

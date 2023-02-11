@@ -1,6 +1,6 @@
-# 编程语言总结
+# 编程语言
 
-- [编程语言总结](#编程语言总结)
+- [编程语言](#编程语言)
   - [依赖](#依赖)
   - [变量](#变量)
   - [常量](#常量)
@@ -11,7 +11,6 @@
     - [封装](#封装)
     - [继承](#继承)
     - [多态](#多态)
-  - [命名规范](#命名规范)
   - [基础类库与框架](#基础类库与框架)
     - [基础类型](#基础类型)
     - [数字相关](#数字相关)
@@ -21,6 +20,7 @@
     - [系统相关](#系统相关)
     - [工程能力](#工程能力)
     - [UI](#ui)
+  - [命名规范](#命名规范)
 
 ## 依赖
 
@@ -86,11 +86,11 @@
   // 构造函数初始化的缺点：无法返回错误，无法安全调用虚函数（除非显式 final）
   // 工厂方法初始化的场景：解决构造函数初始化的问题
   // Init方法初始化的场景：仅在接口天然就适合两段式初始化时使用，因为在构造与初始化间存在不可用的中间态
-  auto foo = bar();                     // 默认
-  auto foo = bar(args);                 // 构造
-  auto foo = initializer;               // 拷贝
-  auto foo = static_cast<bar>(other);   // 转换
-  auto [a, b]  = aggregation;           // 解构
+  auto foo = bar();                   // 默认
+  auto foo = bar(args);               // 构造
+  auto foo = initializer;             // 拷贝
+  auto foo = static_cast<bar>(other); // 转换
+  auto [a, b]  = aggregation;         // 解构
   ```
 
   - 变量类型：结构型强类型
@@ -100,11 +100,11 @@
 - Go
 
   ```go
-  var foo Bar             // 默认
-  foo  := Bar{fd: data}   // 构造
-  foo  := initializer     // 拷贝
-  foo  := Bar(other)      // 转换
-  a, _ := value, list     // 解构
+  var foo Bar           // 默认
+  foo  := Bar{fd: data} // 构造
+  foo  := initializer   // 拷贝
+  foo  := Bar(other)    // 转换
+  a, _ := value, list   // 解构
   ```
 
   - 变量类型：结构型强类型
@@ -114,10 +114,13 @@
 - Dart
 
   ```dart
-  var foo = Bar();        // 默认
-  var foo = Bar(args);    // 构造
-  var foo = initializer;  // 拷贝
-  var foo = other as Bar; // 转换
+  var foo = Bar();            // 默认
+  var foo = Bar(args);        // 构造
+  var foo = initializer;      // 拷贝
+  var foo = other as Bar;     // 转换
+  var [a, b] = list;          // 解构
+  var {'a': a, 'b': b} = map; // 解构
+  var (a, b: b, :c) = record; // 解构
   ```
 
   - 变量类型：引用型强类型
@@ -131,6 +134,7 @@
   let foo = initializer; // 拷贝
   let foo = new Bar(other); // 转换
   let [a, ["1"]: b, ...rest] = array; // 解构
+  let {a, ["1"]: b, ...rest} = obj; // 解构
   ```
 
   - 变量类型：引用型弱类型
@@ -210,19 +214,19 @@
   - 其他：（语句）`i++`, `i--`
 - Dart
   - 算数：`*`, `/`, `~/`, `%`, `+`, `-`
-  - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
-  - 逻辑：`!`, `&&`, `||`, `is`, `is!`
+  - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `is`, `is!`
+  - 逻辑：`!`, `&&`, `||`
   - 赋值：`=`, `??=`
   - 其他：`? :`, `??`, `++`, `--`, `..`, `?..`, `expr!`
 - JavaScript
   - 算数：`**`, `*`, `/`, `%`, `+`, `-`
-  - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `===`, `!==`
+  - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `===`, `!==`, `in`
   - 逻辑：`!`, `&&`, `||`
   - 赋值：`=`, `??=`
   - 其他：`? :`, `??`, `++`, `--`
 - Python
   - 算数：`**`, `*`, `/`, `//`, `%`, `+`, `-`
-  - 关系：`a < b <= c > d >= e`, `x == y != z`
+  - 关系：`a < b <= c > d >= e`, `x == y != z`, `in`
   - 逻辑：`not`, `and`, `or`
   - 赋值：（语句）`a = b = c`
   - 其他：`x if cond else y`
@@ -560,9 +564,9 @@
     // ...
   }
 
-  (args) {statements;}
+  (args) => expression
 
-  (args) => expression;
+  (args) {statements;}
   ```
 
   - 位置参数与命名参数
@@ -896,30 +900,6 @@
 - JavaScript
 - Python
 
-## 命名规范
-
-- 通用命名规范
-  1. 作用域越宽泛，命名要越详细，且避免使用缩写词；反之作用域很狭窄的变量可简写，比如循环变量 `i`
-  2. 让代码读起来像完整句子
-- 变量、属性命名：
-  1. 将最具描述性的名词放在标识符最后
-  2. 若为非布尔类型，尽量使用名词短语
-  3. 若为布尔类型，尽量使用非祈使动词短语，如使用 be 动词或助动词，且尽量使用“正向”的语义，如`isConnected`而非`isDisconnected`
-- 函数、方法命名：
-  1. 若有副作用，尽量使用祈使动词短语
-  2. 若无副作用，命名参考变量、属性命名
-
-常用命名前后缀：
-
-- 布尔：`is`，`not`，`any`，`all`，`none`，`has`，`can`，`should`，`must`
-- 位置：`idx`，`pos`，`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`
-- 计数：`count`，`size`，`length`，`width`，`height`，`depth`
-- 时间：`new`，`old`，`orig`，`cur`，`before`，`after`
-- 循环：`idx`，`pos`
-- 序数：`number`，`1st`，`2nd`，`3rd`
-- 介词：`in`，`on`，`at`，`of`，`2`，`4`
-- 用途：`ret`，`val`，`need`，`temp`，`deal`，`src`，`dest`
-
 ## 基础类库与框架
 
 ### 基础类型
@@ -942,8 +922,8 @@
 
 - 正则表达式
 - 格式化
-- 国际化
 - 序列化
+- 国际化
 
 ### 数据结构与算法
 
@@ -999,7 +979,7 @@
 - 展示
 
   - 布局：位置、大小、方向、伸缩（一维布局）、网格（二维布局）、图层（三维布局）
-  - 样式：颜色、形状
+  - 样式：颜色、形状等
   - 动画：随时间变化而更改布局与样式
   - Materail Design Components
 
@@ -1018,3 +998,27 @@
   - Model：负责维护并提供业务数据与业务逻辑
 
 ![framework](images/framework.png)
+
+## 命名规范
+
+- 通用命名规范
+  1. 作用域越宽泛，命名要越详细，且避免使用缩写词；反之作用域很狭窄的变量可简写，比如循环变量 `i`
+  2. 让代码读起来像完整句子
+- 变量、属性命名：
+  1. 将最具描述性的名词放在标识符最后
+  2. 若为非布尔类型，尽量使用名词短语
+  3. 若为布尔类型，尽量使用非祈使动词短语，如使用 be 动词或助动词，且尽量使用“正向”的语义，如`isConnected`而非`isDisconnected`
+- 函数、方法命名：
+  1. 若有副作用，尽量使用祈使动词短语
+  2. 若无副作用，命名参考变量、属性命名
+
+常用命名前后缀：
+
+- 布尔：`is`，`not`，`any`，`all`，`none`，`has`，`can`，`should`，`must`
+- 位置：`idx`，`pos`，`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`
+- 计数：`count`，`size`，`length`，`width`，`height`，`depth`
+- 时间：`new`，`old`，`orig`，`cur`，`before`，`after`
+- 循环：`idx`，`pos`
+- 序数：`number`，`1st`，`2nd`，`3rd`
+- 介词：`in`，`on`，`at`，`of`，`2`，`4`
+- 用途：`ret`，`val`，`need`，`temp`，`deal`，`src`，`dest`

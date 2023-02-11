@@ -113,7 +113,7 @@ try {
 ## 函数
 
 ```js
-function AddMethod(x, y = 10, ...z) {
+function addMethod(x, y = 10, ...z) {
   // arguments，默认实参，变参数组
   return x + y + sum(...z);
 }

@@ -2,22 +2,34 @@
 
 ## Widgets
 
-- Flutter 使用声明式语法编写 Widgets 树，然后生成 RenderObject 树，最终渲染成画面
+- Widget 只是用来保存视图配置信息的数据结构，可以频繁创建与销毁而没有性能问题
 
-- Widgets 的主要任务是负责展示状态数据与响应 UI 交互（以及提供配置数据）
+- Element 在首次创建 Widget 时对应地生成，目的为用作 Widget 缓存以节省开销
+
+- RenderObject 在挂载 Element 时对应地生成，它负责布局、绘制等渲染任务
+
+- Widgets、Elements 与 RenderObjects 各自组成三棵树，Elment 与 Widget 一一对应，而 RenderObject 与 Element 则不是
+
+- 视图重绘时，会重新构建 Widget Subtree，并比较新旧 Widget 然后更新对应 Element，再由 Element 更新对应 RenderObject
+
+- `StatelessWidget`与`StatefulWidget`用于组合 Element 节点
+
+- `LeafRenderObjectWidget`、`SingleChildRenderObjectWidget`与`MultiChildRenderObjectWidget`才会新建 Element 节点
+
+- 广义上讲，Widget 的主要任务是负责展示状态数据与响应 UI 交互
 
   - 状态数据来源
 
     - 父组件
     - 内部状态
-    - UI Controller
+    - controller
     - context
 
-  - I 响应逻辑来源
+  - UI 响应逻辑来源
 
     - 父组件
     - 内部方法
-    - UI Controller
+    - controller
 
   - 常见属性名：
     - `child`：单个子组件
@@ -30,6 +42,8 @@
     - `controller`：为组件提供状态数据（可能由 UI 交互获取），并为用户提供方法来控制组件内部状态
 
 ## 窗口
+
+由平台 Native 代码控制
 
 ## 内容
 
@@ -192,7 +206,7 @@ class _FooState extends State<Foo> with SingleTickerProviderStateMixin {
 
 - 鼠标事件：`Listener`, `MouseRegion`, `AbsorbPointer`, `IgnorePointer`
 
-- 手势检测：`GestureDetector`, `Draggable`, `LongPressDraggable`, `DragTarget`, `InteractiveViewer`, `Dismissible`
+- 手势检测：`GestureDetector`, `Draggable`, `LongPressDraggable`, `DragTarget`, `SelectionArea`, `InteractiveViewer`, `Dismissible`
 
 - 键盘焦点：`Focus`, `FocusScope`
 
@@ -226,3 +240,10 @@ Widget build(BuildContext context) {
   );
 }
 ```
+
+## 状态管理
+
+- `package:get_it`
+- `package:get_it_mixin`
+
+## 导航路由
