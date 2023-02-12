@@ -76,27 +76,27 @@ enum Color { red, green, blue }               // 支持定义拥有字段的枚�
 
 - 异常
 
-```dart
-try {
-  breedMoreLlamas();
-} on OutOfLlamasException {
-  // A specific exception
-  buyMoreLlamas();
-} on Exception catch (e) {
-  // Anything else that is an exception
-  print('Unknown exception: $e');
-} catch (e) {
-  // No specified type, handles all
-  print('Something really unknown: $e');
-} catch (e, s) {
-  print('Exception details:\n $e');
-  print('Stack trace:\n $s');
-  rethrow;
-} finally {
-  // Always clean up, even if an exception is thrown.
-  cleanLlamaStalls();
-}
-```
+  ```dart
+  try {
+    breedMoreLlamas();
+  } on OutOfLlamasException {
+    // A specific exception
+    buyMoreLlamas();
+  } on Exception catch (e) {
+    // Anything else that is an exception
+    print('Unknown exception: $e');
+  } catch (e) {
+    // No specified type, handles all
+    print('Something really unknown: $e');
+  } catch (e, s) {
+    print('Exception details:\n $e');
+    print('Stack trace:\n $s');
+    rethrow;
+  } finally {
+    // Always clean up, even if an exception is thrown.
+    cleanLlamaStalls();
+  }
+  ```
 
 ## 函数
 
@@ -108,7 +108,7 @@ String fn(String r1, String? r2 [String o1 = "optional", String? o2]) {...}
 
 (arg) {return ...}
 
-(arg) => expression
+(arg) => expression;
 ```
 
 ## 面向对象
@@ -141,6 +141,8 @@ class MyClass {
 
   @override
   bool operator ==(Object other) => other is MyClass && other._name = name;
+
+  String call() => 'my name is $name';
 
   String get name => name;
   set name(String value) => name = value;

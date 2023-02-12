@@ -10,7 +10,7 @@
 
 - Widgets、Elements 与 RenderObjects 各自组成三棵树，Elment 与 Widget 一一对应，而 RenderObject 与 Element 则不是
 
-- 视图重绘时，会重新构建 Widget Subtree，并比较新旧 Widget 然后更新对应 Element，再由 Element 更新对应 RenderObject
+- 视图重绘时，会重新构建 Widget Subtree，并比较新旧 Widget 然后更新对应 Element，再由 Element 更新对应 RenderObject，一些 Widget 利用类似 `builder(context, child)` 属性来避免重新构建子树
 
 - `StatelessWidget`与`StatefulWidget`用于组合 Element 节点
 
@@ -241,9 +241,21 @@ Widget build(BuildContext context) {
 }
 ```
 
+## Material Design Components
+
+- `MaterialApp`
+- `Scaffold`, `AppBar`, `Drawer`, `BottomAppBar`, `BottomNavigationBar`
+- `TabBar`, `TabBarView`, `TabPageSelector`, `TabController`
+- ...
+
 ## 状态管理
 
-- `package:get_it`
-- `package:get_it_mixin`
+- `package:flutter_hooks`
+- `package:hooks_riverpod`
+- `package:riverpod_annotation`
+- `package:freezed`
 
 ## 导航路由
+
+- `package:go_router`
+- `package:url_launcher`

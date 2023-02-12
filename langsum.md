@@ -564,7 +564,7 @@
     // ...
   }
 
-  (args) => expression
+  (args) => expression;
 
   (args) {statements;}
   ```
@@ -936,8 +936,8 @@
 - 网络 IO
 - IPC
 - IOC
-- Timer
 - Lock
+- Timer
 - Tasks
 
 ### 系统相关
