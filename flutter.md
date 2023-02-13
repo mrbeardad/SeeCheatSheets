@@ -2,6 +2,8 @@
 
 ## Widgets
 
+具体参见<https://docs.flutter.dev/resources/architectural-overview>
+
 - Widget 只是用来保存视图配置信息的数据结构，可以频繁创建与销毁而没有性能问题
 
 - Element 在首次创建 Widget 时对应地生成，目的为用作 Widget 缓存以节省开销
@@ -112,7 +114,7 @@ flutter:
 
 - 全局样式，`MaterialApp(theme: ThemeData.from(colorScheme: c, textTheme: t))`
 - 局部样式，由组件的诸如`style`, `color`, `shape`等属性控制
-- 视效容器
+- 视效组件
 
   - `BackdropFilter`, `ImageFilter`
   - `Opacity`, `Visibility`
@@ -259,3 +261,16 @@ Widget build(BuildContext context) {
 
 - `package:go_router`
 - `package:url_launcher`
+
+## 国际化
+
+- `package:flutter_localization`
+- `package:intl`
+- 具体参见<https://docs.flutter.dev/development/accessibility-and-localization/internationalization>
+
+```dart
+import 'dart:ui'
+
+final Locale systemLocale = window.locale;
+final Locale contextLocale = Localizations.localeOf(context);
+```
