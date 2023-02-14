@@ -36,7 +36,7 @@
 
 Body 大致可分为两类：
 
-- 单资源：由一个单文件组，该类型主体由两个首部定义： `Content-Type` 和 `Content-Length`
+- 单资源：由一个单文件组成，该类型主体由两个首部定义： `Content-Type` 和 `Content-Length`
 - 多资源：由多部分主体组成，每一部分包含不同的信息位。通常是和 HTML Forms 连系在一起。
 
 ### 响应报文

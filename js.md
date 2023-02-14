@@ -18,10 +18,11 @@ export default ...
 
 ```js
 // 若不进行初始化则初始值为 undefined
-let foo; // 待初始化
-let foo = new Type(args); // 构造
+let foo = new Bar(args); // 构造
 let foo = initializer; // 拷贝
-let foo = new Type(other); // 转换
+let foo = new Bar(other); // 转换
+let [a, ["1"]: b, ...rest] = array; // 解构
+let {a, ["1"]: b, ...rest} = obj; // 解构
 
 // 仅限制常量名无法再重新绑定引用（赋值）
 const CONST_VALUE = value;

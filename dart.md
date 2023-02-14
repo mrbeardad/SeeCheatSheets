@@ -25,10 +25,13 @@ import 'path/to/my_other_file.dart';
 ## 变量与常量
 
 ```dart
-var foo = Bar();        // 默认
-var foo = Bar(args);    // 构造
-var foo = initializer;  // 拷贝
-var foo = other as Bar; // 转换
+var foo = Bar();            // 默认
+var foo = Bar(args);        // 构造
+var foo = initializer;      // 拷贝
+var foo = other as Bar;     // 转换
+var [a, b] = list;          // 解构
+var {'a': a, 'b': b} = map; // 解构
+var (a, b: b, :c) = record; // 解构
 
 final map = {if (i is int) i: 'int'};         // final 不可改变变量本身，但可以改变其字段内容
 const set = {if (list is List<int>) ...list}; // const 两者都不可改变
@@ -142,10 +145,50 @@ class MyClass {
   @override
   bool operator ==(Object other) => other is MyClass && other._name = name;
 
-  String call() => 'my name is $name';
-
   String get name => name;
   set name(String value) => name = value;
+}
+```
+
+### 继承
+
+```dart
+class Base {
+  int key;
+  void baseMethod() {
+    // ...
+  }
+}
+
+mixin Mixin {
+  void mixinMethod() {
+    // ...
+  }
+}
+
+class MyClass extends Base with Mixin {
+  MyClass(super.key);
+
+  @override
+  void baseMethod() {
+    super.baseMethod();
+    // ...
+  }
+}
+```
+
+### 多态
+
+```dart
+abstract class Abstract {
+  void abstractMethod();
+}
+
+class MyClass implements Abstract {
+  @override
+  void abstractMethod() {
+    // ...
+  }
 }
 ```
 
