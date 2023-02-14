@@ -52,8 +52,8 @@
 用于展示内容的 widget 拥有内在固有的尺寸大小
 
 - 文本：`Text`
-- 图标：`Icon`
-- 图像：`Image`
+- 图标：`Icon`, `Icons`
+- 图像：`Image`, `FadeInImage`
 - 2D 绘制：`CustomPaint`
 
 ```yaml
