@@ -1,4 +1,27 @@
+<div align="center">
+
 # See Cheat Sheets
+
+:books: 整理个人学习的知识框架与技术栈
+
+![lisence](https://img.shields.io/github/license/mrbeardad/SeeCheatSheets?style=for-the-badge&color=brightgreen)
+![stars](https://img.shields.io/github/stars/mrbeardad/SeeCheatSheets?style=for-the-badge&color=yellow)
+![fork](https://img.shields.io/github/forks/mrbeardad/SeeCheatSheets?style=for-the-badge)
+
+![cpp](https://skillicons.dev/icons?i=cpp)
+![rust](https://skillicons.dev/icons?i=rust)
+![go](https://skillicons.dev/icons?i=go)
+![python](https://skillicons.dev/icons?i=python)
+![react](https://skillicons.dev/icons?i=react)
+![flutter](https://skillicons.dev/icons?i=flutter)
+![linux](https://skillicons.dev/icons?i=linux)
+![git](https://skillicons.dev/icons?i=git)
+![vim](https://skillicons.dev/icons?i=vim)
+![md](https://skillicons.dev/icons?i=md)
+
+</div>
+
+---
 
 - [See Cheat Sheets](#see-cheat-sheets)
   - [前言](#前言)
@@ -29,8 +52,8 @@
 
 ## Client
 
-- [Flutter](flutter.md)
-- [QT](qt.md)
+- [Flutter](flutter.md): 基于 Dart 的跨平台的响应式 UI 框架
+- [QT](qt.md): 基于 C++ 的跨平台 UI 框架
 
 ## Server
 
