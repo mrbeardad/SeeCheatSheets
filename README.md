@@ -35,16 +35,16 @@
 
 ## 前言
 
-**注**：部分笔记插入了 Tex 公式，~~介于鄙人的懒惰~~ 介于 GFM 不支持 Tex，诸位就自己下个浏览器插件吧（
-[github-mathjax](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")）。
+部分笔记插入了 Tex 公式，~~介于鄙人的懒惰~~ 介于 GFM 不支持 Tex，诸位就自己下个[浏览器插件](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")吧。
+
 另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
 
 ## Web
 
 - [HTML](html.md)：超文本标记语言
 - [CSS](css.md)：层叠样式表
-- [JavaScript](js.md)：Web 脚本语言
-- [React](react.md)：Web UI 框架
+- [JavaScript](js.md)：脚本语言
+- [React](react.md)：响应式 UI 框架
 - [Next.js](nextjs.md)：基于 React 的应用框架
 - [HTTP](http.md)：超文本传输协议
 - [WAS](was.md)：Web 应用安全

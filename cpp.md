@@ -701,17 +701,25 @@ C++20 无栈协程：
 - 实质：
   - 该类的成员为 constexpr 整数
   - 该类的对象是这些成员中的一个
-    > `enum Num {ONE, TWO, THREE};` > `enum Num {ONE, TWO, THREE};` > `enum Num: int {ONE, TWO, THREE};`
-  - 成员名字对外可见
-  - 默认类型由编译器推断
-  - 可以赋值给整型变量
-  - 不可由整数赋值
-  - 无名枚举：无对象，可直接使用成员
-    > `enum class Num {one, two, three};` > `enum class Num {one, two, three};` > `enum class Num: int {one, two, three};`
-  - 成员名字对外不可见，需要用`::`运算符访问
-  - 默认类型为 int
-  - 不可赋值给整型变量
-  - 不可由整数赋值
+
+> `enum Num {ONE, TWO, THREE};`  
+> `enum Num {ONE, TWO, THREE};`  
+> `enum Num: int {ONE, TWO, THREE};`
+
+- 成员名字对外可见
+- 默认类型由编译器推断
+- 可以赋值给整型变量
+- 不可由整数赋值
+- 无名枚举：无对象，可直接使用成员
+
+> `enum class Num {one, two, three};`  
+> `enum class Num {one, two, three};`  
+> `enum class Num: int {one, two, three};`
+
+- 成员名字对外不可见，需要用`::`运算符访问
+- 默认类型为 int
+- 不可赋值给整型变量
+- 不可由整数赋值
 
 #### 联合类
 

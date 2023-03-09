@@ -3,7 +3,7 @@
 - [编程语言](#编程语言)
   - [依赖](#依赖)
   - [变量](#变量)
-  - [常量](#常量)
+  - [枚举](#枚举)
   - [操作符](#操作符)
   - [控制流](#控制流)
   - [函数](#函数)
@@ -28,55 +28,112 @@
 
   - 程序入口：main 函数
   - 依赖单元：一个头文件 + 一个实现文件（可选）
+  - 依赖导入：符号限定于命名空间
   - 依赖导出：头文件中所有宏与符号
-  - 依赖导入：`#include <path/to/header.hpp>`，符号限定于命名空间
   - 依赖初始化：global-constructor
   - 依赖管理：git-submodule + cmake
 
+  ```cpp
+  #include <iostream>
+  #include "path/to/header.h"
+
+  using namespace std;
+  using qualifier::foo, qualifier::bar;
+
+  namespace ascpp {
+    // ...
+  }
+  ```
+
 - Rust
 
-  - 程序入口：main.rs 中的 main 函数
+  - 程序入口：`main.rs` 中的 main 函数
   - 依赖单元：一个源文件
-  - 依赖导出：`pub`声明，同一层级内的符号可相互访问
-  - 依赖导入：`mod module;`，符号限定于模块路径
+  - 依赖导入：符号限定于模块路径（同一层级内的模块无需导入）
+  - 依赖导出：`pub`声明
   - 依赖初始化：无
   - 依赖管理：cargo
 
+  ```rust
+  mod module;
+
+  use create::module::foo;
+  use module::{self, foo, bar};
+  use super::*;
+  ```
+
 - Go
 
-  - 程序入口：main 包中的 main 函数
+  - 程序入口：`package main` 中的 main 函数
   - 依赖单元：一个目录（不包括子目录）
-  - 依赖导出：大写字母开头的符号，同一目录内的符号可相互访问
-  - 依赖导入：`import "module.github.com/path/to/package"`，符号限定于包名
+  - 依赖导入：符号限定于包名
+  - 依赖导出：大写字母开头的符号
   - 依赖初始化：包中所有 init 函数
   - 依赖管理：go-mod
+
+  ```go
+  package main
+  package internal
+
+  import (
+    "fmt"
+    as "github.com/path/to/package"
+    . "github.com/path/to/package"
+    _ "github.com/path/to/package"
+  )
+  ```
 
 - Dart
 
   - 程序入口：main 函数
   - 依赖单元：一个源文件
+  - 依赖导入：符号默认无限定
   - 依赖导出：非`_`开头的符号
-  - 依赖导入：`import 'package:lib/lib.dart'`，符号限定于别名
   - 依赖初始化：无
   - 依赖管理：flutter-pub
+
+  ```dart
+  import 'dart:io';
+  import 'package:libname/path/to/file.dart';
+  import 'path/to/file.dart';
+  import 'path/to/file.dart' as qualifier;
+  import 'path/to/file.dart' show foo;
+  import 'path/to/file.dart' hide bar;
+  ```
 
 - JavaScript
 
   - 程序入口：任意源文件顺序执行
   - 依赖单元：一个源文件
+  - 依赖导入：符号默认无限定
   - 依赖导出：`export`声明
-  - 依赖导入：`import { name } from 'root/path/to/module'`，符号限定于别名
   - 依赖初始化：脚本导入即执行
   - 依赖管理：npm
+
+  ```js
+  import defaultExport, { Foo, Bar as alias } from "path/to/module.js";
+  import * as qualifier from "path/to/module.js";
+  import "path/to/module.js";
+  ```
 
 - Python
 
   - 程序入口：任意源文件顺序执行（`__init__ == "__main__"`）
   - 依赖单元：一个源文件
   - 依赖导出：非`_`开头的符号
-  - 依赖导入：`from package.subpackage import module`，符号限定于模块名
+  - 依赖导入：符号限定于模块路径
   - 依赖初始化：脚本导入即执行
   - 依赖管理：pip
+
+  ```py
+  import module
+  from module import *
+  from module import foo, bar
+  import package.module
+  from package import *
+  from package import module
+  from package.module import name as alias
+  ```
 
 ## 变量
 
@@ -87,101 +144,121 @@
 >   - 强类型：变量类型静态确定且不可随意变
 >   - 弱类型：变量类型动态确定且可随意变
 > - 引用语义的目的
->   - (Copy) 避免拷贝
->   - (Write) 修改对象
->   - (Dynamic) 动态绑定
+>   - 避免拷贝
+>   - 修改原值
+>   - 多态
 
 - C++
 
+  - 变量类型：结构型强类型
+  - 生命周期：退出作用域时销毁
+  - 作用域：块作用域`{}`
+
   ```cpp
-  // C++ 初始化方法：
-  // 构造函数初始化的缺点：无法返回错误，无法安全调用虚函数（除非显式 final）
-  // 工厂方法初始化的场景：解决构造函数初始化的问题
-  // Init方法初始化的场景：仅在接口天然就适合两段式初始化时使用，因为在构造与初始化间存在不可用的中间态
-  auto foo = bar();                   // 默认
-  auto foo = bar(args);               // 构造
-  auto foo = initializer;             // 拷贝
-  auto foo = static_cast<bar>(other); // 转换
-  auto [a, b]  = aggregation;         // 解构
+  auto foo = other;
+  const auto& foo = other;
+
+  Type foo = other;
+  const Type& foo = other;
+
+  constexpr auto foo = other;
   ```
 
+- Rust
+
   - 变量类型：结构型强类型
-  - 生命周期：退出块作用域时销毁
-  - 作用域：退出块作用域后不可见
+  - 生命周期：在所有者退出作用域时销毁
+  - 作用域：块作用域`{}`
+
+  ```rust
+  let foo = other;
+  let mut foo = &other;
+
+  let foo: Type = other;
+  let foo: &mut Type = &other;
+
+  const FOO: Type = other;
+  ```
 
 - Go
 
-  ```go
-  var foo Bar           // 默认
-  foo  := Bar{fd: data} // 构造
-  foo  := initializer   // 拷贝
-  foo  := Bar(other)    // 转换
-  a, _ := value, list   // 解构
-  ```
-
   - 变量类型：结构型强类型
-  - 生命周期：直到引用计数为零才时销毁
-  - 作用域：退出块作用域后不可见
+  - 生命周期：直到不再被引用时才被 GC 回收
+  - 作用域：块作用域`{}`
+
+  ```go
+  foo := other
+  foo := &other
+
+  var foo Type = other
+  var foo *Type = &other
+
+  const BigInt = 1 << 511
+  ```
 
 - Dart
 
-  ```dart
-  var foo = Bar();            // 默认
-  var foo = Bar(args);        // 构造
-  var foo = initializer;      // 拷贝
-  var foo = other as Bar;     // 转换
-  var [a, b] = list;          // 解构
-  var {'a': a, 'b': b} = map; // 解构
-  var (a, b: b, :c) = record; // 解构
-  ```
-
   - 变量类型：引用型强类型
-  - 生命周期：直到引用计数为零时才销毁
-  - 作用域：退出块作用域后不可见
+  - 生命周期：直到不再被引用时才被 GC 回收
+  - 作用域：块作用域`{}`
+
+  ```dart
+  var foo = other;
+  final foo = other;
+  const foo = other;
+
+  Type? foo = other;
+  final Type foo = other;
+  const Type foo = other;
+  late Type foo;
+  ```
 
 - JavaScript
 
-  ```js
-  let foo = new Bar(args); // 构造
-  let foo = initializer; // 拷贝
-  let foo = new Bar(other); // 转换
-  let [a, ["1"]: b, ...rest] = array; // 解构
-  let {a, ["1"]: b, ...rest} = obj; // 解构
-  ```
-
   - 变量类型：引用型弱类型
-  - 生命周期：直到引用计数为零时才销毁
-  - 作用域：退出块作用域后不可见
+  - 生命周期：直到不再被引用时才被 GC 回收
+  - 作用域：块作用域`{}`
+
+  ```js
+  let foo = other;
+  const foo = other;
+  ```
 
 - Python
 
+  - 变量类型：引用型弱类型
+  - 生命周期：直到不再被引用时才被 GC 回收
+  - 作用域：函数作用域
+
   ```python
-  foo = bar(args)     # 构造
-  foo = initializer   # 拷贝
-  foo = bar(other)    # 转换
-  a, b = iterable     # 解构
+  foo = other
   ```
 
-  - 变量类型：引用型弱类型
-  - 生命周期：直到引用计数为零时才销毁
-  - 作用域：直到退出函数才不可见
-
-## 常量
+## 枚举
 
 - C++
 
   ```cpp
-  #define KVALUE 1          // 宏
-  const int kvalue = 1;     // 常量
-  enum number { one, two }; // 枚举
+  enum number { zero, one, three = 3, four };
+  enum class number { zero, one, two, three };
+  ```
+
+- Rust
+
+  ```rust
+  enum Message {
+      Quit,
+      Move { x: i32, y: i32 },
+      Write(String),
+      ChangeColor(i32, i32, i32),
+  }
   ```
 
 - Go
 
   ```go
-  const BigInt = 1 << 511     // 高精度无类型常量
   const (
-    _, _ = iota, iota         // 枚举器，从0开始
+    _ = iota
     KB = 1 << (10 * iota)
     MB
     GB
@@ -191,57 +268,88 @@
 - Dart
 
   ```dart
-  final map = {if (i is int) i: 'int'};         // final 不可改变变量本身，但可以改变其字段内容
-  const set = {if (list is List<int>) ...list}; // const 两者都不可改变
-  enum Color { red, green, blue }               // 支持定义拥有字段的枚举
+  enum Color { red, green, blue }
+
+  enum Vehicle {
+    car(tires: 4, passengers: 5, carbonPerKilometer: 400),
+    bus(tires: 6, passengers: 50, carbonPerKilometer: 800),
+    bicycle(tires: 2, passengers: 1, carbonPerKilometer: 0);
+
+    final int tires;
+    final int passengers;
+    final int carbonPerKilometer;
+
+    const Vehicle({
+      required this.tires,
+      required this.passengers,
+      required this.carbonPerKilometer,
+    });
+  }
   ```
 
 - JavaScript
 
-  ```js
-  const kvalue = 1; // 仅限制变量禁止被重新赋值绑定或被重新声明
-  ```
-
 - Python
-
-  ```python
-  KVALUE = 1 # 非强制
-  ```
 
 ## 操作符
 
-> 优先级：成员|函数|下标 > 单目 > 算术 > 关系 > 逻辑
+> 优先级：单元后缀 > 单元前缀 > 单元 > 算术 > 关系 > 逻辑
 
 - C++
+
+  - 单后：`::`, `.`, `->`, `[]`, `()`, `++`, `--`
+  - 单前：`&`, `*`, `+`, `-`, `++`, `--`
   - 算数：`*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
   - 逻辑：`!`, `&&`, `||`
   - 赋值：`=`
-  - 其他：`? :`, `++`, `--`
-- Go
+  - 其他：`? :`
+
+- Rust
+
+  - 单后：`::`, `.`, `[]`, `()`
+  - 单前：`&`, `*`, `+`, `-`
   - 算数：`*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
   - 逻辑：`!`, `&&`, `||`
-  - 赋值：（语句）`=`, `:=`
-  - 其他：（语句）`i++`, `i--`
+  - 赋值：`=`
+  - 其他：`!`, `?`, `..`, `..=`
+
+- Go
+
+  - 单后：`.`, `[]`, `()`, `++`, `--`
+  - 单前：`&`, `*`, `+`, `-`
+  - 算数：`*`, `/`, `%`, `+`, `-`
+  - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
+  - 逻辑：`!`, `&&`, `||`
+  - 赋值：`=`, `:=`
+
 - Dart
+
+  - 单后：`.`, `?.`, `[]`, `?[]`, `!`, `()`, `++`, `--`
+  - 单前：`+`, `-`, `++`, `--`
   - 算数：`*`, `/`, `~/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `is`, `is!`
   - 逻辑：`!`, `&&`, `||`
   - 赋值：`=`, `??=`
-  - 其他：`? :`, `??`, `++`, `--`, `..`, `?..`, `expr!`
+  - 其他：`? :`, `??`, `..`, `?..`
+
 - JavaScript
+
+  - 单后：`.`, `?.`, `[]`, `[]`, `()`, `++`, `--`
+  - 单前：`+`, `-`, `++`, `--`
   - 算数：`**`, `*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `===`, `!==`, `in`
   - 逻辑：`!`, `&&`, `||`
   - 赋值：`=`, `??=`
-  - 其他：`? :`, `??`, `++`, `--`
+  - 其他：`? :`, `??`
+
 - Python
+
   - 算数：`**`, `*`, `/`, `//`, `%`, `+`, `-`
   - 关系：`a < b <= c > d >= e`, `x == y != z`, `in`
   - 逻辑：`not`, `and`, `or`
-  - 赋值：（语句）`a = b = c`
-  - 其他：`x if cond else y`
+  - 赋值：`a = b = c`
 
 ## 控制流
 
@@ -250,20 +358,20 @@
   - 分支
 
     ```cpp
-    // if else
+    // if
     if (condition) {
-      statement;
+      // ...
     } else {
-      statement;
+      // ...
     }
 
     // switch
     switch (int_or_enum) {
       case constant:
-        statement;
+        // ...
         break;
       default:
-        statement;
+        // ...
     }
     ```
 
@@ -272,12 +380,12 @@
     ```cpp
     // for
     for (declaration; condition; expression) {
-      statement;
+      // ...
     }
 
     // range based for
-    for (auto elem : iterabal) {
-      statement;
+    for (const auto& elem : iterabal) {
+      // ...
     }
     ```
 
@@ -285,27 +393,78 @@
 
     ```cpp
     // try and function try
+    [auto func()] try {
     // throw and rethrow
-    // catch and catch all
-    [void func()] try {
       throw std::exception();
+    // catch and catch all
     } catch (const std::exception& e) {
-      statement;
+      std::cout << e.what() << std::endl;
     } catch (...) {
       throw;
     }
     ```
+
+- Rust
+
+  > Rust 的控制流全是表达式而非语句，甚至块作用域符号`{}`本身也是表达式
+
+  - 分支
+
+  ```rust
+  if condition {
+    // ...
+  } else {
+    // ...
+  }
+
+  match expr {
+    1 => expr1,
+    other => expr2(other)
+  }
+
+  match expr {
+    Enum::Type1 => expr1,
+    Enum::Type2(fd) => expr2(fd),
+    _ => expr3
+  }
+
+  if let Enum::Type(name) = expr {
+    // ...
+  } else {
+    // ...
+  }
+  ```
+
+  - 循环
+
+  ```rust
+  loop {
+    // ...
+  }
+
+  while condition {
+    // ...
+  }
+
+  for element in iterator {
+    // ...
+  }
+
+  break expr;
+  break 'labeled;
+  continue 'labeled;
+  ```
 
 - Go
 
   - 分支
 
     ```go
-    // if else
+    // if
     if condition {
-      statement
+      // ...
     } else {
-      statement
+      // ...
     }
 
     // switch expr
@@ -313,7 +472,7 @@
       case expr1, expr2:
         fallthrough
       default:
-        statement
+        // ...
     }
 
     // switch condition
@@ -321,7 +480,7 @@
       case condition:
         fallthrough
       default:
-        statement
+        // ...
     }
 
     // switch runtime type
@@ -329,7 +488,7 @@
       case Type:
         fallthrough
       default:
-        statement
+        // ...
     }
     ```
 
@@ -338,12 +497,12 @@
     ```go
     // for
     for declaration; condition; expression {
-      statement
+      // ...
     }
 
     // for range
     for elem := range iterabal {
-      statement
+      // ...
     }
     ```
 
@@ -355,13 +514,13 @@
     defer func() {
       panic = recover()
       if panic != nil {
-        statement
+        // ...
       }
     }()
 
-    defer call3rd()
-    defer call2nd()
-    defer call1st()
+    defer called3rd()
+    defer called2nd()
+    defer called1st()
     ```
 
 - Dart
@@ -369,23 +528,25 @@
   - 分支
 
     ```dart
-    // if else
+    // if
     if (condition) {
-      statement;
+      // ...
     } else {
-      statement;
+      // ...
     }
 
     // switch
     switch (comparable) {
       case constant1:
-        continue fallthrough;
-      fallthrough:
-      case constant2:
-        statement;
+        // ...
         break;
+      case fallthroughToConstant2:
+      case constant2:
+        // ...
+        continue fallthroughCase;
+      fallthroughCase:
       default:
-        statement;
+        // ...
     }
     ```
 
@@ -394,12 +555,12 @@
     ```dart
     // for
     for (declaration; condition; expression) {
-      statement;
+      // ...
     }
 
     // for in
     for (final elem in iterabal) {
-      statement;
+      // ...
     }
     ```
 
@@ -408,8 +569,10 @@
     ```dart
     try {
       throw FormatException('exception');
+    } on FormatException {
+      // ...
     } on FormatException catch (e) {
-      statement;
+      // ...
     } catch (e, s) {
       print('Exception details:\n $e');
       print('Stack trace:\n $s');
@@ -424,20 +587,20 @@
   - 分支
 
     ```js
-    // if else
+    // if
     if (condition) {
-      statement;
+      // ...
     } else {
-      statement;
+      // ...
     }
 
     // switch
     switch (expr) {
       case expr:
-        statement;
+        // ...
         break;
       default:
-        statement;
+      // ...
     }
     ```
 
@@ -446,18 +609,21 @@
     ```js
     // for
     for (declaration; condition; expression) {
-      statement;
+      // ...
     }
 
     // for in
     for (const keyOrIndex in iterable) {
-      statement;
+      // ...
     }
 
     // for of
     for (const element of iterable) {
-      statement;
+      // ...
     }
+
+    break labeled;
+    continue labeled;
     ```
 
   - 异常
@@ -465,10 +631,10 @@
     ```js
     try {
       throw new Error("error message");
-    } catch (identifier) {
-      statement;
+    } catch (e) {
+      // ...
     } finally {
-      statement;
+      // ...
     }
     ```
 
@@ -477,7 +643,7 @@
   - 分支
 
   ```python
-  # if elif else
+  # if
   if condition:
     pass
   elif condition:
@@ -523,32 +689,59 @@
 
 - C++
 
+  - 默认实参
+  - 函数重载
+  - 泛型
+  - 参数包（`...T`与`arg...`）
+
   ```cpp
   auto return_nothing() -> void {
     return;
   }
 
-  auto normal_function(const string& s, int i) -> char {
-    return s[i];
+  auto normal_function(int a1, const std::string& a2, int& a3) -> char {
+    // ...
   }
 
   auto closure = [&r, v, m = std::move(l)] (auto& elem) mutable {}
   ```
 
-  - 签名修饰：`const &|&&`, `inline`, `constexpr`, `noexcept`
-  - 默认实参
-  - 函数重载
+- Rust
+
+  - ~~默认实参~~
+  - ~~函数重载~~
   - 泛型
+  - ~~参数包~~
+
+  ```rust
+  fn return_nothing() {
+    ()
+  }
+
+  fn normal_function(a1: int, a2: &str, a3: &mut int) -> char {
+    // ...
+  }
+
+  let closure_v1 = |x: u32| -> u32 { x + 1 };
+  let closure_v2 = |x|             { x + 1 };
+  let closure_v3 = |x|               x + 1  ;
+  let closure_v4 = move |x: u32| -> u32 { x + outter_cap };
+  ```
 
 - Go
+
+  - ~~默认实参~~
+  - ~~函数重载~~
+  - 泛型
+  - 参数包（`args...`）
 
   ```go
   func ReturnNothing() {
     return
   }
 
-  func NormalFunction(s string, i int) (x, y string) {
-    x, y = s[i], s[i + 1]
+  func NormalFunction(a1 int, a2 string, a3 *int) (x, y string) {
+    // ...
     return
   }
 
@@ -557,11 +750,12 @@
   }
   ```
 
-  - 类型折叠
-  - 切片变参包：`args...`
-  - 返回值列表
-
 - Dart
+
+  - 默认实参
+  - ~~函数重载~~
+  - 泛型
+  - 参数包（`...args`）
 
   ```dart
   void returnNothing() {
@@ -576,15 +770,16 @@
     // ...
   }
 
-  (args) => expression;
-
-  (args) {statements;}
+  final closure1 = (args) => expression;
+  final closure2 = (args) {statements;}
   ```
 
-  - 位置参数与命名参数
-  - 显式指定`optional`或`required`
-
 - JavaScript
+
+  - 默认实参
+  - ~~函数重载~~
+  - ~~泛型~~
+  - 参数包（`...args`）
 
   ```js
   function returnNothing() {
@@ -592,35 +787,31 @@
   }
 
   function normalFunction(s, i) {
-    return s[i];
+    // ...
   }
 
-  let closure = (args) => {
-    return;
+  let closure1 = (args) => expression;
+  let closure2 = (args) => {
+    statements;
   };
-
-  let closure = (args) => expr;
   ```
-
-  - 默认实参
-  - 数组变参包：`...args`
 
 - Python
 
+  - 默认实参
+  - ~~函数重载~~
+  - ~~泛型~~
+  - 参数包（`*posargs`与`**kwargs`）
+
   ```python
   def return_nothing() -> None:
-    pass
+    return
 
   def normal_function(pos: str, /, pos_or_name: str, *, name: str) -> str:
     return pos + pos_or_name + name
 
   closure = lambda x, y: x + y
   ```
-
-  - 类型注解：`None`、`Any`、`Optional[T]`、`tuple[int, str,...]`、`list[int]`、`set[str]`、`dict[str, int]`
-  - 位置参数与键值参数
-  - 位置变参包`*posargs`与键值变参包`**kwargs`
-  - 默认实参：仅定义时构造一次，注意引用类型
 
 ## 面向对象
 
@@ -922,6 +1113,37 @@
 - 字符串
 - 日期时间
 - 基础容器：列表、集合、映射
+  ```cpp
+  // 构造函数初始化的缺点：无法返回错误，无法安全调用虚函数（final类除外）
+  // 工厂方法初始化的场景：解决构造函数初始化的问题
+  // Init方法初始化的场景：仅在接口天然就适合两段式初始化时使用，因为在构造与初始化间存在不可用的中间态
+  auto foo = other;                   // 拷贝/移动
+  auto foo = static_cast<bar>(other); // 转换
+  auto foo = bar(args);               // 构造（构造函数）
+  auto foo = bar{fields};             // 构造（初始列表或聚合类）
+  auto foo = bar{.fd = arg};          // 构造（聚合类）
+  auto [a, b]  = aggregation;         // 解构
+  ```
+  ```rust
+  let a: [i32; 5] = [1, 2, 3, 4, 5];
+  let a = [3; 5];
+  ```
+  ```dart
+  var foo = Bar();            // 默认
+  var foo = Bar.nc(args);     // 构造
+  var foo = initializer;      // 拷贝
+  var foo = other as Bar;     // 转换
+  var [a, b] = list;          // 解构
+  var {'a': a, 'b': b} = map; // 解构
+  var (a, b: b, :c) = record; // 解构
+  ```
+  ```js
+  let foo = new Bar(args); // 构造
+  let foo = initializer; // 拷贝
+  let foo = new Bar(other); // 转换
+  let [a, ["1"]: b, ...rest] = array; // 解构
+  let {a, ["1"]: b, ...rest} = obj; // 解构
+  ```
 
 ### 数字相关
 
