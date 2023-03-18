@@ -256,6 +256,8 @@
   - 生命周期：直到不再被引用时才会被 GC 回收
 
   ```python
+  global global_var
+  nonlocal outside_var
   foo = other
   ```
 
@@ -638,6 +640,12 @@
     pass
   else:
     pass
+
+  match expr:
+    case PATTER:
+      pass
+    case _:
+      pass
   ```
 
   - 循环
@@ -668,6 +676,9 @@
   else:
     pass
   finally:
+    pass
+
+  with expr as target:
     pass
   ```
 
