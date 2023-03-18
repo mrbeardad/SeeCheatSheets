@@ -13,6 +13,12 @@
     - [多态](#多态)
   - [基础类库与框架](#基础类库与框架)
     - [基础类型](#基础类型)
+      - [C++](#c)
+      - [Rust](#rust)
+      - [Go](#go)
+      - [Dart](#dart)
+      - [JavaScript](#javascript)
+      - [Python](#python)
     - [数字相关](#数字相关)
     - [字符相关](#字符相关)
     - [数据结构与算法](#数据结构与算法)
@@ -35,6 +41,7 @@
 
   ```cpp
   #include <iostream>
+  #include "3rd_party/path/to/header.hpp"
   #include "path/to/header.h"
 
   using namespace std;
@@ -48,14 +55,14 @@
 - Rust
 
   - 程序入口：`main.rs` 中的 main 函数
-  - 依赖单元：一个源文件
-  - 依赖导入：符号限定于模块路径（同一层级内的模块无需导入）
+  - 依赖单元：内部依赖单元是一个源文件，外部依赖单元是一个 crate
+  - 依赖导入：符号限定于模块路径
   - 依赖导出：`pub`声明
-  - 依赖初始化：无
+  - ~~依赖初始化~~
   - 依赖管理：cargo
 
   ```rust
-  mod module;
+  pub mod module;
 
   use create::module::foo;
   use module::{self, foo, bar};
@@ -89,7 +96,7 @@
   - 依赖单元：一个源文件
   - 依赖导入：符号默认无限定
   - 依赖导出：非`_`开头的符号
-  - 依赖初始化：无
+  - ~~依赖初始化~~
   - 依赖管理：flutter-pub
 
   ```dart
@@ -111,9 +118,9 @@
   - 依赖管理：npm
 
   ```js
-  import defaultExport, { Foo, Bar as alias } from "path/to/module.js";
+  import defaultExport, { foo, bar as alias } from "path/to/module.js";
   import * as qualifier from "path/to/module.js";
-  import "path/to/module.js";
+  import "path/to/side_effect.js";
   ```
 
 - Python
@@ -143,22 +150,31 @@
 > - 类型系统
 >   - 强类型：变量类型静态确定且不可随意变
 >   - 弱类型：变量类型动态确定且可随意变
-> - 引用语义的目的
->   - 避免拷贝
+> - 生命周期：
+>   - 构造
+>   - 移动
+>   - 销毁
+> - 引用的目的
+>   - 避免拷贝/移动
 >   - 修改原值
 >   - 多态
 
 - C++
 
   - 变量类型：结构型强类型
-  - 生命周期：退出作用域时销毁
   - 作用域：块作用域`{}`
+  - 所有权：默认一个实例只能有一个所有者
+  - 生命周期：右值移动所有权，所有者退出作用域时销毁变量
 
   ```cpp
   auto foo = other;
+  const auto foo = other;
+  auto& foo = other;
   const auto& foo = other;
 
   Type foo = other;
+  const Type foo = other;
+  Type& foo = other;
   const Type& foo = other;
 
   constexpr auto foo = other;
@@ -167,15 +183,20 @@
 - Rust
 
   - 变量类型：结构型强类型
-  - 生命周期：在所有者退出作用域时销毁
   - 作用域：块作用域`{}`
+  - 所有权：默认一个实例只能有一个所有者
+  - 生命周期：non-`Copy` trait 移动所有权，所有者退出作用域时销毁变量
 
   ```rust
   let foo = other;
-  let mut foo = &other;
+  let mut foo = other;
+  let foo = &other;
+  let foo = &mut other;
 
   let foo: Type = other;
-  let foo: &mut Type = &other;
+  let mut foo: Type = other;
+  let foo: &Type = &other;
+  let foo: &mut Type = &mut other;
 
   const FOO: Type = other;
   ```
@@ -183,8 +204,9 @@
 - Go
 
   - 变量类型：结构型强类型
-  - 生命周期：直到不再被引用时才被 GC 回收
   - 作用域：块作用域`{}`
+  - 所有权：一个实例可能有多个所有者
+  - 生命周期：直到不再被引用时才会被 GC 回收
 
   ```go
   foo := other
@@ -199,8 +221,9 @@
 - Dart
 
   - 变量类型：引用型强类型
-  - 生命周期：直到不再被引用时才被 GC 回收
   - 作用域：块作用域`{}`
+  - 所有权：一个实例可能有多个所有者
+  - 生命周期：直到不再被引用时才会被 GC 回收
 
   ```dart
   var foo = other;
@@ -216,8 +239,9 @@
 - JavaScript
 
   - 变量类型：引用型弱类型
-  - 生命周期：直到不再被引用时才被 GC 回收
   - 作用域：块作用域`{}`
+  - 所有权：一个实例可能有多个所有者
+  - 生命周期：直到不再被引用时才会被 GC 回收
 
   ```js
   let foo = other;
@@ -227,8 +251,9 @@
 - Python
 
   - 变量类型：引用型弱类型
-  - 生命周期：直到不再被引用时才被 GC 回收
   - 作用域：函数作用域
+  - 所有权：一个实例可能有多个所有者
+  - 生命周期：直到不再被引用时才会被 GC 回收
 
   ```python
   foo = other
@@ -336,7 +361,7 @@
 
 - JavaScript
 
-  - 单后：`.`, `?.`, `[]`, `[]`, `()`, `++`, `--`
+  - 单后：`.`, `?.`, `[]`, `()`, `++`, `--`
   - 单前：`+`, `-`, `++`, `--`
   - 算数：`**`, `*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `===`, `!==`, `in`
@@ -346,6 +371,8 @@
 
 - Python
 
+  - 单后：`.`, `[]`, `()`
+  - 单前：`+`, `-`
   - 算数：`**`, `*`, `/`, `//`, `%`, `+`, `-`
   - 关系：`a < b <= c > d >= e`, `x == y != z`, `in`
   - 逻辑：`not`, `and`, `or`
@@ -358,15 +385,14 @@
   - 分支
 
     ```cpp
-    // if
     if (condition) {
       // ...
     } else {
       // ...
     }
 
-    // switch
     switch (int_or_enum) {
+      case fallthrough:
       case constant:
         // ...
         break;
@@ -378,12 +404,10 @@
   - 循环
 
     ```cpp
-    // for
     for (declaration; condition; expression) {
       // ...
     }
 
-    // range based for
     for (const auto& elem : iterabal) {
       // ...
     }
@@ -392,11 +416,11 @@
   - 异常
 
     ```cpp
-    // try and function try
+    // try / function try
     [auto func()] try {
-    // throw and rethrow
+    // throw / rethrow
       throw std::exception();
-    // catch and catch all
+    // catch / catch all
     } catch (const std::exception& e) {
       std::cout << e.what() << std::endl;
     } catch (...) {
@@ -418,17 +442,12 @@
   }
 
   match expr {
-    1 => expr1,
-    other => expr2(other)
-  }
-
-  match expr {
-    Enum::Type1 => expr1,
-    Enum::Type2(fd) => expr2(fd),
+    PATTERN => expr1,
+    PATTERN => expr2,
     _ => expr3
   }
 
-  if let Enum::Type(name) = expr {
+  if let PATTERN = expr {
     // ...
   } else {
     // ...
@@ -446,13 +465,16 @@
     // ...
   }
 
+  while let PATTERN = expr {
+    // ...
+  }
+
   for element in iterator {
     // ...
   }
 
   break expr;
   break 'labeled;
-  continue 'labeled;
   ```
 
 - Go
@@ -460,14 +482,12 @@
   - 分支
 
     ```go
-    // if
     if condition {
       // ...
     } else {
       // ...
     }
 
-    // switch expr
     switch expr {
       case expr1, expr2:
         fallthrough
@@ -475,7 +495,6 @@
         // ...
     }
 
-    // switch condition
     switch {
       case condition:
         fallthrough
@@ -483,7 +502,6 @@
         // ...
     }
 
-    // switch runtime type
     switch rt := intf.(type) {
       case Type:
         fallthrough
@@ -495,32 +513,13 @@
   - 循环
 
     ```go
-    // for
     for declaration; condition; expression {
       // ...
     }
 
-    // for range
     for elem := range iterabal {
       // ...
     }
-    ```
-
-  - 异常
-
-    ```go
-    panic("throw a panic!")
-
-    defer func() {
-      panic = recover()
-      if panic != nil {
-        // ...
-      }
-    }()
-
-    defer called3rd()
-    defer called2nd()
-    defer called1st()
     ```
 
 - Dart
@@ -528,23 +527,20 @@
   - 分支
 
     ```dart
-    // if
     if (condition) {
       // ...
     } else {
       // ...
     }
 
-    // switch
     switch (comparable) {
+      case fallthrough:
       case constant1:
         // ...
         break;
-      case fallthroughToConstant2:
       case constant2:
         // ...
-        continue fallthroughCase;
-      fallthroughCase:
+        continue fallthrough;
       default:
         // ...
     }
@@ -553,12 +549,10 @@
   - 循环
 
     ```dart
-    // for
     for (declaration; condition; expression) {
       // ...
     }
 
-    // for in
     for (final elem in iterabal) {
       // ...
     }
@@ -587,14 +581,12 @@
   - 分支
 
     ```js
-    // if
     if (condition) {
       // ...
     } else {
       // ...
     }
 
-    // switch
     switch (expr) {
       case expr:
         // ...
@@ -607,17 +599,14 @@
   - 循环
 
     ```js
-    // for
     for (declaration; condition; expression) {
       // ...
     }
 
-    // for in
     for (const keyOrIndex in iterable) {
       // ...
     }
 
-    // for of
     for (const element of iterable) {
       // ...
     }
@@ -643,7 +632,6 @@
   - 分支
 
   ```python
-  # if
   if condition:
     pass
   elif condition:
@@ -660,7 +648,7 @@
   else:
     pass
 
-  for val1, val2 in iterable:
+  for element in iterable:
     pass
   else:
     pass
@@ -695,7 +683,7 @@
   - 参数包（`...T`与`arg...`）
 
   ```cpp
-  auto return_nothing() -> void {
+  void return_nothing() {
     return;
   }
 
@@ -817,14 +805,18 @@
 
 ### 封装
 
+> - 构造函数初始化的缺点：无法返回错误，且无法安全调用虚函数（final 类除外）
+> - 工厂方法初始化的场景：解决构造函数初始化的问题
+> - Init 方法初始化的场景：仅在接口天然就适合两段式初始化时使用，因为在构造与初始化间存在不可用的中间态
+
 - C++
 
-  - 访问控制：public, protected, private
-  - 构造控制：构造函数
-  - 析构控制：析构函数
-  - 拷贝控制：拷贝与移动函数
-  - 比较操作：三相比较运算符
-  - 类型转换：内置类型(bool&int&float, c-str&string)，单参构造函数与 operator 转换函数
+  - 访问控制
+  - 构造
+  - 析构
+  - 拷贝
+  - 比较
+  - 类型转换
 
   ```cpp
   class myclass {
@@ -835,26 +827,67 @@
     auto operator=(myclass&&) -> myclass& = default;
     auto operator=(const myclass&) -> myclass& = default;
     ~myclass() = default;
+
     auto operator<=>(const myclass&) -> std::strong_ordering = default;
     explicit operator bool() const { return _name.size(); }
 
-    auto name() -> string { return _name; }
-    auto set_name(string name) -> void { _name = std::move(name); }
-    void method();
+    auto name() const -> const std::string& { return _name; }
+    auto set_name(std::string name) { _name = std::move(name); }
+
+    void method() const;
+    static cls_method();
 
    private:
-    string _name;
+    std::string _name;
   };
+  ```
+
+- Rust
+
+  - 访问控制
+  - ~~构造~~
+  - 析构
+  - 拷贝
+  - 比较
+  - ~~类型转换~~
+
+  ```rust
+  #[derive(Copy, Clone, PartialEq, PartialOrd)]
+  pub struct MyClass {
+    name: String;
+  }
+
+  impl MyClass {
+    pub fn new(name: &str) -> String {
+      String::from(name)
+    }
+
+    pub fn name(&self) -> &str {
+      self.name
+    }
+
+    pub fn set_name(&mut self, &str name) {
+      self.name = String::from(name);
+    }
+
+    pub fn method(&self) {
+      // ...
+    }
+
+    pub fn cls_method() {
+      // ...
+    }
+  }
   ```
 
 - Go
 
-  - 访问控制：首字母大写导出包外
-  - 构造控制：无
-  - 析构控制：无
-  - 拷贝控制：拷贝字段
-  - 比较操作：比较字段
-  - 类型转换：int&float, bytes&string, type, const, nil, chan, interface
+  - 访问控制
+  - ~~构造~~
+  - ~~析构~~
+  - 拷贝
+  - 比较
+  - 类型转换
 
   ```go
   type MyClass struct {
@@ -868,12 +901,12 @@
 
 - Dart
 
-  - 访问控制：非`_`开头导出类外
-  - 构造控制：构造函数与命名构造函数
-  - 析构控制：无
-  - 拷贝控制：无
-  - 比较操作：重载操作符
-  - 类型转换：
+  - 访问控制
+  - 构造
+  - 析构
+  - 拷贝
+  - 比较
+  - ~~类型转换~~
 
   ```dart
   class MyClass {
@@ -904,17 +937,19 @@
 
     String get name => name;
     set name(String value) => name = value;
+
+    void method() {}
   }
   ```
 
 - JavaScript
 
-  - 访问控制：非`#`开头导出类外
-  - 构造控制：`constructor()`
-  - 析构控制：无
-  - 拷贝控制：无
-  - 比较操作：无
-  - 类型转换：->boolean, ->number, ->string
+  - 访问控制
+  - 构造
+  - ~~析构~~
+  - 拷贝
+  - ~~比较~~
+  - ~~类型转换~~
 
   ```js
   class MyClass {
@@ -940,12 +975,12 @@
 
 - Python
 
-  - 访问控制：非`_`开头导出文件外（非强制）
-  - 构造控制：`__init__()`
-  - 析构控制：`__del__()`
-  - 拷贝控制：无
-  - 比较操作：无
-  - 类型转换：`__nonzero__()`与`__str__()`
+  - ~~访问控制~~
+  - 构造
+  - 析构
+  - 拷贝
+  - 比较
+  - 类型转换
 
   ```python
   class myclass:
@@ -964,7 +999,10 @@
       self._name = name
 
     def method(self):
-      do_something(self._name)
+      pass
+
+    def cls_method(cls):
+      pass
   ```
 
 ### 继承
@@ -972,29 +1010,63 @@
 - C++
 
   ```cpp
+  class base {
+    base() = default;
+    virtual ~base() =default;
+    virtual base_method() {}
+  };
+
   class myclass: public base, public mixin {
    public:
     myclass() : base(), mixin() {}
-
     virtual ~myclass() override = default;
 
     virtual void base_method() override {
-      base::base_method();
       // ...
+      base_method();
+      base::base_method();
     }
   };
+  ```
+
+- Rust
+
+  ```rust
+  pub trait Base {
+    fn base_factory() {}
+    fn base_method(&self) {}
+  }
+
+  #[derive(Mixin)]
+  impl Base for MyClass {
+    fn base_method(&self) {
+      // ...
+      self.base_method();
+      Base::base_method(self);
+      Self::base_factory();
+      <MyClass as Base>::basefactory();
+    }
+  }
   ```
 
 - Go
 
   ```go
+  type Base struct {
+    name string
+  }
+  func (self *Base) BaseMethod() {
+    // ...
+  }
+
   type MyClass struct {
     Base    // Base 的方法集可由 MyClass 与 *MyClass 继承
     *Mixin  // *Mixin 的方法集仅可由 *MyClass 继承而 MyClass 不行
   }
-
-  func (this *MyClass) baseMethod() {
+  func (self *MyClass) BaseMethod() {
     // ...
+    self.BaseMethod()
+    self.Base.BaseMethod()
   }
   ```
 
@@ -1019,8 +1091,9 @@
 
     @override
     void baseMethod() {
-      super.baseMethod();
       // ...
+      baseMethod();
+      super.baseMethod();
     }
   }
   ```
@@ -1036,14 +1109,22 @@
 - Python
 
   ```python
+  class base:
+    def __init__(self):
+      super(base, self).__init__()
+      super(mixin, self).__init__()
+
+    def base_method(self):
+      pass
+
   class myclass(base, mixin):
     def __init__(self):
       super(base, self).__init__()
       super(mixin, self).__init__()
 
-    def __del__(self):
-      super(base, self).__del__()
-      super(mixin, self).__del__()
+    def base_method(self):
+      self.base_method()
+      super(base, self).base_method()
   ```
 
 ### 多态
@@ -1067,6 +1148,22 @@
 
   abstract* pintf = new myclass();
   abstract& rintf = *pintf;
+  ```
+
+- Rust
+
+  ```rust
+  trait Abstract {
+    fn abstract_method();
+  }
+
+  impl Abstract for MyClass {
+    fn abstract_method() {
+      // ...
+    }
+  }
+
+  let intf: Box<dyn Abstract> = MyClass::new();
   ```
 
 - Go
@@ -1101,6 +1198,7 @@
   ```
 
 - JavaScript
+
 - Python
 
 ## 基础类库与框架
@@ -1109,41 +1207,397 @@
 
 - 布尔
 - 整数
-- 浮点数
-- 字符串
+- 实数
+- 字符
 - 日期时间
-- 基础容器：列表、集合、映射
-  ```cpp
-  // 构造函数初始化的缺点：无法返回错误，无法安全调用虚函数（final类除外）
-  // 工厂方法初始化的场景：解决构造函数初始化的问题
-  // Init方法初始化的场景：仅在接口天然就适合两段式初始化时使用，因为在构造与初始化间存在不可用的中间态
-  auto foo = other;                   // 拷贝/移动
-  auto foo = static_cast<bar>(other); // 转换
-  auto foo = bar(args);               // 构造（构造函数）
-  auto foo = bar{fields};             // 构造（初始列表或聚合类）
-  auto foo = bar{.fd = arg};          // 构造（聚合类）
-  auto [a, b]  = aggregation;         // 解构
-  ```
-  ```rust
-  let a: [i32; 5] = [1, 2, 3, 4, 5];
-  let a = [3; 5];
-  ```
-  ```dart
-  var foo = Bar();            // 默认
-  var foo = Bar.nc(args);     // 构造
-  var foo = initializer;      // 拷贝
-  var foo = other as Bar;     // 转换
-  var [a, b] = list;          // 解构
-  var {'a': a, 'b': b} = map; // 解构
-  var (a, b: b, :c) = record; // 解构
-  ```
-  ```js
-  let foo = new Bar(args); // 构造
-  let foo = initializer; // 拷贝
-  let foo = new Bar(other); // 转换
-  let [a, ["1"]: b, ...rest] = array; // 解构
-  let {a, ["1"]: b, ...rest} = obj; // 解构
-  ```
+- 集合类型
+
+---
+
+> 日期时间通常存储为 Unix Timestamp，即当前 UTC 时间距离 1970-01-01 00:00:00 的秒数（或毫秒、纳秒等）；
+> 想要能正确且无歧义从本地时间构造日期时间对象，和将日期时间对象转换为可读的本地时间，还需要一个时区参数来表示从本地时间相对 UTC 时间的偏移量；
+> ISO 8601 格式 `2000-07-27T21:30:59+08:00` 不仅能为当地人展示可读的无歧义的本地时间，同时还让其它时区的人能获取无歧义的 UTC 时间。
+
+#### C++
+
+```cpp
+// 布尔
+bool b = true || false;
+
+// 整数：字面量的类型根据数值大小推断，最小为 int
+int i = 9'000'000 + 0b1010 + 017 + 0xff;
+unsigned u = 10u;
+size_t uz = 10uz;
+ssize_t z = 10z;
+
+// 实数：字面量的类型默认为 double
+double d = 1.0 + 2.5e3;
+float f = 2.5f;
+
+// 字符：索引元素为字节
+char ascii = 'a';
+char32_t unicode = U'文';
+const char* cstr = "hello world!\n" R"(raw\n)";
+std::string str = cstr;
+const char* u8 = u8"utf-8 string";
+const char16_t* u16 = u"utf-16 string";
+const char32_t* u32 = U"utf-32 string";
+const wchar_t* u32 = L"utf-16 or utf-32 string";
+
+// 日期时间：sys_time 与 local_time 无时区，zoned_time 有时区
+using namespace std::chrono;
+auto local = get_tzdb().current_zone();
+auto now = system_clock::now();
+auto datetime = zoned_time(local,
+    local_days(27d / 7 / 2000) + 21h + 30min + 59s)
+    .get_sys_time();
+auto duration = 1h + 30min + 59s;
+auto to_unix = duration_cast<seconds>(datetime.time_since_epoch()).count();
+auto from_unix = system_clock::time_point(seconds(to_unix));
+auto to_iso = std::format("{0:%F}T{0:%T%Ez}", zoned_time(local, datetime));
+system_clock::time_point from_iso;
+std::stringstream(to_iso) >> parse("%FT%T%Ez", from_iso);
+
+// 结构
+point p1 = {10, 20, 30};
+point p2 = {.x = 10, .y = 20, .z = 30};
+auto [x, y, z] = p2;
+
+// 元组
+tuple<int, double> t = {1, 2.0};
+
+// 其它集合
+std::array<int, 3> arr = {1, 2, 3};
+std::vector<int> vec = {1, 2, 3};
+std::deque<int> deq = {1, 2, 3};
+std::priority_queue<int> heap;
+std::list<int> list = {1, 2, 3};
+std::map<std::string, int> bmap = {{"one", 1}, {"two", 2}};
+std::set<int> bset = {1, 2, 3};
+std::unordered_map<std::string, int> hmap = {{"one", 1}, {"two", 2}};
+std::unordered_set<int> hset = {1, 2, 3};
+```
+
+#### Rust
+
+```rust
+// 布尔
+let b: bool = true || false;
+
+// 整数：字面量的类型根据使用变量的上下文推断，默认为 i32
+let i: i32 = 9_000_000 + 0b1010 + 0o17 + 0xff;
+
+// 实数：字面量的类型根据使用变量的上下文推断，默认为 f64
+let f: f64 = 1.0 + 2.5e3;
+
+// 字符：不允许索引，但允许切片（运行时检测切片字节边界的 UTF-8 有效性）
+let byte: u8 = b'a';
+let c: char = '文';
+let s: &str = "hello world\n" + r"raw\n";
+let inter: String = format!("{name}");
+let ss: String = String::from(s);
+
+// 日期时间：SystemTime 无时区，OffsetDateTime 有时区
+use time::format_description::well_known::Iso8601;
+use time::macros::datetime;
+use time::{Duration, OffsetDateTime};
+let now = OffsetDateTime::now_local().unwrap();
+let datetime = datetime!(2000-07-27 21:30:59 +8);
+let duration = Duration::new(secs, nanos) + Duration::seconds(30);
+let to_unix = datetime.unix_timestamp();
+let from_unix = OffsetDateTime::from_unix_timestamp(to_unix).unwrap().to_offset(time::UtcOffset::current_local_offset().unwrap());
+let to_iso = datetime.format(&Iso8601::DEFAULT).unwrap();
+let from_iso = OffsetDateTime::parse(&to_iso, &Iso8601::DEFAULT);
+
+// 枚举
+let opt = Some(50);
+if let Some(x) = opt {};
+
+// 结构
+let point = Point{x: 10, y, ..other_point}; // point.x
+let x: i32 = point.x;
+let Point{x: x_px, y, ..} = point;
+
+// 元组
+let tuple: (i32, f64, &str) = (1, 2.0, "three");
+let one: i32 = tuple.0;
+let (a, .., c) = tuple;
+
+// 数组
+let array: [i32; 3] = [0; 3];
+let array: [i32; 3] = [1, 2, 3];
+
+// 动态数组
+let vec: Vec<i32> = vec![1, 2, 3];
+
+// 范围
+let range: Range            = begin..end;
+let range: RangeFrom        = begin..;
+let range: RangeTo          = ..end;
+let range: RangeFull        = ..;
+let range: RangeInclusive   = begin..=end;
+let range: RangeToInclusive = ..=end;
+
+// 切片：可用于字符串、数组、动态数组
+let slice: [i32] = arr[range];
+
+// 其它集合
+let deq = std::collections::VecDeque::new();
+let heap = std::collections::BinaryHeap::new();
+let list = std::collections::LinkedList::new();
+let bmap = std::collections::BTreeMap::new();
+let bset = std::collections::BTreeSet::new();
+let hmap = std::collections::HashSet::new();
+let hset = std::collections::HashMap::new();
+```
+
+#### Go
+
+```go
+// 布尔
+var b bool = true || false
+
+// 整数：字面量的类型为高精度常量，int 根据平台大小可能是 int32 或 int64
+var i int = 9_000_000 + 0b1010 + 0o17 + 0xff;
+
+// 实数：字面量的类型根据平台大小可能是 float32 或 float64
+var f float64 = 1.0 + 2.5e3;
+
+// 字符：索引元素为字节
+var r rune = '文'
+var s string = "hello world\n" + `raw\n`
+bytes := []byte(s)
+runes := []rune(s)
+s = string(bytes)
+s = string(runes)
+
+// 日期时间：有时区
+now := time.Now()
+datetime := time.Date(2000, 7, 27, 21, 30, 59, 00, time.Local)
+duration, _ := time.ParseDuration("1h30m59s")
+toUnix := datetime.Unix()
+fromUnix := time.Unix(toUnix, 0)
+toIso := datetime.Format("2006-01-02T15:04:05-07:00")
+fromIso, _ := time.Parse("2006-01-02T15:04:05-07:00", toIso)
+
+// 结构
+point := Point{
+  x: x,
+  y: y,
+  // z default 0
+}
+
+// 数组
+array := [3]int{1, 2, 3}
+array = [...]int{1, 2, 3}
+
+// 切片
+slice := []int{1, 2, 3}
+slice = make([]int, len[, cap])
+slice = array[begin:end]
+slice = array[begin:]
+slice = array[:end]
+slice = array[:]
+slice = append(slice, 4, 5)
+slice = append(slice, other_slice...)
+copy(dst_slice, slice)
+
+// 映射
+hmap := map[string]int{"one": 1}
+val, ok := hmap["one"]
+delete(hmap, "one")
+```
+
+#### Dart
+
+```dart
+// 布尔
+bool b = true || false;
+
+// 整数
+int i = 9000000 + 0xff;
+
+// 实数
+double d = 1.0 + 2.5e3;
+
+// 字符：索引元素为 Unicode
+String str = 'hello ' + "world\n" + r'raw\n';
+String inter = '$name or ${name}';
+String multiline = '''
+multiline
+string
+''';
+
+// 日期时间：有时区
+var now = DateTime.now();
+var datetime = DateTime(2000, 7, 27, 21, 30, 59);
+var duration = Duration(hours: 1, minutes: 30, seconds: 59);
+var toUnix = datetime.millisecondsSinceEpoch;
+var fromUnix = DateTime.fromMillisecondsSinceEpoch(toUnix);
+String toIso8601StringWithOffset(DateTime datetime) {
+  final offset = datetime.timeZoneOffset;
+  return "${datetime.toIso8601String()}${offset.isNegative ? "-" : "+"}${offset.inHours.abs().toString().padLeft(2, "0")}:${(offset.inMinutes - offset.inHours * 60).abs().toString().padLeft(2, "0")}";
+}
+var toIso = toIso8601StringWithOffset(datetime);
+var fromIso = DateTime.tryParse(toIso)?.toLocal();
+
+// 元组
+int i = (1);
+(int,) r = (1,);
+(int, double, {String a, String b}) record = (1, a: 'a', 2.5, b: 'b');
+var t = (int, String); // No record type literals
+var (x, y, a: av, :b) = record;
+int one = record.$1; // 1
+String a = record.a; // 'a'
+
+// 列表
+List<int> list = <int>[];
+list = [1, 2, 3];
+list = [0, ...list, ...?nullable_list];
+list = [0, if (i.isOdd) i];
+list = [0, for (final i in list) i];
+var [a, ...rest, c] = list;
+
+// 映射
+Map<String, int> map = <String, int>{};
+map = {'one': 1, 'two': 2, 'three': 3};
+map = {...map, ...?nullable_map, 'one': 0};
+map = {if (i.isOdd) 'i': i, 'one': 0};
+map = {for (final e in map.entries) e.key: e.value, 'one': 0};
+var {'zero': nullable_zero, ...} = map;
+
+// 集合
+Set<int> set = <int>{};
+set = {1, 2, 3};
+set = {0, ...set, ...?set};
+set = {0, if (i.isOdd) i};
+set = {0, for (final i in set) i};
+```
+
+#### JavaScript
+
+```js
+// 布尔
+let b = true || false;
+
+// 整数
+let i = 9_000_000 + 0b1010 + 0o17 + 0xff;
+
+// 实数
+let f = 1.0 + 2.5e3;
+let nan = NaN + Infinity;
+
+// 字符：索引元素为 Unicode
+let s = "hello " + "world\n" + String.raw`raw\n but ${name}`;
+let inter = `${name}`;
+let regexp = /pattern/i;
+
+// 日期时间：有时区
+let now = new Date();
+let datetime = new Date(2000, 6, 27, 21, 30, 59); // month index start from 0!
+let duration = 30_000; // 30s
+let toUnix = datetime.getTime(); // Unix ms
+let fromUnix = new Date(toUnix);
+function toLocalISOString(date) {
+  const offset = date.getTimezoneOffset();
+  const offsetAbs = Math.abs(offset);
+  const isoString = new Date(date.getTime() - offset * 60 * 1000).toISOString();
+  return `${isoString.slice(0, -1)}${offset > 0 ? "-" : "+"}${String(
+    Math.floor(offsetAbs / 60)
+  ).padStart(2, "0")}:${String(offsetAbs % 60).padStart(2, "0")}`;
+}
+let toIso = toLocalISOString(datetime);
+let fromIso = new Date(toIso);
+
+// 数组
+let arr = [1, 2, 3];
+arr = [0, ...arr, 4];
+let [a, ...rest] = arr;
+
+// 对象
+let obj = { one: 1, two: 2, three };
+obj = { ...obj, one: 0 };
+let { one: varone, ["two"]: two, three, ...rest } = obj;
+obj.one;
+obj["two"];
+```
+
+#### Python
+
+```python
+# 布尔
+b: bool = True or False
+
+# 整数
+i: int = 9_000_000 + 0b1010 + 0o17 + 0xff
+
+# 实数
+f: float = 1.0 + 2.5e3
+
+# 字符：索引元素为 Unicode
+s: str = 'hello ' + "world\n" + r'raw\n'
+s = f'inter {s}'
+s = '''\
+multiline
+string
+'''
+add_s = s + s
+mul_s = s * 3
+
+# 日期时间：默认无时区，使用 astimezone() 方法转换为当地时区
+now = datetime.now().astimezone()
+dt = datetime(2000, 7, 27, 21, 30, 59).astimezone()
+duration = timedelta(hours=1, minutes=30, seconds=59)
+to_unix = dt.timestamp()
+from_unix = datetime.fromtimestamp(to_unix).astimezone()
+to_iso = dt.isoformat()
+from_iso = datetime.strptime(to_iso, "%Y-%m-%dT%H:%M:%S%z").astimezone()
+
+# 元组
+i1: int = 1
+t1: tuple[int] = (1,)
+tup: tuple[int, float, str] = (1, 2.0, "three")
+x, y, z = tup = 1, 2.0, "three"
+add_t = tup + tup
+mul_t = tup * 3
+
+# 列表
+ls: list[int] = [1, 2, 3]
+ls = [i for i in ls if i % 2]
+add_ls = ls + ls
+mul_ls = ls * 3
+
+# 范围
+r = range(stop)
+r = range(start, stop)
+r = range(start, stop, step)
+
+# 切片：可用于线性序列如元素、列表、范围
+ls[i]               # 返回浅拷贝：
+ls[i:j]             #   i, j 为负时表示倒数下标，默认 0, len(ls)
+ls[i:j:k]           #   k 为负时表示倒叙，默认为 1
+ls[i]               # 覆盖列表中的一个元素
+ls[i:j] = [0]       # 覆盖列表中的若干个连续元素
+ls[i:j:k] = [0, 0]  # 用右边列表的对应元素覆盖列表中的若干个元素
+
+# 映射
+hmap: dict[str, int] = {"one": 1, "two": 2, "three": 3}
+hmap = {k: v for k, v in hmap.items() if k % 2}
+hmap["zero"]     # 若键不存在则异常
+hmap["zero"] = 0 # 赋值时若键不存在则自动创建
+hmap |= map1     # map1 覆盖合并到 hmap
+
+# 集合
+hset: set[int] = {1, 2, 3}
+hset = {i for i in hset if i % 2}
+hset < set1 <= set2
+hset > set1 >= set2
+hset == set1 != set2
+hset |= set1
+hset &= set1
+hset -= set1
+hset ^= set1
+```
 
 ### 数字相关
 

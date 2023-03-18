@@ -428,8 +428,8 @@ f = 0x1p1       // 小数点可忽略，但指数部分不可忽略，基数为2
 - string 相比`[]byte`，会在修改和转换为`[]byte`时必定出现拷贝
 
 ```go
-var b byte      // int8别名
-var r rune      // int32别名，注意存储Unicode码点而非UTF-8编码，二者均兼容ascii
+var b byte      // uint8别名
+var r rune      // uint32别名，注意存储Unicode码点而非UTF-8编码，二者均兼容ascii
 // 'a' '文'
 // '\a' '\b' '\f' '\n' '\r' '\t' '\v' '\\' '\''
 // '\000' '\xff' '\u12e4' '\U00101234'

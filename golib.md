@@ -645,8 +645,8 @@ func Unix(sec int64, nsec int64) Time   // 接受Unix时间戳sec*1e9+nsec
 func Parse(layout, value string) (Time, error)
 func ParseInLocation(layout, value string, loc *Location) (Time, error)
 
-// RFC3339 = "2006-01-02T15:04:05Z07:00"
-// RFC3339Nano = "2006-01-02T15:04:05.000Z07:00"
+// RFC3339 = "2006-01-02T15:04:05-07:00"
+// RFC3339Nano = "2006-01-02T15:04:05.000-07:00"
 func (t *Time) Format(layout string) string
 func (t *Time) Date() (year int, month Month, day int)
 func (t *Time) Year() int
