@@ -1539,10 +1539,10 @@ obj["two"];
 # 布尔
 b: bool = True or False
 
-# 整数
+# 整数: 32-bit or big-number
 i: int = 9_000_000 + 0b1010 + 0o17 + 0xff
 
-# 实数
+# 实数: 64-bit
 f: float = 1.0 + 2.5e3
 
 # 字符：索引元素为 Unicode
@@ -1587,7 +1587,7 @@ r = range(start, stop, step)
 ls[i]               # 返回浅拷贝：
 ls[i:j]             #   i, j 为负时表示倒数下标，默认 0, len(ls)
 ls[i:j:k]           #   k 为负时表示倒叙，默认为 1
-ls[i]               # 覆盖列表中的一个元素
+ls[i] = 0           # 覆盖列表中的一个元素
 ls[i:j] = [0]       # 覆盖列表中的若干个连续元素
 ls[i:j:k] = [0, 0]  # 用右边列表的对应元素覆盖列表中的若干个元素
 
