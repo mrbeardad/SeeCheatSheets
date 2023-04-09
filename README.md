@@ -73,6 +73,8 @@
     - [C++ 语法大全](cpp.md)
     - [C++ 程序库](cpplib.md)
     - [CMake 构建系统](cmake.md)
+  - Rust
+    - [Rust 语言基础](rust.md)
   - Go
     - [Go 语言基础](go.md)
     - [Go 程序库](golib.md)
