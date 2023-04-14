@@ -1,5 +1,19 @@
 # Flutter
 
+- [Flutter](#flutter)
+  - [Widgets](#widgets)
+  - [窗口](#窗口)
+  - [内容](#内容)
+  - [展示](#展示)
+    - [布局](#布局)
+    - [样式](#样式)
+    - [动画](#动画)
+  - [输入](#输入)
+  - [Material Design Components](#material-design-components)
+  - [状态管理](#状态管理)
+  - [导航路由](#导航路由)
+  - [国际化](#国际化)
+
 ## Widgets
 
 具体参见<https://docs.flutter.dev/resources/architectural-overview>
@@ -14,7 +28,7 @@
 
 - 视图重绘时，会重新构建 Widget Subtree，并比较新旧 Widget 然后更新对应 Element，再由 Element 更新对应 RenderObject，一些 Widget 利用类似 `builder(context, child)` 属性来避免重新构建子树
 
-- `StatelessWidget`与`StatefulWidget`用于组合 Element 节点
+- `StatelessWidget`与`StatefulWidget`只用于组合 Element 节点
 
 - `LeafRenderObjectWidget`、`SingleChildRenderObjectWidget`与`MultiChildRenderObjectWidget`才会新建 Element 节点
 
@@ -45,7 +59,8 @@
 
 ## 窗口
 
-由平台 Native 代码控制
+- 由 Embeder（即平台 Native 代码）控制
+- `package:bitsdojo_window`
 
 ## 内容
 

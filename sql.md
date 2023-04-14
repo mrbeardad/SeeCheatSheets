@@ -1,9 +1,6 @@
-# 目录
+# SQL
 
-<!-- vim-markdown-toc GFM -->
-
-- [目录](#目录)
-  - [安装与使用](#安装与使用)
+- [SQL](#sql)
   - [SQL 基础](#sql-基础)
     - [系统信息](#系统信息)
     - [用户管理](#用户管理)
@@ -28,23 +25,6 @@
   - [视图](#视图)
   - [分区](#分区)
   - [事务](#事务)
-
-<!-- vim-markdown-toc -->
-
-## 安装与使用
-
-<!-- entry begin: mysql mysqld initialize install -->
-
-```sh
-# 初始化 mariadb
-mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
-# 初始化 mysql
-mysqld --initialize --user=mysql --basedir=/usr --datadir=/var/lib/mysql
-# 连接数据库
-mysql -h 主机名 -P 端口号 -D 数据库名 -u 用户名 -p密码
-```
-
-<!-- entry end -->
 
 ## SQL 基础
 

@@ -1,7 +1,5 @@
 # 目录
 
-<!-- vim-markdown-toc GFM -->
-
 - [目录](#目录)
 - [系统启动](#系统启动)
   - [MBR 与 GPT](#mbr-与-gpt)
@@ -26,7 +24,7 @@
       - [Install 小节](#install-小节)
       - [Service 小节](#service-小节)
       - [Timer 小节](#timer-小节)
-  - [getty&login](#gettylogin)
+  - [getty-login](#getty-login)
 - [用户管理](#用户管理)
 - [日志管理](#日志管理)
 - [系统配置](#系统配置)
@@ -56,11 +54,9 @@
     - [CGroup 机制](#cgroup-机制)
     - [ulimit 机制](#ulimit-机制)
 - [终端](#终端)
-    - [终端结构](#终端结构)
-    - [作业控制](#作业控制)
-    - [伪终端](#伪终端)
-
-<!-- vim-markdown-toc -->
+  - [终端结构](#终端结构)
+  - [作业控制](#作业控制)
+  - [伪终端](#伪终端)
 
 ![unix-history](images/unix.jpeg)
 
@@ -554,7 +550,7 @@ Unit=                   # 指定匹配unit，默认同名.service
 
 <!-- entry end -->
 
-## getty&login
+## getty-login
 
 1. 启动 getty.target 创建终端，并打印提示`/etc/issue`
 2. 启动 systemd-logind 并连接到上述终端，然后打印提示`/etc/motd`
@@ -1059,7 +1055,8 @@ _ -s ：只还原指定的文件或目录 \* -I ：查询基础数据库/var/lib
 
 <!-- entry begin: xfs_repair -->
 
-- xfs*repair
+- xfs\*repair
+
 * -f ：对 image-file 修复
 _ -n ：只检测
 _ -l ：指定 logdev

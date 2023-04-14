@@ -1,5 +1,22 @@
 # Next.js
 
+- [Next.js](#nextjs)
+  - [系统构建](#系统构建)
+    - [初始化](#初始化)
+    - [目录结构](#目录结构)
+    - [环境变量](#环境变量)
+  - [核心特性](#核心特性)
+    - [客户端路由](#客户端路由)
+      - [pages](#pages)
+      - [next/link](#nextlink)
+      - [next/router](#nextrouter)
+      - [api](#api)
+    - [预渲染](#预渲染)
+      - [SSG](#ssg)
+      - [SSR](#ssr)
+      - [CSR](#csr)
+    - [图像优化](#图像优化)
+
 ## 系统构建
 
 ### 初始化
@@ -226,13 +243,7 @@ import mountains from "../public/mountains.jpg";
 const Intrinsic = () => (
   <div>
     <h1>Image Component With Layout Intrinsic</h1>
-    <Image
-      alt="Mountains"
-      src={mountains}
-      layout="intrinsic"
-      width={700}
-      height={475}
-    />
+    <Image alt="Mountains" src={mountains} layout="intrinsic" width={700} height={475} />
   </div>
 );
 

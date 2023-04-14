@@ -1,7 +1,7 @@
 # 设计模式
 
 - [设计模式](#设计模式)
-  - [学习网站](#学习网站)
+  - [参考资料](#参考资料)
   - [设计原则](#设计原则)
   - [创建型](#创建型)
     - [工厂方法模式(Factory Method)](#工厂方法模式factory-method)
@@ -30,7 +30,7 @@
     - [中介者模式(Mediator)](#中介者模式mediator)
     - [观察者模式(Observer)](#观察者模式observer)
 
-## 学习网站
+## 参考资料
 
 <https://design-patterns.readthedocs.io/zh_CN/latest/index.html>  
 <https://www.tutorialspoint.com/design_pattern/design_pattern_overview.htm>  

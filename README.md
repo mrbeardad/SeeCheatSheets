@@ -32,13 +32,19 @@
   - [Coding](#coding)
   - [开发平台](#开发平台)
   - [底层原理](#底层原理)
-  - [其他](#其他)
+  - [其它](#其它)
 
 ## 前言
 
-部分笔记插入了 Tex 公式，~~介于鄙人的懒惰~~ 介于 GFM 不支持 Tex，诸位就自己下个[浏览器插件](https://chrome.google.com/webstore/detail/mathjax-3-plugin-for-gith/peoghobgdhejhcmgoppjpjcidngdfkod/related?hl=en "如果从Web Store安装失败则尝试手动下载并安装其github源码")吧。
+> 各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处……侵删啊，乖乖 0.0
 
-另外，各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处。。。侵删啊，乖乖。
+学习一门技术或其中的知识点时，首先要了解其存在的目的：
+
+- (**What**) 解决了实际生产中出现的什么问题？
+- (**Why**) 问题产生的原因？
+- (**How**) 解决问题的方法？
+
+当对其解决方法有不理解时，递归地思考以上三问。
 
 ## AI
 
@@ -58,15 +64,16 @@
 ## Client
 
 - [Flutter](flutter.md): 基于 Dart 的跨平台的响应式 UI 框架
-- [QT](qt.md): 基于 C++ 的跨平台 UI 框架
+- [QT](qt.md): 基于 C++ 的跨平台的命令式 UI 框架
 
 ## Server
 
 - [Nginx](nginx.md)：路由转发与负载均衡
 - [Docker](docker.md)：打包并隔离进程的运行环境
 - [K8S](k8s.md)：动态编排容器集群
-- [MySQL](sql.md)：关系型数据库
 - [Redis](redis.md)：结构型数据缓存
+- [MySQL](mysql.md)：关系型数据库
+- [SQL](sql.md)：结构化查询语言
 
 ## Coding
 
@@ -94,30 +101,29 @@
 
 - [Linux 系统](linuxsum.md):star:
 
-  - [Linux 知识体系](linux.md)
+  - [Linux 知识框架](linux.md)
   - [Linux 系统接口](linuxapi.md)
   - [Bash 命令行](bash.md)
   - [开发者工具](devtool.md)
 
 - Windows 系统
-  - [Win32 系统接口](win32.md)
+  - [Win32 窗口系统](win32.md)
   - [CMD 命令行](cmd.md)
 
 ## 底层原理
 
-- [计科八股](interview.md):star:
+- [面试八股](interview.md):star:
 
   - [信息编码](code.md)
   - [处理器设计](cpu.md)
   - [汇编语言](asm.md)
   - [操作系统](os.md)
   - [计算机网络](network.md)
-  - [数据库存储](innodb.md)
   - [数据结构与算法](dsaa.md)
 
-## 其他
+## 其它
 
-- [Markdown 语法](markdown.md)
-- [Regex 语法](regex.md)
-- [Protobuf 语法](protobuf.md)
-- [比特币系统](bitcoin.md)
+- [Markdown](markdown.md)
+- [Regex](regex.md)
+- [Protobuf](protobuf.md)
+- [Bitcoin](bitcoin.md)

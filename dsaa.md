@@ -1,6 +1,8 @@
 # 目录
+
 <!-- vim-markdown-toc GFM -->
 
+- [目录](#目录)
 - [算法设计](#算法设计)
   - [回溯算法](#回溯算法)
   - [分治算法](#分治算法)
@@ -32,13 +34,13 @@
   - [队列](#队列)
   - [堆](#堆)
   - [树状数组](#树状数组)
-  - [ST表](#st表)
+  - [ST 表](#st表)
   - [并查集](#并查集)
-  - [Trie树](#trie树)
+  - [Trie 树](#trie树)
   - [跳跃表](#跳跃表)
 - [匹配与排序](#匹配与排序)
   - [KMP](#kmp)
-  - [AC自动机](#ac自动机)
+  - [AC 自动机](#ac自动机)
   - [计数排序](#计数排序-1)
 - [图论](#图论)
   - [拓扑排序有向无圈图](#拓扑排序有向无圈图)
@@ -55,12 +57,12 @@
 - [其它算法](#其它算法)
   - [哈夫曼编码贪婪](#哈夫曼编码贪婪)
   - [平面最近点分治](#平面最近点分治)
-  - [最优二叉搜索树DP](#最优二叉搜索树dp)
-  - [所有点对最短路DP](#所有点对最短路dp)
+  - [最优二叉搜索树 DP](#最优二叉搜索树dp)
+  - [所有点对最短路 DP](#所有点对最短路dp)
   - [收费公路重建回溯](#收费公路重建回溯)
   - [井字棋博弈回溯](#井字棋博弈回溯)
   - [单词代表](#单词代表)
-  - [子序列最大值(max为负则0)](#子序列最大值max为负则0)
+  - [子序列最大值(max 为负则 0)](#子序列最大值max为负则0)
   - [最大公因数](#最大公因数)
   - [快速幂运算](#快速幂运算)
   - [厄拉多塞筛](#厄拉多塞筛)
@@ -69,184 +71,214 @@
 <!-- vim-markdown-toc -->
 
 # 算法设计
+
 ## 回溯算法
-* 利用***DFS***进行多路分叉选择，若选择错误或无选择则函数返回(撤销)重新选择
-* 注意是否可以裁剪掉一些情况
+
+- 利用**_DFS_**进行多路分叉选择，若选择错误或无选择则函数返回(撤销)重新选择
+- 注意是否可以裁剪掉一些情况
 
 ## 分治算法
+
 > 分治一般需要至少两次递归调用
-* 将大问题分解为各类型子问题，各部分递归求解，然后综合结果
-* 子问题的解可以用来裁剪掉一些情况
+
+- 将大问题分解为各类型子问题，各部分递归求解，然后综合结果
+- 子问题的解可以用来裁剪掉一些情况
 
 ## 动态规划
-**“所有的DP问题，本质上都是有限集中的最值问题”——闫氏DP分析法**
 
-将问题模型化为：求有限集S中满足限制条件C的结果max/min/count
+**“所有的 DP 问题，本质上都是有限集中的最值问题”——闫氏 DP 分析法**
 
-* 状态表示：写出一个函数形式如`f(i, j)`用来表示一个子集合的结果
-    * 集合：满足某些条件的子集合，如范围限制、长度限制、数值限制
-    * 结果：通常为题解如max/min/count
+将问题模型化为：求有限集 S 中满足限制条件 C 的 max/min/count 结果
 
-* 状态计算：写出状态表示函数的定义，即递推方程
-    * 将当前集合不遗漏地划分为若干子部分求解
-        * max/min即各部分max/min值的max/min（子部分划分可部分重叠）
-        * count即各部分count的和（子部分划分不可重叠）
+- 状态表示：写出一个函数形式如`f(i, j)`用来表示一个子集合的结果
 
-* 时间优化与空间优化：都是对代码中公式的恒等变换
+  - 集合：满足某些条件的子集合，如范围限制、长度限制、数值限制
+  - 结果：通常为题解如 max/min/count
+
+- 状态计算：写出状态表示函数的定义，即递推方程
+
+  - 将当前集合不遗漏地划分为若干子部分求解
+    - max/min 即各部分 max/min 值的 max/min（子部分划分可部分重叠）
+    - count 即各部分 count 的和（子部分划分不可重叠）
+
+- 时间优化与空间优化：都是对代码中公式的恒等变换
 
 ## 贪心算法
-* 一个问题的整体最优解可通过一系列局部的最优解的选择达到（即每个阶段做出对当前而言最好的选择而不考虑将来的后果）
-* 并且每次的选择可以依赖以前作出的选择，但不依赖于后面要作出的选择，这就是贪心选择性质
-* 必须证明每一步所作的贪心选择最终导致问题的整体最优解
 
+- 一个问题的整体最优解可通过一系列局部的最优解的选择达到（即每个阶段做出对当前而言最好的选择而不考虑将来的后果）
+- 并且每次的选择可以依赖以前作出的选择，但不依赖于后面要作出的选择，这就是贪心选择性质
+- 必须证明每一步所作的贪心选择最终导致问题的整体最优解
 
 ## 算法优化
-* 找出重复的计算
-* 减少多余的拷贝
-* 避免重复的访存
-* 高速缓存命中率
-* 分支预测命中率
+
+- 找出重复的计算
+- 减少多余的拷贝
+- 避免重复的访存
+- 高速缓存命中率
+- 分支预测命中率
 
 # 时空复杂度
+
 ## 复杂度计算
-* `T ≤ O `
-* `T ≥ Ω `
-* `T = Θ `
-* `T < o `
 
-* 复杂度合并：
-    * $T_1+T_2=\max(O_1,O_2)$
+- `T ≤ O `
+- `T ≥ Ω `
+- `T = Θ `
+- `T < o `
 
-    * $T_1\times T_2=O_1\times O_2$
+- 复杂度合并：
+
+  - $T_1+T_2=\max(O_1,O_2)$
+
+  - $T_1\times T_2=O_1\times O_2$
 
 ## 经典复杂度
+
 ![fzd](images/fzd1.jpg)
 ![fzd2](images/fzd2.png)
 ![fzd3](images/fzd3.png)
 
 # 数论
+
 ## 指数
-* $X^AX^B=X^{A+B}$
-* $X^A/X^B=X^{A-B}$
-* $(X^A)^B=X^{AB}$
+
+- $X^AX^B=X^{A+B}$
+- $X^A/X^B=X^{A-B}$
+- $(X^A)^B=X^{AB}$
 
 ## 对数
-* $\ln AB=\ln A+\ln B$
-* $\ln A/B=\ln A-\ln B$
-* $\ln A^B=B\ln A$
-* $\log_AB=\frac{\log_CB}{\log_CA}$
+
+- $\ln AB=\ln A+\ln B$
+- $\ln A/B=\ln A-\ln B$
+- $\ln A^B=B\ln A$
+- $\log_AB=\frac{\log_CB}{\log_CA}$
 
 ## 级数
-* $\sum_{i=0}^{N}A^i=\frac{1-A^{N+1}}{1-A}\qquad(|A|>1)$
 
-* $\sum_{i=0}^{N}A^i\le\frac{1}{1-A}\qquad(|A|<1)$
+- $\sum_{i=0}^{N}A^i=\frac{1-A^{N+1}}{1-A}\qquad(|A|>1)$
 
-* $\sum_{i=1}^{N}i^k\approx \frac{N^{k+1}}{|k+1|}\qquad(k \ne -1)$
+- $\sum_{i=0}^{N}A^i\le\frac{1}{1-A}\qquad(|A|<1)$
 
-* $\sum_{i=1}^Ni^k\approx \ln{N}\qquad(k=-1)$
+- $\sum_{i=1}^{N}i^k\approx \frac{N^{k+1}}{|k+1|}\qquad(k \ne -1)$
 
-* $F_{k+1}\lt(5/3)^{k+1}\qquad(F_{k+1}=F_k+F_{k-1})$
+- $\sum_{i=1}^Ni^k\approx \ln{N}\qquad(k=-1)$
+
+- $F_{k+1}\lt(5/3)^{k+1}\qquad(F_{k+1}=F_k+F_{k-1})$
 
 ## 模运算
-* 同余方程：
-    > 若$(a-b)\\\% N=0$
-    * 则$a\equiv b\mod N$
 
-    * 则$a+c\equiv b+c\mod N$
+- 同余方程：
 
-    * 则$a\times d\equiv b\times d\mod N$
+  > 若$(a-b)\\\% N=0$
 
-* 求余方程：
-    * $(a+b)\\\% N = (a\\\% N + b\\\% N)\\\% N$
+  - 则$a\equiv b\mod N$
 
-    * $(a\times b)\\\% N = (a\\\% N \times b\\\% N)\\\% N$
+  - 则$a+c\equiv b+c\mod N$
 
-    * $(a-b)\\\% N = (a\\\% N - b\\\% N + N)\\\% N$
+  - 则$a\times d\equiv b\times d\mod N$
 
-    * $(a\div b)\\\% N = (a\times b^{-1})\\\% N$
-        > 公式推导：
-        > $$
-        > (a\div b)\mod N \Rightarrow (a\div b)\times 1\mod N
-        > \Rightarrow(a\div b)\times(b\times b^{-1})\mod N
-        > \Rightarrow(a\times b^{-1})\mod N
-        > $$
-        > **$b^{-1}$是$b$ 的逆元。因为计算机整数运算中`a/b`会丢弃小数，违反了上述证明必要的数学运算逻辑，故需要 $a$ 可以被 $b$ 整除**
+- 求余方程：
 
-* 模算术逆元：
-    * 定义：$b\times b^{ -1 } \equiv 1 \mod N$  
-        > 所有$x=b^{-1}+k\times N(k\in Z)$ 都是 $b$ 在模$N$意义下的逆元；  
-        > **整数 $b$ 存在逆元的充要条件是 $b$ 与 $N$ 互素**
-    * 求解：
-        * 费马小定理：  
-            > 若$b$为整数，$N$为素数，  
-            > 则$b^{N-1} \equiv 1 \mod N\Rightarrow b\times b^{N-2} \equiv 1 \mod N$，  
-            > 即$b^{N-2}$就是$b$在模$N$意义下的逆元
-        * 扩展欧几里得算法
-            > 前提条件：a能被b整除
-            <details>
-                <summary><b>Code ...</b></summary>
-            
-            ```cpp
-            int ext_gcd(int a, int b, int& x, int& y)
-            {
-                if ( b == 0 ) {
-                    x = 1;
-                    y = 0;
-                    return a;
-                }
-                auto gcd = ext_gcd(b, a % b, y, x);
+  - $(a+b)\\\% N = (a\\\% N + b\\\% N)\\\% N$
 
-                //   因 ans == b * y + (a % b) * x
-                //   又 a % b == a - (a / b) * b
-                //   故 ans == b * y + (a - (a / b) * b) * x == x * a + (y - (a / b) * x) * b
-                y -= a / b * x;
+  - $(a\times b)\\\% N = (a\\\% N \times b\\\% N)\\\% N$
 
-                return gcd;
+  - $(a-b)\\\% N = (a\\\% N - b\\\% N + N)\\\% N$
+
+  - $(a\div b)\\\% N = (a\times b^{-1})\\\% N$
+    > 公式推导：
+    >
+    > $$
+    > (a\div b)\mod N \Rightarrow (a\div b)\times 1\mod N
+    > \Rightarrow(a\div b)\times(b\times b^{-1})\mod N
+    > \Rightarrow(a\times b^{-1})\mod N
+    > $$
+    >
+    > **$b^{-1}$是$b$ 的逆元。因为计算机整数运算中`a/b`会丢弃小数，违反了上述证明必要的数学运算逻辑，故需要 $a$ 可以被 $b$ 整除**
+
+- 模算术逆元：
+
+  - 定义：$b\times b^{ -1 } \equiv 1 \mod N$
+    > 所有$x=b^{-1}+k\times N(k\in Z)$ 都是 $b$ 在模$N$意义下的逆元；  
+    > **整数 $b$ 存在逆元的充要条件是 $b$ 与 $N$ 互素**
+  - 求解：
+
+    - 费马小定理：
+      > 若$b$为整数，$N$为素数，  
+      > 则$b^{N-1} \equiv 1 \mod N\Rightarrow b\times b^{N-2} \equiv 1 \mod N$，  
+      > 即$b^{N-2}$就是$b$在模$N$意义下的逆元
+    - 扩展欧几里得算法
+
+      > 前提条件：a 能被 b 整除
+
+        <details>
+            <summary><b>Code ...</b></summary>
+        
+        ```cpp
+        int ext_gcd(int a, int b, int& x, int& y)
+        {
+            if ( b == 0 ) {
+                x = 1;
+                y = 0;
+                return a;
             }
-            ```
-            </details>
-        * 穷举法
-            <details>
-                <summary><b>Code ...</b></summary>
-            
-            ```python
-            def inverse(b, mod):
-                for i in range(1, mod):
-                    if i * b % mod == 1:
-                        return i
-                return 0
-            ```
-            </details>
+            auto gcd = ext_gcd(b, a % b, y, x);
+
+            //   因 ans == b * y + (a % b) * x
+            //   又 a % b == a - (a / b) * b
+            //   故 ans == b * y + (a - (a / b) * b) * x == x * a + (y - (a / b) * x) * b
+            y -= a / b * x;
+
+            return gcd;
+
+      }
+
+      ```
+      </details>
+      ```
+
+    - 穷举法
+        <details>
+            <summary><b>Code ...</b></summary>
+        
+        ```python
+        def inverse(b, mod):
+            for i in range(1, mod):
+                if i * b % mod == 1:
+                    return i
+            return 0
+        ```
+        </details>
 
 ## 排列组合
-* 加法原理：完成一个过程有N类方法
 
-* 乘法原理：完成一个过程有N个步骤
+- 加法原理：完成一个过程有 N 类方法
 
-* 排列数
-$$
-A^m_n=\frac{n!}{(n-m)!}
-$$
-* 多重集的全排列数：
-    > 对于每个元素都存在$n_i!$次相同排列
-$$
-\binom{n}{n_1,n_2,\cdots,n_k}=\frac{n!}{\prod_{i=1}^kn_i!}
-$$
-* 组合数
-    > 抽出的组合存在$m!$种排列，除去这些重复组合
-$$
-C^m_n=\binom{n}{m}=\frac{n!}{m!(n-m)!}
-$$
-* 多重集的组合数：
-    > 即求$x_1+x_2+\cdots+x_k=r$的解的个数，  
-    > 利用插板法得$(x_1+1)+(x_2+1)+\cdots+(x_k+1)=r+k$，  
-    > 需要在$r+k-1$个位置中插入$k-1$个隔板
-$$
-得\binom{r+k-1}{k-1}
-$$
+- 乘法原理：完成一个过程有 N 个步骤
+
+- 排列数
+  $$
+  A^m_n=\frac{n!}{(n-m)!}
+  $$
+- 多重集的全排列数： > 对于每个元素都存在$n_i!$次相同排列
+  $$
+  \binom{n}{n_1,n_2,\cdots,n_k}=\frac{n!}{\prod_{i=1}^kn_i!}
+  $$
+- 组合数 > 抽出的组合存在$m!$种排列，除去这些重复组合
+  $$
+  C^m_n=\binom{n}{m}=\frac{n!}{m!(n-m)!}
+  $$
+- 多重集的组合数： > 即求$x_1+x_2+\cdots+x_k=r$的解的个数，  
+   > 利用插板法得$(x_1+1)+(x_2+1)+\cdots+(x_k+1)=r+k$，  
+   > 需要在$r+k-1$个位置中插入$k-1$个隔板
+  $$
+  得\binom{r+k-1}{k-1}
+  $$
 
 # 排序算法
+
 ## 冒泡排序
+
 ```cpp
 int* bubbleSort(int* A, int n) {
     for ( ssize_t right{n - 1}; right > 0; --right )
@@ -256,7 +288,9 @@ int* bubbleSort(int* A, int n) {
     return A;
 }
 ```
+
 ## 选择排序
+
 ```cpp
 int* selectionSort(int* A, int n) {
     for ( ssize_t right{n - 1}; right > 0; --right ) {
@@ -268,7 +302,9 @@ int* selectionSort(int* A, int n) {
     return A;
 }
 ```
+
 ## 插入排序
+
 ```cpp
 int* insertionSort(int* A, int n) {
     for ( ssize_t idx{1}; idx < n; ++idx )
@@ -277,7 +313,9 @@ int* insertionSort(int* A, int n) {
     return A;
 }
 ```
+
 ## 希尔排序
+
 ```cpp
 int* shellSort(int* A, int n)
 {
@@ -291,6 +329,7 @@ int* shellSort(int* A, int n)
 ```
 
 ## 归并排序
+
 ```cpp
 void mergeSort(int* A, int* B, size_t begin, size_t end)
 {
@@ -315,7 +354,9 @@ void mergeSort(int* A, int* B, size_t begin, size_t end)
         A[idx] = B[idx];
 }
 ```
+
 ## 快速排序
+
 ```cpp
 void quickSort(int* A, ssize_t begin, ssize_t end)
 {
@@ -355,6 +396,7 @@ void quickSort(int* A, ssize_t begin, ssize_t end)
 ```
 
 ## 堆排序
+
 ```cpp
 void percolate_down(int* A, ssize_t n, ssize_t root)
 {
@@ -388,6 +430,7 @@ int* heapSort(int* A, int n) {
 ```
 
 ## 基数排序
+
 ```cpp
 int* radixSort(int* A, int n) {
     std::vector<std::vector<int> > buckets(10);
@@ -404,7 +447,9 @@ int* radixSort(int* A, int n) {
     return A;
 }
 ```
+
 ## 计数排序
+
 ```cpp
 int* countingSort(int* A, size_t n)
 {
@@ -423,82 +468,85 @@ int* countingSort(int* A, size_t n)
 ```
 
 # C++标准库容器
-* vector
-    * 无其他需求一般选择vector
-* array
-    * 固定大小
-    * 或容量需求大且时间效率优于空间效率
-* deque
-    * 需要头部增删元素
-    * 或容量需求大且空间效率优于时间效率
-    * 或容量需求过大
-* list
-    * 需要大量地随处插删
-* Pqueue
-    * 只需快速找出最值而无需完全排序
-* Associated
-    * 快速搜索且需要自动排序
+
+- vector
+  - 无其他需求一般选择 vector
+- array
+  - 固定大小
+  - 或容量需求大且时间效率优于空间效率
+- deque
+  - 需要头部增删元素
+  - 或容量需求大且空间效率优于时间效率
+  - 或容量需求过大
+- list
+  - 需要大量地随处插删
+- Pqueue
+  - 只需快速找出最值而无需完全排序
+- Associated
+  - 快速搜索且需要自动排序
     > 若只是为了排序（不需要动态地使插入元素自动排序），则考虑线性数组+排序算法
-* Unordered
-    * 快速搜索且无需排序
+- Unordered
+  - 快速搜索且无需排序
     > 若元素的比较为整数的比较，且该整数的值域可接受作为下标索引，则考虑线性数组作极限哈希表
-* Map
-    * 在set的基础上提供更方便的下标操作
-    * 只比较key而进行映射集合的分类
+- Map
+  - 在 set 的基础上提供更方便的下标操作
+  - 只比较 key 而进行映射集合的分类
 
 # 数据结构
 
 ## 栈
-* LIFO表：后进先出
 
-* 单调栈：
-    > 从栈顶弹出破坏单调性的元素（以单调**递增**栈为例）
-    * 对出栈元素：
-        * 入栈元素是其右侧第一个 **小值**
-    * 对入栈元素：
-        * 栈中元素即其左侧单调排列的元素（去除了破坏单调性的元素）
-        * 弹出所有破坏单调性的元素后，栈顶元素即其左侧第一个 **小值**
+- LIFO 表：后进先出
 
+- 单调栈：
+  > 从栈顶弹出破坏单调性的元素（以单调**递增**栈为例）
+  - 对出栈元素：
+    - 入栈元素是其右侧第一个 **小值**
+  - 对入栈元素：
+    - 栈中元素即其左侧单调排列的元素（去除了破坏单调性的元素）
+    - 弹出所有破坏单调性的元素后，栈顶元素即其左侧第一个 **小值**
 
 ## 队列
-* FIFO表：先进先出
 
-* 多级反馈队列：
-    * 优先级高的任务未完成则放入下级队列尾部（操作系统的调度算法）
+- FIFO 表：先进先出
 
-* 单调队列：
-    * 从 **队尾** 弹出破坏单调性的元素
-    * 从队首弹出不属于滑动窗口内的元素后，队首元素即窗口内的最小值（单调升序）
+- 多级反馈队列：
 
+  - 优先级高的任务未完成则放入下级队列尾部（操作系统的调度算法）
+
+- 单调队列：
+  - 从 **队尾** 弹出破坏单调性的元素
+  - 从队首弹出不属于滑动窗口内的元素后，队首元素即窗口内的最小值（单调升序）
 
 ## 堆
-* 节点值大于其子节点值
-* 子节点索引为`i`，其父节点索引为`(i + 1) / 2 - 1`
-    > 若索引0空缺则为`i / 2`
-* 从最后节点往前进行堆序化
+
+- 节点值大于其子节点值
+- 子节点索引为`i`，其父节点索引为`(i + 1) / 2 - 1`
+  > 若索引 0 空缺则为`i / 2`
+- 从最后节点往前进行堆序化
 
 ## 树状数组
-* 特点：快速进行任意范围区间的可加性操作与查询
-* 细节：
-    * 父节点管理前面`lowbit(x & -x)`个元素
-    * 0索引空缺(0管理0个节点)，数组多开一格
-    * 更新节点需要更新所有管理该元素的父节点
-    * 询问总和只需获取每个区间的管理者并取和
-* 单点修改+区间查询：
-    > 数组元素维护自己管理区间的总和
-    * `sum_tool(idx)`：询问区间`[1,idx]`的总和，利用`-lowbit(x)`迭代
-    * `point_add(idx, val)`：更新所有管理该点的父节点，利用`+lowbit(x)`迭代
-    * `range_query(lefy, right)`：`sum_tool(right) - sum_tool(left - 1)`
-* 区间修改+单点查询：
-    > 数组元素维护该点与前一点的差分
-    * `range_add(left, right, val)`：`point_add(left, val); point_add(right + 1, -val)`
-    * `point_query(idx)`：`sum_tool(idx)`
-* 区间修改+区间查询：
-    > 相对上一种类型，额外用一数组`diff`，其元素维护差分`(idx - 1) * BITree[idx]`
-    * `range_add(left, right, val, diff)`：BITree数组同上，
-        diff数组`point_add(left, (left - 1) * val); point_add(right + 1, (right - 1) * -val)`
-    * `range_query(left, right, diff)`：`_sum_tool(right, diff) - _sum_tool(left - 1, diff)`，
-        其中`_sum_tool(originIdx, val)`利用`sum = originIdx * BITree[idx] - diff[idx]`求和
+
+- 特点：快速进行任意范围区间的可加性操作与查询
+- 细节：
+  - 父节点管理前面`lowbit(x & -x)`个元素
+  - 0 索引空缺(0 管理 0 个节点)，数组多开一格
+  - 更新节点需要更新所有管理该元素的父节点
+  - 询问总和只需获取每个区间的管理者并取和
+- 单点修改+区间查询：
+  > 数组元素维护自己管理区间的总和
+  - `sum_tool(idx)`：询问区间`[1,idx]`的总和，利用`-lowbit(x)`迭代
+  - `point_add(idx, val)`：更新所有管理该点的父节点，利用`+lowbit(x)`迭代
+  - `range_query(lefy, right)`：`sum_tool(right) - sum_tool(left - 1)`
+- 区间修改+单点查询：
+  > 数组元素维护该点与前一点的差分
+  - `range_add(left, right, val)`：`point_add(left, val); point_add(right + 1, -val)`
+  - `point_query(idx)`：`sum_tool(idx)`
+- 区间修改+区间查询： > 相对上一种类型，额外用一数组`diff`，其元素维护差分`(idx - 1) * BITree[idx]`
+_ `range_add(left, right, val, diff)`：BITree 数组同上，
+diff 数组`point_add(left, (left - 1) _ val); point_add(right + 1, (right - 1) _ -val)`
+_ `range_query(left, right, diff)`：`_sum_tool(right, diff) - _sum_tool(left - 1, diff)`，
+其中`_sum_tool(originIdx, val)`利用`sum = originIdx * BITree[idx] - diff[idx]`求和
 <details>
     <summary><b>Code...</b></summary>
 
@@ -576,19 +624,21 @@ struct BITree
 };
 
 ```
+
 </details>
 
-## ST表
-* 特点：对于重叠OP无影响的结果进行快速地任意区间查寻
-* 细节：
-    * `dp[i][j]`代表区间$[i, i^j-1]$的OP结果
-* build()：
-    * 初始状态：`dp[i][0]`=`a[i]`
-    * 递推方程：`dp[i][j]`=$OP(dp[i][j-1], dp[i+2^{j-1}][j-1]$)
-    * 外迭代$j$直到最后状态为$k$，内迭代$i$直到$i+2^j\le n$
-* query()：
-    * $k = \log(n)/\log(2)$，$n$表示数量
-    * $OP(dp[i][k]，dp[j-2^k+1][k])$
+## ST 表
+
+- 特点：对于重叠 OP 无影响的结果进行快速地任意区间查寻
+- 细节：
+  - `dp[i][j]`代表区间$[i, i^j-1]$的 OP 结果
+- build()：
+  - 初始状态：`dp[i][0]`=`a[i]`
+  - 递推方程：`dp[i][j]`=$OP(dp[i][j-1], dp[i+2^{j-1}][j-1]$)
+  - 外迭代$j$直到最后状态为$k$，内迭代$i$直到$i+2^j\le n$
+- query()：
+_ $k = \log(n)/\log(2)$，$n$表示数量
+_ $OP(dp[i][k]，dp[j-2^k+1][k])$
 <details>
     <summary><b>Code...</b></summary>
 
@@ -622,14 +672,16 @@ struct STable
 };
 
 ```
+
 </details>
 
 ## 并查集
-* 特点：快速查询与合并类型集合
-* 细节：
-    * 数组索引作为元素标识，存储内容为上级元素的索引，根的存储内容为负且其绝对值代表高度
-* root()：查找目标所在集合的根，并进行路径压缩
-* merge()：合并两集合的根，并更新高度
+
+- 特点：快速查询与合并类型集合
+- 细节：
+  - 数组索引作为元素标识，存储内容为上级元素的索引，根的存储内容为负且其绝对值代表高度
+- root()：查找目标所在集合的根，并进行路径压缩
+- merge()：合并两集合的根，并更新高度
 <details>
     <summary><b>Code...</b></summary>
 
@@ -666,20 +718,21 @@ struct DisSet
 };
 
 ```
+
 </details>
 
-## Trie树
-* 特点：快速匹配字符串前缀
-* 细节：
-可以使用数组实现
-    * 每个节点存储flag以判定此节点是否为单词尾部
-    * 每个节点存储Umap或vector以判断后续节点是否存在
-* 插入：
-    * 按前缀一路查询，无匹配则添加节点，尾部节点flag置1
-* 删除：
-    * 从尾部开始，若无后续字符串清除Umap中的ptr，并销毁节点
-* 查询：
-    * 按前缀查询完后，flag为true则匹配
+## Trie 树
+
+- 特点：快速匹配字符串前缀
+- 细节：
+  可以使用数组实现
+  _ 每个节点存储 flag 以判定此节点是否为单词尾部
+  _ 每个节点存储 Umap 或 vector 以判断后续节点是否存在
+- 插入：
+  - 按前缀一路查询，无匹配则添加节点，尾部节点 flag 置 1
+- 删除：
+  - 从尾部开始，若无后续字符串清除 Umap 中的 ptr，并销毁节点
+- 查询： \* 按前缀查询完后，flag 为 true 则匹配
 <details>
     <summary><b>Code...</b></summary>
 
@@ -716,7 +769,7 @@ struct Trie
         int strIdx{}, strEnd = matchStr.size(), trieIdx{};
         int nextIdx{};
         while ( strIdx < strEnd && (nextIdx = tree_m[trieIdx].next_m[matchStr[strIdx] - 'a']) != 0 ) {
-            ++strIdx; 
+            ++strIdx;
             trieIdx = nextIdx;
         }
         return strIdx == nextIdx && tree_m[trieIdx].isEnd_m;
@@ -724,33 +777,36 @@ struct Trie
 };
 
 ```
+
 </details>
 
 ## 跳跃表
-* 特点：快速搜索元素并自动排序
-* 细节：
-    * 每个元素包含一个多级索引表，其为N级的概率为1/2ⁿ，第N级索引指向后面第2ⁿ个元素
-* 搜索：
-    * 从每个节点的最高级索引开始搜索
-* 插入与删除：
-    * 利用0-1分布，决定索引表是否提升
-    * 保留每级索引最近的节点并更新
+
+- 特点：快速搜索元素并自动排序
+- 细节：
+  - 每个元素包含一个多级索引表，其为 N 级的概率为 1/2ⁿ，第 N 级索引指向后面第 2ⁿ 个元素
+- 搜索：
+  - 从每个节点的最高级索引开始搜索
+- 插入与删除：
+_ 利用 0-1 分布，决定索引表是否提升
+_ 保留每级索引最近的节点并更新
 <details>
     <summary><b>noCode...</b></summary>
 
 ```cpp
 //真的没有o(=·ェ·=)m
 ```
+
 </details>
 
 # 匹配与排序
 
 ## KMP
-* 特点：快速匹配模式子串
-* 细节：
-    * 失配指针next：指向该位置所代表的字符串的一个前缀的后一个位置，该前缀与字符串后缀相等且是所有可能中最长的
-    * 计算next：依赖前一个位置的next值，注意前缀的前缀等于后缀的后缀
-    * 模式匹配：某个位置匹配失败，则直接将模式串前缀右移到next记录的后缀的位置上
+
+- 特点：快速匹配模式子串
+- 细节：
+_ 失配指针 next：指向该位置所代表的字符串的一个前缀的后一个位置，该前缀与字符串后缀相等且是所有可能中最长的
+_ 计算 next：依赖前一个位置的 next 值，注意前缀的前缀等于后缀的后缀 \* 模式匹配：某个位置匹配失败，则直接将模式串前缀右移到 next 记录的后缀的位置上
 <details>
     <summary><b>Code...</b></summary>
 
@@ -799,15 +855,15 @@ struct KMP
     }
 };
 ```
+
 </details>
 
+## AC 自动机
 
-## AC自动机
-* 特点：快速进行一对多模式匹配
-* 细节：
-    * 失配指针：指向这样一个节点，它代表的字符串是当前已匹配的字符串的后缀，且是所有可能中最长的
-    * 计算fail：依赖父节点的fail，注意将不存在的子节点赋值为其fail的同一子节点的值
-    * 模式匹配：失配时跳转到fail指向的节点
+- 特点：快速进行一对多模式匹配
+- 细节：
+_ 失配指针：指向这样一个节点，它代表的字符串是当前已匹配的字符串的后缀，且是所有可能中最长的
+_ 计算 fail：依赖父节点的 fail，注意将不存在的子节点赋值为其 fail 的同一子节点的值 \* 模式匹配：失配时跳转到 fail 指向的节点
 <details>
     <summary><b>Code...</b></summary>
 
@@ -892,11 +948,12 @@ struct Trie
     }
 };
 ```
+
 </details>
 
-
 ## 计数排序
-* 特点：时间效率高，空间效率低
+
+- 特点：时间效率高，空间效率低
 <details>
     <summary><b>Code...</b></summary>
 
@@ -912,7 +969,7 @@ vector<int> cnt_sort(ITER begin, ITER end, int minNum, int maxNum)
         cnt[idx] += cnt[idx - 1];
     }
     vector<int> ret(cnt.back());
-    for ( auto pos{--end}; pos != begin; ++pos ) {    // 遍历原数组 
+    for ( auto pos{--end}; pos != begin; ++pos ) {    // 遍历原数组
         ret[--cnt[*pos - minNum]] = *pos;
     }
     ret[--cnt[*begin - minNum]] = *begin;
@@ -920,179 +977,210 @@ vector<int> cnt_sort(ITER begin, ITER end, int minNum, int maxNum)
 }
 
 ```
+
 </details>
 
-
 # 图论
+
 [Code...](https://github.com/mrbeardad/Practices/tree/master/ACM/BOOK/dsaa:c%2B%2B)
+
 ## 拓扑排序有向无圈图
-* 数据结构：
-Vertex{numr; adj;}
-Umap<numr, indegree>
-queue<idx>
-* 步骤：
-    * online算法记录indegree
-    * 遍历将indegree为0的入队
-    * 层序遍历处理出队元素的邻接点：
-将adj的indegree-1，若变为0则入队
+
+- 数据结构：
+  Vertex{numr; adj;}
+  Umap<numr, indegree>
+  queue<idx>
+- 步骤：
+  _ online 算法记录 indegree
+  _ 遍历将 indegree 为 0 的入队 \* 层序遍历处理出队元素的邻接点：
+  将 adj 的 indegree-1，若变为 0 则入队
+
 ## 单源无权路径
-* 数据结构：
-Vertex{dist;  path; adj;}
-queue<idx>
-* 步骤：
-    * 层级遍历处理出队元素的邻接点：
-若adj的dist=-1则更新dist与path，并将其入队
+
+- 数据结构：
+  Vertex{dist; path; adj;}
+  queue<idx>
+- 步骤： \* 层级遍历处理出队元素的邻接点：
+  若 adj 的 dist=-1 则更新 dist 与 path，并将其入队
+
 ## 单源赋权路径
-* 数据结构：
-Vertex{isInQueue; dist;  path; adj;}
-queue<idx>
-* 步骤：
-    * 层序遍历处理出队元素的邻接点：
-若当前dist比adj的dist更优则更新其dist与path
-若更新了其dist且未在队列则更新isInQueue且入队
+
+- 数据结构：
+  Vertex{isInQueue; dist; path; adj;}
+  queue<idx>
+- 步骤： \* 层序遍历处理出队元素的邻接点：
+  若当前 dist 比 adj 的 dist 更优则更新其 dist 与 path
+  若更新了其 dist 且未在队列则更新 isInQueue 且入队
+
 ## 关键路径分析有向无圈图
-* 数据结构：
-Vertex{early; late; prevAdj; nextAdj}
-Umap<numr, Vertex> Graph
-* 步骤：
-    * 添加初始节点0
-    * 将动作节点图转换为事件节点图：
-0个prev，连到0节点
-1个prev，连到那个节点
-多个prev，添加哑节点，哑边，真节点，真边
-    * 正向bfs最长路(early)
-    * 逆向bfs最短路(late)，此时权为相反数
-    * dfs计算松弛时间并用stack存储一路都为0的路
+
+- 数据结构：
+  Vertex{early; late; prevAdj; nextAdj}
+  Umap<numr, Vertex> Graph
+- 步骤：
+  _ 添加初始节点 0
+  _ 将动作节点图转换为事件节点图：
+  0 个 prev，连到 0 节点
+  1 个 prev，连到那个节点
+  多个 prev，添加哑节点，哑边，真节点，真边
+  _ 正向 bfs 最长路(early)
+  _ 逆向 bfs 最短路(late)，此时权为相反数 \* dfs 计算松弛时间并用 stack 存储一路都为 0 的路
+
 ## 网络流最大值有向图
-* 数据结构：
-Vertex{path; pathFlow; nthVisit; umapGf; umapGr}
-* 步骤：
-    * selectPath(nth)：对Gr图bfs无权最短路
-层序遍历处理出队元素的邻接点：
-若nthVisit小于nth且到该邻接点的权不为0，则更新path与pathFlow与nthVisit并将其入队
-    * 遍历该路径并更新umapGr(target的nthVisit是否未被更新用于判断是否结束，target的pathFlow代表该增长通路的flow)
-    * 计算umapGf(find区分Gf中有无反向流)
-    * 注：source节点pathFlow置INT32_MAX
+
+- 数据结构：
+  Vertex{path; pathFlow; nthVisit; umapGf; umapGr}
+- 步骤：
+  _ selectPath(nth)：对 Gr 图 bfs 无权最短路
+  层序遍历处理出队元素的邻接点：
+  若 nthVisit 小于 nth 且到该邻接点的权不为 0，则更新 path 与 pathFlow 与 nthVisit 并将其入队
+  _ 遍历该路径并更新 umapGr(target 的 nthVisit 是否未被更新用于判断是否结束，target 的 pathFlow 代表该增长通路的 flow)
+  _ 计算 umapGf(find 区分 Gf 中有无反向流)
+  _ 注：source 节点 pathFlow 置 INT32_MAX
+
 ## 无向图最小生成树无向连通图
-* 数据结构：
-Pqueue<{eageWeight, idx1, idx2}>
-DisjointSet
-* 步骤：
-    * 将权重最小的边依次尝试加入(优先队列)
-    * 当且仅当该边两节点未在同一集合中(并查集)
-    * 直到所有节点连通(eages==vertexs-1)
+
+- 数据结构：
+  Pqueue<{eageWeight, idx1, idx2}>
+  DisjointSet
+- 步骤：
+  - 将权重最小的边依次尝试加入(优先队列)
+  - 当且仅当该边两节点未在同一集合中(并查集)
+  - 直到所有节点连通(eages==vertexs-1)
+
 ## 连通性
-* 数据结构：
-Vertex{isKnown; adj}
-* 步骤：
-一次dfs可遍历所有节点则图为连通的
+
+- 数据结构：
+  Vertex{isKnown; adj}
+- 步骤：
+  一次 dfs 可遍历所有节点则图为连通的
+
 ## 无圈性
-* 数据结构：
-Vertex{isKnown; adj}
-(stack<idx>)
-* 步骤：
-    * 多次dfs递归，更新isKnown
-    * 递归前设置stack记录路径，返回前弹出，用于判断非树边(无向图无需)
-    * 无背向边则无圈
+
+- 数据结构：
+  Vertex{isKnown; adj}
+  (stack<idx>)
+- 步骤：
+  - 多次 dfs 递归，更新 isKnown
+  - 递归前设置 stack 记录路径，返回前弹出，用于判断非树边(无向图无需)
+  - 无背向边则无圈
+
 ## 无向图割点无向图
-* 数据结构：
-Vertex{num; low; adj;}
-* 步骤：
-    * low(v)=min(num(v), min(low(w)), min(num(b)))
-    * dfs递归，设置num与low，返回low
-    * 对于根节点，有多个儿子则为割点；对于其他节点，num(v) ≤ low(w)则为割点
-    * 注：循环adj时区分树边与非树边
+
+- 数据结构：
+  Vertex{num; low; adj;}
+- 步骤：
+  - low(v)=min(num(v), min(low(w)), min(num(b)))
+  - dfs 递归，设置 num 与 low，返回 low
+  - 对于根节点，有多个儿子则为割点；对于其他节点，num(v) ≤ low(w)则为割点
+  - 注：循环 adj 时区分树边与非树边
+
 ## 欧拉回路无向连通图
-* 数据结果：
-Vertex{umapAdj}
-list<idx> result
-* 必要条件：
-每个节点的边为偶数的连通无向图
-* 步骤：
-    * 循环一，换一条回路直到pos2insert到头
-    * 循环二，list插入、删除边、反向删除边
+
+- 数据结果：
+  Vertex{umapAdj}
+  list<idx> result
+- 必要条件：
+  每个节点的边为偶数的连通无向图
+- 步骤：
+  - 循环一，换一条回路直到 pos2insert 到头
+  - 循环二，list 插入、删除边、反向删除边
+
 ## 强分支有向图
-* 数据结构：
-Vertex{numr; adj; revAdj}
-map<numr, idx> maxNumr
-vector<vector<idx>> branch
-* 步骤：
-    * 多次dfs，后序遍历设置numr，插入(numr, idx)对到map，反转边
-    * 多次dfs，添加branch，从map删除该节点，每次dfs从numr最大者开始
-    * 每个branch为强分支
-    * 注：第二种dfs需提前为branch提供空位
+
+- 数据结构：
+  Vertex{numr; adj; revAdj}
+  map<numr, idx> maxNumr
+  vector<vector<idx>> branch
+- 步骤：
+  - 多次 dfs，后序遍历设置 numr，插入(numr, idx)对到 map，反转边
+  - 多次 dfs，添加 branch，从 map 删除该节点，每次 dfs 从 numr 最大者开始
+  - 每个 branch 为强分支
+  - 注：第二种 dfs 需提前为 branch 提供空位
+
 # 其它算法
 
 ## 哈夫曼编码贪婪
-* 数据结构：
-Node{char, freq, left, right}
-Pqueue<NodePtr>
-vector<string>
-* 步骤：
-合并频数最小的两棵trie树(后合并的深度小)
-* 证明：
-d1*p1+d2*p2 < d1*p2+d2*p1 (d1<d2, p1>p2)
-trie树代表的d*p带入上式仍成立
+
+- 数据结构：
+  Node{char, freq, left, right}
+  Pqueue<NodePtr>
+  vector<string>
+- 步骤：
+  合并频数最小的两棵 trie 树(后合并的深度小)
+- 证明：
+  d1*p1+d2*p2 < d1*p2+d2*p1 (d1<d2, p1>p2)
+  trie 树代表的 d\*p 带入上式仍成立
+
 ## 平面最近点分治
-* 步骤：
-    * 功能：接受两个容器，返回范围内最近点距离
-    * 基准：一个点返回INF，两个点返回距离
-    * 一般：
-为递归准备参数容器，一个x排序，一个y排序
-为mid准备容器，限定x范围按y排序
-计算mid，注意控制转移
-## 最优二叉搜索树DP
-* 步骤：
-    * 最优子结构：
-三个节点的三种排列
-    * 状态转移方程：
-多个节点DP根节点，计算子范围最优排列
-    * 记忆表推进：
-由下至上扩大范围进行DP，结果用二叉堆表示
-## 所有点对最短路DP
-* 步骤：
-    * 最优子结构：
-最初即邻接边的值
-两点最短距离由下次循环的更优者代替
-    * 状态转移方程：
-每对点DP中间节点，计算子范围距离合，若更优则更新该点对的距离
-    * 记忆表推进
-二维数组记录并用于更新最优值
+
+- 步骤：
+  _ 功能：接受两个容器，返回范围内最近点距离
+  _ 基准：一个点返回 INF，两个点返回距离 \* 一般：
+  为递归准备参数容器，一个 x 排序，一个 y 排序
+  为 mid 准备容器，限定 x 范围按 y 排序
+  计算 mid，注意控制转移
+
+## 最优二叉搜索树 DP
+
+- 步骤：
+  _ 最优子结构：
+  三个节点的三种排列
+  _ 状态转移方程：
+  多个节点 DP 根节点，计算子范围最优排列 \* 记忆表推进：
+  由下至上扩大范围进行 DP，结果用二叉堆表示
+
+## 所有点对最短路 DP
+
+- 步骤：
+  _ 最优子结构：
+  最初即邻接边的值
+  两点最短距离由下次循环的更优者代替
+  _ 状态转移方程：
+  每对点 DP 中间节点，计算子范围距离合，若更优则更新该点对的距离 \* 记忆表推进
+  二维数组记录并用于更新最优值
+
 ## 收费公路重建回溯
-* 步骤：
-    * 由大到小地选择距离，插入在左或在右
-    * 插入节点后删除新增的距离
-    * 出错则回溯
+
+- 步骤：
+  - 由大到小地选择距离，插入在左或在右
+  - 插入节点后删除新增的距离
+  - 出错则回溯
+
 ## 井字棋博弈回溯
-* 步骤：
-    * 选择所有可走的位置，计算每个位置胜数
-    * 预测对方所有可走的位置
-    * 递归博弈直到得出结果(胜，败，平)
-    * 记忆表记录选择情况(博弈)
-    * 裁剪
+
+- 步骤：
+  - 选择所有可走的位置，计算每个位置胜数
+  - 预测对方所有可走的位置
+  - 递归博弈直到得出结果(胜，败，平)
+  - 记忆表记录选择情况(博弈)
+  - 裁剪
 
 ## 单词代表
-* 数据结构：
-array (array) UMmap
-* 步骤：
-    * 替换版：需要区分不同删除位置的代表
-    * 删增版：只需区分单词长度
-    * 注：同代表的单词中其自身会出现多次
 
-## 子序列最大值(max为负则0)
-* 数据结构：
-vector<int>
-* 步骤：
-    * 若前缀为负则可选择下一个非负前缀进行优化
-    * 注：记录maxBeg，maxEnd，maxVal，thisBeg，thisEnd，thisMax，nowSum
+- 数据结构：
+  array (array) UMmap
+- 步骤：
+  - 替换版：需要区分不同删除位置的代表
+  - 删增版：只需区分单词长度
+  - 注：同代表的单词中其自身会出现多次
+
+## 子序列最大值(max 为负则 0)
+
+- 数据结构：
+  vector<int>
+- 步骤：
+  - 若前缀为负则可选择下一个非负前缀进行优化
+  - 注：记录 maxBeg，maxEnd，maxVal，thisBeg，thisEnd，thisMax，nowSum
 
 ## 最大公因数
-* 最大公因数(gcd)的性质
-    * $\gcd(a, b) = \gcd(b, a)$
-    * $\gcd(a, b) = \gcd(a-b, b)\qquad(a ≥ b)$
-    * $\gcd(a, b) = \gcd(a\\\% b, b)$
-    * $\gcd(a, b, c) = \gcd(gcd(a, b), c)$
-* 最小公倍数(lcm)：$lcm(a, b) = a\times b \div gcd(a, b)$
+
+- 最大公因数(gcd)的性质
+  - $\gcd(a, b) = \gcd(b, a)$
+  - $\gcd(a, b) = \gcd(a-b, b)\qquad(a ≥ b)$
+  - $\gcd(a, b) = \gcd(a\\\% b, b)$
+  - $\gcd(a, b, c) = \gcd(gcd(a, b), c)$
+- 最小公倍数(lcm)：$lcm(a, b) = a\times b \div gcd(a, b)$
 <details>
     <summary><b>Code...</b></summary>
 
@@ -1107,11 +1195,12 @@ int gcd(int m, int n)
     return m;
 }
 ```
+
 </details>
 
-
 ## 快速幂运算
-* 描述：$a^{23}=a^{0x17}=a^{0b00010111}=a^{0x10}\times a^{0x4}\times a^{0x2}\times a^{0x1}$
+
+- 描述：$a^{23}=a^{0x17}=a^{0b00010111}=a^{0x10}\times a^{0x4}\times a^{0x2}\times a^{0x1}$
 <details>
     <summary><b>Code...</b></summary>
 
@@ -1128,11 +1217,12 @@ int quick_pow(int num, int pow) { // 利用指数的二进制分解与指数加�
     return ret;
 }
 ```
+
 </details>
 
-
 ## 厄拉多塞筛
-* 描述：素数的倍数均为非素数，筛掉这些倍数
+
+- 描述：素数的倍数均为非素数，筛掉这些倍数
 <details>
     <summary><b>Code...</b></summary>
 
@@ -1157,13 +1247,14 @@ vector<int> prime_sieve(int maxNum) // 筛掉初始值的所有倍数
     return ret;
 }
 ```
+
 </details>
 
-
 ## 唯一分解定理
-* 描述：每个整数可以被分解为质数的幂的乘积，如$20=2^2\times 3^0\times 5^1$
-* 拓展： 从多个数的质数分解式中，选取每个质数的指数的最小值则得到gcd的质数分解式，
-    选取最大值则得到lcm的质数分解式
+
+- 描述：每个整数可以被分解为质数的幂的乘积，如$20=2^2\times 3^0\times 5^1$
+- 拓展： 从多个数的质数分解式中，选取每个质数的指数的最小值则得到 gcd 的质数分解式，
+选取最大值则得到 lcm 的质数分解式
 <details>
     <summary><b>Code...</b></summary>
 
@@ -1184,6 +1275,5 @@ vector<int> udt(int num) // 每个正整数都可以分解为唯一的素数的�
     return ret;
 }
 ```
+
 </details>
-
-

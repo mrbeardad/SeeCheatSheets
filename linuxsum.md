@@ -1,4 +1,4 @@
-# Linux Operate System
+# Linux
 
 ## Bash
 
@@ -20,7 +20,7 @@
   - `while ; do`
   - `for in ; do`
 
-## Linux
+## OS
 
 - 系统启动
 
