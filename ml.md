@@ -17,55 +17,57 @@
 ## 基础术语
 
 - 特征 (feature)
+- 样本 (sample)
 - 标记 (label)
 - 样例 (example)
 - 训练集 (training set)
-- 交叉验证集 (cross validation set)
 - 测试集 (test set)
-- 预测 (prediction)
 - 模型 (model)
+- 预测 (prediction)
 - 代价函数 (cost function)
 - 梯度下降 (gradient descent)
 - 监督学习 (supervised learning)
-  - 分类 (classification)
   - 回归 (regression)
+  - 分类 (classification)
 - 无监督学习 (unsupervised learning)
   - 聚类 (clustering)
+  - 异常检测 (anomaly detection)
+- 强化学习 (reinforcement learning)
 
 ## 监督学习
 
-> 给定数据集 $(X, Y)$，训练模型 $f(\vec x) = y$
+> 给定数据集 $(X, Y)$，训练模型 $f(\bold{x}) = y$
 
 ### 回归
 
 1. 数学模型
 
-   $$f_{\vec{w},b}(\vec{x})=\vec{w}\cdot\vec{x}+b$$
+   $$f_{\bold{w},b}(\bold{x})=\bold{w}\cdot\bold{x}+b$$
 
 2. 代价函数
 
-   $$J(\vec{w},b)=\frac{1}{2m}\sum^{m-1}_{i=0}\left[f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)}\right]^2+\frac{\lambda}{2m}\sum\limits^{n}_{j=0}w_j^2$$
+   $$J(\bold{w},b)=\frac{1}{2m}\sum^{m-1}_{i=0}\left[f_{\bold{w},b}(\bold{x}^{(i)})-y^{(i)}\right]^2+\frac{\lambda}{2m}\sum\limits^{n}_{j=0}w_j^2$$
 
 3. 梯度下降
    $$
-   w_j=w_j-\alpha\frac{\partial J(\vec{w},b)}{\partial w_j}=w_j-\alpha\left[\frac{1}{m}\sum\limits^{m-1}_{i=0}\left[(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)})x_j^{(i)}\right]+\frac{\lambda}{m}w_j\right]\newline
-   b=b-\alpha\frac{\partial J(\vec{w},b)}{\partial b}=b-\alpha\frac{1}{m}\sum\limits^{m-1}_{i=0}(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)})
+   w_j=w_j-\alpha\frac{\partial J(\bold{w},b)}{\partial w_j}=w_j-\alpha\left[\frac{1}{m}\sum\limits^{m-1}_{i=0}\left[(f_{\bold{w},b}(\bold{x}^{(i)})-y^{(i)})x_j^{(i)}\right]+\frac{\lambda}{m}w_j\right]\newline
+   b=b-\alpha\frac{\partial J(\bold{w},b)}{\partial b}=b-\alpha\frac{1}{m}\sum\limits^{m-1}_{i=0}(f_{\bold{w},b}(\bold{x}^{(i)})-y^{(i)})
    $$
 
 ### 二元分类
 
 1. 数学模型
 
-   $$f_{\vec{w},b}(z)=\frac{1}{1+e^{-z}}=\frac{1}{1+e^{-(\vec{w}\cdot\vec{x}+b)}}$$
+   $$f_{\bold{w},b}(z)=\frac{1}{1+e^{-z}}=\frac{1}{1+e^{-(\bold{w}\cdot\bold{x}+b)}}$$
 
 2. 代价函数
 
-   $$J(\vec{w},b)=-\frac{1}{m}\sum^{m-1}_{i=0}\left[y^{(i)}\log(f_{\vec{w},b}(\vec{x}^{(i)}))+(1-y^{(i)})\log(1-f_{\vec{w},b}(\vec{x}^{(i)}))\right]+\frac{\lambda}{2m}\sum\limits^{n}_{j=0}w_j^2$$
+   $$J(\bold{w},b)=-\frac{1}{m}\sum^{m-1}_{i=0}\left[y^{(i)}\log(f_{\bold{w},b}(\bold{x}^{(i)}))+(1-y^{(i)})\log(1-f_{\bold{w},b}(\bold{x}^{(i)}))\right]+\frac{\lambda}{2m}\sum\limits^{n}_{j=0}w_j^2$$
 
 3. 梯度下降
    $$
-   w_j=w_j-\alpha\frac{\partial J(\vec{w},b)}{\partial w_j}=w_j-\alpha\left[\frac{1}{m}\sum\limits^{m-1}_{i=0}\left[(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)})x_j^{(i)}\right]+\frac{\lambda}{m}w_j\right]\newline
-   b=b-\alpha\frac{\partial J(\vec{w},b)}{\partial b}=b-\alpha\frac{1}{m}\sum\limits^{m-1}_{i=0}(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)})
+   w_j=w_j-\alpha\frac{\partial J(\bold{w},b)}{\partial w_j}=w_j-\alpha\left[\frac{1}{m}\sum\limits^{m-1}_{i=0}\left[(f_{\bold{w},b}(\bold{x}^{(i)})-y^{(i)})x_j^{(i)}\right]+\frac{\lambda}{m}w_j\right]\newline
+   b=b-\alpha\frac{\partial J(\bold{w},b)}{\partial b}=b-\alpha\frac{1}{m}\sum\limits^{m-1}_{i=0}(f_{\bold{w},b}(\bold{x}^{(i)})-y^{(i)})
    $$
 
 ### 多类分类
@@ -73,7 +75,7 @@
 1. 数学模型
 
    $$
-    \vec{a}(x)=\frac{1}{\sum\limits^{N-1}_{k=0}{e^{z_k}}}
+    \bold{a}(x)=\frac{1}{\sum\limits^{N-1}_{k=0}{e^{z_k}}}
     \begin{bmatrix}
     e^{z_1} \\
     \vdots \\
@@ -87,15 +89,14 @@
 
 ### 神经网络
 
-- 激活函数 (activation)
-- 神经元 (neuron)
 - 层 (layer)
   - 输入层 (input layer)
   - 隐含层 (hidden layer)
   - 输出层 (output layer)
-- 随机梯度下降 (stochastic gradient descent)
-  - 前向传播 (forward propagation)
-  - 后向传播 (backward propagation)
+- 神经元 (neuron)
+- 激活函数 (activation function)
+- 前向传播 (forward propagation)
+- 后向传播 (backward propagation)
 - 迁移学习 (transfer learning)
 
 ### 决策树
@@ -135,6 +136,7 @@
     - 若 J 下降过慢，则 α 过小
     - 若 J 存在增长，则 α 过大
     - 若导数存在振荡，则 α 过大
+  - mini-batch: 每次迭代仅使用部分数据
 
 - 高偏差 (high bias): $J_{train} \gg J_{baseline}$，即欠拟合 (underfit)
 
@@ -147,6 +149,8 @@
   - 增加训练集数据
   - 减少特征
   - 增大正则化参数 $\lambda$
+  - 早停
+  - Dropout
 
 - 模型选择：F1 score = $2\frac{PR}{P+R}$
   - 查准率(precision): 当目标被预测为阳性时描述预测的准确程度
@@ -156,7 +160,7 @@
 
 ### 聚类
 
-> 给定数据集 $X$，训练模型 $f(\vec x) = y_{category}$
+> 给定数据集 $X$，训练模型 $f(\bold x) = y_{category}$
 
 1. 随机选取 K 个样例点初始化簇质心
 2. 遍历所有点并将其划分给最近的簇
@@ -165,14 +169,13 @@
 
 ### 异常检测
 
-> 给定训练集 $X_{train}$（全阴性）、交叉验证集 $X_{cv}$ 与测试集 $X_{test}$，训练模型 $f(\vec x)=y_{probability}$
+> 给定训练集 $X_{train}$（全阴性）、交叉验证集 $X_{cv}$ 与测试集 $X_{test}$，训练模型 $f(\bold x)=y_{probability}$
 
 1. 特征值拟合正态分布
 2. 若样本的多个特征的分布概率乘积小于阈值则异常
 
 ## 强化学习
 
-- Agent
-- State
-- Action
-- Reward
+神经网络拟合 Q(s,a)，然后选取 Q 值最高的 action
+
+- 探索优化，95%选 Q 值最高 action，5% 随机选
