@@ -1257,15 +1257,15 @@ const wchar_t* u32 = L"utf-16 or utf-32 string";
 
 // 日期时间：sys_time 与 local_time 无时区，zoned_time 有时区
 using namespace std::chrono;
-auto local = get_tzdb().current_zone();
+auto lz = get_tzdb().current_zone();
 auto now = system_clock::now();
-auto datetime = zoned_time(local,
+auto datetime = zoned_time(lz,
     local_days(27d / 7 / 2000) + 21h + 30min + 59s)
     .get_sys_time();
 auto duration = 1h + 30min + 59s;
 auto to_unix = duration_cast<seconds>(datetime.time_since_epoch()).count();
 auto from_unix = system_clock::time_point(seconds(to_unix));
-auto to_iso = std::format("{0:%F}T{0:%T%Ez}", zoned_time(local, datetime));
+auto to_iso = std::format("{0:%F}T{0:%T%Ez}", zoned_time(lz, datetime));
 system_clock::time_point from_iso;
 std::stringstream(to_iso) >> parse("%FT%T%Ez", from_iso);
 

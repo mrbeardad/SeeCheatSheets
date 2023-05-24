@@ -99,6 +99,67 @@ $\sigma$是激活函数，如果不引入激活函数，可以验证，无论多
 
 输入形状：（步长，批量，特征）通常需要转置（批量，步长）后独热编码
 
-## Pytorch 调参
+## Pytorch 框架
+
+- 加载数据：加载，转换
+- 加载模型：model, optimizer
+- 定义模型
+- 定义优化器
+- 定义损失函数
+- 梯度计算模式
+- channels_last memory format & Automatic Mixed Precision
+
+### Tensor
+
+```python
+torch.tensor([[1, 2, 3], [4, 5, 6]], dtype=torch.float)
+torch.arange(5)
+torch.arange(1, 4)
+torch.arange(1, 2.5, 0.5)
+torch.zeros(2, 3)
+torch.ones(2, 3)
+torch.full((2, 3), 3.14)
+torch.rand(2, 3)
+torch.randint(3, 10, (2, 3))
+torch.randn(2, 3)
+
+x_data.shape  # torch.Size([2, 3])
+x_data.dtype  # torch.float32
+x_data.device # cpu
+
+x_data[0]     # first row, 降维 dim=0
+x_data[:, 0]  # first column, 降维 dim=1
+x_data[...,-1]# last column, 降维 dim=1
+```
+
+### 超参数
 
 - Batch Size: 64 ~ 256
+
+- Model
+
+  - Hidden Linear Features:
+
+    - input \* 2 / 3 + output
+    - (input + output) / 2
+    - sqrt(input \* output)
+
+- Optimizer:
+
+  - Algorithm: Adam
+  - weight_decay: 1e-4 ~ 9e-4
+
+- Loss Function:
+
+  - Regression:
+    - L1Loss: noise
+    - SmoothL1Loss: large values
+    - MSELoss: not large values, not very high-dimensional
+  - multi-class Classification:
+    - CrossEntropyLoss & Softmax
+  - binary Classification:
+    - BCEWithLogitsLoss & Sigmoid
+
+- Overfitting solution:
+  - Dropout: 20% ~ 50%
+  -
