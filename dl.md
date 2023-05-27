@@ -2,9 +2,9 @@
 
 ## 深度前馈网络
 
-深度前馈网络(Deep Feedforward Network, DFN)也叫前馈神经网络(Feedforward Neural Network, FNN)或多层感知机(Multilayer Perceptron, MLP)。网络包含输入层、隐含层、输出层，层与层之间是全连接的。
-
 > 万能近似定理：⼀个前馈神经⽹络如果具有线性层和⾄少⼀层具有 “挤压” 性质的激活函数（如 sigmoid 等），给定⽹络⾜够数量的隐藏单元，它可以以任意精度来近似任何从⼀个有限维空间到另⼀个有限维空间的 borel 可测函数。
+
+深度前馈网络(Deep Feedforward Network, DFN)也叫前馈神经网络(Feedforward Neural Network, FNN)或多层感知机(Multilayer Perceptron, MLP)。网络包含输入层、隐含层、输出层，层与层之间是全连接的。
 
 ![dfn](images/dfn.png)
 
@@ -29,6 +29,7 @@ $\sigma$是激活函数，如果不引入激活函数，可以验证，无论多
 
 - linear: $\hat{y}=z=Wh+b$
 - softmax: $\hat{y}_i=\frac{exp(z_i)}{\sum_jexp(z_j)}$
+- sigmoid: $\hat{y}=\frac{1}{1+exp(-z)}$
 
 ### 后向传播
 
@@ -38,20 +39,18 @@ $\sigma$是激活函数，如果不引入激活函数，可以验证，无论多
 
 ## 卷积神经网络
 
+通常输入为 4 维张量（样本，通道，高度，宽度）
+
 ### 卷积层
 
 > 稀疏交互、参数共享、等变表示
 
 ![cnn](images/cnn.png)
 
-- 输入通常为 4 维张量（样本，通道，宽度，高度）
-- 填充
-  - valid: 不填充，输出大小为 (m − f + 1, n−f + 1)
-  - same: 用 0 填充使得卷积后输出大小与输入一致，p=(f-1)/2
-  - full: 用 0 填充使得输出大小为 (m+f-1, n+f-1)
-- 步幅
-- 卷积运算
-- 激活函数
+- 填充：为防止边缘像素参与卷积运算次数过少，对边缘进行 0 填充
+- 步幅：每次移动卷积核的距离
+- 核：通常是三维张量（通道，高度，宽度），通道数等于输入数据的通道数，核的数量等于输出数据的通道数
+- 卷积：每个核将局部像素信息提取出来
 
 ### 池化层
 
@@ -63,36 +62,6 @@ $\sigma$是激活函数，如果不引入激活函数，可以验证，无论多
   - Max
   - Average
 
-### 卷积神经网络模型
-
-- LeNet: 逐渐降低其表示的空间分辨率，同时增加通道数。
-
-  ![lenet](images/lenet.png)
-
-- AlexNet
-
-  ![alexnet](images/alexnet.png)
-
-- VGG
-
-  ![vgg](images/vgg.png)
-
-- NiN: 利用 1×1 卷积核代替全连接层，全局平均池化代替输出层
-
-  ![nin](images/nin.png)
-
-- GoogLeNet
-
-  ![googlenet](images/googlenet.png)
-
-- ResNet
-
-  ![resnet](images/resnet.png)
-
-- DenseNet
-
-  ![densenet](images/densenet.png)
-
 ## 循环神经网络
 
 ![rnn](images/rnn.png)
@@ -101,18 +70,11 @@ $\sigma$是激活函数，如果不引入激活函数，可以验证，无论多
 
 ## Pytorch 框架
 
-- 加载数据：加载，转换
-- 加载模型：model, optimizer
-- 定义模型
-- 定义优化器
-- 定义损失函数
-- 梯度计算模式
-- channels_last memory format & Automatic Mixed Precision
-
 ### Tensor
 
 ```python
-torch.tensor([[1, 2, 3], [4, 5, 6]], dtype=torch.float)
+import torch
+
 torch.arange(5)
 torch.arange(1, 4)
 torch.arange(1, 2.5, 0.5)
@@ -122,44 +84,177 @@ torch.full((2, 3), 3.14)
 torch.rand(2, 3)
 torch.randint(3, 10, (2, 3))
 torch.randn(2, 3)
+x = torch.tensor([[1, 2, 3], [4, 5, 6]], dtype=torch.float, device="cuda")
 
-x_data.shape  # torch.Size([2, 3])
-x_data.dtype  # torch.float32
-x_data.device # cpu
+x.shape  # torch.Size([2, 3])
+x.dtype  # torch.float32
+x.device # gpu
 
-x_data[0]     # first row, 降维 dim=0
-x_data[:, 0]  # first column, 降维 dim=1
-x_data[...,-1]# last column, 降维 dim=1
+x = x.reshape(-1)
+x = x.to(torch.int)
+x = x.to("cpu")
+
+x[0]     # first row, 降维 dim=0
+x[:, 0]  # first column, 降维 dim=1
+x[...,-1]# last column, 降维 dim=1
 ```
 
-### 超参数
+### Dataset
 
-- Batch Size: 64 ~ 256
+```python
+from torch.utils.data import Dataset, DataLoader
+from torchvision import datasets, transforms
 
-- Model
+class CustomDataset(Dataset):
+    def __init__(self, root, transform=None, target_transform=None):
+        pass
 
-  - Hidden Linear Features:
+    def __len__(self):
+        pass
 
-    - input \* 2 / 3 + output
-    - (input + output) / 2
-    - sqrt(input \* output)
+    def __getitem__(self, idx):
+        pass
 
-- Optimizer:
 
-  - Algorithm: Adam
-  - weight_decay: 1e-4 ~ 9e-4
+# Dataset 迭代元素为一个样例数据 (X, y)
+train_data = datasets.FashionMNIST(
+    root="data",                    # 数据目录
+    train=True,                     # 训练集 or 测试集
+    download=True,                  # 数据不存在则联网下载
+    transform=transforms.ToTensor() # 将图片转换为张量并缩放值域
+)
 
-- Loss Function:
+# DataLoader 迭代元素为一个 mini-batch 的所有样例数据 (X, y)
+train_loader = DataLoader(
+    train_data,               # 绑定 Dataset
+    batch_size,               # mini-batch 大小
+    shuffle=True,             # 每次循环是否打乱顺序
+)
+```
 
-  - Regression:
-    - L1Loss: noise
-    - SmoothL1Loss: large values
-    - MSELoss: not large values, not very high-dimensional
-  - multi-class Classification:
-    - CrossEntropyLoss & Softmax
-  - binary Classification:
-    - BCEWithLogitsLoss & Sigmoid
+### Model
 
-- Overfitting solution:
-  - Dropout: 20% ~ 50%
-  -
+```python
+from torch import nn
+
+class MyNeuralNetwork(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.flatten = nn.Flatten()
+        self.net = nn.Sequential(
+            nn.Linear(28 * 28, 512),
+            nn.BatchNorm1d(512)
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(512, 10),
+        )
+
+    def forward(self, x):
+        x = self.flatten(x)
+        return self.net(x)
+
+model = MyNeuralNetwork()
+```
+
+- Hidden Layers
+
+  - `0`: 只能表示线性可分函数或决策
+  - `1`: 可以近似任何包含从一个有限空间到另一个有限空间的连续映射的函数
+  - `2`: 可以用有理激活函数以任意精度表示任意决策边界，并且可以近似任何平滑映射到任何精度
+  - `>2`: 额外的隐藏层可以学习复杂的描述（某种自动特征工程）
+
+- Hidden Neurons
+
+  - `input * 2 / 3 + output`
+  - `(input + output) / 2`
+  - `sqrt(input * output)`
+
+- Structed Pruning
+  - 提高运算速度
+  - 提高泛化能力
+
+### Optimizer
+
+```python
+torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-2, amsgrad=True)
+```
+
+### Loss Function
+
+```python
+# Regression
+nn.SmoothL1Loss(beta=1.0) # 绝对元素误差小于 beta 则使用 MSELoss，其他情况使用 L1Loss
+
+# Multi-Class Classification
+nn.CrossEntropyLoss() # 多远分类利用 Softmax(logits) 获取概率
+
+# Binary Classification
+nn.BCEWithLogitsLoss() # 二元分类利用 Sigmoid(logits) 获取概率
+```
+
+### Training Loop
+
+```python
+# 模型有两种模式：
+# model.train() 训练时使用，Dropout 与 BatchNorm 等会生效
+# model.eval() 测试或推理时使用，Dropout 与 BatchNorm 等不生效
+
+# Pytorch 全局模式有三种：
+# Grad Mode: 默认模式，此模式下设置了`requires_grad=True`的张量为记录操作图用于计算梯度
+# No-Grad Mode: 此模式下不再记录操作图，可加速测试或推理
+# Inference Mode: 同 No-Grad Mode 但更极端，且此模式下创建的张量无法用于其他模式
+
+model.train()
+for i in range(epochs):
+    for x, y in dataloader:
+        # 将张量拷贝到 GPU
+        x = x.to("cuda", non_blocking=True)
+        y = y.to("cuda", non_blocking=True)
+
+        optimizer.zero_grad(set_to_none=True) # 将累加的梯度归零
+        y_hat = model(x) # 前向传播
+        loss = criterion(y_hat, y) # 计算损失标准
+        loss.backward() # 计算梯度并累加到模型参数张量的.grad字段
+        optimizer.step() # 梯度下降优化权重参数
+
+model.eval()
+with torch.no_grad():
+    for x, y in dataloader:
+        x = x.to("cuda", non_blocking=True)
+        y = y.to("cuda", non_blocking=True)
+        y_hat = model(x)
+```
+
+### Performance Tuning
+
+- 数据归一化 `transforms.ToTensor()` `nn.BatchNormd1(...)`
+- 异步加载数据 `DataLoader(..., num_workers=1, ...)`
+- 固定内存 `DataLoader(..., pin_memory=True, ...)`
+- 使用 GPU 加速 `model.to("cuda")` `tensor.to("cuda")`
+- 减少不必要梯度计算 `torch.no_grad()` `torch.inference_mode()`
+- 加速优化函数 `torch.optim.AdamW(..., fuse=True, ...)`
+- JIT 编译 `torch.compile(model)`
+- channels_last memory format & Automatic Mixed Precision (Require Tensor Core)
+
+### Overfitting Solution
+
+- Add more training data
+- Data Augmentations
+- Batch Size: 64 ~ 256，越小泛化能力越强，但训练成本也越高
+- Early Stopping: 验证损失持续不下降则停止训练
+- Batch Normalisation: 放在激活函数前
+- Dropout: 20% ~ 50%, 越大正则化能力越强。放在激活函数后
+- L1 and L2 Regularization: 1e-3 ~ 1e-4，越大正则化能力越强
+
+### Hyperparameter
+
+- Batch Size
+- Learning Rate
+- Weight Decay
+- Model Architecture
+
+### 卷积
+
+- valid: 不填充，输出大小为 (m − f + 1, n−f + 1)
+- same: 用 0 填充使得卷积后输出大小与输入一致，p=(f-1)/2
+- full: 用 0 填充使得输出大小为 (m+f-1, n+f-1)
