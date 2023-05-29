@@ -121,7 +121,7 @@ train_data = datasets.FashionMNIST(
     root="data",                    # 数据目录
     train=True,                     # 训练集 or 测试集
     download=True,                  # 数据不存在则联网下载
-    transform=transforms.ToTensor() # 将图片转换为张量并缩放值域
+    transform=transforms.ToTensor() # 将图片转换为张量并缩放至[0,1]
 )
 
 # DataLoader 迭代元素为一个 mini-batch 的所有样例数据 (X, y)
@@ -240,13 +240,17 @@ with torch.no_grad():
 
 - Add more training data
 - Data Augmentations
-- Batch Size: 64 ~ 256，越小泛化能力越强，但训练成本也越高
+- Batch Size: 4 ~ 512，越小泛化能力越强，但训练成本也越高
 - Early Stopping: 验证损失持续不下降则停止训练
 - Batch Normalisation: 放在激活函数前
 - Dropout: 20% ~ 50%, 越大正则化能力越强。放在激活函数后
 - L1 and L2 Regularization: 1e-3 ~ 1e-4，越大正则化能力越强
 
-### Hyperparameter
+### Hyperparameter Optimization
+
+```language
+pip install optuna
+```
 
 - Batch Size
 - Learning Rate
