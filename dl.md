@@ -1,5 +1,26 @@
 # 深度学习
 
+- [深度学习](#深度学习)
+  - [深度前馈网络](#深度前馈网络)
+    - [输入层](#输入层)
+    - [隐含层](#隐含层)
+    - [输出层](#输出层)
+    - [后向传播](#后向传播)
+  - [卷积神经网络](#卷积神经网络)
+    - [卷积层](#卷积层)
+    - [池化层](#池化层)
+  - [循环神经网络](#循环神经网络)
+  - [Pytorch 框架](#pytorch-框架)
+    - [Tensor](#tensor)
+    - [Dataset](#dataset)
+    - [Model](#model)
+    - [Optimizer](#optimizer)
+    - [Loss Function](#loss-function)
+    - [Training Loop](#training-loop)
+    - [Performance Tuning](#performance-tuning)
+    - [Overfitting Solution](#overfitting-solution)
+    - [Hyperparams Optimization](#hyperparams-optimization)
+
 ## 深度前馈网络
 
 > 万能近似定理：⼀个前馈神经⽹络如果具有线性层和⾄少⼀层具有 “挤压” 性质的激活函数（如 sigmoid 等），给定⽹络⾜够数量的隐藏单元，它可以以任意精度来近似任何从⼀个有限维空间到另⼀个有限维空间的 borel 可测函数。
@@ -170,8 +191,15 @@ model = MyNeuralNetwork()
   - `sqrt(input * output)`
 
 - Structed Pruning
+
   - 提高运算速度
   - 提高泛化能力
+
+- Convolution Layer
+  - $n_o=\frac{(n_i-f+2p)}{s}+1$
+  - valid: 不填充
+  - same: 填充使得卷积后输出大小与输入一致
+  - full: 填充使得输出大小为 n+f-1
 
 ### Optimizer
 
@@ -246,7 +274,7 @@ with torch.no_grad():
 - Dropout: 20% ~ 50%, 越大正则化能力越强。放在激活函数后
 - L1 and L2 Regularization: 1e-3 ~ 1e-4，越大正则化能力越强
 
-### Hyperparameter Optimization
+### Hyperparams Optimization
 
 ```language
 pip install optuna
@@ -256,9 +284,3 @@ pip install optuna
 - Learning Rate
 - Weight Decay
 - Model Architecture
-
-### 卷积
-
-- valid: 不填充，输出大小为 (m − f + 1, n−f + 1)
-- same: 用 0 填充使得卷积后输出大小与输入一致，p=(f-1)/2
-- full: 用 0 填充使得输出大小为 (m+f-1, n+f-1)

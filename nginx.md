@@ -1,12 +1,24 @@
 # Nginx
 
+## 配置文件
+
+- 配置文件：nginx.conf 为默认主配置文件名，用`include`指令导入模块化配置
+
+- 单行指令：包含指令名与参数，用空格隔开，行尾分号结束
+
+- 块指令：又称上下文，是指令的容器，用花括号包裹指令，不同上下文中可用的指令也不同
+
+  - `main`: 最顶级指令的默认上下文
+    - `events`: 通用连接处理
+    - `stream`: TCP/UDP 流量
+    - `mail`: Mail 流量
+    - `http`: HTTP 流量
+      - `server`: 虚拟主机，匹配 ip/port 与 host name 来处理流量
+        - `location`: 路由策略，匹配 URI 来处理资源
+
+- 继承：有些指令可在放在多种上下文中，此时子上下文的配置继承父上下文
+
 ## 路由转发
-
-- 每条请求需要与一个虚拟主机(server)中的一条路由策略(location)匹配
-- 先将请求的 origin 与**server**的**listen**与**server_name**匹配
-- 再将请求的 path 与**server**内部的**location**匹配
-
-### 基础配置
 
 ```nginx
 Syntax : server { ... }
@@ -19,13 +31,15 @@ Context: http
 ---
 
 ```nginx
-Syntax : listen address:port [default_server] [ssl] [http2];
+Syntax : listen address[:port] [default_server] [ssl] [http2 | quic];
 Default: listen *:80 | *:8000;
 Context: server
 ```
 
-- 指定当前 server 监听地址与端口
-- default_server 表示当前 server 为该监听地址与端口的默认 server
+- 指定当前 server 匹配地址与端口
+- address 格式 `127.0.0.1`, `*`, `[::]`, `[::1]`
+- port 默认 80
+- default_server 指定该 server 为 default server，默认情况下第一个 server 为 default server；当绑定到该 ip/port 上的 servers 的 server_name 都不匹配时，则用 default server 来处理流量
 
 ---
 
@@ -35,12 +49,32 @@ Default: server_name "";
 Context: server
 ```
 
-- 指定当前 server 匹配请求的 host
+- 指定当前 server 匹配的 host name
   1. 准确匹配，如 `www.example.com`
-  2. 开头通配符，如 `*.example.com`
-  3. 结尾通配符，如 `www.example.*`
-  4. 正则匹配，如 `~^www.example.com$`
+  2. 首通配符，如 `*.example.com`
+  3. 尾通配符，如 `www.example.*`
+  4. 正则匹配，如 `~www\..*\.com`
   5. 优先级从上到下，多个同优先级则匹配第一个出现的
+
+---
+
+```nginx
+Syntax: location [ = | ~ | ~* | ^~ ] uri { ... }
+        location @name { ... }
+Default: —
+Context: server, location
+```
+
+- 指定该路由策略匹配的 uri
+  1. 先进行前缀匹配，并记录其中最长前缀匹配的 location；
+  2. 再进行正则匹配，并记录第一个成功匹配的 location；
+  3. 最后选择，正则匹配优先级高于前缀匹配
+  - 默认前缀匹配
+  - `=` 表示精准匹配，匹配成功则停止匹配直接选择该 location（无法嵌套）
+  - `^~` 表示若当前 location 为最长前缀匹配，则停止匹配直接选择该 location
+  - `~` 表示正则匹配且区分大小写
+  - `~*` 表示正则匹配且忽略大小写
+- `@name` location 无法嵌套与被嵌套
 
 ---
 
@@ -77,26 +111,6 @@ Context: http, server, location, if in location
 
 - 添加响应首部。若不加 always，则仅在响应码为 200, 201 , 204, 206, 301, 302, 303, 304, 307 , or 308 时添加。
 - 仅当当前域没有`add_header`命令才从外部继承
-
----
-
-```nginx
-Syntax: location [ = | ~ | ~* | ^~ ] uri { ... }
-        location @name { ... }
-Default: —
-Context: server, location
-```
-
-- 指定该路由策略匹配的 url path
-  1. 先进行前缀匹配，并记录其中最长前缀匹配的 location；
-  2. 再进行正则匹配，并记录第一个成功匹配的 location；
-  3. 最后选择，正则匹配优先级高于前缀匹配
-  - 默认前缀匹配
-  - `=` 表示精准匹配，匹配成功则停止匹配直接选择该 location（无法嵌套）
-  - `^~` 表示若当前 location 为最长前缀匹配，则停止匹配直接选择该 location
-  - `~` 表示正则匹配且区分大小写
-  - `~*` 表示正则匹配且忽略大小写
-- `@name` location 无法嵌套与被嵌套
 
 ---
 
@@ -140,7 +154,7 @@ Context: server, location
 
 - 依序尝试获取指定文件（需要经 root 与 alias 处理），若都获取失败则使用最后指定方法
 
-### 重定向
+## 重定向
 
 ```nginx
 Syntax : rewrite regex replacement [flag];
@@ -164,7 +178,7 @@ Default: —
 Context: server, location, if
 ```
 
-### 反向代理
+## 反向代理
 
 ```nginx
 http {
