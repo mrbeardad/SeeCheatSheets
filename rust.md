@@ -6,8 +6,9 @@
 
 ## 依赖
 
-- crate 内部的依赖由`mod`语句导入
-- crate 外部的依赖由`Cargo.toml`导入
+- 包内部的依赖由`mod`语句导入
+- 包外部的依赖由`Cargo.toml`导入
+- 一个包可以包含至多一个 lib crate(`src/lib.rs`)和若干 bin crate(`src/main.rs`, `bin/name.rs`)
 
 ## 变量
 

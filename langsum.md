@@ -9,15 +9,15 @@
   - [函数](#函数)
   - [面向对象](#面向对象)
     - [封装](#封装)
-    - [继承](#继承)
     - [多态](#多态)
+    - [继承](#继承)
   - [基础类库与框架](#基础类库与框架)
     - [基础类型](#基础类型)
       - [C++](#c)
       - [Rust](#rust)
       - [Go](#go)
       - [Dart](#dart)
-      - [JavaScript](#javascript)
+      - [TypeScript](#typescript)
       - [Python](#python)
     - [数字相关](#数字相关)
     - [字符相关](#字符相关)
@@ -80,7 +80,6 @@
 
   ```go
   package main
-  package internal
 
   import (
     "fmt"
@@ -97,7 +96,7 @@
   - 依赖导入：符号默认无限定
   - 依赖导出：非`_`开头的符号
   - ~~依赖初始化~~
-  - 依赖管理：flutter-pub
+  - 依赖管理：dart-pub
 
   ```dart
   import 'dart:io';
@@ -108,7 +107,7 @@
   import 'path/to/file.dart' hide bar;
   ```
 
-- JavaScript
+- TypeScript
 
   - 程序入口：任意源文件顺序执行
   - 依赖单元：一个源文件
@@ -117,10 +116,10 @@
   - 依赖初始化：脚本导入即执行
   - 依赖管理：npm
 
-  ```js
-  import defaultExport, { foo, bar as alias } from "path/to/module.js";
-  import * as qualifier from "path/to/module.js";
-  import "path/to/side_effect.js";
+  ```ts
+  import defaultExport, { foo, bar as alias } from "path/to/module.ts";
+  import * as qualifier from "path/to/module.ts";
+  import "path/to/side_effect.ts";
   ```
 
 - Python
@@ -134,9 +133,9 @@
 
   ```py
   import module
+  import package.module
   from module import *
   from module import foo, bar
-  import package.module
   from package import *
   from package import module
   from package.module import name as alias
@@ -177,7 +176,7 @@
   Type& foo = other;
   const Type& foo = other;
 
-  constexpr auto foo = other;
+  constexpr auto FOO = other;
   ```
 
 - Rust
@@ -215,7 +214,7 @@
   var foo Type = other
   var foo *Type = &other
 
-  const BigInt = 1 << 511
+  const FOO = 1 << 511
   ```
 
 - Dart
@@ -230,22 +229,25 @@
   final foo = other;
   const foo = other;
 
+  late Type foo;
   Type? foo = other;
   final Type foo = other;
-  const Type foo = other;
-  late Type foo;
+  const Type FOO = other;
   ```
 
-- JavaScript
+- TypeScript
 
   - 变量类型：引用型弱类型
   - 作用域：块作用域`{}`
   - 所有权：一个实例可能有多个所有者
   - 生命周期：直到不再被引用时才会被 GC 回收
 
-  ```js
+  ```ts
   let foo = other;
   const foo = other;
+
+  let foo: Type = other;
+  const foo: Type = other;
   ```
 
 - Python
@@ -256,7 +258,7 @@
   - 生命周期：直到不再被引用时才会被 GC 回收
 
   ```python
-  global global_var
+  global GLOBAL_VAR
   nonlocal outside_var
   foo = other
   ```
@@ -266,18 +268,26 @@
 - C++
 
   ```cpp
-  enum number { zero, one, three = 3, four };
-  enum class number { zero, one, two, three };
+  enum class EnumValue {
+    ONE = 1,
+    TWO,
+    THREE,
+  };
   ```
 
 - Rust
 
   ```rust
-  enum Message {
-      Quit,
-      Move { x: i32, y: i32 },
-      Write(String),
-      ChangeColor(i32, i32, i32),
+  enum EnumValue {
+    ONE = 1,
+    TWO,
+    THREE,
+  }
+
+  enum EnumType {
+      NoMem,
+      Tuple(i32, i32),
+      Struct { x: i32, y: i32 },
   }
   ```
 
@@ -295,9 +305,13 @@
 - Dart
 
   ```dart
-  enum Color { red, green, blue }
+  enum EnumValue {
+    ZERO,
+    ONE,
+    TWO,
+  }
 
-  enum Vehicle {
+  enum EnumValueWithField {
     car(tires: 4, passengers: 5, carbonPerKilometer: 400),
     bus(tires: 6, passengers: 50, carbonPerKilometer: 800),
     bicycle(tires: 2, passengers: 1, carbonPerKilometer: 0);
@@ -314,13 +328,26 @@
   }
   ```
 
-- JavaScript
+- TypeScript
+
+  ```ts
+  enum EnumValue {
+    ONE = 1,
+    TWO,
+    THREE,
+  }
+
+  enum EnumType {
+    Type1,
+    Type2,
+  }
+  ```
 
 - Python
 
 ## 操作符
 
-> 优先级：单元后缀 > 单元前缀 > 单元 > 算术 > 关系 > 逻辑
+> 优先级：单元后缀 > 单元前缀 > 算术 > 关系 > 逻辑
 
 - C++
 
@@ -353,7 +380,7 @@
 
 - Dart
 
-  - 单后：`.`, `?.`, `[]`, `?[]`, `!`, `()`, `++`, `--`
+  - 单后：`!`, `.`, `?.`, `[]`, `?[]`, `()`, `++`, `--`
   - 单前：`+`, `-`, `++`, `--`
   - 算数：`*`, `/`, `~/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `is`, `is!`
@@ -361,9 +388,9 @@
   - 赋值：`=`, `??=`
   - 其他：`? :`, `??`, `..`, `?..`
 
-- JavaScript
+- TypeScript
 
-  - 单后：`.`, `?.`, `[]`, `()`, `++`, `--`
+  - 单后：`!`, `.`, `?.`, `[]`, `()`, `++`, `--`
   - 单前：`+`, `-`, `++`, `--`
   - 算数：`**`, `*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `===`, `!==`, `in`
@@ -578,11 +605,11 @@
     }
     ```
 
-- JavaScript
+- TypeScript
 
   - 分支
 
-    ```js
+    ```ts
     if (condition) {
       // ...
     } else {
@@ -600,7 +627,7 @@
 
   - 循环
 
-    ```js
+    ```ts
     for (declaration; condition; expression) {
       // ...
     }
@@ -619,7 +646,7 @@
 
   - 异常
 
-    ```js
+    ```ts
     try {
       throw new Error("error message");
     } catch (e) {
@@ -773,19 +800,19 @@
   final closure2 = (args) {statements;}
   ```
 
-- JavaScript
+- TypeScript
 
   - 默认实参
   - ~~函数重载~~
   - ~~泛型~~
   - 参数包（`...args`）
 
-  ```js
-  function returnNothing() {
+  ```ts
+  function returnNothing(): void {
     return;
   }
 
-  function normalFunction(s, i) {
+  function normalFunction(s: string, i: int) {
     // ...
   }
 
@@ -822,28 +849,28 @@
 
 - C++
 
-  - 访问控制
-  - 构造
-  - 析构
-  - 拷贝
-  - 比较
-  - 类型转换
+  - 访问控制：`public`, `protected`, `private`
+  - 构造控制：`ClassName(): ... {...}`
+  - 析构控制：`~ClassName() {...}`
+  - 拷贝控制：`ClassName(const ClassName&): ... {...}`
+  - 比较操作：`... operator<=>(const ClassName&) {...}`
+  - 语言集成：运算符重载，STL 迭代器
 
   ```cpp
-  class myclass {
+  class MyClass {
    public:
-    myclass() = default;
-    myclass(myclass&&) = default;
-    myclass(const myclass&) = default;
-    auto operator=(myclass&&) -> myclass& = default;
-    auto operator=(const myclass&) -> myclass& = default;
-    ~myclass() = default;
+    MyClass() = default;
+    MyClass(MyClass&&) = default;
+    MyClass(const MyClass&) = default;
+    auto operator=(MyClass&&) -> MyClass& = default;
+    auto operator=(const MyClass&) -> MyClass& = default;
+    ~MyClass() = default;
 
     auto operator<=>(const myclass&) -> std::strong_ordering = default;
     explicit operator bool() const { return _name.size(); }
 
-    auto name() const -> const std::string& { return _name; }
-    auto set_name(std::string name) { _name = std::move(name); }
+    auto property() const -> const std::string& { return _name; }
+    auto set_property(std::string name) { _name = std::move(name); }
 
     void method() const;
     static cls_method();
@@ -855,12 +882,12 @@
 
 - Rust
 
-  - 访问控制
-  - ~~构造~~
-  - 析构
-  - 拷贝
-  - 比较
-  - ~~类型转换~~
+  - 访问控制：`pub`
+  - ~~构造控制~~
+  - 析构控制：`Drop`
+  - 拷贝控制：`Clone`, `Copy`
+  - 比较操作：`Eq`, `Ord`, `PartialEq`, `PartialOrd`
+  - 语言集成：通过 trait 实现
 
   ```rust
   #[derive(Copy, Clone, PartialEq, PartialOrd)]
@@ -873,11 +900,11 @@
       String::from(name)
     }
 
-    pub fn name(&self) -> &str {
+    pub fn property(&self) -> &str {
       self.name
     }
 
-    pub fn set_name(&mut self, &str name) {
+    pub fn set_property(&mut self, &str name) {
       self.name = String::from(name);
     }
 
@@ -893,12 +920,12 @@
 
 - Go
 
-  - 访问控制
-  - ~~构造~~
-  - ~~析构~~
-  - 拷贝
-  - 比较
-  - 类型转换
+  - 访问控制：大写首字母导出包外，包内代码可随意访问
+  - ~~构造控制~~
+  - ~~析构控制~~
+  - ~~拷贝控制~~
+  - 比较操作：自动实现
+  - ~~语言集成~~
 
   ```go
   type MyClass struct {
@@ -912,12 +939,12 @@
 
 - Dart
 
-  - 访问控制
-  - 构造
-  - 析构
-  - 拷贝
-  - 比较
-  - ~~类型转换~~
+  - 访问控制：非`_`开头导出
+  - 构造控制：`MyClass.constrcutor(...)`
+  - ~~析构控制~~
+  - ~~拷贝控制~~
+  - 比较操作：重载比较操作符
+  - 语言集成：运算符重载
 
   ```dart
   class MyClass {
@@ -943,43 +970,42 @@
     MyClass.redirecting1(String name) : this(name);
     MyClass.redirecting2(String name) : this.named(name);
 
-    @override
     bool operator ==(Object other) => other is MyClass && other._name = name;
 
-    String get name => name;
-    set name(String value) => name = value;
+    String get property => name;
+    set property(String value) => name = value;
 
     void method() {}
   }
   ```
 
-- JavaScript
+- TypeScript
 
-  - 访问控制
-  - 构造
-  - ~~析构~~
-  - 拷贝
-  - ~~比较~~
-  - ~~类型转换~~
+  - 访问控制：`public`, `protected`, `private`
+  - 构造控制：`constructor(...) {...}`
+  - ~~析构控制~~
+  - ~~拷贝控制~~
+  - ~~比较操作~~
+  - ~~语言集成~~
 
-  ```js
+  ```ts
   class MyClass {
-    #name;
+    private name: string;
 
-    constructor(name) {
-      this.#name = name;
+    constructor(name: string) {
+      this.name = name;
     }
 
-    get name() {
-      return this.#name;
+    get property(): string {
+      return this.name;
     }
 
-    set name(x) {
-      this.#name = x;
+    set property(new_name: string) {
+      this.name = new_name;
     }
 
     method() {
-      doSomething(this.#name);
+      doSomething(this.name);
     }
   }
   ```
@@ -987,11 +1013,11 @@
 - Python
 
   - ~~访问控制~~
-  - 构造
-  - 析构
-  - 拷贝
-  - 比较
-  - 类型转换
+  - 构造控制：`__init__(self, ...):`
+  - 析构控制：`__del__(self):`
+  - ~~拷贝控制~~
+  - 比较操作
+  - 语言集成：通过实现名如`__getitem__`的方法
 
   ```python
   class myclass:
@@ -1002,11 +1028,11 @@
       self._name.__del__()
 
     @property
-    def name(self):
+    def pproperty(self):
       return self._name
 
-    @name.setter
-    def name(self, name):
+    @pproperty.setter
+    def pproperty(self, name):
       self._name = name
 
     def method(self):
@@ -1015,6 +1041,92 @@
     def cls_method(cls):
       pass
   ```
+
+### 多态
+
+- C++
+
+  ```cpp
+  class abstract {
+   public:
+    virtual ~abstract() = defatul;
+    virtual abstract_method() = 0;
+  }
+
+  class myclass: public abstract {
+   public:
+    virtual ~myclass() override = default;
+    virtual abstract_method() override {
+      // ...
+    }
+  };
+
+  abstract* pintf = new myclass();
+  abstract& rintf = *pintf;
+  ```
+
+- Rust
+
+  ```rust
+  trait Abstract {
+    fn abstract_method();
+  }
+
+  impl Abstract for MyClass {
+    fn abstract_method() {
+      // ...
+    }
+  }
+
+  let intf: Box<dyn Abstract> = MyClass::new();
+  ```
+
+- Go
+
+  ```go
+  type Abstract interface {
+      abstractMethod()
+  }
+
+  type MyClass struct {}
+
+  func (this *MyClass) abstractMethod() {
+    // ...
+  }
+
+  var intf Abstract = MyClass{}
+  ```
+
+- Dart
+
+  ```dart
+  abstract class Abstract {
+    void abstractMethod();
+  }
+
+  class MyClass implements Abstract {
+    @override
+    void abstractMethod() {
+      // ...
+    }
+  }
+  ```
+
+- TypeScript
+
+  ```ts
+  interface Abstract {
+    abstractMethod(): void;
+  }
+
+  class MyClass implements Abstract {
+    abstractMethod(): void {
+      // ...
+    }
+  }
+  ```
+
+- Python
 
 ### 继承
 
@@ -1109,9 +1221,9 @@
   }
   ```
 
-- JavaScript
+- TypeScript
 
-  ```js
+  ```ts
   class MyClass extends Base {
     // ...
   }
@@ -1137,80 +1249,6 @@
       self.base_method()
       super(base, self).base_method()
   ```
-
-### 多态
-
-- C++
-
-  ```cpp
-  class abstract {
-   public:
-    virtual ~abstract() = defatul;
-    virtual abstract_method() = 0;
-  }
-
-  class myclass: public abstract {
-   public:
-    virtual ~myclass() override = default;
-    virtual abstract_method() override {
-      // ...
-    }
-  };
-
-  abstract* pintf = new myclass();
-  abstract& rintf = *pintf;
-  ```
-
-- Rust
-
-  ```rust
-  trait Abstract {
-    fn abstract_method();
-  }
-
-  impl Abstract for MyClass {
-    fn abstract_method() {
-      // ...
-    }
-  }
-
-  let intf: Box<dyn Abstract> = MyClass::new();
-  ```
-
-- Go
-
-  ```go
-  type Abstract interface {
-      abstractMethod()
-  }
-
-  type MyClass struct {}
-
-  func (this *MyClass) abstractMethod() {
-    // ...
-  }
-
-  var intf Abstract = MyClass{}
-  ```
-
-- Dart
-
-  ```dart
-  abstract class Abstract {
-    void abstractMethod();
-  }
-
-  class MyClass implements Abstract {
-    @override
-    void abstractMethod() {
-      // ...
-    }
-  }
-  ```
-
-- JavaScript
-
-- Python
 
 ## 基础类库与框架
 
@@ -1485,9 +1523,9 @@ set = {0, if (i.isOdd) i};
 set = {0, for (final i in set) i};
 ```
 
-#### JavaScript
+#### TypeScript
 
-```js
+```ts
 // 布尔
 let b = true || false;
 

@@ -64,8 +64,8 @@
 
 ## Client
 
-- [Flutter](flutter.md): 基于 Dart 的跨平台的响应式 UI 框架
-- [QT](qt.md): 基于 C++ 的跨平台的命令式 UI 框架
+- [Flutter](flutter.md)：基于 Dart 的跨平台的响应式 UI 框架
+- [QT](qt.md)：基于 C++ 的跨平台的命令式 UI 框架
 
 ## Server
 
@@ -82,21 +82,12 @@
 - [设计模式](dspt.md):star:
 - [编程语言](langsum.md):star:
 
-  - C++
-    - [C++ 语法大全](cpp.md)
-    - [C++ 程序库](cpplib.md)
-    - [CMake 构建系统](cmake.md)
-  - Rust
-    - [Rust 语言基础](rust.md)
-  - Go
-    - [Go 语言基础](go.md)
-    - [Go 程序库](golib.md)
-  - Dart
-    - [Dart 语言基础](dart.md)
-  - JavaScript
-    - [JS 语言基础](js.md)
-  - Python
-    - [Python 语言基础](py.md)
+  - [C++](cpp.md) & [CMake](cmake.md)
+  - [Rust](rust.md)
+  - [Go](go.md)
+  - [Dart](dart.md)
+  - [TypeScript](ts.md)
+  - [Python](py.md)
 
 ## 开发平台
 
