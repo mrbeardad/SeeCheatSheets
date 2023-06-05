@@ -2,7 +2,7 @@
 
 - [编程语言](#编程语言)
   - [依赖](#依赖)
-  - [变量](#变量)
+  - [变量与常量](#变量与常量)
   - [枚举](#枚举)
   - [操作符](#操作符)
   - [控制流](#控制流)
@@ -41,7 +41,7 @@
 
   ```cpp
   #include <iostream>
-  #include "3rd_party/path/to/header.hpp"
+  #include "3rd_party/path/to/header_only.hpp"
   #include "path/to/header.h"
 
   using namespace std;
@@ -138,17 +138,17 @@
   from module import foo, bar
   from package import *
   from package import module
-  from package.module import name as alias
+  from package.module import state as alias
   ```
 
-## 变量
+## 变量与常量
 
 > - 存储结构
 >   - 结构型：变量本身代表一块包含数据结构的内存，拷贝时至少包括该内存
 >   - 引用型：变量仅仅指向一块包含数据结构的内存，拷贝时仅针对该指针值
 > - 类型系统
->   - 强类型：变量类型、函数签名、类属性与方法等，均静态确定且不可随意变
->   - 弱类型：变量类型、函数签名、类属性与方法等，均动态确定且可随意变
+>   - 强类型：变量类型、函数签名、类属性与方法等，均静态确定且不可随意改变
+>   - 弱类型：变量类型、函数签名、类属性与方法等，均动态确定且可以随意改变
 > - 生命周期：
 >   - 构造
 >   - 移动
@@ -163,7 +163,7 @@
   - 变量类型：结构型强类型
   - 作用域：块作用域`{}`
   - 所有权：默认一个实例只能有一个所有者
-  - 生命周期：右值移动所有权，所有者退出作用域时销毁变量
+  - 生命周期：左值拷贝，右值移动，所有者退出作用域时销毁变量
 
   ```cpp
   auto foo = other;
@@ -184,7 +184,7 @@
   - 变量类型：结构型强类型
   - 作用域：块作用域`{}`
   - 所有权：默认一个实例只能有一个所有者
-  - 生命周期：non-`Copy` trait 移动所有权，所有者退出作用域时销毁变量
+  - 生命周期：`Copy` trait 拷贝，non-`Copy` trait 移动，所有者退出作用域时销毁变量
 
   ```rust
   let foo = other;
@@ -237,7 +237,7 @@
 
 - TypeScript
 
-  - 变量类型：引用型弱类型
+  - 变量类型：引用型强类型
   - 作用域：块作用域`{}`
   - 所有权：一个实例可能有多个所有者
   - 生命周期：直到不再被引用时才会被 GC 回收
@@ -261,6 +261,7 @@
   global GLOBAL_VAR
   nonlocal outside_var
   foo = other
+  foo: Type = other
   ```
 
 ## 枚举
@@ -285,7 +286,7 @@
   }
 
   enum EnumType {
-      NoMem,
+      None,
       Tuple(i32, i32),
       Struct { x: i32, y: i32 },
   }
@@ -345,6 +346,18 @@
 
 - Python
 
+  ```python
+  from enum import Enum
+
+  class EnumValue(Enum):
+      ONE = 1
+      TWO = 2
+      THREE = 3
+
+  for ev in (EnumValue):
+      print(ev, ev.value)
+  ```
+
 ## 操作符
 
 > 优先级：单元后缀 > 单元前缀 > 算术 > 关系 > 逻辑
@@ -367,7 +380,7 @@
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
   - 逻辑：`!`, `&&`, `||`
   - 赋值：`=`
-  - 其他：`!`, `?`, `..`, `..=`
+  - 其他：`!`, `?`
 
 - Go
 
@@ -409,17 +422,21 @@
 
 ## 控制流
 
+> 模式匹配：常量绑定、变量绑定、解构、逻辑与、逻辑或
+
 - C++
 
   - 分支
 
     ```cpp
+    // branches
     if (condition) {
       // ...
     } else {
       // ...
     }
 
+    // branches for single expression
     switch (int_or_enum) {
       case fallthrough:
       case constant:
@@ -433,23 +450,36 @@
   - 循环
 
     ```cpp
-    for (declaration; condition; expression) {
+    // infinite loop
+    while(true) {
       // ...
     }
 
+    // loop with condition
+    while (condition) {
+      // ...
+    }
+
+    // loop for iterator
     for (const auto& elem : iterabal) {
       // ...
     }
+
+    // loop label
+    label:
+    continue;
+    break;
+    goto label;
     ```
 
   - 异常
 
     ```cpp
-    // try / function try
+    // try | function try
     [auto func()] try {
-    // throw / rethrow
+    // throw | rethrow
       throw std::exception();
-    // catch / catch all
+    // catch | catch all
     } catch (const std::exception& e) {
       std::cout << e.what() << std::endl;
     } catch (...) {
@@ -459,73 +489,87 @@
 
 - Rust
 
-  > Rust 的控制流全是表达式而非语句，甚至块作用域符号`{}`本身也是表达式
+  > Rust 的控制流全是表达式而非语句，因为块作用域符号`{}`本身就是表达式
 
   - 分支
 
-  ```rust
-  if condition {
-    // ...
-  } else {
-    // ...
-  }
-
-  match expr {
-    PATTERN => expr1,
-    PATTERN => expr2,
-    _ => expr3
-  }
-
-  if let PATTERN = expr {
-    // ...
-  } else {
-    // ...
-  }
-  ```
-
-  - 循环
-
-  ```rust
-  loop {
-    // ...
-  }
-
-  while condition {
-    // ...
-  }
-
-  while let PATTERN = expr {
-    // ...
-  }
-
-  for element in iterator {
-    // ...
-  }
-
-  break expr;
-  break 'labeled;
-  ```
-
-- Go
-
-  - 分支
-
-    ```go
+    ```rust
+    // branches
     if condition {
       // ...
     } else {
       // ...
     }
 
-    switch expr {
-      case expr1, expr2:
+    // two branches for single expression
+    if let pattern = expr {
+      // ...
+    } else {
+      // ...
+    }
+
+    // multiple branches for single expression
+    match expr {
+      pattern => {...},
+      pattern => expr,
+      _ => expr
+    }
+    ```
+
+  - 循环
+
+    ```rust
+    // infinite loop
+    loop {
+      // ...
+    }
+
+    // loop with condition
+    while condition {
+      // ...
+    }
+
+    // loop with pattern
+    while let pattern = expr {
+      // ...
+    }
+
+    // loop for iterator
+    for elem in iterator {
+      // ...
+    }
+
+    // loop label
+    'label:
+    continue;
+    continue 'label;
+    break;
+    break 'label;
+    break expr;
+    ```
+
+- Go
+
+  - 分支
+
+    ```go
+    // branches
+    if condition {
+      // ...
+    } else {
+      // ...
+    }
+
+    switch {
+      case condition:
         fallthrough
       default:
         // ...
     }
 
-    switch {
-      case condition:
+    // branches for single expression
+    switch expr {
+      case expr1, expr2:
         fallthrough
       default:
         // ...
@@ -542,13 +586,27 @@
   - 循环
 
     ```go
-    for declaration; condition; expression {
+    // infinite loop
+    for {
       // ...
     }
 
+    // loop with condition
+    for condition {
+      // ...
+    }
+
+    // loop for iterator
     for elem := range iterabal {
       // ...
     }
+
+    // loop label
+    label:
+    continue;
+    continue label;
+    break;
+    break label;
     ```
 
 - Dart
@@ -556,20 +614,17 @@
   - 分支
 
     ```dart
+    // branches
     if (condition) {
       // ...
     } else {
       // ...
     }
 
-    switch (comparable) {
-      case fallthrough:
-      case constant1:
+    // branches for single expression
+    switch (expr) {
+      case pattern:
         // ...
-        break;
-      case constant2:
-        // ...
-        continue fallthrough;
       default:
         // ...
     }
@@ -578,13 +633,27 @@
   - 循环
 
     ```dart
-    for (declaration; condition; expression) {
+    // infinite loop
+    while (true) {
       // ...
     }
 
+    // loop with condition
+    while (condition) {
+      // ...
+    }
+
+    // loop for iterator
     for (final elem in iterabal) {
       // ...
     }
+
+    // loop label
+    label:
+    continue;
+    continue label;
+    break;
+    break label;
     ```
 
   - 异常
@@ -610,12 +679,14 @@
   - 分支
 
     ```ts
+    // branches
     if (condition) {
       // ...
     } else {
       // ...
     }
 
+    // branches for single expression
     switch (expr) {
       case expr:
         // ...
@@ -628,11 +699,18 @@
   - 循环
 
     ```ts
-    for (declaration; condition; expression) {
+    // infinite loop
+    while (true) {
       // ...
     }
 
-    for (const keyOrIndex in iterable) {
+    // loop with condition
+    while (condition) {
+      // ...
+    }
+
+    // loop for iterator
+    for (const key_or_index in iterable) {
       // ...
     }
 
@@ -640,8 +718,11 @@
       // ...
     }
 
-    break labeled;
-    continue labeled;
+    // loop label
+    label: continue;
+    continue label;
+    break;
+    break label;
     ```
 
   - 异常
@@ -661,57 +742,67 @@
   - 分支
 
   ```python
+  # branches
   if condition:
-    pass
+      pass
   elif condition:
-    pass
+      pass
   else:
-    pass
+      pass
 
+  # branches for single expression
   match expr:
-    case PATTER:
-      pass
-    case _:
-      pass
+      case pattern:
+          pass
+      case _:
+          pass
   ```
 
   - 循环
 
   ```python
-  while condition:
-    pass
-  else:
-    pass
+  # infinite loop
+  while True:
+      pass
 
-  for element in iterable:
-    pass
+  # loop with condition
+  while condition:
+      pass
   else:
-    pass
+      pass
+
+  # loop for iterator
+  for element in iterable:
+      pass
+  else:
+      pass
   ```
 
   - 异常
 
   ```python
   try:
-    raise Exception('error0')
+      raise Exception('error0')
   except Exception:
-    raise Exception('error1')
+      raise Exception('error1')
   except Exception as excep:
-    raise Exception('error2') from Exception('__cause__')
+      raise Exception('error2') from Exception('__cause__')
   except:
-    raise
+      raise
   else:
-    pass
+      pass
   finally:
-    pass
+      pass
 
   with expr as target:
-    pass
+      pass
   ```
 
 ## 函数
 
-> - 注意函数对**可重入性**与**线程安全性**的保证
+> - 函数是否存在副作用
+> - 函数是否可重复调用
+> - 函数是否多线程安全
 
 - C++
 
@@ -721,7 +812,7 @@
   - 参数包（`...T`与`arg...`）
 
   ```cpp
-  void return_nothing() {
+  auto return_nothing() -> void {
     return;
   }
 
@@ -771,8 +862,8 @@
     return
   }
 
-  closure := func() {
-    return
+  closure := func(a int) {
+    return a * a
   }
   ```
 
@@ -831,10 +922,10 @@
 
   ```python
   def return_nothing() -> None:
-    return
+      return
 
-  def normal_function(pos: str, /, pos_or_name: str, *, name: str) -> str:
-    return pos + pos_or_name + name
+  def normal_function(pos: str, /, pos_or_name: str, *, state: str) -> str:
+      return pos + pos_or_name + state
 
   closure = lambda x, y: x + y
   ```
@@ -849,73 +940,79 @@
 
 - C++
 
-  - 访问控制：`public`, `protected`, `private`
-  - 构造控制：`ClassName(): ... {...}`
-  - 析构控制：`~ClassName() {...}`
-  - 拷贝控制：`ClassName(const ClassName&): ... {...}`
-  - 比较操作：`... operator<=>(const ClassName&) {...}`
-  - 语言集成：运算符重载，STL 迭代器
+  - 访问控制：`public`, `protected`, `private`(默认)
+  - 构造控制：构造函数
+  - 析构控制：析构函数
+  - 拷贝控制：拷贝构造函数、移动构造函数、拷贝赋值函数、移动赋值函数
+  - 比较操作：重载相等比较操作符与三路比较操作符（深度值比较）
+  - 语言扩展：操作符重载，STL 迭代器
 
   ```cpp
+  #include <compare>
+
   class MyClass {
+    std::string _state;
+    static inline std::string _class_state = "";
+
    public:
     MyClass() = default;
+    MyClass(std::string state): _state(std::move(state)) {}
     MyClass(MyClass&&) = default;
     MyClass(const MyClass&) = default;
     auto operator=(MyClass&&) -> MyClass& = default;
     auto operator=(const MyClass&) -> MyClass& = default;
     ~MyClass() = default;
 
-    auto operator<=>(const myclass&) -> std::strong_ordering = default;
-    explicit operator bool() const { return _name.size(); }
+    friend auto operator<=>(const myclass&) -> std::strong_ordering = default;
+    explicit operator bool() const { return !_state.empty(); }
 
-    auto property() const -> const std::string& { return _name; }
-    auto set_property(std::string name) { _name = std::move(name); }
+    auto property() const -> const std::string& { return _state; }
+    auto set_property(std::string state) -> void { _state = std::move(state); }
+    auto method() const -> void {/*...*/};
 
-    void method() const;
-    static cls_method();
-
-   private:
-    std::string _name;
+    static inline auto class_property() -> const std::string& { return _class_state; }
+    static inline auto set_class_property(std::string state) -> void { _class_state = state; }
+    static inline auto class_method() -> void {/*...*/}
   };
+
+  auto inst = MyClass("");  rinst.method();
+  auto* pinst = &inst;      pinst->method();
+  auto& rinst = *pinst;     rinst.method();
+                            MyClass::class_method();
   ```
 
 - Rust
 
   - 访问控制：`pub`
-  - ~~构造控制~~
+  - 构造控制：一般通过工厂函数构造实例
   - 析构控制：`Drop`
-  - 拷贝控制：`Clone`, `Copy`
-  - 比较操作：`Eq`, `Ord`, `PartialEq`, `PartialOrd`
-  - 语言集成：通过 trait 实现
+  - 拷贝控制：`Copy`, `Clone`
+  - 比较操作：`Eq`, `Ord`, `PartialEq`, `PartialOrd`（比较字段）
+  - 语言扩展：通过 trait 实现
 
   ```rust
   #[derive(Copy, Clone, PartialEq, PartialOrd)]
   pub struct MyClass {
-    name: String;
+    pub state: String;
+    // no class state support, use unsafe static variable instead
   }
 
   impl MyClass {
-    pub fn new(name: &str) -> String {
-      String::from(name)
+    pub fn new(state: &str) -> MyClass {
+      MyClass { state: String::from(state) }
     }
 
-    pub fn property(&self) -> &str {
-      self.name
-    }
+    pub fn property(&self) -> &str { self.state }
+    pub fn set_property(&mut self, &str state) { self.state = String::from(state); }
+    pub fn method(&self) {/*...*/}
 
-    pub fn set_property(&mut self, &str name) {
-      self.name = String::from(name);
-    }
-
-    pub fn method(&self) {
-      // ...
-    }
-
-    pub fn cls_method() {
-      // ...
-    }
+    pub fn class_property() -> &str {/*...*/}
+    pub fn class_method() {/*...*/}
   }
+
+  let inst = MyClass::new("");  inst.method();
+  let rinst = &inst;            rinst.method();
+                                MyClass::class_method();
   ```
 
 - Go
@@ -924,122 +1021,168 @@
   - ~~构造控制~~
   - ~~析构控制~~
   - ~~拷贝控制~~
-  - 比较操作：自动实现
-  - ~~语言集成~~
+  - 比较操作：默认实现比较字段
+  - ~~语言扩展~~
 
   ```go
   type MyClass struct {
-    name string
+    state string
+    // no class state support, use global variable instead
   }
 
-  func (this *MyClass) Method() {
-    doSomething(this.name)
+  func (this *MyClass) Property() string {
+    return this.state
   }
+  func (this *MyClass) SetProperty(state string) {
+    this.state = state
+  }
+  func (this *MyClass) Method() {
+    // ...
+  }
+  // no class property or class method support, use global function instead
+
+  inst := MyClass{state: ""}; inst.Method();
+  pinst := &inst;             pinst.Method();
   ```
 
 - Dart
 
   - 访问控制：非`_`开头导出
-  - 构造控制：`MyClass.constrcutor(...)`
+  - 构造控制：构造函数
   - ~~析构控制~~
   - ~~拷贝控制~~
-  - 比较操作：重载比较操作符
-  - 语言集成：运算符重载
+  - 比较操作：默认实现比较引用，可重载比较操作符
+  - 语言扩展：操作符重载
 
   ```dart
   class MyClass {
-    String _name;
+    String _state;
+    static String _classState = "";
 
     // constructor likes function but no return type
-    MyClass(String name) {
-      this._name = name;
-    }
+    MyClass(String state) { this._state = state; }
 
     // named constructor beacase no funtion overload
-    MyClass.named(String name) {
-      this._name = name;
-    }
+    MyClass.named(String state) { this._state = state; }
 
     // using this in constructor, a syntax sugar
-    MyClass.useThis(this._name);
+    MyClass.useThis(this._state);
 
     // initializer lists: final fields must have values before the constructor body executes
-    MyClass.initList(String name) : _name = name;
+    MyClass.initList(String state) : _state = state;
 
     // redirect to another constructor
-    MyClass.redirecting1(String name) : this(name);
-    MyClass.redirecting2(String name) : this.named(name);
+    MyClass.redirecting1(String state) : this(state);
+    MyClass.redirecting2(String state) : this.named(state);
 
-    bool operator ==(Object other) => other is MyClass && other._name = name;
+    String get property => _state;
+    set property(String state) => _state = state;
+    void method() {/*...*/}
 
-    String get property => name;
-    set property(String value) => name = value;
-
-    void method() {}
+    static String get classProperty => _classState;
+    static set classProperty(String state) => _classState = state;
+    static void classMethod() {/*...*/}
   }
+
+  var inst = MyClass(""); inst.method();
+                          MyClass.classMethod();
   ```
 
 - TypeScript
 
-  - 访问控制：`public`, `protected`, `private`
-  - 构造控制：`constructor(...) {...}`
+  - 访问控制：`public`(默认), `protected`, `private`
+  - 构造控制：构造函数
   - ~~析构控制~~
   - ~~拷贝控制~~
   - ~~比较操作~~
-  - ~~语言集成~~
+  - ~~语言扩展~~
 
   ```ts
   class MyClass {
-    private name: string;
+    private state: string;
+    private static classState = "";
 
-    constructor(name: string) {
-      this.name = name;
+    constructor(state: string) {
+      this.state = state;
     }
 
     get property(): string {
-      return this.name;
+      return this.state;
     }
 
-    set property(new_name: string) {
-      this.name = new_name;
+    set property(state: string): void {
+      this.state = state;
     }
 
-    method() {
-      doSomething(this.name);
+    method(): void {
+      // ...
+    }
+
+    static get classProperty(): string {
+      return this.classState;
+    }
+
+    static set classProperty(state: string) {
+      this.classState = state;
+    }
+
+    static classMethod(): void {
+      // ...
     }
   }
+
+  let inst = new MyClass("");
+  inst.method();
+  MyClass.classMethod();
   ```
 
 - Python
 
   - ~~访问控制~~
-  - 构造控制：`__init__(self, ...):`
-  - 析构控制：`__del__(self):`
+  - 构造控制：`__init__`
+  - 析构控制：`__del__`
   - ~~拷贝控制~~
   - 比较操作
   - 语言集成：通过实现名如`__getitem__`的方法
 
   ```python
-  class myclass:
-    def __init__(self, name: str):
-      self._name = name
+  class MyClass:
+      class_state = ""
 
-    def __del__(self):
-      self._name.__del__()
+      def __init__(self, state: str) -> None:
+          self._state = state
 
-    @property
-    def pproperty(self):
-      return self._name
+      def __del__(self) -> None:
+          pass
 
-    @pproperty.setter
-    def pproperty(self, name):
-      self._name = name
+      @property
+      def aproperty(self) -> str:
+          return self._state
 
-    def method(self):
-      pass
+      @aproperty.setter
+      def aproperty(self, state) -> None:
+          self._state = state
 
-    def cls_method(cls):
-      pass
+      def method(self):
+          pass
+
+      @property
+      @classmethod
+      def aclass_peoperty(cls) -> str:
+          return cls.class_state
+
+      @aclass_peoperty.setter
+      @classmethod
+      def aclass_peoperty(cls, state: str) -> None:
+          cls.class_state = state
+
+      @classmethod
+      def class_method(cls) -> None:
+          pass
+
+  inst = MyClass("")
+  inst.method()
+  MyClass.class_method()
   ```
 
 ### 多态
@@ -1047,35 +1190,39 @@
 - C++
 
   ```cpp
-  class abstract {
+  class Abstract {
    public:
-    virtual ~abstract() = defatul;
-    virtual abstract_method() = 0;
+    virtual ~Abstract() = defatul;
+    virtual auto abstract_property() -> const std::string& = 0;
+    virtual auto abstract_method() -> void = 0;
+    // no abstract class property or abstract class method support
   }
 
-  class myclass: public abstract {
+  class MyClass: public Abstract {
    public:
-    virtual ~myclass() override = default;
-    virtual abstract_method() override {
-      // ...
-    }
+    auto abstract_property() -> const std::string& override {/*...*/}
+    auto abstract_method() -> void override {/*...*/}
   };
 
-  abstract* pintf = new myclass();
-  abstract& rintf = *pintf;
+  Abstract* pintf = new MyClass();
+  Abstract& rintf = *pintf;
   ```
 
 - Rust
 
   ```rust
   trait Abstract {
-    fn abstract_method();
+    fn abstract_property(&self) -> &str;
+    fn abstract_method(&self);
+    fn abstract_class_property() -> &str;
+    fn abstract_class_method();
   }
 
   impl Abstract for MyClass {
-    fn abstract_method() {
-      // ...
-    }
+    fn abstract_property(&self) -> &str {/*...*/};
+    fn abstract_method(&self) {/*...*/};
+    fn abstract_class_property() -> &str {/*...*/};
+    fn abstract_class_method() {/*...*/};
   }
 
   let intf: Box<dyn Abstract> = MyClass::new();
@@ -1085,30 +1232,45 @@
 
   ```go
   type Abstract interface {
-      abstractMethod()
+    abstractProperty()
+    abstractMethod()
+    // no abstract class property or abstract class method support
   }
 
-  type MyClass struct {}
+  func (this *MyClass) abstractProperty() {
+    // ...
+  }
 
   func (this *MyClass) abstractMethod() {
     // ...
   }
 
-  var intf Abstract = MyClass{}
+  var intf Abstract = &MyClass{}
   ```
 
 - Dart
 
   ```dart
   abstract class Abstract {
+    String get abstractProperty;
+    set abstractProerty(String state);
     void abstractMethod();
+    // no abstract class property or abstract class method support
   }
 
   class MyClass implements Abstract {
+    String _state;
+
     @override
-    void abstractMethod() {
-      // ...
+    String get abstractProperty => _state;
+
+    @override
+    set abstractProperty(String state) {
+      _state = state
     }
+
+    @override
+    void abstractMethod() {/*...*/}
   }
   ```
 
@@ -1116,10 +1278,19 @@
 
   ```ts
   interface Abstract {
+    get abstractProperty(): string;
+    set abstractProperty(state: string);
     abstractMethod(): void;
+    // no abstract class property or abstract class method support
   }
 
   class MyClass implements Abstract {
+    get abstractProperty(): string {
+      // ...
+    }
+    set abstractProperty(state: string) {
+      // ...
+    }
     abstractMethod(): void {
       // ...
     }
@@ -1128,26 +1299,92 @@
 
 - Python
 
+  ```python
+  from abc import ABC, abstractmethod
+
+  class Abstract(ABC):
+      def __init__(self) -> None:
+          pass
+
+      @property
+      @abstractmethod
+      def abstract_property(self) -> None:
+          pass
+
+      @abstract_property.setter
+      @abstractmethod
+      def abstract_property(self, state: str) -> None:
+          pass
+
+      @abstractmethod
+      def abstract_method(self) -> None:
+          pass
+
+      @property
+      @classmethod
+      @abstractmethod
+      def abstract_class_property(self) -> None:
+          pass
+
+      @abstract_class_property.setter
+      @classmethod
+      @abstractmethod
+      def abstract_class_property(self, state: str) -> None:
+          pass
+
+      @classmethod
+      @abstractmethod
+      def abstract_class_method(cls) -> None:
+          pass
+
+  class MyClass(Abstract):
+      def __init__(self) -> None:
+          super().__init__()
+
+      @property
+      def abstract_property(self) -> None:
+          pass
+
+      @abstract_property.setter
+      def abstract_property(self, state: str) -> None:
+          pass
+
+      def abstract_method(self) -> None:
+          pass
+
+      @property
+      @classmethod
+      def abstract_class_property(self) -> None:
+          pass
+
+      @abstract_class_property.setter
+      @classmethod
+      def abstract_class_property(self, state: str) -> None:
+          pass
+
+      @classmethod
+      def abstract_class_method(cls) -> None:
+          pass
+
+  inst: Abstract = MyClass()
+  ```
+
 ### 继承
 
 - C++
 
   ```cpp
-  class base {
-    base() = default;
-    virtual ~base() =default;
-    virtual base_method() {}
+  class Base {
+    virtual ~Base() = default;
+    virtual base_method() {/*...*/}
   };
 
-  class myclass: public base, public mixin {
+  class MyClass: public Base {
    public:
-    myclass() : base(), mixin() {}
-    virtual ~myclass() override = default;
+    MyClass() : Base() {}
 
-    virtual void base_method() override {
-      // ...
-      base_method();
-      base::base_method();
+    void base_method() override {
+      Base::base_method();
     }
   };
   ```
@@ -1156,18 +1393,14 @@
 
   ```rust
   pub trait Base {
-    fn base_factory() {}
-    fn base_method(&self) {}
+    fn base_method(&self) -> Self {/*...*/}
+    fn base_class_method() {/*...*/}
   }
 
-  #[derive(Mixin)]
   impl Base for MyClass {
     fn base_method(&self) {
-      // ...
-      self.base_method();
       Base::base_method(self);
-      Self::base_factory();
-      <MyClass as Base>::basefactory();
+      <MyClass as Base>::base_class_method();
     }
   }
   ```
@@ -1176,7 +1409,7 @@
 
   ```go
   type Base struct {
-    name string
+    state string
   }
   func (self *Base) BaseMethod() {
     // ...
@@ -1184,11 +1417,9 @@
 
   type MyClass struct {
     Base    // Base 的方法集可由 MyClass 与 *MyClass 继承
-    *Mixin  // *Mixin 的方法集仅可由 *MyClass 继承而 MyClass 不行
+    *Base   // *Base 的方法集仅可由 *MyClass 继承而 MyClass 不行
   }
   func (self *MyClass) BaseMethod() {
-    // ...
-    self.BaseMethod()
     self.Base.BaseMethod()
   }
   ```
@@ -1214,8 +1445,6 @@
 
     @override
     void baseMethod() {
-      // ...
-      baseMethod();
       super.baseMethod();
     }
   }
@@ -1224,30 +1453,32 @@
 - TypeScript
 
   ```ts
+  class Base {
+    baseMethod(): void {
+      // ...
+    }
+  }
+
   class MyClass extends Base {
-    // ...
+    baseMethod(): void {
+      super.baseMethod();
+    }
   }
   ```
 
 - Python
 
   ```python
-  class base:
-    def __init__(self):
-      super(base, self).__init__()
-      super(mixin, self).__init__()
+  class Base:
+      def base_method(self) -> None:
+          pass
 
-    def base_method(self):
-      pass
+  class MyClass(Base):
+      def __init__(self) -> None:
+          super().__init__()
 
-  class myclass(base, mixin):
-    def __init__(self):
-      super(base, self).__init__()
-      super(mixin, self).__init__()
-
-    def base_method(self):
-      self.base_method()
-      super(base, self).base_method()
+      def base_method(self) -> None:
+          super(Base, self).base_method()
   ```
 
 ## 基础类库与框架
@@ -1284,9 +1515,10 @@ double d = 1.0 + 2.5e3;
 float f = 2.5f;
 
 // 字符：索引元素为字节
-char ascii = 'a';
+char byte = 'A';
 char32_t unicode = U'文';
 const char* cstr = "hello world!\n" R"(raw\n)";
+std::string inter = std::format("state is {state}")
 std::string str = cstr;
 const char* u8 = u8"utf-8 string";
 const char16_t* u16 = u"utf-16 string";
@@ -1340,10 +1572,10 @@ let i: i32 = 9_000_000 + 0b1010 + 0o17 + 0xff;
 let f: f64 = 1.0 + 2.5e3;
 
 // 字符：不允许索引，但允许切片（运行时检测切片字节边界的 UTF-8 有效性）
-let byte: u8 = b'a';
+let byte: u8 = b'A';
 let c: char = '文';
 let s: &str = "hello world\n" + r"raw\n";
-let inter: String = format!("{name}");
+let inter: String = format!("state is {state}");
 let ss: String = String::from(s);
 
 // 日期时间：SystemTime 无时区，OffsetDateTime 有时区
@@ -1471,7 +1703,7 @@ double d = 1.0 + 2.5e3;
 
 // 字符：索引元素为 Unicode
 String str = 'hello ' + "world\n" + r'raw\n';
-String inter = '$name or ${name}';
+String inter = '$state or ${state}';
 String multiline = '''
 multiline
 string
@@ -1537,8 +1769,8 @@ let f = 1.0 + 2.5e3;
 let nan = NaN + Infinity;
 
 // 字符：索引元素为 Unicode
-let s = "hello " + "world\n" + String.raw`raw\n but ${name}`;
-let inter = `${name}`;
+let s = "hello " + "world\n" + String.raw`raw\n but ${state}`;
+let inter = `${state}`;
 let regexp = /pattern/i;
 
 // 日期时间：有时区

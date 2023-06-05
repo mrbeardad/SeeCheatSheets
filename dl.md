@@ -1,7 +1,7 @@
 # 深度学习
 
 - [深度学习](#深度学习)
-  - [深度前馈网络](#深度前馈网络)
+  - [多层感知机](#多层感知机)
     - [输入层](#输入层)
     - [隐含层](#隐含层)
     - [输出层](#输出层)
@@ -21,11 +21,11 @@
     - [Overfitting Solution](#overfitting-solution)
     - [Hyperparams Optimization](#hyperparams-optimization)
 
-## 深度前馈网络
+## 多层感知机
 
 > 万能近似定理：⼀个前馈神经⽹络如果具有线性层和⾄少⼀层具有 “挤压” 性质的激活函数（如 sigmoid 等），给定⽹络⾜够数量的隐藏单元，它可以以任意精度来近似任何从⼀个有限维空间到另⼀个有限维空间的 borel 可测函数。
 
-深度前馈网络(Deep Feedforward Network, DFN)也叫前馈神经网络(Feedforward Neural Network, FNN)或多层感知机(Multilayer Perceptron, MLP)。网络包含输入层、隐含层、输出层，层与层之间是全连接的。
+多层感知机(Multilayer Perceptron, MLP)，也叫深度前馈网络(Deep Feedforward Network, DFN)或前馈神经网络(Feedforward Neural Network, FNN)。网络包含输入层、隐含层、输出层，层与层之间是全连接的。
 
 ![dfn](images/dfn.png)
 
@@ -90,6 +90,8 @@ $\sigma$是激活函数，如果不引入激活函数，可以验证，无论多
 输入形状：（步长，批量，特征）通常需要转置（批量，步长）后独热编码
 
 ## Pytorch 框架
+
+[完整的训练代码示例](https://github.com/mrbeardad/pytorch_example/blob/master/main.py)
 
 ### Tensor
 
