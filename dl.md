@@ -10,6 +10,7 @@
     - [卷积层](#卷积层)
     - [池化层](#池化层)
   - [循环神经网络](#循环神经网络)
+  - [Transformer](#transformer)
   - [Pytorch 框架](#pytorch-框架)
     - [Tensor](#tensor)
     - [Dataset](#dataset)
@@ -87,7 +88,13 @@ $\sigma$是激活函数，如果不引入激活函数，可以验证，无论多
 
 ![rnn](images/rnn.png)
 
+![lstm](images/lstm.png)
+
 输入形状：（步长，批量，特征）通常需要转置（批量，步长）后独热编码
+
+## Transformer
+
+![transformer](images/transformer.png)
 
 ## Pytorch 框架
 
