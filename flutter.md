@@ -1,7 +1,7 @@
 # Flutter
 
 - [Flutter](#flutter)
-  - [Widgets](#widgets)
+  - [核心概念](#核心概念)
   - [窗口](#窗口)
   - [内容](#内容)
   - [展示](#展示)
@@ -14,38 +14,32 @@
   - [导航路由](#导航路由)
   - [国际化](#国际化)
 
-## Widgets
+## 核心概念
 
 具体参见<https://docs.flutter.dev/resources/architectural-overview>
 
-- Widget 只是用来保存视图配置信息的数据结构，可以频繁创建与销毁而没有性能问题
+- Widget 表现为一个类，用来生成 Element
 
-- Element 在首次创建 Widget 时对应地生成，目的为用作 Widget 缓存以节省开销
+- Element 表现为一个实例数据，用来保存视图的配置数据
 
-- RenderObject 在挂载 Element 时对应地生成，它负责布局、绘制等渲染任务
+- RenderObject 表现为一个实例数据，用来它负责布局、绘制、合成等渲染任务
 
-- Widgets、Elements 与 RenderObjects 各自组成三棵树，Elment 与 Widget 一一对应，而 RenderObject 与 Element 则不是
+- 应用启动：调用根 Widget 的 build 方法递归地构造一棵 Element 树，再由后者生成一棵 RenderObject 树，最后由 RenderObject 树负责渲染画面
 
-- 视图重绘时，会重新构建 Widget Subtree，并比较新旧 Widget 然后更新对应 Element，再由 Element 更新对应 RenderObject，一些 Widget 利用类似 `builder(context, child)` 属性来避免重新构建子树
+- 状态更新：重新调用状态被更新的 Widget 的 build 方法，并用结果更新对应的 Element 子树，再由后者更新对应 RenderObject，最后更新渲染的画面。一些 Widget 利用类似 `builder(context, child)` 属性来避免重新构建子树
 
-- `StatelessWidget`与`StatefulWidget`只用于组合 Element 节点
+- `StatelessWidget` 与 `StatefulWidget` 只用于组合 Element 节点
 
-- `LeafRenderObjectWidget`、`SingleChildRenderObjectWidget`与`MultiChildRenderObjectWidget`才会新建 Element 节点
+- `LeafRenderObjectWidget`、`SingleChildRenderObjectWidget` 与 `MultiChildRenderObjectWidget` 才会新建 Element 节点
 
 - 广义上讲，Widget 的主要任务是负责展示状态数据与响应 UI 交互
 
   - 状态数据来源
 
-    - 父组件
-    - 内部状态
-    - controller
-    - context
-
-  - UI 响应逻辑来源
-
-    - 父组件
-    - 内部方法
-    - controller
+    - 环境状态（影响所有 Widget 的状态）
+    - 内部状态（只影响单个 Widget 的状态）
+    - 配置状态（祖先节点为 Widget 的构造函数提供参数，可用于跨 Widget 的状态）
+    - UI 事件（如 controller 获取用户输入数据）
 
   - 常见属性名：
     - `child`：单个子组件

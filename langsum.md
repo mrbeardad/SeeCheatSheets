@@ -54,7 +54,7 @@
 
 - Rust
 
-  - 程序入口：`main.rs` 中的 main 函数
+  - 程序入口：`src/main.rs` 或 `bin/*.rs` 中的 main 函数
   - 依赖单元：内部依赖单元是一个源文件，外部依赖单元是一个 crate
   - 依赖导入：符号限定于模块路径
   - 依赖导出：`pub`声明
@@ -1961,9 +1961,9 @@ hset ^= set1
 
 - MVVM 模式
 
-  - View：负责展示状态数据并响应 UI 事件
-  - ViewModel：负责数据绑定并提供响应逻辑
-  - Model：负责维护并提供业务数据与业务逻辑
+  - View：负责展示状态数据
+  - ViewModel：负责双向数据绑定（即将 Model 的业务状态数据提供为 View，并将 View 的 UI 状态数据提供给 Model）
+  - Model：负责维护状态数据
 
 ![framework](images/framework.png)
 

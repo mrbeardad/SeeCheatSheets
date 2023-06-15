@@ -56,8 +56,7 @@
 - [HTML](html.md)：超文本标记语言
 - [CSS](css.md)：层叠样式表
 - [JavaScript](js.md)：脚本语言
-- [React](react.md)：响应式 UI 框架
-- [Next.js](nextjs.md)：基于 React 的应用框架
+- [React](react.md)：基于 Web 的响应式 UI 框架
 - [HTTP](http.md)：超文本传输协议
 - [WAS](was.md)：Web 应用安全
 - [SEO](seo.md)：搜索引擎优化
@@ -78,8 +77,8 @@
 
 ## Coding
 
-- [编码逻辑](coding.md):star:
 - [设计模式](dspt.md):star:
+- [编码逻辑](coding.md):star:
 - [编程语言](langsum.md):star:
 
   - [C++](cpp.md) & [CMake](cmake.md)

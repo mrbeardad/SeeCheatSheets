@@ -1,11 +1,7 @@
 # React
 
 - [React](#react)
-  - [系统构建](#系统构建)
-    - [初始化](#初始化)
-    - [目录结构](#目录结构)
-    - [环境变量](#环境变量)
-  - [核心思想](#核心思想)
+  - [JSX](#jsx)
     - [组件树](#组件树)
     - [生命周期](#生命周期)
   - [Redux](#redux)
@@ -15,52 +11,11 @@
     - [代码分割](#代码分割)
     - [错误边界](#错误边界)
 
-## 系统构建
+## JSX
 
-### 初始化
+```js
 
-```sh
-pnpx create-react-app react-app && cd react-app
-
-eslint --init
-
-pnpm add redux react-redux @reduxjs/toolkit \
-  react-router-dom \
-  react-hook-form \
-  @mui/material @mui/icons-material @mui/system @emotion/react @emotion/styled
 ```
-
-### 目录结构
-
-```txt
-react-app/
-├─ README.md
-├─ package.json
-├─ node_modules/
-├─ public/          index.html可直接引用的文件，编译打包后位于目录顶层，使用
-│  ├─ index.html    可通过 %PUBLIC_URL% 形式引用项目预定义变量
-│  ├─ favicon.ico
-│  ├─ robots.txt
-│  └─ manifest.json
-└─ src/             index.js可直接导入的文件，编译打包后位于static目录
-   ├─ index.js      优点如下：
-   ├─ index.css     1. 会尽量合并文件，减少网络IO
-   ├─ App.js        2. 缺失文件直接编译报错，而非给用户显示404
-   └─ App.css       3. 编译结果文件名包含了hash，从而利用缓存破坏机制
-```
-
-### 环境变量
-
-- js 中调用：`process.env.NODE_ENV`
-- public/html 中调用：`<a href="%PUBLIC_URL%">%REACT_APP_WEBSITE%</p>`
-
-| 变量          | 值                                                                                                    |
-| ------------- | ----------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`    | `development`, `test`, `production`                                                                   |
-| `PUBLIC_URL`  | public 目录中的文件资源在编译构建后的路径前缀，通过修改*package.json*中的`homepage`可修改该环境变量值 |
-| `REACT_APP_*` | react app 环境变量                                                                                    |
-
-## 核心思想
 
 ### 组件树
 

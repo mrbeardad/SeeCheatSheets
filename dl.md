@@ -1,9 +1,9 @@
 # 深度学习
 
 - [深度学习](#深度学习)
-  - [多层感知机](#多层感知机)
-    - [输入层](#输入层)
-    - [隐含层](#隐含层)
+  - [前馈神经网络](#前馈神经网络)
+    - [线性层](#线性层)
+    - [激活层](#激活层)
     - [输出层](#输出层)
     - [后向传播](#后向传播)
   - [卷积神经网络](#卷积神经网络)
@@ -22,24 +22,31 @@
     - [Overfitting Solution](#overfitting-solution)
     - [Hyperparams Optimization](#hyperparams-optimization)
 
-## 多层感知机
+## 前馈神经网络
+
+前馈神经网络(Feedforward Neural Network, FNN)，又叫多层感知机(Multilayer Perceptron, MLP)。网络包含输入层、隐含层、输出层，层与层之间是全连接的。
+
+![fnn](images/fnn.png)
 
 > 万能近似定理：⼀个前馈神经⽹络如果具有线性层和⾄少⼀层具有 “挤压” 性质的激活函数（如 sigmoid 等），给定⽹络⾜够数量的隐藏单元，它可以以任意精度来近似任何从⼀个有限维空间到另⼀个有限维空间的 borel 可测函数。
+>
+> 隐含层数量的影响：
+>
+> - `0`: 只能表示线性可分函数或决策
+> - `1`: 可以近似任何包含从一个有限空间到另一个有限空间的连续映射的函数
+> - `2`: 可以用有理激活函数以任意精度表示任意决策边界，并且可以近似任何平滑映射到任何精度
+> - `≥3`: 额外的隐藏层可以学习复杂的描述（某种自动特征工程）
 
-多层感知机(Multilayer Perceptron, MLP)，也叫深度前馈网络(Deep Feedforward Network, DFN)或前馈神经网络(Feedforward Neural Network, FNN)。网络包含输入层、隐含层、输出层，层与层之间是全连接的。
+### 线性层
 
-![dfn](images/dfn.png)
+线性层也叫全连接层
 
-### 输入层
+- 压缩信息，提取特征
+- 整合信息，计算目标
 
-通常输入数据是二维张量（样本，特征）
+### 激活层
 
-### 隐含层
-
-![dfn2](images/dfn2.png)
-
-$\sigma$是激活函数，如果不引入激活函数，可以验证，无论多少层神经网络，
-输出都是输入的线性组合。常见激活函数有
+如果不引入激活函数，可以验证，无论多少个线性层，输出都是输入的线性组合。常见激活函数有：
 
 - ReLU: $g(z)=max\{0,z\}$
 - tanh: $g(z)=\frac{e^z-e^{-z}}{e^z+e^{-z}}$
@@ -47,7 +54,7 @@ $\sigma$是激活函数，如果不引入激活函数，可以验证，无论多
 
 ### 输出层
 
-假设前⾯已经使⽤若⼲隐藏层提供了⼀组隐藏特征 $h$，输出层的任务就是要对这些特征做⼀些额外变换。常见输出单元有
+假设前⾯已经使⽤若⼲隐藏层提供了⼀组隐藏特征 $h$，输出层的任务就是要对这些特征做⼀些额外变换。常见输出单元有：
 
 - linear: $\hat{y}=z=Wh+b$
 - softmax: $\hat{y}_i=\frac{exp(z_i)}{\sum_jexp(z_j)}$
@@ -57,11 +64,9 @@ $\sigma$是激活函数，如果不引入激活函数，可以验证，无论多
 
 > 关于后向传播算法见 [3Blue1Brown@youtube](https://www.youtube.com/watch?v=Ilg3gGewQ5U&t=464s)
 
-任何能够衡量模型预测值与真实值之间的差异的函数都可以叫做代价函数；通过链式求导与梯度下降可从后往前优化代价函数的参数。
+任何能够衡量模型预测值与真实值之间的差异的函数都可以叫做代价函数；通过链式求导与梯度下降可从后往前优化代价函数的参数，从而提高模型的预测性能。
 
 ## 卷积神经网络
-
-通常输入为 4 维张量（样本，通道，高度，宽度）
 
 ### 卷积层
 
@@ -80,17 +85,11 @@ $\sigma$是激活函数，如果不引入激活函数，可以验证，无论多
 
 ![pooling](images/pooling.png)
 
-- 池化运算
-  - Max
-  - Average
-
 ## 循环神经网络
 
 ![rnn](images/rnn.png)
 
 ![lstm](images/lstm.png)
-
-输入形状：（步长，批量，特征）通常需要转置（批量，步长）后独热编码
 
 ## Transformer
 
@@ -186,13 +185,6 @@ class MyNeuralNetwork(nn.Module):
 model = MyNeuralNetwork()
 ```
 
-- Hidden Layers
-
-  - `0`: 只能表示线性可分函数或决策
-  - `1`: 可以近似任何包含从一个有限空间到另一个有限空间的连续映射的函数
-  - `2`: 可以用有理激活函数以任意精度表示任意决策边界，并且可以近似任何平滑映射到任何精度
-  - `>2`: 额外的隐藏层可以学习复杂的描述（某种自动特征工程）
-
 - Hidden Neurons
 
   - `input * 2 / 3 + output`
@@ -205,14 +197,23 @@ model = MyNeuralNetwork()
   - 提高泛化能力
 
 - Convolution Layer
+
   - $n_o=\frac{(n_i-f+2p)}{s}+1$
   - valid: 不填充
   - same: 填充使得卷积后输出大小与输入一致
   - full: 填充使得输出大小为 n+f-1
 
+- Activation Function
+  - ReLU: first try
+  - PReLU: avoid the dying ReLU problem
+  - ReLU6: limit high positive value to avoid computational issue during the training
+  - HardSwish: give it a try
+
 ### Optimizer
 
 ```python
+torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9,weight_decay=1e-4)
+
 torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-2, amsgrad=True)
 ```
 
@@ -279,7 +280,7 @@ with torch.no_grad():
 - Data Augmentations
 - Batch Size: 4 ~ 512，越小泛化能力越强，但训练成本也越高
 - Early Stopping: 验证损失持续不下降则停止训练
-- Batch Normalisation: 放在激活函数前
+- Batch/Layer Normalisation: 放在激活函数前
 - Dropout: 20% ~ 50%, 越大正则化能力越强。放在激活函数后
 - L1 and L2 Regularization: 1e-3 ~ 1e-4，越大正则化能力越强
 
