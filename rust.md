@@ -1,15 +1,91 @@
 # RUST
 
 - [RUST](#rust)
+  - [项目管理](#项目管理)
   - [依赖](#依赖)
   - [变量](#变量)
   - [Triats](#triats)
+
+## 项目管理
+
+```txt
+.
+├── Cargo.lock
+├── Cargo.toml
+├── src/
+│   ├── lib.rs
+│   ├── main.rs
+│   └── bin/
+│       ├── named-executable.rs
+│       ├── another-executable.rs
+│       └── multi-file-executable/
+│           ├── main.rs
+│           └── some_module.rs
+├── benches/
+│   ├── large-input.rs
+│   └── multi-file-bench/
+│       ├── main.rs
+│       └── bench_module.rs
+├── examples/
+│   ├── simple.rs
+│   └── multi-file-example/
+│       ├── main.rs
+│       └── ex_module.rs
+└── tests/
+    ├── some-integration-tests.rs
+    └── multi-file-test/
+        ├── main.rs
+        └── test_module.rs
+```
+
+通过修改 Cargo.toml 来调整依赖
+
+```txt
+1.2.3  :=  >=1.2.3, <2.0.0
+1.2    :=  >=1.2.0, <2.0.0
+1      :=  >=1.0.0, <2.0.0
+0.2.3  :=  >=0.2.3, <0.3.0
+0.2    :=  >=0.2.0, <0.3.0
+0.0.3  :=  >=0.0.3, <0.0.4
+0.0    :=  >=0.0.0, <0.1.0
+0      :=  >=0.0.0, <1.0.0
+
+^1.2.3 :=  ==1.2.3
+
+~1.2.3 :=  >=1.2.3, <1.3.0
+~1.2   :=  >=1.2.0, <1.3.0
+~1     :=  >=1.0.0, <2.0.0
+
+*      :=  >=0.0.0
+1.*    :=  >=1.0.0, <2.0.0
+1.2.*  :=  >=1.2.0, <1.3.0
+```
+
+```sh
+# 新建项目
+cargo new pkg_name
+
+# 构建项目，自动下载依赖
+cargo build [--release]
+
+# 运行程序，自动构建项目
+cargo run [--bin name | --example name]
+
+# 测试程序，自动构建项目
+cargo test [test_name]
+
+# 更新依赖
+cargo update [-p pkg]
+
+# 下载、编译并安装二进制可执行文件
+cargo install pkg
+```
 
 ## 依赖
 
 - 包内部的依赖由`mod`语句导入
 - 包外部的依赖由`Cargo.toml`导入
-- 一个包可以包含至多一个 lib crate(`src/lib.rs`)和若干 bin crate(`src/main.rs`, `bin/name.rs`)
+- 一个包可以包含至多一个 lib crate(`src/lib.rs`)和任意数量 bin crate(`src/main.rs`, `src/bin/name.rs`)
 
 ## 变量
 

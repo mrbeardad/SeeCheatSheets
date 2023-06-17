@@ -1,9 +1,8 @@
 # Go
 
 - [Go](#go)
-  - [安装](#安装)
-  - [模块](#模块)
-  - [包](#包)
+  - [项目管理](#项目管理)
+  - [依赖](#依赖)
   - [变量](#变量)
   - [常量](#常量)
   - [表达式](#表达式)
@@ -23,7 +22,7 @@
     - [映射](#映射)
     - [通道](#通道)
 
-## 安装
+## 项目管理
 
 ```txt
 $GOROOT/
@@ -46,8 +45,6 @@ $GOBIN/
 $GOCACHE/
 ```
 
-## 模块
-
 - 模块名：
   - 版本管理仓库根目录`golang.org/x/net`
   - 版本管理仓库子目录`golang.org/x/tools/gopls`
@@ -65,27 +62,27 @@ $GOCACHE/
 
 ```sh
 go env [-u] [-w] [var ...]
-# 逗号分隔列表，指定proxy-url，direct表示直接从版本管理仓库下载
-GOPROXY=https://proxy.golang.org,direct
+# 模块包下载服务器，direct 表示直接从版本管理仓库下载
+GOPROXY=https://goproxy.cn,direct
 # 签名文件下载服务器
 GOSUMDB=sum.golang.google.cn
-# 逗号分隔列表，是GONOPROXY与GONOSUMDB的默认值，指定通配符匹配的模块作为私有模块，不走代理且无需验证
+# GONOPROXY 与 GONOSUMDB 的默认值，指定通配符匹配的模块作为私有模块，不走代理且无需验证
 GOPRIVATE=
 
--mod=mod        # 忽略vendor目录，并自动更新go.mod
--mod=readonly   # 忽略vendor目录，且当需要更改go.mod时报错
--mod=vendor     # 仅从vendor目录加载模块
-# 1.14之后，若存在vendor目录则默认-mod=vendor，其他情况默认-mod=readonly
+-mod=readonly   # 忽略 vendor 目录，仅 go mod 与 go get 命令能更新 go.mod
+-mod=mod        # 忽略 vendor 目录，并自动更新 go.mod
+-mod=vendor     # 仅从 vendor 目录加载模块
+# 1.16 之前，默认 -mod=mod
+# 1.16 之后，默认 -mod=readonly
+# 1.14 之后，若主目录下有 vendor 目录则默认 -mod=vendor
 
-go mod init [module-path]       # 初始化模块
-go mod tidy [-v]                # 重新扫描并整理依赖
-go mod vendor [-v]              # 同步依赖模块到vendor目录
-go mod graph                    # 列出依赖模块
-go mod why packages...          # 列出主模块到列出包的最短路径
-go mod download [all]           # 下载主模块所有依赖
-
-go install [packages]           # 下载、编译并安装包/模块，可选添加@指定版本
-go get -d golang.org/x/net      # 管理依赖，可选添加@指定版本
+# 项目管理
+go mod init [path]      # 初始化模块
+go mod tidy [-v]        # 扫描项目来重新整理依赖
+go mod vendor [-v]      # 拷贝依赖模块到 vendor 目录
+go mod graph            # 列出依赖模块
+go mod download [all]   # 下载依赖模块
+go get example.com/pkg  # 手动管理依赖，并自动下载
 # @v1.2.3       # 完整版本号
 # @v1.2         # 版本号前缀
 # @<v1.2.3      # 版本号比较
@@ -100,13 +97,15 @@ go clean -cache                 # 清除构建缓存
 go build [-o output] [packages] # 编译当前包或指定包，参数 -gcflags='all=-N -l' 用于调试
 go run packages [arguments]     # 编译并运行指定包
 go test [packages]              # 编译并测试当前包或指定包，测试文件XXX_test.go
+
+go install packages@latest      # 下载、编译并安装二进制文件
 ```
 
 <!-- entry end -->
 
-## 包
+## 依赖
 
-- 包是模块下的一个目录所有文件集合（不包括子目录）
+- 包(package)是模块下的一个目录所有文件集合（不包括子目录）
 - 同一包中的符号可相互引用不依赖定义的先后顺序
 - 导入路径
   - 当前模块

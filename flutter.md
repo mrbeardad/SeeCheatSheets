@@ -18,38 +18,31 @@
 
 具体参见<https://docs.flutter.dev/resources/architectural-overview>
 
-- Widget 表现为一个类，用来生成 Element
-
-- Element 表现为一个实例数据，用来保存视图的配置数据
-
-- RenderObject 表现为一个实例数据，用来它负责布局、绘制、合成等渲染任务
-
-- 应用启动：调用根 Widget 的 build 方法递归地构造一棵 Element 树，再由后者生成一棵 RenderObject 树，最后由 RenderObject 树负责渲染画面
-
-- 状态更新：重新调用状态被更新的 Widget 的 build 方法，并用结果更新对应的 Element 子树，再由后者更新对应 RenderObject，最后更新渲染的画面。一些 Widget 利用类似 `builder(context, child)` 属性来避免重新构建子树
+- 应用启动：调用根 Widget 的 build 方法递归地构造 Element 树，再由后者构造 RenderObject 树，最后由 RenderObject 树负责渲染画面
+- 重新渲染：Widget 关联的状态发生状态转移时，重新调用其 build 方法生成新的 Element 子树，并更新对应的 Element，再由后者更新对应 RenderObject，最后更新画面。一些 Widget 利用类似 `builder(context, child)` 属性来避免不必要地重新构建子树
 
 - `StatelessWidget` 与 `StatefulWidget` 只用于组合 Element 节点
-
 - `LeafRenderObjectWidget`、`SingleChildRenderObjectWidget` 与 `MultiChildRenderObjectWidget` 才会新建 Element 节点
 
-- 广义上讲，Widget 的主要任务是负责展示状态数据与响应 UI 交互
+- Widget 视图仅与其状态有关，即 $View=f(Status)$
 
-  - 状态数据来源
+  - 状态
+    - Widget 内部状态
+    - Widget 参数
+    - Widgets 共享状态
+    - UI 事件：特殊的 IO 事件，如用户表单输入
+    - IO 事件：通常携带了环境状态用来对 Widget 进行状态转移，如平台交互、UI 交互、文件、网络、IPC 等
+  - 状态转移：事件是状态转移的唯一来源，`setState`是状态转移的唯一手段，状态转移通常由库代码自动执行（如`useMedia`）或你手动执行（如`onClick`）
 
-    - 环境状态（影响所有 Widget 的状态）
-    - 内部状态（只影响单个 Widget 的状态）
-    - 配置状态（祖先节点为 Widget 的构造函数提供参数，可用于跨 Widget 的状态）
-    - UI 事件（如 controller 获取用户输入数据）
-
-  - 常见属性名：
-    - `child`：单个子组件
-    - `children`：子组件列表
-    - `builder`：构建子组件的函数
-      - 在必要时才构建以提高性能
-      - 提供额外的状态数据
-      - 为子组件提供 context 而避免重构提取出子组件
-    - `delegation`：将内部的一些配置参数与策略方法暴露给用户来提供和实现
-    - `controller`：为组件提供状态数据（可能由 UI 交互获取），并为用户提供方法来控制组件内部状态
+- Widget 常见属性名：
+  - `child`：单个子组件
+  - `children`：子组件列表
+  - `builder`：构建子组件的函数
+    - 在必要时才构建以提高性能
+    - 提供额外的状态数据
+    - 为子组件提供 context 而避免重构提取出子组件
+  - `delegation`：将内部的一些配置参数与策略方法暴露给用户来提供和实现
+  - `controller`：为组件提供状态数据（可能由 UI 交互获取），并为用户提供方法来控制组件内部状态
 
 ## 窗口
 
