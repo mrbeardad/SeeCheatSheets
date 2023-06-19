@@ -121,9 +121,6 @@
   - 水平方向的 padding 和 margin 会挤占空间，而垂直方向不会
   - 宽度忽略`width:`
   - 高度忽略`height:`
-- **特殊的**：
-  - 初始元素`<html>`的宽度固定为`100vw`，高度固定为`100vh`
-  - 根元素`<body>`的宽度默认为`100vw`，最小高度默认为`100vh`
 
 ```css
 /* box-sizing */
@@ -179,11 +176,11 @@ margin: 2px 1em 0 auto;
 
 Normal Flow 布局是一种垂直排列布局，时默认的布局方式。
 
-| 属性                        | 值                                          | 备注                                        |
-| --------------------------- | ------------------------------------------- | ------------------------------------------- |
-| `display: block`            | `block`                                     | 在开头和结尾换行，默认宽度为父元素宽度 100% |
-| `display: inline`           | `inline`,`inline-block`                     | 与其他元素进行堆积排列                      |
-| `write-mode: horizontal-tb` | `horizontal-tb`,`vertical-rl`,`vertical-lr` | 堆积排列方向                                |
+| 属性                        | 值                                          | 备注                                                    |
+| --------------------------- | ------------------------------------------- | ------------------------------------------------------- |
+| `display: block`            | `block`                                     | 元素默认宽度为父元素宽度 100%，根元素`html`宽度为 100vw |
+| `display: inline`           | `inline`,`inline-block`                     | 与其他元素进行堆积排列                                  |
+| `write-mode: horizontal-tb` | `horizontal-tb`,`vertical-rl`,`vertical-lr` | 堆积排列方向                                            |
 
 ### Flex 布局
 
@@ -300,16 +297,13 @@ Grid 是二维布局，它的目标注重于整体规划区域并定位元素。
 | `overflow: scroll`  | 滚动条               |
 | `overflow: auto`    | 自动隐藏或显示滚动条 |
 
-| 图像溢出处理             | 备注                             |
-| ------------------------ | -------------------------------- |
-| `object-fit: none`       | 保持其原有的尺寸                 |
-| `object-fit: contain`    | 缩放并保持长宽比，保证包含全图   |
-| `object-fit: cover`      | 缩放并保持长宽比，必要时进行裁剪 |
-| `object-fit: fill`       | 缩放且必要时拉伸，保证包含全图   |
-| `object-fit: scale-down` | 取 none 与 contain 中的较小者    |
-| `max-width: 100%`        | 仅缩小并保持长宽比               |
-
-> `object-fit`需要设置`width`生效
+| 图像缩放                 | 备注                          |
+| ------------------------ | ----------------------------- |
+| `object-fit: none`       | 保持其原有的尺寸              |
+| `object-fit: contain`    | 缩放至长边匹配（保持长宽比）  |
+| `object-fit: cover`      | 缩放至短边匹配（保持长宽比）  |
+| `object-fit: fill`       | 缩放至长边短边匹配            |
+| `object-fit: scale-down` | 取 none 与 contain 中的较小者 |
 
 ## 动画
 

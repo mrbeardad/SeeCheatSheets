@@ -4,7 +4,7 @@
   - [JSX](#jsx)
   - [Component](#component)
   - [Hook](#hook)
-  - [Server Component](#server-component)
+  - [Server Component in Next.js](#server-component-in-nextjs)
 
 ## JSX
 
@@ -128,23 +128,35 @@ const memoizedCallback = useCallback(() => {
 原理是当父组件重新渲染时会直接重新渲染整个子组件树，
 使用`memo(SubWidget)`会先比较子组件每个属性是否发生变化，若均相等则不再重绘。
 
-## Server Component
+## Server Component in Next.js
 
-- 服务端组件：（默认）完全在服务端运行并渲染，用来保护敏感信息、更快访问后端数据、减少客户端代码
+- 服务端组件：（默认）仅在服务端运行并渲染，用来保护敏感信息、更快访问后端数据、减少客户端代码体积
 
-  - 可以直接嵌套客户端组件
+  - 可以直接导入并嵌套客户端组件
   - 可以传递属性给客户端组件，但因为需要先将属性序列化，所以不能传递函数
-  - 无法使用 Hooks 和浏览器 API，意味着其无法进行状态转移
-  - 服务端组件之间共享状态可通过单例，且相同的`fetch`结果会自动共享而无序担心多余开销
-  - 服务端组件支持`async`，阻塞时可由`<Suspense>`处理
+  - 无法使用 Hooks 和浏览器 API，意味着其无状态（组件代码仅运行一次）且无交互
+  - 支持`async`，通过使用`<Suspense fallback={<Loading/>}>`内嵌服务端组件可在其阻塞时渲染`fallback`从而使客户端可以异步加载服务端组件（默认同步）
 
-- 客户端组件：（`"use client"`）发送给客户端运行并渲染，建议仅在服务端组件无法满足需要时使用
+- 客户端组件：（`"use client"`）在客户端运行并渲染，建议仅在服务端组件无法满足需要时使用
 
   - 只能间接嵌套服务端组件（通过`props.children`），因为客户端组件导入的组件都会自动转换为客户端组件
   - 无法传递属性给服务端属性，因为无法为`props.children`设置属性
 
-- 渲染：服务端收到网页请求后，服务端组件代码在服务端运行并负责生成 ReactNode（可能被缓存），客户端组件代码发送给客户端运行并负责接受服务端传来的 ReactNode 然后重建完整的 React 树
+- 渲染交互：
 
-  - 服务端是否缓存服务端组件结果取决于：1、fetch 是否缓存；2、是否需要动态信息（如 url、cookie 等）
+  - 服务端将渲染结果传给客户端，客户端将两边渲染结果组合(hydrate)在本地重建完整 React VDOM
+  - 客户端代码如何传递？答：通过页面 HTML 的资源链接，这些资源可上传至 CDN（需要设置`assetPrefix`）
+  - 服务端渲染结果如何获取？答：硬导航（如刷新页面）通过页面 HTML 尾部追加的内联`<script>`，软导航（如路由跳转）通过 fetch
+  - 服务端渲染结果的传递格式？答：JSON 序列化后的 ReactNode
 
-- 预渲染：编译构建时预先运行一遍组件渲染流程来生成初始 HTML，代替原来完全由客户端代码运行后生成，可以提高首屏渲染速度
+- 预渲染：也叫静态渲染，在编译构建时，预先运行一遍整个组件渲染过程来生成初始 HTML，代替原来 HTML 内容几乎完全由 js 生成，这可以使 SEO 更友好并提高首屏渲染速度。以下页面无法预渲染：
+
+  - 调用了非缓存 fetch
+  - 需要访问动态信息，如 Cookie, DynamicPath, Params
+  - 组件内直接调用浏览器专属 API，可将其放入`useEffect`或`onClick`之类的回调函数里避免
+  - `export const dynamic = "force-static";`
+
+- 缓存：在 HTTP 缓存基础上，客户端和服务端中所有相同参数 fetch GET 的重复调用会被去除，所有调用返回同一个的缓存结果，可以通过选项控制
+  - dynamic
+  - fetchCache
+  - revalidate

@@ -15,7 +15,7 @@
 <html lang="en-US">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Description of the page less than 150 characters" />
     <title>页面标题</title>
     <link rel="icon" type="image/png" href="favicon-32x32.png" />
@@ -85,14 +85,14 @@
 </html>
 ```
 
-| 通用属性    | 备注                               |
-| ----------- | ---------------------------------- |
-| `id`        | 元素唯一标识符，可作为`#anchor`    |
-| `class`     | 元素的类（逗号分隔列表）           |
-| `title`     | 元素咨询信息，通常会在提示框中展示 |
-| `autofocus` | 页面加载完成后聚焦该元素           |
-| `hidden`    | 指明该元素语义上已不属于当前页面   |
-| `style`     | 内联样式                           |
+| 通用属性    | 备注                                  |
+| ----------- | ------------------------------------- |
+| `id`        | 元素唯一标识符，可作为`#anchor`       |
+| `class`     | 元素的类（逗号分隔列表）              |
+| `title`     | 元素咨询信息，通常会在 tooltip 中展示 |
+| `autofocus` | 页面加载完成后聚焦该元素              |
+| `hidden`    | 指明该元素语义上已不属于当前页面      |
+| `style`     | 内联样式                              |
 
 ## 语义元素
 
@@ -317,15 +317,20 @@
   alt="alternative content"
   loading="lazy"
 />
-
-<hr />
-
-<!--按条件加载图片，img为默认-->
-<picture>
-  <source media="(max-width: 799px)" srcset="elva-480w-close-portrait.jpg" />
-  <source media="(min-width: 800px)" srcset="elva-800w.jpg" />
-  <img src="elva-800w.jpg" alt="Chris standing up holding his daughter Elva" />
-</picture>
+<!--浏览器选择的src会影响该元素的内在尺寸，比如选480w则宽度为480px，800w宽度变800px-->
+<img
+  srcset="elva-fairy-480w.jpg 480w, elva-fairy-800w.jpg 800w"
+  sizes="(max-width: 600px) 480px,
+         800px"
+  src="elva-fairy-800w.jpg"
+  alt="Elva dressed as a fairy"
+/>
+<!--但是像素描述符不同，宽度同1x，1x宽度320px，1.5x宽度320px，2x宽度也是320px -->
+<img
+  srcset="elva-fairy-320w.jpg, elva-fairy-480w.jpg 1.5x, elva-fairy-640w.jpg 2x"
+  src="elva-fairy-640w.jpg"
+  alt="Elva dressed as a fairy"
+/>
 
 <hr />
 
