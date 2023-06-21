@@ -164,7 +164,7 @@ Context: server, location, if
 
 - 正则替换 uri，按顺序执行
   - last: 停止当前 ngx_http_rewrite_module 并重新匹配 location（内部重定向）
-  - break: 停止当前 ngx_http_rewrite_module 但不重新匹配 location（内部重定向）
+  - break: 停止当前 ngx_http_rewrite_module 但不再重新匹配 location，即该路由判定匹配当前 location（内部重定向）
   - redirect: 302 暂时重定向（外部重定向）
   - permanent: 301 永久重定向（外部重定向）
 - 若 replacement 以`http://`、`https://`或`$scheme`开头则停止并返回响应

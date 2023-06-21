@@ -4,7 +4,8 @@
   - [JSX](#jsx)
   - [Component](#component)
   - [Hook](#hook)
-  - [Server Component in Next.js](#server-component-in-nextjs)
+  - [Server Component](#server-component)
+  - [Next.js](#nextjs)
 
 ## JSX
 
@@ -128,13 +129,13 @@ const memoizedCallback = useCallback(() => {
 原理是当父组件重新渲染时会直接重新渲染整个子组件树，
 使用`memo(SubWidget)`会先比较子组件每个属性是否发生变化，若均相等则不再重绘。
 
-## Server Component in Next.js
+## Server Component
 
 - 服务端组件：（默认）仅在服务端运行并渲染，用来保护敏感信息、更快访问后端数据、减少客户端代码体积
 
   - 可以直接导入并嵌套客户端组件
-  - 可以传递属性给客户端组件，但因为需要先将属性序列化，所以不能传递函数
-  - 无法使用 Hooks 和浏览器 API，意味着其无状态（组件代码仅运行一次）且无交互
+  - 可以传递属性给客户端组件，但因为需要先将属性序列化，所以不能传递函数（使用 Server Action 代替）
+  - 无法使用 Hooks 和浏览器专属 API，意味着其无状态（组件代码仅运行一次）且无交互
   - 支持`async`，通过使用`<Suspense fallback={<Loading/>}>`内嵌服务端组件可在其阻塞时渲染`fallback`从而使客户端可以异步加载服务端组件（默认同步）
 
 - 客户端组件：（`"use client"`）在客户端运行并渲染，建议仅在服务端组件无法满足需要时使用
@@ -149,14 +150,25 @@ const memoizedCallback = useCallback(() => {
   - 服务端渲染结果如何获取？答：硬导航（如刷新页面）通过页面 HTML 尾部追加的内联`<script>`，软导航（如路由跳转）通过 fetch
   - 服务端渲染结果的传递格式？答：JSON 序列化后的 ReactNode
 
-- 预渲染：也叫静态渲染，在编译构建时，预先运行一遍整个组件渲染过程来生成初始 HTML，代替原来 HTML 内容几乎完全由 js 生成，这可以使 SEO 更友好并提高首屏渲染速度。以下页面无法预渲染：
+- 预渲染：也叫静态渲染，在编译构建时，预先运行一遍整个组件渲染过程来生成初始 HTML，代替原来 HTML 内容几乎完全由 js 生成，提高首屏渲染速度且 SEO 友好
 
-  - 调用了非缓存 fetch
-  - 需要访问动态信息，如 Cookie, DynamicPath, Params
-  - 组件内直接调用浏览器专属 API，可将其放入`useEffect`或`onClick`之类的回调函数里避免
-  - `export const dynamic = "force-static";`
+  - 无法预渲染
+    - 访问动态信息，如 Dynamic Path, Query Params, Cookie 等
+    - 调用无缓存 fetch，如 non-GET 方法、`cache: 'no-store'` 或 `revalidate: 0` 选项
+    - 最顶层直接调用浏览器专属 API，为了避免这种情况可以将其放入`useEffect`或`onClick`之类的回调函数里
+  - 对于前两种情况，将无法预渲染的组件放入`<Suspense>`可避免上层组件无法预渲染
+  - 设置`next: {revalidate: n}`可以预渲染，并运行时固定周期重新预渲染一次，可以根据响应首部`Cache-Control`设置
 
-- 缓存：在 HTTP 缓存基础上，客户端和服务端中所有相同参数 fetch GET 的重复调用会被去除，所有调用返回同一个的缓存结果，可以通过选项控制
-  - dynamic
-  - fetchCache
-  - revalidate
+- 缓存：
+  - 默认所有 fetch 调用的结果都会被缓存在内存中
+  - 所有相同参数缓存 fetch 的重复调用会被去除，所有调用返回同一个的缓存结果(deduped)
+
+## Next.js
+
+- `<Image>`为了避免 LCP 开销，必须在构建时确定显示大小，通过以下三种方式
+  - 静态导入图片用于默认尺寸`import pic from '@/public/picture.jpg'`
+  - 动态引用图片需要手动指定`width`和`height`
+  - 相对父元素大小
+    - 父元素必须指定`position`、`width`和`height`
+    - `<Image>`指定`fill`和`style={{objectFit: 'fill'}}`
+    - `<Image>`可选指定`sizes`来优化获取的图片尺寸

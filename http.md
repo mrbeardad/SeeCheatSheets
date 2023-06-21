@@ -266,7 +266,7 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 | `<name>=<value>`     | name 不能包含控制字符、空白符和一些符号；value 可以用双引号来转移特殊字符；若需多个 name=value 对则添加多个`Set-Cookie`               |
 | `Max-Age=`           | 指定 cookie 持久化时间，默认 session cookie                                                                                           |
 | `Expires=`           | 指定 cookie 持久化时间点，默认 session cookie                                                                                         |
-| `Domain=`            | 指定 cookie 对应的域名且包括子域名，默认当前域名且不含子域名                                                                          |
+| `Domain=`            | 指定 cookie 当前域名或更高阶的域名（包括子域名），默认当前域名（不含子域名）                                                          |
 | `Path=`              | 指定 cookie 对应的路径且包括子路径，默认匹配所有路径                                                                                  |
 | `Secure`             | 指定 cookie 仅在 https 协议下使用                                                                                                     |
 | `HttpOnly`           | 指定 cookie 不能被 JS 访问                                                                                                            |
