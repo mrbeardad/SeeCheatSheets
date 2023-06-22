@@ -5,7 +5,6 @@
   - [Component](#component)
   - [Hook](#hook)
   - [Server Component](#server-component)
-  - [Next.js](#nextjs)
 
 ## JSX
 
@@ -162,13 +161,3 @@ const memoizedCallback = useCallback(() => {
 - 缓存：
   - 默认所有 fetch 调用的结果都会被缓存在内存中
   - 所有相同参数缓存 fetch 的重复调用会被去除，所有调用返回同一个的缓存结果(deduped)
-
-## Next.js
-
-- `<Image>`为了避免 LCP 开销，必须在构建时确定显示大小，通过以下三种方式
-  - 静态导入图片用于默认尺寸`import pic from '@/public/picture.jpg'`
-  - 动态引用图片需要手动指定`width`和`height`
-  - 相对父元素大小
-    - 父元素必须指定`position`、`width`和`height`
-    - `<Image>`指定`fill`和`style={{objectFit: 'fill'}}`
-    - `<Image>`可选指定`sizes`来优化获取的图片尺寸

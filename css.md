@@ -6,6 +6,7 @@
   - [长度单位](#长度单位)
   - [布局](#布局)
     - [盒子模型](#盒子模型)
+    - [Normal Flow](#normal-flow)
     - [正常流布局](#正常流布局)
     - [Flex 布局](#flex-布局)
     - [Grid 布局](#grid-布局)
@@ -105,27 +106,50 @@
 └─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┘
 ```
 
-> - 宽度与高度均指逻辑方向上的内容宽度与内容高度
-> - 盒子模型的基础大小等于子元素盒子堆积排列后的挤占总空间的大小
-> - 盒子模型的最终大小依布局方式进行改变
+将每个元素看做一个矩形盒子，布局就是对这些盒子进行排列、覆盖和嵌套
+
+- 排列：在 2D 平面上连续紧凑地放置若干元素
+- 覆盖：在新的 2D 平面上排列元素
+- 嵌套：将布局后的若干元素放入一个父元素
+
+每个元素都有一个外部显示类型和一个内部显示类型
+
+- 外部显示类型：用于 Normal Flow 布局区分盒子类型
+  - block
+  - inline
+  - inline-block
+- 内部显示类型：指明元素内部应用的布局类型（默认 Normal Flow）
+  - Normal Flow
+  - Flex
+  - Grid
+
+### Normal Flow
+
+不同盒子类型具有不同的排列方式和默认大小
 
 - `block`
-  - padding 和 margin 会挤占空间
-  - 宽度考虑`width:`
-  - 高度考虑`height:`
-- `inline-block`：
-  - padding 和 margin 会挤占空间
-  - 宽度考虑`width:`
-  - 高度考虑`height:`
+  - 独占一行
+  - padding, margin, border 会挤占周围空间
+  - 宽度默认父元素宽度，考虑属性`width`
+  - 高度默认装下子元素的最小高度，考虑属性`height`
 - `inline`
-  - 水平方向的 padding 和 margin 会挤占空间，而垂直方向不会
-  - 宽度忽略`width:`
-  - 高度忽略`height:`
+  - 与其他`inline`或`inline-box`元素连续紧凑地排列，超出父元素宽度时换行
+  - padding, margin, border 仅挤占水平方向空间
+  - 宽度默认装下子元素的最小宽度，忽略属性`width`
+  - 高度默认装下子元素的最小高度，忽略属性`height`
+- `inline-block`：
+  - 与其他`inline`或`inline-box`元素连续紧凑地排列，超出父元素宽度或属性`width`大小时换行
+  - padding, margin, border 会挤占周围空间
+  - 宽度默认装下子元素的最小宽度，忽略属性`width`
+  - 高度默认装下子元素的最小高度，考虑属性`height`
+
+总的来说，元素的大小通常依赖于子元素的大小，递归到最后一些元素拥有内在大小，如文本、图像等内容；
+而有些元素的大小依赖于父元素宽度，递归到最后`<body>`的默认宽度为`100vw`，即浏览器视窗宽度；
 
 ```css
 /* box-sizing */
 box-sizing: content-box; /* width/height 表示 content width/height（默认） */
-box-sizing: border-box; /* width/height 表示 border width/height */
+box-sizing: border-box; /* width/height 表示 border width/height（建议） */
 
 /* 宽度：width, min-width, max-width, inline-size */
 width: auto; /* 各布局的默认宽度 */
