@@ -72,8 +72,7 @@
 - [Docker](docker.md)：打包并隔离进程的运行环境
 - [K8S](k8s.md)：动态编排容器集群
 - [Redis](redis.md)：结构型数据缓存
-- [MySQL](mysql.md)：关系型数据库
-- [SQL](sql.md)：结构化查询语言
+- [PostgreSQL](sql.md)：关系型数据库
 
 ## Coding
 
@@ -118,3 +117,4 @@
 - [Regex](regex.md)
 - [Protobuf](protobuf.md)
 - [Bitcoin](bitcoin.md)
+- [Color](color.md)

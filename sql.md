@@ -1,431 +1,247 @@
 # SQL
 
 - [SQL](#sql)
-  - [SQL 基础](#sql-基础)
-    - [系统信息](#系统信息)
-    - [用户管理](#用户管理)
-    - [库](#库)
+  - [数据类型](#数据类型)
+  - [类型限制](#类型限制)
+  - [表达式](#表达式)
+  - [CRUD](#crud)
     - [表](#表)
-    - [模式](#模式)
-    - [行记录](#行记录)
-    - [数据类型](#数据类型)
-      - [整数类型](#整数类型)
-      - [实数类型](#实数类型)
-      - [枚举类型](#枚举类型)
-      - [字符类型](#字符类型)
-      - [时间日期](#时间日期)
-    - [类型约束](#类型约束)
-    - [运算符](#运算符)
-    - [函数](#函数)
-  - [SQL 查询](#sql-查询)
-    - [查询语句](#查询语句)
-    - [联结查询](#联结查询)
-    - [嵌套查询](#嵌套查询)
-    - [全文查询](#全文查询)
-  - [视图](#视图)
-  - [分区](#分区)
-  - [事务](#事务)
+    - [列](#列)
+    - [行](#行)
+    - [查询](#查询)
+    - [事务](#事务)
 
-## SQL 基础
+## 数据类型
 
-### 系统信息
+| 数据类型           | 备注                              | 示例                                                            |
+| ------------------ | --------------------------------- | --------------------------------------------------------------- |
+| `BOOLEAN`          | 1 字节                            | `TRUE` `FALSE`                                                  |
+| `INTEGER`          | 32 位整数                         | `32`                                                            |
+| `BIGINT`           | 64 位整数                         | `32`                                                            |
+| `DOUBLE PRECISION` | 64 位浮点数                       | `3.14`                                                          |
+| `NUMERIC(p, s)`    | 大数，p 位有效数字，s 位最小精度  | `3.1415926`                                                     |
+| `CHAR(n)`          | 固定 n 个字符，长度不足用空白填充 | `'char'`                                                        |
+| `VARCHAR(n)`       | 最多 n 个字符                     | `'varchar'`                                                     |
+| `TEXT`             | 无限制字符                        | `'text'`                                                        |
+| `DATE`             | 日期                              | `DATE '2000-07-27'` `CURRENT_DATE`                              |
+| `TIME`             | 时间                              | `TIME '21:30:59.789'` `CURRENT_TIME`                            |
+| `TIMESTAMP`        | 日期时间                          | `TIMESTAMP '2000-07-27 21:30:59.789'` `CURRENT_DATETIME`        |
+| `INTERVAL`         | 时间间隔                          | `INTERVAL '1 year 2 months 3 days 4 hours 5 minutes 6 seconds'` |
+| `ENUM(...)`        | 枚举                              |                                                                 |
+|                    | 结构                              | `(1, 2.5, 'str')` `(item).fd` `(item).*`                        |
+| `datatype[][]`     | 数组                              | `ARRAY[[1,2],[3,4]]` `arr[1]` `arr[:][1]`                       |
 
-```sql
--- 默认变量作用域为SESSION
-SHOW VARAIABLES [LIKE 'pattern'];
-SHOW STATUS     [LIKE 'pattern'];
-SHOW PROCESSLIST;
+## 类型限制
 
-SHOW ENGINES    [LIKE 'pattern'];
-SHOW CHARSET    [LIKE 'pattern'];
-SHOW COLLATION  [LIKE 'pattern'];
-SET  NAMES charset;
-    -- SET character_set_client     = charset;  -- 客户端使用的字符集
-    -- SET character_set_connection = charset;  -- 服务器处理请求时使用的字符集
-    -- SET character_set_results    = charset;  -- 回传给客户端时使用的字符集
-```
+- `DEFAULT`
+- `NOT NULL`
+- `CHECK (expression)`
+- `UNIQUE [NULLS NOT DISTINCT]`
+- `PRIMARY KEY`
+- `REFERENCES foreign_table(ref_column)`
 
-### 用户管理
+## 表达式
 
-```sql
-SELECT * FROM mysql.user;                                   -- 查询用户
-CREATE USER username [IDENTIFIED BY [PASSWORD] 'passwd'];   -- 创建用户
-DROP   USER username;                                       -- 删除用户
-RENAME USER username TO new_username;                       -- 重命名
-SET PASSWORD FOR username = PASSWORD('passwd');             -- 修改密码
+- 运算符
 
-SHOW GRANTS [FOR username]                                  -- 查询授权
-GRANT|REVOKE privcode, ... ON db_name.tbl_name TO username; -- 授权|撤销
-FLUSH PRIVILEGES;                                           -- 刷新权限
+  - 单前：`+` `-`
+  - 算术：`+` `-` `*` `/` `%`
+  - 关系：
+    - `=` `<>` `<` `<=` `>` `=>` ：任意一边为 NULL 则会返回 false
+    - `IS [NOT] NULL`
+    - `~` `!~` `~*` `!~*`：正则匹配，`!`表示反选，`*`表示忽略大小写
+    - `[NOT] LIKE 'pattern'` ：支持通配符`_`和`%`
+    - `[NOT] ILIKE 'pattern'` ：忽略大小写
+    - `[NOT] IN (value, ...)`
+    - `[NOT] BETWEEN minval AND maxval`
+    - `<OP> ALL (value, ...)`
+    - `<OP> ANY (value, ...)`
+    - `[NOT] EXISTS (SELECT...)`：若 SELECT 字句返回结果至少一行则为 true
+  - 逻辑：`NOT` `AND` `OR`
 
--- 用户名(username)
-    -- user                ：默认host为'%'
-    -- user@%              ：允许从任意主机登录
-    -- user@localhost      ：只允许本机登录
-    -- user@192.168.0.1    ：只允许从指定IP的主机登录
-
--- 权限码(privcode)：
-    -- ALL
-    -- USAGE
-    -- SELECT
-    -- ...
-```
-
-### 库
+- 类型转换
 
 ```sql
-SHOW   DATABASES [LIKE 'pattern'];          -- 查询数据库
-CREATE DATABASE  [IF NOT EXISTS] db_name    -- 创建数据库
-DROP   DATABASE  [IF EXISTS]     db_name;   -- 删除数据库
-ALTER  DATABASE  db_name option             -- 修改数据库选项
-
-USE    db_name;                             -- 选择数据库
+CAST (expression AS datatype)
 ```
+
+- 条件表达式：
+
+```sql
+CASE expression
+    WHEN value THEN result
+    [WHEN...]
+    [ELSE result]
+END
+
+COALESCE(value, ...)  -- 返回第一个非 NULL 参数，若没有则返回 NULL
+NULLIF(value1, value2)-- 若两值相等则返回 NULL
+GREATEST(value, ...)  -- 返回最大值，若全为 NULL 则返回 NULL
+LEAST(value, ...)     -- 返回最小值，若全为 NULL 则返回 NULL
+```
+
+- 聚合表达式：应用于多行，结果为一行
+
+```sql
+aggregate_func ([DISTINCT] expression, ... [ORDER BY...] ) [FILTER (WHERE...)]
+aggregate_func (expression, ...) WITHIN GROUP (ORDER BY...) [FILTER (WHERE...)]
+```
+
+- 窗口表达式：应用于多行，结果为多行
+
+```sql
+window_func (expression, ...) [FILTER (WHERE...)] OVER ([PARTITION BY...] [ORDER BY...])
+```
+
+- 标量子查询
+
+```sql
+SELECT name, (SELECT max(pop) FROM cities WHERE cities.state = states.name) FROM states;
+```
+
+## CRUD
+
+> 注意列表尾部多余逗号`,`会报错
 
 ### 表
 
+- 数据表
+
 ```sql
-SHOW   TABLES [LIKE 'pattern'];                         -- 查询数据表
-SHOW   TABLE  STATUS [LIKE 'pattern']                   -- 查询数据表详情
--- 临时表只在单个连接中可见，断开连接时销毁；
--- 临时表可能使用Memory引擎或MyISAM引擎
--- Memory引擎不支持TEXT族和BLOB族类型数据，故这类临时表只能使用磁盘MyISAM
-CREATE [TEMPORARY] TABLE tbl_name (                     -- 创建数据表
-        fd_name type [const],
-        ...,
-        [PRIMARY KEY (fd_name),]
-        [KEY         (fd_name),]
-        [FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name),]
-    ) [ENGINE=engine] [CHARSET=charset] [COLLATE=collate] [AUTO_INCREMENT=n];
-DROP    TABLE tbl_name;                                 -- 删除数据表
-ALTER   TABLE tbl_name option=val;                      -- 修改表选项
-RENAME  TABLE tbl_name TO [new_db_name.]new_tbl_name;   -- 修改表名
+CREATE TABLE table_name (column_name datatype [constraints], ...);
+DROP TABLE table_name;
 ```
 
-<!-- entry end -->
-
-### 模式
-
-<!-- entry begin: sql table index metadata -->
+- 索引：加速搜索筛选目标
 
 ```sql
--- field
-SHOW COLUMNS FROM tbl_name;
-ALTER TABLE tbl_name ADD    fd_name type [const] [FIRST| AFTER fd_name];
-ALTER TABLE tbl_name DROP   fd_name;
-ALTER TABLE tbl_name CHANGE fd_name new_fd_name type [const];
-ALTER TABLE tbl_name MODIFY fd_name type [const];
-
--- index
-SHOW  INDEX FROM tbl_name;
-ALTER TABLE tbl_name ADD  INDEX idx_name(fd_name);
-ALTER TABLE tbl_name DROP INDEX idx_name;
-
--- FOREIGN KEY：两域类型必须相同，且被引用的域必须为`UNIQUE`
-ALTER TABLE tbl_name ADD  FOREIGN KEY (fd_name) REFERENCES tbl_name(fd_name);
-ALTER TABLE tbl_name DROP FOREIGN KEY fk_name;
+CREATE INDEX index_name ON table_name (expression, ...);
+CREATE UNIQUE INDEX index_name ON table_name (expression, ...) [NULLS NOT DISTINCT];
 ```
 
-<!-- entry end -->
-
-### 行记录
-
-<!-- entry begin: sql insert delete 事务 -->
+- 分区：将逻辑表分成若干物理表，以加速搜索筛选目标
 
 ```sql
--- 插入
-INSERT INTO tbl_name [(fd_name, ...)]   -- 外键列需要指定为该键所指向的列中已存在的值以进行关联
-VALUES (value, ...), ... ;              -- 若类型为字符串或日期时间，则`value`必须使用单引号
-
--- 复制
-INSERT INTO tbl_name (fd_name, ...)
-SELECT 语句 ;                            -- 两语句中的fd_name部分两两对应
-
--- 删除
-DELETE FROM tbl_name
-[WHERE clause] ;                        -- 默认删除所有数据
-
--- 修改
-UPDATE [IGNORE] tbl_name                -- IGNORE表示失败时不回滚而继续更改
-SET fd_name=value, ...
-[WHERE clause] ;                        -- 默认修改所有行
+-- range
+CREATE TABLE... PARTITION BY RANGE (expression, ...)
+CREATE TABLE part_name PARTITION OF table_name FOR VALUES FROM (begin_include) TO (end_exclude);
+-- list
+CREATE TABLE... PARTITION BY LIST (expression, ...)
+CREATE TABLE part_name PARTITION OF table_name FOR VALUES IN (value, ...)
+CREATE TABLE part_name PARTITION OF table_name DEFAULT;
+-- hash
+CREATE TABLE... PARTITION BY hash (expression, ...)
+CREATE TABLE part_name PARTITION OF table_name FOR VALUES WITH (modulus 3, remainder 0);
+CREATE TABLE part_name PARTITION OF table_name FOR VALUES WITH (modulus 3, remainder 1);
+CREATE TABLE part_name PARTITION OF table_name FOR VALUES WITH (modulus 3, remainder 2);
 ```
 
-<!-- entry end -->
-
-### 数据类型
-
-#### 整数类型
-
-> - 支持在其后添加`(N)`，指定十进制显示时的最小显示位数，最大 255（不影响存储与计算） **deprecated**
-
-- 支持在其后添加`UNSIGNED`，指定为无符型整数
-- 计算时统一使用`BIGINT`类型
-
-| 类型      | 字节 |
-| --------- | ---- |
-| TINYINT   | 1    |
-| SMALLINT  | 2    |
-| MEDIUMINT | 3    |
-| INT       | 4    |
-| BIGINT    | 8    |
-
-#### 实数类型
-
-> - 对于 FLOAT 与 DOUBLE，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（影响存储大小限制） **deprecated**
-
-- 对于 DECIMAL，支持在其后添加`(N, P)`，分别指定十进制显示时的最大有效位数与小数位数精度（默认`(10, 0)`）
-- 计算时统一使用`DOUBLE`类型
-
-| 类型    | 字节 |
-| ------- | ---- |
-| FLOAT   | 4    |
-| DOUBLE  | 8    |
-| DECIMAL | ∞    |
-
-#### 枚举类型
-
-- 支持在其后添加`('str1', 'str2')`来设置枚举字符
-  - 对于 ENUM，枚举字符映射为 1 个整数
-  - 对于 SET，枚举字符映射为 1 个 bit
-- 对于 ENUM，存储、计算、比较、索引时使用数字，显示时使用映射的字符。
-  特别注意排序时也是按数字大小来，所以最好映射的字符顺序与数字顺序相对应
-
-| 类型 | 说明                                       |
-| ---- | ------------------------------------------ |
-| ENUM | 数字与字符串间的双射，尽量使用整数代替枚举 |
-| SET  | 给每一位取个可读性高的名称                 |
-
-#### 字符类型
-
-- 对于 CHAR，支持在其后添加`(N)`，指定固定字符数（字节数最小为 N）
-- 对于 VARCHAY，支持在其后添加`(N)`，指定最大字符数
-- 对于 BINARY，支持在其后添加`(N)`，指定固定字节数
-- 对于 VARBINAY，支持在其后添加`(N)`，指定最大字节数
-- 对于 TEXT 族与 BLOB 族，排序时仅比较前`max_sort_length`字节，且可能使用外部空间存储数据而在表中存储指针
-
-| 类型            | 长度              | 说明                                  |
-| --------------- | ----------------- | ------------------------------------- |
-| CHAR            | 0~255 字符        | 固定字符数，忽略输入的尾后空格        |
-| VARCHAR         | 0~65535 字节      | 可变字符数                            |
-| BINARY          | 0~255 字节        | 类似 CHAR，但用`\0`填充且索引时不忽略 |
-| VARBINARY       | 0~65535 字节      | 类似 VARCHAR                          |
-| TINYTEXT        | 0~255 字符        | 大字符串数据                          |
-| SMALLTEXT(TEXT) | 0~65535 字符      | 大字符串数据                          |
-| MEDIUMTEXT      | 0~16777215 字符   | 大字符串数据                          |
-| LONGTEXT        | 0~4294967286 字符 | 大字符串数据                          |
-| TINYBLOB        | 0~255 字节        | 大二进制数据                          |
-| SMALLBLOB(BLOB) | 0~65535 字节      | 大二进制数据                          |
-| MEDIUMBLOB      | 0~16777215 字节   | 大二进制数据                          |
-| LONGBLOB        | 0~4294967286 字节 | 大二进制数据                          |
-
-#### 时间日期
-
-- 尽量选择 TIMESTAMP
-  - 根据客户端时区`time_zone`将 timestamp 转换为 UTC 存储，返回给客户端时又转换为客户端时区的时间
-  - 支持`DEFAULT CURRENT_TIMESTAMP`
-  - 支持`ON UPDATE CURRENT_TIMESTAMP`
-  - 默认情况开启选项`explicit_defaults_for_timestamp`，表示第一个 timestamp 列默认具有上述两属性
-- 除 DATE 外，其余类型支持在其后添加`(fps)`表示秒级小数位数
-
-| 类型      | 字节 | 格式                |
-| --------- | ---- | ------------------- |
-| DATE      | 3    | YYYY-mm-dd          |
-| TIME      | 3    | HH:MM:SS            |
-| DATETIME  | 8    | YYYY-mm-dd HH:MM:SS |
-| TIMESTAMP | 4    | YYYY-mm-dd HH:MM:SS |
-
-### 类型约束
-
-| 约束             | 说明         | 备注                                                  |
-| ---------------- | ------------ | ----------------------------------------------------- |
-| `UNIQUE`         | 不能重复     | PRIMARY KEY 的必要条件，UNIQUE KEY 的充分条件         |
-| `NOT NULL`       | 不能为空     | PRIMARY KEY 的必要条件                                |
-| `AUTO_INCREMENT` | 自动增加数值 | 隐含 UNIQUE，一个表只能有一个列为该限制且必须作为 key |
-| `DEFAULT val`    | 设置默认值   | 仅支持常量默认值                                      |
-
-### 运算符
-
-<!-- entry begin: sql operator -->
-
-- 算术：`+` `-` `*` `/` `%` ：可以用`()`来改变优先级
-- 关系：
-- `=` `<>` `<` `<=` `>` `=>` ：任意一边为 NULL 则会返回 false
-- `<=>` ：当两边相等或均为 NULL 返回 true
-- `IS [NOT] NULL value`
-- `[NOT] LIKE 'pattern'` ：支持通配符`_`和`%`，匹配完整字符串
-- `[NOT] REGEXP 'pattern'` ：转义序列使用类似`\\.`，匹配子串
-- `[NOT] BETWEEN value1 AND value2`
-- `[NOT] IN (val, ...)`
-- `[NOT] EXISTS (SELECT 语句)` ：判断子查询是否检索出数据
-- `<OP> ALL (val, ...)` ：列表中所有行都符合`<OP>`
-- `<OP> ANY (val, ...)` ：列表中有一行符合`<OP>`
-- 逻辑：`NOT` `AND` `OR` `XOR` ：注意运算符优先级问题
-<!-- entry end -->
-
-### 函数
-
-<!-- entry begin: sql function -->
-
-| 字符处理函数             | 描述                  |
-| ------------------------ | --------------------- |
-| CONCAT(s, s)             | 拼接两数据            |
-| LEFT(s, l)               | 左边 l 个字符         |
-| RIGHT(s, l)              | 右边 l 个字符         |
-| SUBSTRING(s, i, l)       | 返回子串，下标 1 开始 |
-| LOCATE(substr, s[, pos]) | 返回子串起始下标      |
-| LENGTH(s)                | 返回字符串长度        |
-| UPPER(s)                 | 转为大写              |
-| LOWER(s)                 | 转为小写              |
-| LTRIM(s)                 | 删除左侧空白符        |
-| RTRIM(s)                 | 删除右侧空白符        |
-| TRIM(s)                  | 删除两侧空白符        |
-
-| 时间处理函数                     | 描述                   |
-| -------------------------------- | ---------------------- |
-| NOW()                            | 返回当前日期时间       |
-| CURDATE()                        | 返回当前日期           |
-| CURTIME()                        | 返回当前时间           |
-| DATE(date)                       | 返回对应日期           |
-| YEAR(date)                       | 返回对应年份           |
-| MONTH(date)                      | 返回对应月份           |
-| DAY(date)                        | 返回对应天数           |
-| DAYOFWEEK(date)                  | 返回对应礼拜           |
-| TIME(time)                       | 返回对应时间           |
-| HOUR(time)                       | 返回对应小时           |
-| MINUTE(time)                     | 返回对应分钟           |
-| SECOND(time)                     | 返回对应秒数           |
-| DATE_ADD(dt, INTERVAL expr UNIT) | 增加指定日期/时间      |
-| DATE_SUB(dt, INTERVAL expr UNIT) | 增加指定日期/时间      |
-| DATE_FORMAT(dt, format)          | 按指定格式打印日期时间 |
-
-| 数值处理函数 | 描述   |
-| ------------ | ------ |
-| ABS(v)       | 绝对值 |
-| SIN(v)       | 正弦   |
-| COS(v)       | 余弦   |
-| TAN(v)       | 正切   |
-| SQRT(v)      | 平方根 |
-| EXP(b, e)    | 幂     |
-| Rand()       | 随机数 |
-| PI()         | 圆周率 |
-
-| 聚合函数 | 描述                        |
-| -------- | --------------------------- |
-| FIRST(f) | 返回第一个值                |
-| LAST(f)  | 返回最后一个值              |
-| MAX(f)   | 返回最大值                  |
-| MIN(f)   | 返回最小值                  |
-| SUM(f)   | 返回总和                    |
-| COUNT(f) | 返回行数，`*`会计算 NULL 行 |
-| AVG(f)   | 返回平均值                  |
-
-<!-- entry end -->
-
-## SQL 查询
-
-### 查询语句
-
-<!-- entry begin: sql select -->
+- 继承：子表继承父表的列同时拥有自己的列，访问父表会包含子表（除非`ONLY`）
 
 ```sql
-SELECT [DISTINCT] expr [AS fd_alias], ...       -- expr表示选择列或表达式列
-[FROM tbl_name [AS tbl_alias], ...]             -- 若有多个表则expr中列名必须加上表名
+CREATE TABLE sub_table (...) INHERITS (parent_table);
+```
 
--- join的目的，范式表的查询
-[[INNER|LEFT|RIGHT] JOIN tbl_name[AS tbl_alias]]-- 连接多表，与在FROM子句中指定多表区别在于此处可外连接，首选INNER JOIN而非FROM联结
-[ON clause]                                     -- 类似WHERE，但对于外连接对驱动表的行均判定为真
+- 视图
 
-[WHERE clause]                                  -- WHERE子句，用于条件过滤索引
+```sql
+CREATE VIEW view_name AS SELECT...;
+DROP   VIEW view_name;
+```
 
-[GROUP BY expr, ...]                            -- 将指定expr相等的列聚合为一行，且SELECT后的选择列只能使用此处出现过的
-[WITH ROLLUP]                                   -- 会将所有聚合后的行再聚合成一行并添加到最后
-[HAVING clause]                                 -- 类似WHERR，但可使用聚合函数，在分组后进行过滤
+### 列
 
-[ORDER BY expr [DESC], ...]                     -- 按指定顺序的列进行（升序）排序，DESC指定该列按降序排列，可使用fd_alias
+```sql
+ALTER TABLE table_name ADD    COLUMN column_name datatype constraints;
+ALTER TABLE table_name RENAME COLUMN column_name TO new_name;
+ALTER TABLE table_name ALTER  COLUMN column_name TYPE datatype;
+ALTER TABLE table_name ALTER  COLUMN column_name SET DEFAULT value;
+ALTER TABLE table_name ALTER  COLUMN column_name SET NOT NULL;
+ALTER TABLE table_name ALTER  COLUMN column_name DROP DEFAULT;
+ALTER TABLE table_name ALTER  COLUMN column_name DROP NOT NULL;
+ALTER TABLE table_name ADD    constraints;
+ALTER TABLE table_name DROP   CONSTRAINT constraints;
+ALTER TABLE table_name DROP   COLUMN column_name;
+```
 
-[LIMIT N] [OFFSET M]
+### 行
 
-[UNION [ALL]]                                   -- 合并两查询结果（上下连接）。ALL表示允许重复，默认删掉重复值
-[SELECT 语句];                                  -- 列数要相同，且类型可互相转换。组合查询仅能在最后一条SELECT语句有ORDER BY子句
+```sql
+INSERT INTO table_name (column_name, ...) VALUES (value, ...), ... [RETURNING column, ...];
+INSERT INTO table_name (column_name, ...) SELECT... [RETURNING column, ...];
+UPDATE table_name SET column_name=column_value, ... [WHERE...] [RETURNING column, ...];
+DELETE FROM table_name [WHERE...] [RETURNING column, ...];
+```
+
+### 查询
+
+```sql
+-- SELECT 语句返回虚拟表
+
+-- 循环处理结果表的每一行
+SELECT [DISTINCT [ON expression]] expression [AS alias], ...  -- DISTINCT 表示对最终结果去重
+
+-- 将多张表横向连接（笛卡尔积）
+[FROM table_ref [AS alias], ...]              -- table_ref 可以是 table_name, joined_table 或 SELECT...
+
+-- 筛选结果
+[WHERE expression]                            -- expression 返回布尔值
+
+-- 按 expression 是否相等来分组，并将同组的所有行聚合成一行
+[GROUP BY expression, ...]                    -- expression 只能使用 SELECT 中出现的 expression 或 alias
+-- 筛选分组后的结果
+[HAVING expression]                           -- expression 必须使用聚合函数
+
+-- 将两查询结果表纵向连接，列数必须相同且类型可互换；ALL 表示允许重复，默认删掉完全重复的行；
+[UNION [ALL] SELECT...]                       -- 取并集
+[INTERSECT [ALL] SELECT...]                   -- 取交集
+[EXCEPT [ALL] SELECT...]                      -- 取左差集
+
+-- 排序 SELECT 结果
+[ORDER BY expression [DESC], ...]             -- expression 可以使用 SELECT 中出现的 alias，DESC 表示降序（默认升序）
+
+-- 结果丢弃前面 M 条
+[OFFSET M]
+
+-- 结果最多输出 N 条
+[LIMIT N]
 ```
 
 执行顺序：
 
-1. FROM 子句组装数据（包括通过 ON 进行连接）；
-2. WHERE 子句进行条件筛选；
-3. GROUP BY 分组 ；
-4. 使用聚集函数进行计算；
-5. HAVING 筛选分组；
-6. 计算所有的表达式；
-7. SELECT 的字段；
-8. ORDER BY 排序；
-9. LIMIT 筛选。
-<!-- entry end -->
+1. FROM 连接多表
+2. WHERE 筛选记录
+3. GROUP BY 分组聚合
+4. HAVING 筛选分组
+5. SELECT 表达式
+6. UNION/INTERSECT/EXCEPT 集合
+7. ORDER BY 排序
+8. LIMIT 限选
+9. DISTINCT 去重
 
-### 联结查询
+> JOIN 通常，表 A 中的一行表示一个对象，表 B 中的行表示对象关联的数据
+>
+> - LEFT JOIN: 将所有 A 保留，若其无关联 B 则为 NULL
+> - RIGHT JOIN: 将所有 B 保留，若其无关联 A 则为 NULL
+> - INNER JOIN: 仅将具有关联的 A 和 B 保留
+> - FULL JOIN: 将所有 A 和 B 保留，若其无关联 A 或 B 则为 NULL
+>
+> ![JOIN](images/sql-join.png)
 
-![JOIN](images/sql-join.png)
+### 事务
 
-```sql
--- 自联结 --
-SELECT ...
-FROM tbl AS t1, tbl AS t2
-WHERE t1.id = t2.id AND t2.grade > 60   -- 查询grade大于60的id对应的信息
-```
-
-### 嵌套查询
-
-```sql
-SELECT id, (SELECT 语句) AS expr
-FROM ...
-WHERE fd_name IN (SELECT 语句)
-```
-
-### 全文查询
+- 原子性
+- 隔离性
+- 持久性
 
 ```sql
--- 需要先设置全文索引
-SELECT ...
-FROM ...
-WHERE MATCH(fulltext) AGAINST('word1 word2' [WITH QUERY EXPANSION | IN BOOLEAN MODE])
-```
-
-## 视图
-
-```sql
-CREATE VIEW view_name AS SELECT 语句;
-DROP   VIEW view_name;
-SHOW CREATE VIEW view_name;
-```
-
-## 分区
-
-```sql
-CREATE TABLE ( ... )
-    [PARTITION BY RANGE (expr) (PARTITION part_name VALUES LESS THAN (val|MAXVALUE), ...)]  -- 仅支持单列的整数比较
-    [PARTITION BY RANGE COLUMNS (fd_name,...) (PARTITION part_name VALUES LESS THAN (val|MAXVALUE), ...)]   -- 支持多列多类型比较，但不支持表达式
-    [PARTITION BY LIST  (expr) (PARTITION part_name VALUES IN (val,...), ...)]              -- 仅只支持单列的整数比较
-    [PARTITION BY LIST  COLUMNS (fd_name,...) (PARTITION part_name VALUES IN (val,...), ...)]               -- 支持多类型比较，但不支持表达式
-    [PARTITION BY HASH  (expr) PARTITIONS size]
-    ;
-ALTER TABLE tbl_name ADD  PARTITION (PARTITION part_name VALUES ...)
-ALTER TABLE tbl_name DROP PARTITION part_name;
-ALTER TABLE tbl_name REORGANIZE PARTITION part_name,... into(
-    PARTITION part_name VALUES ...);
-SELECT ... FROM tbl_name PARTITION (part_name);
-```
-
-## 事务
-
-```sql
-BEGIN;                                  -- 开启事务
+BEGIN;                      -- 开启事务
 ...
-SAVEPOINT mypoint;                        -- 设置保存点
+SAVEPOINT mypoint;          -- 设置保存点
 ...
-RELEASE SAVEPOINT mypoint;                -- 删除保存点
+RELEASE SAVEPOINT mypoint;  -- 删除保存点
 ...
-ROLLBACK TO mypoint;                      -- 撤销至保存点
+ROLLBACK TO mypoint;        -- 撤销至保存点
 ...
-COMMIT 或 ROLLBACK ;                    -- 提交事务 或 撤销此次事务
+COMMIT 或 ROLLBACK ;         -- 提交事务 或 撤销此次事务
 ```

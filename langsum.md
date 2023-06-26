@@ -4,7 +4,7 @@
   - [依赖](#依赖)
   - [变量与常量](#变量与常量)
   - [枚举](#枚举)
-  - [操作符](#操作符)
+  - [运算符](#运算符)
   - [控制流](#控制流)
   - [函数](#函数)
   - [面向对象](#面向对象)
@@ -359,7 +359,7 @@
       print(ev, ev.value)
   ```
 
-## 操作符
+## 运算符
 
 > 优先级：单元后缀 > 单元前缀 > 算术 > 关系 > 逻辑
 
@@ -1486,7 +1486,6 @@
 
 - 泛型函数
 - 泛型类
-- 泛型方法
 - 泛型约束
 
 ## 工程能力
@@ -1510,9 +1509,10 @@
 
 ---
 
-> 日期时间通常存储为 Unix Timestamp，即当前 UTC 时间距离 1970-01-01 00:00:00 的秒数（或毫秒、纳秒等）；
-> 想要能正确且无歧义从本地时间构造日期时间对象，和将日期时间对象转换为可读的本地时间，还需要一个时区参数来表示从本地时间相对 UTC 时间的偏移量；
-> ISO 8601 格式 `2000-07-27T21:30:59+08:00` 不仅能为当地人展示可读的无歧义的本地时间，同时还让其它时区的人能获取无歧义的 UTC 时间。
+> 日期时间的存储或传递格式（消除歧义）：
+>
+> - Unix Timestamp，即 UTC 时间距离 1970-01-01 00:00:00 的带正负号的秒数（或毫秒、纳秒等）
+> - ISO 8601，例如 `2000-07-27T21:30:59+08:00`
 
 #### C++
 
@@ -1543,15 +1543,13 @@ const wchar_t* u32 = L"utf-16 or utf-32 string";
 
 // 日期时间：sys_time 与 local_time 无时区，zoned_time 有时区
 using namespace std::chrono;
-auto lz = get_tzdb().current_zone();
+auto zone = get_tzdb().current_zone();
 auto now = system_clock::now();
-auto datetime = zoned_time(lz,
-    local_days(27d / 7 / 2000) + 21h + 30min + 59s)
-    .get_sys_time();
-auto duration = 1h + 30min + 59s;
+auto datetime = zoned_time(zone, local_days(27d / 7 / 2000) + 21h + 30min + 59s).get_sys_time();
+auto duration = years(1) + months(2) + days(3) + weeks(4) + 5h + 6min + 7s + 8ms + 9us + 10ns;
 auto to_unix = duration_cast<seconds>(datetime.time_since_epoch()).count();
 auto from_unix = system_clock::time_point(seconds(to_unix));
-auto to_iso = std::format("{0:%F}T{0:%T%Ez}", zoned_time(lz, datetime));
+auto to_iso = std::format("{0:%F}T{0:%T%Ez}", zoned_time(zone, datetime));
 system_clock::time_point from_iso;
 std::stringstream(to_iso) >> parse("%FT%T%Ez", from_iso);
 
@@ -1926,12 +1924,13 @@ hset ^= set1
 > 通讯中间件类型：EventBus, TasksQueue
 
 - IO
-  - 平台数据
+  - 平台信息
   - 系统事件
   - 本地文件
+  - 网络文件
   - 网络通讯
   - 进程通讯
-- IOC
+  - 对象通讯
 - Lock
 - Timer
 - Task

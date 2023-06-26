@@ -7,9 +7,8 @@
   - [布局](#布局)
     - [盒子模型](#盒子模型)
     - [Normal Flow](#normal-flow)
-    - [正常流布局](#正常流布局)
-    - [Flex 布局](#flex-布局)
-    - [Grid 布局](#grid-布局)
+    - [Flex](#flex)
+    - [Grid](#grid)
     - [响应式布局](#响应式布局)
   - [定位](#定位)
   - [隐藏](#隐藏)
@@ -106,11 +105,7 @@
 └─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┘
 ```
 
-将每个元素看做一个矩形盒子，布局就是对这些盒子进行排列、覆盖和嵌套
-
-- 排列：在 2D 平面上连续紧凑地放置若干元素
-- 覆盖：在新的 2D 平面上排列元素
-- 嵌套：将布局后的若干元素放入一个父元素
+将每个元素看做一个矩形盒子，布局就是对这些盒子进行排列、覆盖和嵌套。
 
 每个元素都有一个外部显示类型和一个内部显示类型
 
@@ -130,83 +125,23 @@
 - `block`
   - 独占一行
   - padding, margin, border 会挤占周围空间
-  - 宽度默认父元素宽度，考虑属性`width`
+  - 宽度默认 containing block 宽度，考虑属性`width`
   - 高度默认装下子元素的最小高度，考虑属性`height`
 - `inline`
-  - 与其他`inline`或`inline-box`元素连续紧凑地排列，超出父元素宽度时换行
+  - 与其他`inline`或`inline-box`元素连续紧凑地排列，超出父元素宽度时换行（盒子可能被切断）
   - padding, margin, border 仅挤占水平方向空间
   - 宽度默认装下子元素的最小宽度，忽略属性`width`
   - 高度默认装下子元素的最小高度，忽略属性`height`
 - `inline-block`：
-  - 与其他`inline`或`inline-box`元素连续紧凑地排列，超出父元素宽度或属性`width`大小时换行
+  - 与其他`inline`或`inline-box`元素连续紧凑地排列，超出父元素宽度或属性`width`，同时超出`min-content`时换行（盒子不会被切断）
   - padding, margin, border 会挤占周围空间
   - 宽度默认装下子元素的最小宽度，忽略属性`width`
   - 高度默认装下子元素的最小高度，考虑属性`height`
 
 总的来说，元素的大小通常依赖于子元素的大小，递归到最后一些元素拥有内在大小，如文本、图像等内容；
-而有些元素的大小依赖于父元素宽度，递归到最后`<body>`的默认宽度为`100vw`，即浏览器视窗宽度；
+而有些元素的大小依赖于`containing block`（最近祖先 block）宽度，递归到最后`<body>`的默认宽度为`100vw`，如 block、文本等。
 
-```css
-/* box-sizing */
-box-sizing: content-box; /* width/height 表示 content width/height（默认） */
-box-sizing: border-box; /* width/height 表示 border width/height（建议） */
-
-/* 宽度：width, min-width, max-width, inline-size */
-width: auto; /* 各布局的默认宽度 */
-width: <length>;
-width: <percentage>;
-width: max-content; /* 子元素全部在同一行中堆积总宽度 */
-width: min-content; /* 子元素中最大宽度 */
-width: fit-content(<length-or-percentage>); /* clamp(arg, min-content, max-content) */
-
-/* 高度： height, min-height, max-height, block-size */
-height: auto; /* 各布局默认高度 */
-height: <length>;
-height: <percentage>;
-
-/* 内边距：padding */
-padding: <length>;
-padding: <percentage>;
-/* vertical | horizontal */
-padding: 5% 10%;
-/* top | horizontal | bottom */
-padding: 1em 2em 2em;
-/* top | right | bottom | left */
-padding: 5px 1em 0 2em;
-
-/* 边界：border */
-/* style */
-border: solid;
-/* width | style */
-border: 2px dotted;
-/* style | color */
-border: outset #f33;
-/* width | style | color */
-border: medium dashed green;
-
-/* 外边距：margin */
-margin: <length>;
-margin: <percentage>;
-margin: auto; /* 浏览器自动设置值来使其居中 */
-/* vertical | horizontal */
-margin: 5% auto;
-/* top | horizontal | bottom */
-margin: 1em auto 2em;
-/* top | right | bottom | left */
-margin: 2px 1em 0 auto;
-```
-
-### 正常流布局
-
-Normal Flow 布局是一种垂直排列布局，时默认的布局方式。
-
-| 属性                        | 值                                          | 备注                                                    |
-| --------------------------- | ------------------------------------------- | ------------------------------------------------------- |
-| `display: block`            | `block`                                     | 元素默认宽度为父元素宽度 100%，根元素`html`宽度为 100vw |
-| `display: inline`           | `inline`,`inline-block`                     | 与其他元素进行堆积排列                                  |
-| `write-mode: horizontal-tb` | `horizontal-tb`,`vertical-rl`,`vertical-lr` | 堆积排列方向                                            |
-
-### Flex 布局
+### Flex
 
 ![flex](images/flex_terms.png)
 
@@ -235,7 +170,7 @@ Flex 布局是一维布局，它的目标注重于灵活地伸缩空间与对齐
 | `flex-basis: auto;`     | 类似于`width`       | 指定 item 在主轴方向上的尺寸，优先级高于`width`/`height`           |
 | `order: 0;`             | `<number>`          | 设置展示顺序，序号越大越靠后，同序号按元素顺序                     |
 
-### Grid 布局
+### Grid
 
 ![grid](images/grid.png)
 
