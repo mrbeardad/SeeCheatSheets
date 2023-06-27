@@ -801,10 +801,6 @@
 
 ## 函数
 
-> - 函数是否存在副作用
-> - 函数是否可重复调用
-> - 函数是否多线程安全
-
 - C++
 
   - 默认实参
@@ -1921,8 +1917,11 @@ hset ^= set1
 
 ### 异步框架
 
-> 通讯中间件类型：EventBus, TasksQueue
+> 通讯中间件类型：MessageQueue, EventBus
 
+- Task
+  - async
+  - await
 - IO
   - 平台信息
   - 系统事件
@@ -1931,9 +1930,8 @@ hset ^= set1
   - 网络通讯
   - 进程通讯
   - 对象通讯
-- Lock
 - Timer
-- Task
+- Lock
 
 ### UI
 
