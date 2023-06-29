@@ -6,10 +6,12 @@
   - [内容](#内容)
   - [展示](#展示)
     - [布局](#布局)
+      - [Box](#box)
+      - [Sliver](#sliver)
     - [样式](#样式)
     - [动画](#动画)
-  - [输入](#输入)
-  - [Material Design Components](#material-design-components)
+    - [Material Design](#material-design)
+  - [交互](#交互)
   - [状态管理](#状态管理)
   - [导航路由](#导航路由)
   - [国际化](#国际化)
@@ -37,10 +39,7 @@
 - Widget 常见属性名：
   - `child`：单个子组件
   - `children`：子组件列表
-  - `builder`：构建子组件的函数
-    - 在必要时才构建以提高性能
-    - 提供额外的状态数据
-    - 为子组件提供 context 而避免重构提取出子组件
+  - `builder`：构建子组件的函数，为其提供 context 和额外参数
   - `delegation`：将内部的一些配置参数与策略方法暴露给用户来提供和实现
   - `controller`：为组件提供状态数据（可能由 UI 交互获取），并为用户提供方法来控制组件内部状态
 
@@ -73,18 +72,18 @@ flutter:
 
 ### 布局
 
-盒子布局：
+#### Box
 
-- 核心概念：
+- 盒子布局：可看做若干矩形盒子在平面上排列、嵌套和覆盖
 
-  - 位置：父组件决定子组件位置
-  - 约束：从上到下，由父组件传递给子组件从而约束其尺寸大小，其中特殊的
+  - 约束：从上到下，由父组件传递给子组件从而约束其尺寸大小，其中特殊的有
     - tight 指最大约束与最小约束相等
     - loose 指最小约束为 0 且最大约束为父组件大小
     - unlimited 指约束值为无穷大，从而可以让一些组件显示自然的大小，同时也会导致一些组件无法显示
   - 尺寸：从下到上，由子组件根据约束计算尺寸大小再返回给父组件
+  - 位置：父组件决定子组件位置
 
-- 布局容器：
+- Widgets：
 
   - 控制大小：
     - 获取约束：`LayoutBuilder`
@@ -97,19 +96,21 @@ flutter:
   - 二维布局：`Table`, `GridView`
   - 三维布局：`Stack`, `Positioned`
 
-滚动布局：
+#### Sliver
 
-- 核心概念：
-  - 滚动布局因其子组件尺寸动态确定，故使用特殊的 Sliver 布局协议
-  - 利用滚动布局从而可以处理盒子布局的溢出问题
-- 布局容器：
+- 滚动布局：sliver 布局协议比较复杂且灵活，每个 sliver 可以根据视窗大小和滑动状态来决定自己在视窗中的位置、绘制大小等
+
+> 由于 Box 与 Sliver 之间不能直接传递约束和大小等布局信息，所有通常使用一些封装或中介 Widget，如 ListView, GridView, CustomScrollView, RenderSliverToBoxAdapter 等
+
+- Widgets：
+
   - `CustomScrollView`
   - `SliverPadding`
-  - `SliverToBoxAdapter`
   - `SliverAppBar`
   - `SliverList`, `SliverFixedExtentList`, `SliverPrototypeExtentList`
   - `SliverGrid`
   - `SliverChildBuilderDelegate`, `SliverChildListDelegate`
+  - `SliverToBoxAdapter`
   - `Scrollbar`, `SingleChildScrollView`, `ListView`, `ReorderableListView`, `GridView`, `PageView`, `RefreshIndicator`
 
 ### 样式
@@ -206,11 +207,18 @@ class _FooState extends State<Foo> with SingleTickerProviderStateMixin {
 - `Tween`默认`Tween<Double>(begin: 0.0, end: 1.0)`
 - `Curve`默认`Curves.linear`
 
-## 输入
+### Material Design
+
+- `MaterialApp`
+- `Scaffold`, `NavigationBar`, `NavigationRail`, `NavigationDrawer`, `AppBar`
+- `TabBar`, `TabBarView`, `TabPageSelector`, `TabController`
+- ...
+
+## 交互
 
 - 鼠标事件：`Listener`, `MouseRegion`, `AbsorbPointer`, `IgnorePointer`
 
-- 手势检测：`GestureDetector`, `Draggable`, `LongPressDraggable`, `DragTarget`, `SelectionArea`, `InteractiveViewer`, `Dismissible`
+- 高级手势：`GestureDetector`, `Draggable`, `LongPressDraggable`, `DragTarget`, `SelectionArea`, `InteractiveViewer`, `Dismissible`
 
 - 键盘焦点：`Focus`, `FocusScope`
 
@@ -244,13 +252,6 @@ Widget build(BuildContext context) {
   );
 }
 ```
-
-## Material Design Components
-
-- `MaterialApp`
-- `Scaffold`, `AppBar`, `Drawer`, `BottomAppBar`, `BottomNavigationBar`
-- `TabBar`, `TabBarView`, `TabPageSelector`, `TabController`
-- ...
 
 ## 状态管理
 
