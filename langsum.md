@@ -2,7 +2,7 @@
 
 - [编程语言](#编程语言)
   - [依赖](#依赖)
-  - [变量与常量](#变量与常量)
+  - [变量](#变量)
   - [枚举](#枚举)
   - [运算符](#运算符)
   - [控制流](#控制流)
@@ -142,7 +142,7 @@
   from package.module import state as alias
   ```
 
-## 变量与常量
+## 变量
 
 > - 存储结构
 >   - 结构型：变量本身代表一块包含数据结构的内存，拷贝时至少包括该内存
@@ -270,79 +270,68 @@
 - C++
 
   ```cpp
-  enum class EnumValue {
-    ONE = 1,
+  enum class Enum {
+    ZERO = 0,
+    ONE,
     TWO,
-    THREE,
   };
+
+  Enum e = Enum::ZERO;
   ```
 
 - Rust
 
   ```rust
-  enum EnumValue {
-    ONE = 1,
+  enum Enum {
+    ZERO = 0,
+    ONE,
     TWO,
-    THREE,
   }
 
-  enum EnumType {
-      None,
-      Tuple(i32, i32),
-      Struct { x: i32, y: i32 },
-  }
+  let e: Enum = Enum::ZERO;
   ```
 
 - Go
 
   ```go
   const (
-    _ = iota
+    ZERO = iota
+    ONE
+    TWO
+  )
+
+  const (
+    _, _ = iota, iota
     KB = 1 << (10 * iota)
     MB
     GB
   )
+
+  var e int = ZERO
   ```
 
 - Dart
 
   ```dart
-  enum EnumValue {
+  enum Enum {
     ZERO,
     ONE,
     TWO,
   }
 
-  enum EnumValueWithField {
-    car(tires: 4, passengers: 5, carbonPerKilometer: 400),
-    bus(tires: 6, passengers: 50, carbonPerKilometer: 800),
-    bicycle(tires: 2, passengers: 1, carbonPerKilometer: 0);
-
-    final int tires;
-    final int passengers;
-    final int carbonPerKilometer;
-
-    const Vehicle({
-      required this.tires,
-      required this.passengers,
-      required this.carbonPerKilometer,
-    });
-  }
+  Enum e = Enum.ZERO;
   ```
 
 - TypeScript
 
   ```ts
-  enum EnumValue {
-    ONE = 1,
+  enum Enum {
+    ZERO = 0,
+    ONE,
     TWO,
-    THREE,
   }
 
-  enum EnumType {
-    Type1,
-    Type2,
-  }
+  let e: Enum = Enum.ZERO;
   ```
 
 - Python
@@ -350,12 +339,12 @@
   ```python
   from enum import Enum
 
-  class EnumValue(Enum):
+  class EnumT(Enum):
+      ZERO = 0
       ONE = 1
       TWO = 2
-      THREE = 3
 
-  for ev in (EnumValue):
+  for ev in (EnumT):
       print(ev, ev.value)
   ```
 
@@ -1480,9 +1469,9 @@
 
 ## 泛型
 
+- 泛型约束
 - 泛型函数
 - 泛型类
-- 泛型约束
 
 ## 工程能力
 
@@ -1498,10 +1487,19 @@
 
 - 布尔
 - 整数
-- 实数
+- 浮点数
 - 字符
 - 日期时间
+- 联合
 - 集合类型
+  - tuple
+  - struct
+  - list
+  - map (btree | hash)
+  - set (btree | hash)
+  - heap
+  - ring list
+  - link list
 
 ---
 
@@ -1522,7 +1520,7 @@ unsigned u = 10u;
 size_t uz = 10uz;
 ssize_t z = 10z;
 
-// 实数：字面量的类型默认为 double
+// 浮点数：字面量的类型默认为 double
 double d = 1.0 + 2.5e3;
 float f = 2.5f;
 
@@ -1549,24 +1547,29 @@ auto to_iso = std::format("{0:%F}T{0:%T%Ez}", zoned_time(zone, datetime));
 system_clock::time_point from_iso;
 std::stringstream(to_iso) >> parse("%FT%T%Ez", from_iso);
 
-// 结构
-point p1 = {10, 20, 30};
-point p2 = {.x = 10, .y = 20, .z = 30};
-auto [x, y, z] = p2;
+// 联合
+auto u = std::variant<int, double>(1);
 
 // 元组
-tuple<int, double> t = {1, 2.0};
+auto t = std::tuple{1, 2.5};
 
-// 其它集合
+// 结构
+struct StructT {
+  int f1;
+  double f2;
+};
+auto s = StructT{1, 2.5};
+
+// 集合类型
 std::array<int, 3> arr = {1, 2, 3};
 std::vector<int> vec = {1, 2, 3};
-std::deque<int> deq = {1, 2, 3};
-std::priority_queue<int> heap;
-std::list<int> list = {1, 2, 3};
 std::map<std::string, int> bmap = {{"one", 1}, {"two", 2}};
 std::set<int> bset = {1, 2, 3};
 std::unordered_map<std::string, int> hmap = {{"one", 1}, {"two", 2}};
 std::unordered_set<int> hset = {1, 2, 3};
+std::priority_queue<int> heap;
+std::deque<int> deq = {1, 2, 3};
+std::list<int> list = {1, 2, 3};
 ```
 
 #### Rust
@@ -1578,7 +1581,7 @@ let b: bool = true || false;
 // 整数：字面量的类型根据使用变量的上下文推断，默认为 i32
 let i: i32 = 9_000_000 + 0b1010 + 0o17 + 0xff;
 
-// 实数：字面量的类型根据使用变量的上下文推断，默认为 f64
+// 浮点数：字面量的类型根据使用变量的上下文推断，默认为 f64
 let f: f64 = 1.0 + 2.5e3;
 
 // 字符：不允许索引，但允许切片（运行时检测切片字节边界的 UTF-8 有效性）
@@ -1600,21 +1603,29 @@ let from_unix = OffsetDateTime::from_unix_timestamp(to_unix).unwrap().to_offset(
 let to_iso = datetime.format(&Iso8601::DEFAULT).unwrap();
 let from_iso = OffsetDateTime::parse(&to_iso, &Iso8601::DEFAULT);
 
-// 枚举
-let opt = Some(50);
-if let Some(x) = opt {};
-
-// 结构
-let point = Point{x: 10, y, ..other_point}; // point.x
-let x: i32 = point.x;
-let Point{x: x_px, y, ..} = point;
+// 联合（枚举）
+enum Union {
+  None,
+  Tuple(i32, f64),
+  Struct { f1: i32, f2: f64 },
+}
+let u = Union::Tuple(1, 2.5);
+if let Union::Tuple(f1, 2.5) = u { };
 
 // 元组
-let tuple: (i32, f64, &str) = (1, 2.0, "three");
-let one: i32 = tuple.0;
+let tuple: (i32, f64, &str) = (1, 2.0, "three"); // tuple.0
 let (a, .., c) = tuple;
 
-// 数组
+// 结构
+struct Struct {
+  f1: i32,
+  f2: f64,
+  f3: bool,
+}
+let st = Struct{f1: 1, f2, ..other};
+let Struct{f1: alia, f2, ..} = st;
+
+// 静态数组
 let array: [i32; 3] = [0; 3];
 let array: [i32; 3] = [1, 2, 3];
 
@@ -1629,17 +1640,17 @@ let range: RangeFull        = ..;
 let range: RangeInclusive   = begin..=end;
 let range: RangeToInclusive = ..=end;
 
-// 切片：可用于字符串、数组、动态数组
+// 切片：可用于字符串、静态数组、动态数组
 let slice: [i32] = arr[range];
 
 // 其它集合
-let deq = std::collections::VecDeque::new();
-let heap = std::collections::BinaryHeap::new();
-let list = std::collections::LinkedList::new();
 let bmap = std::collections::BTreeMap::new();
 let bset = std::collections::BTreeSet::new();
 let hmap = std::collections::HashSet::new();
 let hset = std::collections::HashMap::new();
+let heap = std::collections::BinaryHeap::new();
+let deq = std::collections::VecDeque::new();
+let list = std::collections::LinkedList::new();
 ```
 
 #### Go
@@ -1651,7 +1662,7 @@ var b bool = true || false
 // 整数：字面量的类型为高精度常量，int 根据平台大小可能是 int32 或 int64
 var i int = 9_000_000 + 0b1010 + 0o17 + 0xff;
 
-// 实数：字面量的类型根据平台大小可能是 float32 或 float64
+// 浮点数：字面量的类型根据平台大小可能是 float32 或 float64
 var f float64 = 1.0 + 2.5e3;
 
 // 字符：索引元素为字节
@@ -1672,17 +1683,22 @@ toIso := datetime.Format("2006-01-02T15:04:05-07:00")
 fromIso, _ := time.Parse("2006-01-02T15:04:05-07:00", toIso)
 
 // 结构
-point := Point{
-  x: x,
-  y: y,
-  // z default 0
+type Struct struct {
+  int f1
+  float64 f2
+  bool f3
+}
+st := Struct{
+  f1: 1,
+  f2: 2.5,
+  // f3 default zero-value
 }
 
-// 数组
+// 静态数组
 array := [3]int{1, 2, 3}
 array = [...]int{1, 2, 3}
 
-// 切片
+// 动态数组（切片）
 slice := []int{1, 2, 3}
 slice = make([]int, len[, cap])
 slice = array[begin:end]
@@ -1708,7 +1724,7 @@ bool b = true || false;
 // 整数
 int i = 9000000 + 0xff;
 
-// 实数
+// 浮点数
 double d = 1.0 + 2.5e3;
 
 // 字符：索引元素为 Unicode
@@ -1757,7 +1773,7 @@ map = {if (i.isOdd) 'i': i, 'one': 0};
 map = {for (final e in map.entries) e.key: e.value, 'one': 0};
 var {'zero': nullable_zero, ...} = map;
 
-// 集合
+// 数集
 Set<int> set = <int>{};
 set = {1, 2, 3};
 set = {0, ...set, ...?set};
@@ -1771,10 +1787,10 @@ set = {0, for (final i in set) i};
 // 布尔
 let b = true || false;
 
-// 整数
+// 整数：用浮点数表示整数
 let i = 9_000_000 + 0b1010 + 0o17 + 0xff;
 
-// 实数
+// 浮点数
 let f = 1.0 + 2.5e3;
 let nan = NaN + Infinity;
 
@@ -1800,6 +1816,9 @@ function toLocalISOString(date) {
 let toIso = toLocalISOString(datetime);
 let fromIso = new Date(toIso);
 
+// 联合
+let u: null | number = 1;
+
 // 数组
 let arr = [1, 2, 3];
 arr = [0, ...arr, 4];
@@ -1822,7 +1841,7 @@ b: bool = True or False
 # 整数: 32-bit or big-number
 i: int = 9_000_000 + 0b1010 + 0o17 + 0xff
 
-# 实数: 64-bit
+# 浮点数: 64-bit
 f: float = 1.0 + 2.5e3
 
 # 字符：索引元素为 Unicode
@@ -1843,6 +1862,9 @@ to_unix = dt.timestamp()
 from_unix = datetime.fromtimestamp(to_unix).astimezone()
 to_iso = dt.isoformat()
 from_iso = datetime.strptime(to_iso, "%Y-%m-%dT%H:%M:%S%z").astimezone()
+
+# 联合
+u: None | int | float = 1
 
 # 元组
 i1: int = 1
@@ -1917,7 +1939,7 @@ hset ^= set1
 
 ### 异步框架
 
-> 通讯中间件类型：MessageQueue, EventBus
+> 通讯中间件类型：MessageQueue, EventBus, RPC
 
 - Task (async/await)
 - Lock
