@@ -4,7 +4,7 @@
   - [简介](#简介)
   - [窗口](#窗口)
   - [内容](#内容)
-  - [展示](#展示)
+  - [呈现](#呈现)
     - [布局](#布局)
       - [Box](#box)
       - [Sliver](#sliver)
@@ -28,13 +28,15 @@
 
 - Widget 视图仅与其状态有关，即 $View=f(Status)$
 
-  - 状态
-    - Widget 内部状态
-    - Widget 参数
-    - Widgets 共享状态
-    - UI 事件：特殊的 IO 事件，如用户表单输入
-    - IO 事件：通常携带了环境状态用来对 Widget 进行状态转移，如平台交互、UI 交互、文件、网络、IPC 等
-  - 状态转移：事件是状态转移的唯一来源，`setState`是状态转移的唯一手段，状态转移通常由库代码自动执行（如`useMedia`）或你手动执行（如`onClick`）
+- 状态
+  - 内部状态
+  - 共享状态
+  - UI 输入：特殊的 IO 事件，如用户表单输入等
+  - IO 事件：事件发生时通常会携带外部数据，如 UI 交互、网络通讯等
+- 状态转移
+
+  - 事件是触发状态转移的唯一来源
+  - 改变属性和调用方法是进行状态转移的途径
 
 - Widget 常见属性名：
   - `child`：单个子组件
@@ -68,7 +70,7 @@ flutter:
     - fonts/
 ```
 
-## 展示
+## 呈现
 
 ### 布局
 
@@ -85,12 +87,12 @@ flutter:
 
 - Widgets：
 
+  - 控制位置：`Center`, `Align`, `Padding`, `Baseline`
   - 控制大小：
     - 获取约束：`LayoutBuilder`
     - 更改约束：`ConstranedBox`, `LimitedBox`, `UnconstrainedBox`, `OverflowBox`
     - 指定大小（考虑约束）：`IntrinsicWidth`, `IntrinsicHeight`, `SizedBox`, `FractionallySizedBox`, `Container`, `AspectRatio`
     - 指定大小（忽略约束）：`SizedOverflowBox`, `FittedBox`
-  - 控制位置：`Center`, `Align`, `Padding`, `Baseline`
   - 流布局：`Wrap`
   - 一维布局：`Flex`, `Row`, `Column`, `Flexible`, `Expanded`, `Spacer`, `ListView`
   - 二维布局：`Table`, `GridView`
@@ -138,6 +140,9 @@ flutter:
 
   - `FooTransition(foo: animation, child: )`
   - use `AnimatedBuilder(animation: , builder: )`
+
+- 复合多动画：组合 Widget
+- 顺序多动画：`curve: Interval`
 
 ```dart
 class Foo extends StatefulWidget {
@@ -256,9 +261,6 @@ Widget build(BuildContext context) {
 ## 状态管理
 
 - `package:flutter_hooks`
-- `package:hooks_riverpod`
-- `package:riverpod_annotation`
-- `package:freezed`
 
 ## 导航路由
 

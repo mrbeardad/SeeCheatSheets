@@ -30,8 +30,11 @@
 ![color roles](images/mdcs.png)
 ![dark color roles](images/mdcsd.png)
 
+> 浅色主题深色配色，深色主题浅色配色；
+> 只需指定主要配色(primary, secondary, tertiary, surface)，其他颜色可通过算法自动生成。
+
 - Accent Colors
-  - Primary: 用于跨 UI 的关键组件，如 FAB、AppBar 等
+  - Primary: 用于跨 UI 的关键组件，如 FAB 等
   - Secondary: 用于 UI 中不太突出的组件，如 Chips 等
   - Tertiary: 用于平衡主色辅色，或提高元素关注度
   - Tertiary-Container: 同上，但相对不太需要强调

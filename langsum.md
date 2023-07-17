@@ -102,10 +102,10 @@
   ```dart
   import 'dart:io';
   import 'package:libname/path/to/file.dart';
-  import 'path/to/file.dart';
-  import 'path/to/file.dart' as qualifier;
-  import 'path/to/file.dart' show foo;
-  import 'path/to/file.dart' hide bar;
+  import 'package:path/to/file.dart';
+  import 'package:path/to/file.dart' as qualifier;
+  import 'package:path/to/file.dart' show foo;
+  import 'package:path/to/file.dart' hide bar;
   ```
 
 - TypeScript
@@ -1969,25 +1969,36 @@ hset ^= set1
   - 文本：国际化
   - 图标
   - 图像：分辨率
+  - 动画
   - 视频
   - 音频
-  - 2D 绘制
-  - 3D 绘制
 
-- 展示
+- 呈现
 
-  - 布局：方向、位置、大小、伸缩（一维布局）、网格（二维布局）、图层（三维布局）
-  - 样式：形状、颜色等
-  - 动画：随时间变化而更改布局与样式
+  - 布局：位置、方向、大小、伸缩（一维布局）、网格（二维布局）、图层（三维布局）
+  - 样式：形状、颜色、特效等
+  - 动画：
+    - 关注最终状态：随时间改变布局和样式从前一个状态平滑过渡到后一个状态
+      - 复合多动画
+      - 顺序多动画
+    - 关注动画过程：动画作为内容（如 Rive, Lottie, Spine 等）
 
 - 交互
 
   - 鼠标事件：enter, leave, move, down, up
-  - 高级手势：轻触、长按、右键、双击、三击、拖拽、选择、缩放、滚动
+  - 高级手势：轻触、长按、右键、双击、三击、拖拽、选择、滚动、缩放
   - 键盘事件：down, up
   - 高级按键：焦点切换、快捷键
 
-![framework](images/framework.png)
+- 框架
+  - 声明式
+    - 不区分初始化和更新渲染
+    - 监听事件通过设置组件属性
+    - 更新状态数据来更新 UI
+  - 命令式
+    - 区分初始化和更新渲染
+    - 监听事件通过继承部件并覆盖方法
+    - 调用更新方法来更新 UI
 
 ## 命名规范
 
