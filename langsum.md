@@ -1495,8 +1495,8 @@
   - tuple
   - struct
   - list
-  - map (btree | hash)
-  - set (btree | hash)
+  - map (btree or hash)
+  - set (btree or hash)
   - heap
   - ring list
   - link list
@@ -1810,7 +1810,7 @@ function toLocalISOString(date) {
   const offsetAbs = Math.abs(offset);
   const isoString = new Date(date.getTime() - offset * 60 * 1000).toISOString();
   return `${isoString.slice(0, -1)}${offset > 0 ? "-" : "+"}${String(
-    Math.floor(offsetAbs / 60)
+    Math.floor(offsetAbs / 60),
   ).padStart(2, "0")}:${String(offsetAbs % 60).padStart(2, "0")}`;
 }
 let toIso = toLocalISOString(datetime);
@@ -1966,22 +1966,19 @@ hset ^= set1
 
 - 内容
 
-  - 文本：国际化
+  - 文本（国际化）
   - 图标
-  - 图像：分辨率
-  - 动画
-  - 视频
-  - 音频
+  - 图像（响应式分辨率）
+  - 视频（流式加载）
 
 - 呈现
 
   - 布局：位置、方向、大小、伸缩（一维布局）、网格（二维布局）、图层（三维布局）
   - 样式：形状、颜色、特效等
   - 动画：
-    - 关注最终状态：随时间改变布局和样式从前一个状态平滑过渡到后一个状态
+    - 随时间改变布局和样式从前一个状态平滑过渡到后一个状态
       - 复合多动画
       - 顺序多动画
-    - 关注动画过程：动画作为内容（如 Rive, Lottie, Spine 等）
 
 - 交互
 
@@ -1990,15 +1987,13 @@ hset ^= set1
   - 键盘事件：down, up
   - 高级按键：焦点切换、快捷键
 
-- 框架
-  - 声明式
-    - 不区分初始化和更新渲染
-    - 监听事件通过设置组件属性
-    - 更新状态数据来更新 UI
-  - 命令式
-    - 区分初始化和更新渲染
-    - 监听事件通过继承部件并覆盖方法
-    - 调用更新方法来更新 UI
+- AppUI 与 GameUI 的区别
+  - App 呈现内容大多静态，必要时才更新渲染
+  - Game 呈现内容大多动态，实时更新渲染
+  - App 呈现的内容一般是：文本、图标、图像、视频
+  - Game 呈现的内容一般是：图像、图集、动画(Png, Rive, Skeletons, Particles)
+  - App 一般使用声明式编码，不区分初始化和更新渲染，通过设置组件属性来监听事件
+  - Game 一般使用命令式编码，区分初始化和更新渲染，通过初始化时绑定事件或继承并覆盖方法来监听事件
 
 ## 命名规范
 

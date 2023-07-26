@@ -51,15 +51,24 @@
 
 ## 组件
 
-- 整体布局：
+- 功能/页面导航
 
-  - NavigationBar
-  - NavigationRail
-  - NavigationDrawer
-  - AppBar
+  - Navigation Bar
+  - Navigation Rail
+  - Navigation Drawer
+  - Top App Bar
+  - Bottom App Bar
   - Tabs
 
-- 行为触发：
+- 信息展开
+
+  - Dialog
+  - BottomSheet
+  - Menu
+  - Snackbar
+  - Tooltip
+
+- 行为触发
 
   - **High emphasis**
     - Extended FAB
@@ -74,9 +83,13 @@
     - Segmented button
     - Icon button
 
-- 信息展开：
-  - Dialog
-  - BottomSheet
-  - Menu
-  - Snackbar
-  - Tooltip
+- 表单输入
+  - Select
+  - Radio
+  - Switch
+  - Checkbox
+  - Chips
+  - Slider
+  - Date picker
+  - Time picker
+  - Color Picker
