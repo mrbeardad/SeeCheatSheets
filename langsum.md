@@ -27,6 +27,7 @@
     - [系统相关](#系统相关)
     - [异步框架](#异步框架)
     - [UI](#ui)
+    - [Game](#game)
   - [命名规范](#命名规范)
 
 ## 依赖
@@ -1810,7 +1811,7 @@ function toLocalISOString(date) {
   const offsetAbs = Math.abs(offset);
   const isoString = new Date(date.getTime() - offset * 60 * 1000).toISOString();
   return `${isoString.slice(0, -1)}${offset > 0 ? "-" : "+"}${String(
-    Math.floor(offsetAbs / 60),
+    Math.floor(offsetAbs / 60)
   ).padStart(2, "0")}:${String(offsetAbs % 60).padStart(2, "0")}`;
 }
 let toIso = toLocalISOString(datetime);
@@ -1955,7 +1956,7 @@ hset ^= set1
 
 ### UI
 
-- 窗口：
+- 窗口
 
   - 位置与大小
   - Z 轴顺序
@@ -1987,13 +1988,55 @@ hset ^= set1
   - 键盘事件：down, up
   - 高级按键：焦点切换、快捷键
 
-- AppUI 与 GameUI 的区别
-  - App 呈现内容大多静态，必要时才更新渲染
-  - Game 呈现内容大多动态，实时更新渲染
-  - App 呈现的内容一般是：文本、图标、图像、视频
-  - Game 呈现的内容一般是：图像、图集、动画(Png, Rive, Skeletons, Particles)
-  - App 一般使用声明式编码，不区分初始化和更新渲染，通过设置组件属性来监听事件
-  - Game 一般使用命令式编码，区分初始化和更新渲染，通过初始化时绑定事件或继承并覆盖方法来监听事件
+> 高 DPI 缩放问题：
+>
+> - 缩放逻辑像素 = dpi_scale × 物理像素
+>   （优点是在不同屏幕上的画面元素显示的物理尺寸大约相等）
+> - 设置基础分辨率 width × height，屏幕宽高不对应时自动缩放或扩充画面
+>   （优点是在不同屏幕上的画面元素显示的相对屏幕大小的比例相近）
+>
+> 多分辨率布局问题：
+>
+> - 相对位置与大小
+> - 响应式布局
+>
+> UI 框架类型：
+>
+> - 声明式 UI，不区分初始化和更新渲染，通过设置组件属性来监听事件
+> - 命令式 UI，区分初始化和更新渲染，通过初始化时绑定事件或继承基类并覆盖方法来监听事件
+
+### Game
+
+- Scene
+  - Camera
+  - World
+    - Objects
+- Render
+  - 2D: Sprites, Tilemaps
+  - 3D: Model, Terrain
+  - Textures
+  - Materials
+  - Meshes
+  - Animations
+  - Effects
+  - Particles
+- Transform
+  - Position
+  - Rotation
+  - Scale
+- Physic
+  - Force
+    - Gravity
+    - Bounciness
+    - Friction
+    - Drag
+    - User Apply
+  - Collider
+  - Body
+  - Joint
+- Lighting
+- Audio
+- Input
 
 ## 命名规范
 

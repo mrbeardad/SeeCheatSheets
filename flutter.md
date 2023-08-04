@@ -121,11 +121,11 @@ flutter:
 - 局部样式，由组件的诸如`style`, `color`, `shape`等属性控制
 - 视效组件
 
-  - `BackdropFilter`, `ImageFilter`
-  - `Opacity`, `Visibility`
   - `ShaderMask`
   - `ClipRect`, `ClipRRect`, `ClipOval`, `ClipPath`
   - `DecoratedBox`, `BoxDecoration`, `LinearGradient`, `RadialGradient`, `SweepGradient`
+  - `BackdropFilter`, `ImageFilter`
+  - `Opacity`, `Visibility`
   - `RotatedBox`
   - `Transform`
 

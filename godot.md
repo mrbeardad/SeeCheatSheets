@@ -9,14 +9,8 @@
 
 > 用 Scene Editor 编辑的缺点是只能静态组合，不能动态加载
 
-## 分辨率
+## UI
 
-- Godot 中像素均为物理像素
-- 通过设置 Stretch Mode 为 canvas_items 会自动缩放分辨率，以达到类似逻辑像素的效果
-
-## 数学
-
-- Vector: relative direction and magnitude
-  - Point: the Vector from Origin to Point
-  - Line: the Vector from Point to Point
-  - Plane: the Vector for Normal
+- 高 DPI 与多分辨率问题：
+  - Godot 中像素均为物理像素
+  - 通过设置 Stretch Mode 为 canvas_items ，改变分辨率大小会自动缩放或扩充画面

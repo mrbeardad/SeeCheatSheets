@@ -1,12 +1,5 @@
 # Flame Engine
 
-Game UI 与 App UI 的区别：
-
-- Game UI 命令式，App UI 声明式
-- Game UI 实时渲染，App UI 仅在状态更新时渲染
-
-Game 概念
-
 - Camera
   - Viewport：观察世界的窗口本身
   - Viewfinder：控制窗口如何观察世界，如位置、缩放等
