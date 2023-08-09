@@ -102,7 +102,7 @@ flutter:
 
 - 滚动布局：sliver 布局协议比较复杂且灵活，每个 sliver 可以根据视窗大小和滑动状态来决定自己在视窗中的位置、绘制大小等
 
-> 由于 Box 与 Sliver 之间不能直接传递约束和大小等布局信息，所有通常使用一些封装或中介 Widget，如 ListView, GridView, CustomScrollView, RenderSliverToBoxAdapter 等
+> 由于 Box 与 Sliver 之间不能直接传递约束和大小等布局信息，所以通常使用一些封装或中介 Widget，如 ListView, GridView, CustomScrollView, RenderSliverToBoxAdapter 等
 
 - Widgets：
 

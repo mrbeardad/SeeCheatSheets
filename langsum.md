@@ -1940,7 +1940,7 @@ hset ^= set1
 
 ### 异步框架
 
-> 通讯中间件类型：MessageQueue, EventBus, RPC
+> 通讯中间件类型：Queue, Bus
 
 - Task (async/await)
 - Lock
@@ -2011,15 +2011,26 @@ hset ^= set1
   - Camera
   - World
     - Objects
+
+---
+
 - Render
-  - 2D: Sprites, Tilemaps
-  - 3D: Model, Terrain
+  - 2D
+    - Sprites
+    - Tilemaps
+  - 3D
+    - Models
+    - Terrain
+  - Color
+    - Linear & Gamma
+    - HDR
   - Textures
   - Materials
   - Meshes
   - Animations
-  - Effects
+  - Lighting & Shadows
   - Particles
+  - Shaders
 - Transform
   - Position
   - Rotation
@@ -2034,7 +2045,6 @@ hset ^= set1
   - Collider
   - Body
   - Joint
-- Lighting
 - Audio
 - Input
 
