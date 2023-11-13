@@ -98,7 +98,7 @@ pprof <path/to/binary> /tmp/prof.out
 - `openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt`
   > 用私钥与证书请求签发证书
 - `openssl req -newkey rsa:2048 -keyout server.key -x509 -days 365 -out server.crt`
-  > 同时创建私钥与自签证书
+  > 同时创建私钥与自签证书，`-nodes`不设置私钥密码
 - `openssl x509 -in server.crt -signkey server.key -x509toreq server.csr`
   > 利用已有证书创建证书请求，用于续订证书
 - `openssl req -text -noout -in server.csr`

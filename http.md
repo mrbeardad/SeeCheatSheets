@@ -1,13 +1,13 @@
 # HTTP
 
 - [HTTP](#http)
+  - [架构](#架构)
   - [协议](#协议)
-    - [请求报文](#请求报文)
-    - [响应报文](#响应报文)
+    - [报文](#报文)
     - [URL](#url)
     - [方法](#方法)
     - [状态码](#状态码)
-  - [连接](#连接)
+    - [版本](#版本)
   - [重定向](#重定向)
   - [认证](#认证)
   - [缓存](#缓存)
@@ -19,42 +19,47 @@
     - [Cookie 安全](#cookie-安全)
     - [跨源资源共享(CORS)](#跨源资源共享cors)
 
+## 架构
+
+```txt
+Client ⇄ Proxy ⇄ Proxy ⇄ Server
+```
+
+- Proxy functions
+  - filtering
+  - load balancing
+  - logging
+  - authentication
+  - caching
+
 ## 协议
 
-编码：utf8（不存在大小端问题）
+### 报文
 
-### 请求报文
-
-```txt
-方法 资源 协议版本
-请求首部: 值
-通用首部: 值
-实体首部: 值
-
-主体
+```yml
+GET / HTTP/1.1
+Host: developer.mozilla.org
+Accept-Language: fr
 ```
 
-Body 大致可分为两类：
+```yml
+HTTP/1.1 200 OK
+Date: Sat, 09 Oct 2010 14:28:02 GMT
+Server: Apache
+Last-Modified: Tue, 01 Dec 2009 20:18:22 GMT
+ETag: "51142bc1-7449-479b075b2891b"
+Accept-Ranges: bytes
+Content-Length: 29769
+Content-Type: text/html
 
-- 单资源：由一个单文件组成，该类型主体由两个首部定义： `Content-Type` 和 `Content-Length`
-- 多资源：由多部分主体组成，每一部分包含不同的信息位。通常是和 HTML Forms 连系在一起。
-
-### 响应报文
-
-```txt
-协议版本 状态码 状态描述
-响应首部: 值
-通用首部: 值
-实体首部: 值
-
-主体
+<!DOCTYPE html>… (here come the 29769 bytes of the requested web page)
 ```
 
-Body 大致可分为三类：
+- Body
 
-- 单资源：由已知长度的单个文件组成，该类型主体由两个首部定义：`Content-Type` 和 `Content-Length`
-- 单资源：由未知长度的单个文件组成，通过定义首部 `Transfer-Encoding: chunked` 使用 chunks 编码。
-- 多资源：由多部分主体组成，每部分包含不同的信息段，这是比较少见的。
+  - 单资源固定长度，`Content-Type`、`Content-Length`
+  - 单资源不定长度，`Transfer-Encoding: chunked`
+  - 多资源，`Content-Type: multipart/form-data; boundary=----`、`Content-Disposition: form-data; name="myFile"`
 
 ### URL
 
@@ -94,36 +99,32 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 | 400    | Bad Request           | 客户端请求错误 |
 | 500    | Internal Server Error | 服务器处理错误 |
 
-## 连接
+### 版本
 
-- HTTP/1.0（短连接）：
-  - 管理方便，一次连接只进行一次请求-响应
-  - TCP 连接建立与断开的开销，以及慢启动导致的高延迟
-- HTTP/1.1（长连接）：
-  - 节省 TCP 连接的建立与关闭的开销，并减少慢启动
-  - 一次连接中可进行多次串行的”请求-响应“
-  - 静态资源数据长度由`Content-Length`指明，动态资源数据长度通过分块传输编码判断
-  - 服务端需要为每个客户端连接保留资源，一般存在保活机制来探测无效连接并关闭之
-  - ~~管道化连接选项~~（不稳健）：请求发起不必等待前一个请求的响应结束，但响应时必须按请求顺序
+- HTTP/1.0
+  - 可扩展性
+- HTTP/1.1
+  - 长连接
+  - 流水线
+  - chunked 编码
+  - 缓存控制
 - HTTP/2：
-  - 首部压缩
-  - 二进制帧
-  - 数据流
+  - 二进制
   - 多路复用
+  - 压缩首部
   - 服务器推送
 - HTTP/3：
-  - 利用 UPD+QUIC 代替 TCP，解决重传等待
+  - QUIC: 通过 UDP 同时运行多个流，每个流的丢包检测和重传都相互独立
 
 ## 重定向
 
-| 状态码 | 描述               | 处理方法                               | 应用场景                                                              |
-| ------ | ------------------ | -------------------------------------- | --------------------------------------------------------------------- |
-| 301    | Moved Permanently  | GET 方法不变，其他方法有可能会变为 GET | 网站重构                                                              |
-| 308    | Permanent Redirect | 方法和消息主体都不发生变化             | 网站重构，用于非 GET 方法                                             |
-| 302    | Found              | GET 方法不变，其他方法有可能会变为 GET | 网页意外不可用                                                        |
-| 307    | Temporary Redirect | 方法和消息主体都不发生变化             | 网页意外不可用，用于非 GET 方法                                       |
-| 300    | Multiple Choice    | 用户手动选择 html 中列出的重定向       | `<link rel="alternate" href="https://zh.example.com/" hreflang="zh">` |
-| 304    | Not Modified       | 重定向到缓存                           | 缓存校验，表明缓存仍有效                                              |
+| 状态码 | 描述               | 处理方法                               | 应用场景                        |
+| ------ | ------------------ | -------------------------------------- | ------------------------------- |
+| 301    | Moved Permanently  | GET 方法不变，其他方法有可能会变为 GET | 网站重构                        |
+| 308    | Permanent Redirect | 方法和消息主体都不发生变化             | 网站重构，用于非 GET 方法       |
+| 302    | Found              | GET 方法不变，其他方法有可能会变为 GET | 网页意外不可用                  |
+| 307    | Temporary Redirect | 方法和消息主体都不发生变化             | 网页意外不可用，用于非 GET 方法 |
+| 304    | Not Modified       | 重定向到缓存                           | 缓存校验，表明缓存仍有效        |
 
 - HTTP 重定向：`Location: URL`
 - HTML 重定向：`<meta http-equiv="Refresh" content="0; URL=https://example.com/">`
@@ -150,40 +151,37 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 
 ## 缓存
 
-- 缓存类型：缓存分为 private 缓存与 public 缓存
-- 缓存状态：缓存状态有 fresh 与 stale，根据`max-age`与`Date`或`Age`确定
-- 缓存校验：fresh 缓存可复用，stale 缓存需要校验成功后才能重用
+- 缓存类型：缓存分为 private 与 public，前者仅客户端存储，后者均可存储
+- 缓存状态：缓存状态有 fresh 与 stale，过期日期 = `Date` + `max-age` - `Age`
+- 缓存校验：fresh 缓存可直接复用，stale 缓存需要校验成功后才能在 1 小时内复用
 - 复用旧缓存：当与源服务器断开连接时允许使用 stale 缓存
-- 启发式缓存：即使未指定`Cache-Control`也可进行缓存，一般`max-age`=(`Last-Modified`-`Date`) / 10
+- 启发式缓存：即使未指定`Cache-Control`也可进行缓存，通常 `max-age` = (`Last-Modified` - `Date`) / 10
 - 缓存折叠：缓存代理同时接收多个相同请求时，只向源服务器发送一个请求，除非指定`Cache-Control: private`
 - 缓存破坏：给静态资源名添加版本号（如哈希等），修改后 URL 不同导致缓存失效
 
-| `Cache-Control` 响应首部参数 | 备注（`,`逗号分隔列表）                                                                 |
-| ---------------------------- | --------------------------------------------------------------------------------------- |
-| `public`                     | 允许共享缓存，即允许反向代理缓存，当响应具有`Authorization`的请求时才需要显示指定       |
-| `private`                    | 仅限私有缓存，即仅限浏览器本地缓存，一般需要显示指定                                    |
-| `max-age=3600`               | 指定缓存从源服务器产生开始计算的保持 fresh 的流逝时间                                   |
-| `must-revalidate`            | 禁止“复用旧缓存”                                                                        |
-| `no-cache`                   | 每次复用缓存都必须校验，且禁止“复用旧缓存”                                              |
-| `no-store`                   | 禁止缓存                                                                                |
-| `immutable`                  | 表明缓存在 fresh 期间绝不可能更改，浏览器重载页面时忽略校验该缓存，一般用于缓存破坏模式 |
+| `Cache-Control` 首部参数 | 类型 | 备注（`,`逗号分隔列表）                                                                 |
+| ------------------------ | ---- | --------------------------------------------------------------------------------------- |
+| `public`                 | 响应 | 允许共享缓存，即允许反向代理缓存，当响应具有`Authorization`的请求时才需要显示指定       |
+| `private`                | 响应 | 仅限私有缓存，即仅限浏览器本地缓存，一般需要显示指定                                    |
+| `max-age=3600`           | 响应 | 指定缓存从源服务器产生开始计算的保持 fresh 的流逝时间                                   |
+| `must-revalidate`        | 响应 | 禁止“复用旧缓存”                                                                        |
+| `no-cache`               | 响应 | 每次复用缓存都必须校验，且禁止“复用旧缓存”                                              |
+| `no-store`               | 响应 | 禁止缓存                                                                                |
+| `immutable`              | 响应 | 表明缓存在 fresh 期间绝不可能更改，浏览器重载页面时忽略校验该缓存，一般用于缓存破坏模式 |
+| `max-age=0`              | 请求 | 表明仅允许使用从源服务器创建不超过指定时间的响应的缓存，一般用于浏览器刷新              |
+| `no-cache`               | 请求 | 表明需要校验缓存                                                                        |
+| `max-stale=3600`         | 请求 | 表明允许返回已过期的缓存，但过期时间不能超过指定时间                                    |
 
-| `Cache-Control` 请求首部参数 | 备注（`,`逗号分隔列表）                                                    |
-| ---------------------------- | -------------------------------------------------------------------------- |
-| `max-age=0`                  | 表明仅允许使用从源服务器创建不超过指定时间的响应的缓存，一般用于浏览器刷新 |
-| `no-cache`                   | 表明需要校验缓存                                                           |
-| `max-stale=3600`             | 表明允许返回已过期的缓存，但过期时间不能超过指定时间                       |
-
-| 其他相关首部        | 类型 | 备注                                                                                    |
-| ------------------- | ---- | --------------------------------------------------------------------------------------- |
-| `Date`              | 响应 | 响应报文创建时间                                                                        |
-| `Age`               | 响应 | 响应报文在代理中已缓存的时间                                                            |
-| `Last-Modified`     | 响应 | 资源上次修改时间                                                                        |
-| `ETag`              | 响应 | 用于缓存校验，一般为哈希值                                                              |
-| `Expires`           | 响应 | 指定缓存保持 fresh 的时间点而非流逝时间                                                 |
-| `Vary: Headers`     | 响应 | 加上 Vary 指定的请求首部作为缓存标志而非仅用 URL，应用场景如`Origin, Accept-Encoding`等 |
-| `If-Modified-Since` | 请求 | 缓存校验，对应`Last-Modified`                                                           |
-| `If-None-Match`     | 请求 | 缓存校验，对应`Etag`，优先于上条                                                        |
+| 其他相关首部        | 类型 | 备注                                                                                           |
+| ------------------- | ---- | ---------------------------------------------------------------------------------------------- |
+| `Date`              | 响应 | 响应报文创建时间                                                                               |
+| `Age`               | 响应 | 响应报文在代理中已缓存的时间                                                                   |
+| `Last-Modified`     | 响应 | 资源上次修改时间                                                                               |
+| `ETag`              | 响应 | 用于缓存校验，一般为哈希值                                                                     |
+| `Expires`           | 响应 | 指定缓存保持 fresh 的时间点而非流逝时间                                                        |
+| `Vary`              | 响应 | 表示即使 URI 相同，但指定的请求首部若不同则响应报文则不同，常见如`Origin`和`Accept-Encoding`等 |
+| `If-Modified-Since` | 请求 | 缓存校验，对应`Last-Modified`                                                                  |
+| `If-None-Match`     | 请求 | 缓存校验，对应`Etag`，优先于上条                                                               |
 
 | 状态码 | 描述         | 备注               |
 | ------ | ------------ | ------------------ |
@@ -199,7 +197,7 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 
 | `Strict-Transport-Security`响应首部 | 备注（`;`分号分隔列表）              |
 | ----------------------------------- | ------------------------------------ |
-| `max-age=`                          | 指定 HSTS 记忆有效时间               |
+| `max-age=63072000`                  | 指定 HSTS 记忆有效时间               |
 | `includeSubDomains`                 | 包括子域名也应用 HSTS                |
 | `preload`                           | 使用 HSTS 预加载列表，由 google 维护 |
 
@@ -235,16 +233,16 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 
 > `Site`表示两 URL 的 secheme 相同且 host 中的可注册域名相同（表示网站来自同一组织）
 
-| `Set-Cookie`响应首部 | 备注（`;`分号分隔列表）                                                                                                               |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `<name>=<value>`     | name 不能包含控制字符、空白符和一些符号；value 可以用双引号来转移特殊字符；若需多个 name=value 对则添加多个`Set-Cookie`               |
-| `Max-Age=`           | 指定 cookie 持久化时间，默认 session cookie                                                                                           |
-| `Expires=`           | 指定 cookie 持久化时间点，默认 session cookie                                                                                         |
-| `Domain=`            | 指定 cookie 当前域名或更高阶的域名（包括子域名），默认当前域名（不含子域名）                                                          |
-| `Path=`              | 指定 cookie 对应的路径且包括子路径，默认匹配所有路径                                                                                  |
-| `Secure`             | 指定 cookie 仅在 https 协议下使用                                                                                                     |
-| `HttpOnly`           | 指定 cookie 不能被 JS 访问                                                                                                            |
-| `SameSite=`          | `Strict`拒绝任何跨站请求，（默认）`Lax`表示仅额外允许导航页面（更改浏览器地址栏）的跨站请求，`None`表示允许跨站请求但必须设置`Secure` |
+| `Set-Cookie`响应首部 | 备注（`;`分号分隔列表）                                                                                         |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `<name>=<value>`     | name 不能包含控制字符和分隔符；value 可以用双引号来转义部分分隔符；若需多个 name=value 对则添加多个`Set-Cookie` |
+| `Max-Age=`           | 指定 cookie 持久化时间，默认 session cookie                                                                     |
+| `Expires=`           | 指定 cookie 持久化时间点，默认 session cookie                                                                   |
+| `Domain=`            | 指定 cookie 当前域名或更高阶的域名（包括子域名），默认当前域名（不含子域名）                                    |
+| `Path=`              | 指定 cookie 对应的路径且包括子路径，默认匹配所有路径                                                            |
+| `Secure`             | 指定 cookie 仅在 https 协议下使用                                                                               |
+| `HttpOnly`           | 指定 cookie 不能被 JS 访问                                                                                      |
+| `SameSite=`          | `Strict`仅允许同源访问，`Lax（默认）`允许导航跳转的跨站请求，`None`表示允许跨站请求但必须设置`Secure`           |
 
 | `Cookie`请求首部 | 备注（`;`分号分隔列表）             |
 | ---------------- | ----------------------------------- |
@@ -276,7 +274,7 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 
 | 请求首部                                                        | 备注                       |
 | --------------------------------------------------------------- | -------------------------- |
-| `Origin: <origin>`                                              | 指明跨源请求的源 Domain    |
+| `Origin: <origin>`                                              | 指明跨源请求的源 Origin    |
 | `Referer: <url>`                                                | 指明跨源请求的源 URL       |
 | `Access-Control-Request-Method: <method>`                       | 预检时指明方法             |
 | `Access-Control-Request-Headers: <field-name>[, <field-name>]*` | 预检时指明携带的自定义首部 |

@@ -40,6 +40,7 @@ Context: server
 - address 格式 `127.0.0.1`, `*`, `[::]`, `[::1]`
 - port 默认 80
 - default_server 指定该 server 为 default server，默认情况下第一个 server 为 default server；当绑定到该 ip/port 上的 servers 的 server_name 都不匹配时，则用 default server 来处理流量
+- ssl 需要设置证书和私钥
 
 ---
 
@@ -75,18 +76,6 @@ Context: server, location
   - `~` 表示正则匹配且区分大小写
   - `~*` 表示正则匹配且忽略大小写
 - `@name` location 无法嵌套与被嵌套
-
----
-
-```nginx
-Syntax : ssl_certificate file;
-Syntax : ssl_certificate_key file;
-Syntax : ssl_password_file file;
-Default: —
-Context: http, server
-```
-
-- ssl 协议卸载
 
 ---
 

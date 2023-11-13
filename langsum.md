@@ -35,7 +35,7 @@
 - C++
 
   - 程序入口：main 函数
-  - 依赖单元：一个头文件 + 一个实现文件（可选）
+  - 依赖单元：一个头文件 + 一个源文件（可选）
   - 依赖导入：符号限定于命名空间
   - 依赖导出：头文件中所有宏与符号
   - 依赖初始化：global-constructor
@@ -56,18 +56,18 @@
 
 - Rust
 
-  - 程序入口：`src/main.rs` 或 `bin/*.rs` 中的 main 函数
-  - 依赖单元：一个源文件（项目内部依赖才需手动导入，外部依赖由 Cargo.toml 控制自动导入）
+  - 程序入口：`src/main.rs` 或 `src/bin/*.rs` 中的 main 函数
+  - 依赖单元：一个源文件（项目内部依赖才需手动导入，外部依赖由 Cargo.toml 导入）
   - 依赖导入：符号限定于模块路径
   - 依赖导出：`pub`声明
   - ~~依赖初始化~~
   - 依赖管理：cargo
 
   ```rust
-  pub mod module;
+  pub mod fileordir;
 
-  use create::module::foo;
-  use module::{self, foo, bar};
+  use create::fileordir::foo;
+  use fileordir::{self, foo, bar};
   use super::*;
   ```
 
@@ -822,7 +822,7 @@
     ()
   }
 
-  fn normal_function(a1: int, a2: &str, a3: &mut int) -> char {
+  fn normal_function(a1: i32, a2: &str, a3: &mut i32) -> char {
     // ...
   }
 
@@ -1960,8 +1960,8 @@ hset ^= set1
 
   - 位置与大小
   - Z 轴顺序
-  - 可见状态
-  - 最大最小化状态
+  - 隐藏状态
+  - 最小化状态
   - 激活状态
   - 禁用状态
 
@@ -1974,7 +1974,7 @@ hset ^= set1
 
 - 呈现
 
-  - 布局：位置、方向、大小、伸缩（一维布局）、网格（二维布局）、图层（三维布局）
+  - 布局：位置、大小、方向、伸缩（一维布局）、网格（二维布局）、图层（三维布局）
   - 样式：形状、颜色、特效等
   - 动画：
     - 随时间改变布局和样式从前一个状态平滑过渡到后一个状态
@@ -2029,7 +2029,6 @@ hset ^= set1
   - Meshes
   - Animations
   - Lighting & Shadows
-  - Particles
   - Shaders
 - Transform
   - Position
@@ -2042,9 +2041,18 @@ hset ^= set1
     - Friction
     - Drag
     - User Apply
-  - Collider
+  - Velocity
+    - Linear
+    - Angular
   - Body
-  - Joint
+    - Collider
+    - Joint
+- Particles
+  - Emission (count per time)
+  - Lifetime
+  - Transform
+  - Velocity
+  - Gravity
 - Audio
 - Input
 

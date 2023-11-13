@@ -69,7 +69,7 @@
   - Visible Inside Mask: 视口
   - Visible Outside Mask: 洞口
 
-- 2D Render Sorting
+- Render Sorting
   1. Sorting Layer
   2. Order in Layer
   3. Distance to Camera（可在 Render Pipeline 中自定义排序轴）
@@ -84,9 +84,10 @@
 
 - Sprite Editor
 
-  - 分割图集
-  - 修改 Border, Pivot, Outline, Physics Shape
-  - 编辑骨骼
+  - 2D
+    - 分割图集
+    - 修改 Border, Pivot, Outline, Physics Shape
+    - 编辑骨骼
 
 - Filter Mode
   - Point: 原始像素点，不加任何滤镜
@@ -101,15 +102,50 @@
   - State (Animation Clips): 表示状态的循环动画
   - Transition: 动画切换时的过度动画
     - 仅在特定时间或条件下触发
-    - 可选被其他 Transition 中断，中断具有优先级
-- 2D
-  - Sprite Skin (Skeleton & Bones)
+    - 可选被其他 Transition 中断，排在前面 Transition 具有更高优先级
+- 2D Skeleton
+  - Sprite Skin
   - Sprit Library
   - Sprite Resolver
+  - IK Manager 2D
+  - IK Resolver 2D
 - Target Matching
-- IK
 
 #### Lighting
+
+#### Particles
+
+- Main
+  - Play On Awake
+  - Duration
+  - Looping
+  - Start Lifetime
+  - Start Speed
+  - Start Rotation
+  - Start Size
+  - Start Color
+  - Gravity
+  - Simulate Space
+  - Max Particles
+- Emission
+  - Rate Over Time
+  - Rate Over Distance
+  - Bursts
+- Shape
+  - Shape
+  - Radius Thickness: 0 表示仅从表面发射，1 表示从整个体积发射
+  - Arc: 可发射的弧度
+    - Mode
+      - Random: 随机发射
+      - Loop: 旋转发射
+      - Ping: 旋转发射（下次循环反向）
+      - Burst: 使 Burst 发射相对 Random 分布更加均匀
+    - Spread: 旋转间隔，0 表示无间隔，0.1 表示间隔 10%
+    - Speed: 旋转速度，1 表示每秒旋转 1 圈
+  - Align To Direction: 粒子 Rotation 根据初始速度方向设置
+  - Randomize Direction: 将随机发射方向与默认发射方向混合
+  - Spherize Direction: 将表面法线发射方向与默认方向混合
+  - Randomize Position: 扩张发射位置
 
 ### Physics
 

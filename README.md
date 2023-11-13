@@ -43,7 +43,7 @@
 
 - (**What**) 解决了实际生产中出现的什么问题？
 - (**Why**) 问题产生的原因？
-- (**How**) 解决问题的方法？
+- (**How**) 解决问题的逻辑步骤？
 
 当对其解决方法有不理解时，递归地思考以上三问。
 
@@ -96,7 +96,7 @@
 
 ## 开发平台
 
-- [Linux 系统](linuxsum.md):star:
+- [Linux 系统](linuxsum.md)
 
   - [Linux 知识框架](linux.md)
   - [Linux 系统接口](linuxapi.md)
@@ -109,7 +109,7 @@
 
 ## 底层原理
 
-- [面试八股](interview.md):star:
+- [面试八股](interview.md)
 
   - [信息编码](code.md)
   - [处理器设计](cpu.md)

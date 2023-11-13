@@ -23,6 +23,7 @@ function Component(porps) {
           height: user.imageSize,
         }}
       />
+      {props.children}
     </>
   );
 }
@@ -41,21 +42,20 @@ function Component(porps) {
 
 ## Component
 
-- 应用启动：调用根组件递归构造 VDOM 树，然后再由 VDOM 树构造 DOM 树，最后浏览器根据 DOM 树渲染首帧画面
-- 重新渲染：当组件关联的状态发生状态转移时，会重新调用组件构造新的 VDOM 子树，并对比新旧来更新对应 VDOM，然后在更新对应 DOM，最后更新画面
+组件视图仅与组件状态有关，即 $View=f(Status)$。当事件触发状态转移后视图也会发生变化，即重新渲染。
 
-组件视图仅与组件状态有关，即 $View=f(Status)$，当状态发生变化时（状态转移）视图也会发生变化（重新渲染）
-
-- 状态
+- 状态数据
   - 内部状态
   - 共享状态
   - UI 输入：特殊的 IO 事件，如用户表单输入等
   - IO 事件：事件发生时通常会携带外部数据，如 UI 交互、网络通讯等
-- 状态转移
-  - 事件是触发状态转移的唯一来源
-  - 改变属性和调用方法是进行状态转移的途径
+- 监听事件：通过设置组件属性，如`onClick`
+- 状态转移：调用状态修改方法，如`setState`
 
-保持组件简单，用 Hooks 提供状态数据和状态转移逻辑
+> 保持组件简单，用 Hooks 封装状态数据和状态转移逻辑
+
+- 应用启动：调用根组件递归构造 VDOM 树，然后再由 VDOM 树构造 DOM 树，最后浏览器根据 DOM 树渲染首帧画面
+- 重新渲染：当组件关联的状态发生状态转移时，会重新调用组件构造新的 VDOM 子树，并对比新旧来更新对应 VDOM，然后在更新对应 DOM，最后更新画面
 
 ## Hook
 
@@ -131,34 +131,25 @@ const memoizedCallback = useCallback(() => {
 
 ## Server Component
 
-- 服务端组件：（默认）仅在服务端运行并渲染，用来保护敏感信息、更快访问后端数据、减少客户端代码体积
+- 服务端组件
 
-  - 可以直接导入并嵌套客户端组件
-  - 可以传递属性给客户端组件，但因为需要先将属性序列化，所以不能传递函数（使用 Server Action 代替）
+  - 可以直接导入并嵌套客户端组件，反之则不能，因为服务端组件导入客户端组件则自动转为客户端组件
+  - 可以传递属性给客户端组件，但无法直接传递函数，因为函数无法序列化，可以使用 Server Action 代替
   - 无法使用 Hooks 和浏览器专属 API，意味着其无状态（组件代码仅运行一次）且无交互
-  - 支持`async`，通过使用`<Suspense fallback={<Loading/>}>`内嵌服务端组件可在其阻塞时渲染`fallback`从而使客户端可以异步加载服务端组件（默认同步）
+  - 支持`async`，通过使用`<Suspense fallback={<Loading/>}>`内嵌服务端组件可在其阻塞时渲染`fallback`从而使客户端可以异步加载服务端组件
 
-- 客户端组件：（`"use client"`）在客户端运行并渲染，建议仅在服务端组件无法满足需要时使用
+- 缓存
 
-  - 只能间接嵌套服务端组件（通过`props.children`），因为客户端组件导入的组件都会自动转换为客户端组件
-  - 无法传递属性给服务端属性，因为无法为`props.children`设置属性
+| Mechanism           | What                          | Where  | Purpose                                         | Duration                        |
+| ------------------- | ----------------------------- | ------ | ----------------------------------------------- | ------------------------------- |
+| Request Memoization | Return values of functions    | Server | Re-use data in a React Component tree           | Per-request lifecycle           |
+| Data Cache          | Fectch and Route Handler Data | Server | Store data across user requests and deployments | Persistent (can be revalidated) |
+| Full Route Cache    | HTML and RSC payload          | Server | Reduce rendering cost and improve performance   | Persistent (can be revalidated) |
+| Router Cache        | RSC Payload                   | Client | Reduce server requests on navigation            | User session or time-based      |
 
-- 渲染交互：
+- Full Route Cache 会跟随 Data Cache 一同 Revalidate
 
-  - 服务端将渲染结果传给客户端，客户端将两边渲染结果组合(hydrate)在本地重建完整 React VDOM
-  - 客户端代码如何传递？答：通过页面 HTML 的资源链接，这些资源可上传至 CDN（需要设置`assetPrefix`）
-  - 服务端渲染结果如何获取？答：硬导航（如刷新页面）通过页面 HTML 尾部追加的内联`<script>`，软导航（如路由跳转）通过 fetch
-  - 服务端渲染结果的传递格式？答：JSON 序列化后的 ReactNode
-
-- 预渲染：也叫静态渲染，在编译构建时，预先运行一遍整个组件渲染过程来生成初始 HTML，代替原来 HTML 内容几乎完全由 js 生成，提高首屏渲染速度且 SEO 友好
-
-  - 无法预渲染
-    - 访问动态信息，如 Dynamic Path, Query Params, Cookie 等
-    - 调用无缓存 fetch，如 non-GET 方法、`cache: 'no-store'` 或 `revalidate: 0` 选项
-    - 最顶层直接调用浏览器专属 API，为了避免这种情况可以将其放入`useEffect`或`onClick`之类的回调函数里
-  - 对于前两种情况，将无法预渲染的组件放入`<Suspense>`可避免上层组件无法预渲染
-  - 设置`next: {revalidate: n}`可以预渲染，并运行时固定周期重新预渲染一次，可以根据响应首部`Cache-Control`设置
-
-- 缓存：
-  - 默认所有 fetch 调用的结果都会被缓存在内存中
-  - 所有相同参数缓存 fetch 的重复调用会被去除，所有调用返回同一个的缓存结果(deduped)
+> - 服务端将渲染结果传给客户端，客户端将两边渲染结果组合(hydrate)在本地重建完整 React VDOM
+> - 客户端代码如何传递？答：通过页面 HTML 的资源链接，这些资源可上传至 CDN（需要设置`assetPrefix`）
+> - 服务端渲染结果如何获取？答：硬导航（如刷新页面）通过页面 HTML 尾部追加的内联`<script>`，软导航（如路由跳转）通过 fetch
+> - 服务端渲染结果的传递格式？答：JSON 序列化后的 ReactNode

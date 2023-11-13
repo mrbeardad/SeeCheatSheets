@@ -957,38 +957,38 @@ _ 分区 UUID
 <!-- entry begin: lvm pv -->
 
 - LVM-PV 阶段
-_ pvs
-_ pvdisplay PV
-_ pvcreate DEV
-_ pvremove DEV
+- pvs
+- pvdisplay PV
+- pvcreate DEV
+- pvremove DEV
 <!-- entry end -->
 
 <!-- entry begin: lvm vg -->
 
 - LVM-VG 阶段
-_ vgs
-_ vgdisplay VG
-_ vgcreate VG PV
-_ -s ：指定 PE 大小
-_ vgextend VG PV
-_ vgreduce VG PV
-_ vgchange -a `y/n`
-_ vgremove VG
+- vgs
+- vgdisplay VG
+- vgcreate VG PV
+- -s ：指定 PE 大小
+- vgextend VG PV
+- vgreduce VG PV
+- vgchange -a `y/n`
+- vgremove VG
 <!-- entry end -->
 
 <!-- entry begin: lvm lv -->
 
 - LVM-LV 阶段
-_ lvs
-_ lvdisplay LV
-_ lvcreate
-_ -L SIZE -n LV ：普通 LV
-_ -L SIZE -T VG/LVpool ：建立 LVpool
-_ -V SIZE -T VG/LVpool -n LV ：在指定 LVpool 中建立 LV
-_ -s -L SIZE -n LVS VG/LV ：建立快照
-_ lvresize
-_ -L +|-SIZE
-_ lvchange -a y|n \* lvremove LV
+- lvs
+- lvdisplay LV
+- lvcreate
+- -L SIZE -n LV ：普通 LV
+- -L SIZE -T VG/LVpool ：建立 LVpool
+- -V SIZE -T VG/LVpool -n LV ：在指定 LVpool 中建立 LV
+- -s -L SIZE -n LVS VG/LV ：建立快照
+- lvresize
+- -L +|-SIZE
+- lvchange -a y|n \* lvremove LV
 <!-- entry end -->
 
 ## XFS 文件系统
@@ -1049,18 +1049,19 @@ _ lvchange -a y|n \* lvremove LV
   - -s ：指定目录（无增量备份）
 
 - xfsrestore MP
-_ -f ：指定使用的备份文件
-_ -s ：只还原指定的文件或目录 \* -I ：查询基础数据库/var/lib/xfsdump/inventory/
+- -f ：指定使用的备份文件
+- -s ：只还原指定的文件或目录
+- -I ：查询基础数据库/var/lib/xfsdump/inventory/
 <!-- entry end -->
 
-<!-- entry begin: xfs_repair -->
+<!-- entry begin: xfs-repair -->
 
 - xfs\*repair
 
-* -f ：对 image-file 修复
-_ -n ：只检测
-_ -l ：指定 logdev
-\_ -d ：用于单用户模式强制恢复以 ro 挂载的/
+- -f ：对 image-file 修复
+- -n ：只检测
+- -l ：指定 logdev
+- -d ：用于单用户模式强制恢复以 ro 挂载的/
 <!-- entry end -->
 
 ## 归档包
@@ -1070,21 +1071,21 @@ _ -l ：指定 logdev
 <!-- entry begin: gzip bzip2 xz -->
 
 - gzip/bzip2/xz
-_ -[1-9] ：压缩等级，越大压缩比越高
-_ -k ：保存原文件不删除 \* -l ：查看压缩包信息
+- -[1-9] ：压缩等级，越大压缩比越高
+- -k ：保存原文件不删除 \* -l ：查看压缩包信息
 <!-- entry end -->
 
 <!-- entry begin: tar -->
 
 - tar
-_ -[z|j|J] ：gzip | bzip2 | xz
-_ -[c|x|t|u] ：打包|解包|查询|更新
-_ --delete ：删除
-_ -f ：指定压缩文件名
-_ -v ：详述
-_ -p ：保留权限等信息
-_ --exlcude ：排除，pattern
-_ -C ：解包时指定路径
+- -[z|j|J] ：gzip | bzip2 | xz
+- -[c|x|t|u] ：打包|解包|查询|更新
+- --delete ：删除
+- -f ：指定压缩文件名
+- -v ：详述
+- -p ：保留权限等信息
+- --exlcude ：排除，pattern
+- -C ：解包时指定路径
 <!-- entry end -->
 
 <!-- entry begin: zip -->
@@ -1099,24 +1100,24 @@ _ -C ：解包时指定路径
 <!-- entry begin: dd -->
 
 - dd
-  _ if=
-  _ skip=
-  _ of=
-  _ seek=
-  _ bs=
-  _ count=
-  _ conv=
-  _ lcase ：小写
-  _ ucase ：大写
-  _ notrunc ：不截断，覆盖
-  > 例：dd if=_manjaro.iso_ of=_usb-dev_ bs=8M oflag=sync status=progress
-  <!-- entry end -->
+  - if=
+  - skip=
+  - of=
+  - seek=
+  - bs=
+  - count=
+  - conv=
+  - lcase ：小写
+  - ucase ：大写
+  - notrunc ：不截断，覆盖
+    > 例：dd if=manjaro.iso of=\_usb-dev bs=8M oflag=sync status=progress
+    <!-- entry end -->
 
 <!-- entry begin: losetup -->
 
-- losetup _/dev/loop0_ _loopfile_
+- losetup /dev/loop0 loopfile
   > 制作 loop 设备
-- losetup -d _/dev/loop0_ > 解除 loop 设备
+- losetup -d /dev/loop0 > 解除 loop 设备
 <!-- entry end -->
 
 # 文件系统
@@ -1335,23 +1336,23 @@ Change: 2020-11-07 13:53:39.060000000 +0800
 
 <!-- entry begin: setfacl getfacl -->
 
-- ACL 权限
-_ setfacl > 设置 ACL 权限，优先级在 owner 和 group 之后
-_ getfacl
+- ACL 权限 - setfacl > 设置 ACL 权限，优先级在 owner 和 group 之后 - getfacl
 <!-- entry end -->
 
 <!-- entry begin: chattr lsattr -->
 
 - 额外属性
-_ chattr > 设置文件额外属性
-_ -R： 递归目录
-_ 以下选项的前缀，-设置，+取消
-_ a ： 只能追加
-_ i ： 无法变更
-_ A ： 不更新 atime
-_ S ： 同步存储文件
-_ d ： 不被 dump \* lsattr
-<!-- entry end -->
+  - chattr
+    > 设置文件额外属性
+    - -R： 递归目录
+    - 以下选项的前缀，-设置，+取消
+    - a ： 只能追加
+    - i ： 无法变更
+    - A ： 不更新 atime
+    - S ： 同步存储文件
+    - d ： 不被 dump
+  - lsattr
+  <!-- entry end -->
 
 <!-- entry begin: sudo -->
 

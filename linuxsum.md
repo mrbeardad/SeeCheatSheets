@@ -3,10 +3,10 @@
 ## Bash
 
 - 基础语法：
-  - Command
-  - Pipeline
-  - List
-  - Composite-Command
+  - Simple-Command `cmd [args...] [redirection]`
+  - Pipeline `[time] [!] simple-command [ | or |& ...]`
+  - List `pipeline [ ; or || or && or &]`
+  - Composite-Command `{ list; }` `(list)` `((exper))` `[[ expr ]]`
 - 命令扩展：
   1. 花括号
   2. 波浪号
@@ -39,23 +39,20 @@
 
 - 文件系统
 
-  - 文件系统挂载
-    - 磁盘分区
-    - 内存
-    - 设备
-    - 内核
-  - 文件系统结构
+  - 挂载
+    - 内核信息
+    - 内存文件
+    - 硬盘文件
+    - 网络文件
+    - 设备文件
+  - 结构
     - Hard Link
     - Inode
     - Block
-  - 文件 IO
+  - IO
     - 文件描述符
     - 文件表项
     - Vnode
-  - IO 缓冲区分类
-    - 管道：`← ▥ ←`
-    - 套接字：`⮀ ⬒⮀⬒ ⮀`
-    - 普通文件：`⮀ ▣`
 
 - 进程管理
   - 用户权限
@@ -65,13 +62,17 @@
     - 会话
     - 进程组
     - 父子进程
+  - 进程通讯
+    - socket
+    - pipe
+    - mmap
+    - signal
   - 线程调度
-    - 进程退出
-    - 线程阻塞
-    - 独立信息
-  - 信号机制
-    - 触发机制
-    - 安全处理
+    - 线程状态
+    - 线程信息
+    - 并发同步
+    - 虚拟内存
+    - 动态链接
   - 资源限制
     - CGroup
     - Ulimit
