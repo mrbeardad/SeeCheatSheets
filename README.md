@@ -2,22 +2,23 @@
 
 # See Cheat Sheets
 
-:books: 整理个人学习的知识框架与技术栈
+:books: 整理个人学习的知识与技能树
 
 ![lisence](https://img.shields.io/github/license/mrbeardad/SeeCheatSheets?style=for-the-badge&color=brightgreen)
 ![stars](https://img.shields.io/github/stars/mrbeardad/SeeCheatSheets?style=for-the-badge&color=yellow)
 ![fork](https://img.shields.io/github/forks/mrbeardad/SeeCheatSheets?style=for-the-badge)
 
+![python](https://skillicons.dev/icons?i=py)
+![pytorch](https://skillicons.dev/icons?i=pytorch)
+![unity](https://skillicons.dev/icons?i=unity)
+![godot](https://skillicons.dev/icons?i=godot)
+![react](https://skillicons.dev/icons?i=react)
+![flutter](https://skillicons.dev/icons?i=flutter)
+![qt](https://skillicons.dev/icons?i=qt)
 ![cpp](https://skillicons.dev/icons?i=cpp)
 ![rust](https://skillicons.dev/icons?i=rust)
 ![go](https://skillicons.dev/icons?i=go)
-![python](https://skillicons.dev/icons?i=python)
-![react](https://skillicons.dev/icons?i=react)
-![flutter](https://skillicons.dev/icons?i=flutter)
 ![linux](https://skillicons.dev/icons?i=linux)
-![git](https://skillicons.dev/icons?i=git)
-![vim](https://skillicons.dev/icons?i=vim)
-![md](https://skillicons.dev/icons?i=md)
 
 </div>
 
@@ -37,15 +38,15 @@
 
 ## 前言
 
-> 各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处……侵删啊，乖乖 0.0
+> 各篇文章中的图片几乎都来自网络，来源繁多复杂且大多未表明出处，敬请见谅。
 
-学习一门技术或其中的知识点时，首先要了解其存在的目的：
+学习一门技术或知识时，首先要了解其存在的目的：
 
 - (**What**) 解决了实际生产中出现的什么问题？
 - (**Why**) 问题产生的原因？
 - (**How**) 解决问题的逻辑步骤？
 
-当对其解决方法有不理解时，递归地思考以上三问。
+当对其解决方案有不理解时，递归地思考以上三问。
 
 ## AI
 
