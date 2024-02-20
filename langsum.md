@@ -36,8 +36,8 @@
 
   - 程序入口：main 函数
   - 依赖单元：一个头文件 + 一个源文件（可选）
-  - 依赖导入：符号限定于命名空间
   - 依赖导出：头文件中所有宏与符号
+  - 依赖导入：符号限定于命名空间
   - 依赖初始化：global-constructor
   - 依赖管理：git-submodule + cmake
 
@@ -58,8 +58,8 @@
 
   - 程序入口：`src/main.rs` 或 `src/bin/*.rs` 中的 main 函数
   - 依赖单元：一个源文件（项目内部依赖才需手动导入，外部依赖由 Cargo.toml 导入）
-  - 依赖导入：符号限定于模块路径
   - 依赖导出：`pub`声明
+  - 依赖导入：符号限定于模块路径
   - ~~依赖初始化~~
   - 依赖管理：cargo
 
@@ -75,8 +75,8 @@
 
   - 程序入口：`package main` 中的 main 函数
   - 依赖单元：一个目录（不包括子目录）
-  - 依赖导入：符号限定于包名
   - 依赖导出：大写字母开头的符号
+  - 依赖导入：符号限定于包名
   - 依赖初始化：包中所有 init 函数
   - 依赖管理：go-mod
 
@@ -95,8 +95,8 @@
 
   - 程序入口：main 函数
   - 依赖单元：一个源文件
-  - 依赖导入：符号默认无限定
   - 依赖导出：非`_`开头的符号
+  - 依赖导入：符号默认无限定
   - ~~依赖初始化~~
   - 依赖管理：dart-pub
 
@@ -113,8 +113,8 @@
 
   - 程序入口：任意源文件顺序执行
   - 依赖单元：一个源文件
-  - 依赖导入：符号默认无限定
   - 依赖导出：`export`声明
+  - 依赖导入：符号默认无限定
   - 依赖初始化：脚本导入即执行
   - 依赖管理：npm
 
@@ -128,8 +128,8 @@
 
   - 程序入口：任意源文件顺序执行（`__init__ == "__main__"`）
   - 依赖单元：一个源文件
-  - 依赖导出：非`_`开头的符号
   - 依赖导入：符号限定于模块路径
+  - 依赖导出：非`_`开头的符号
   - 依赖初始化：脚本导入即执行
   - 依赖管理：pip
 
@@ -145,27 +145,11 @@
 
 ## 变量
 
-> - 存储结构
->   - 结构型：变量本身代表一块包含数据结构的内存，拷贝时至少包括该内存
->   - 引用型：变量仅仅指向一块包含数据结构的内存，拷贝时仅针对该指针值
-> - 类型系统
->   - 强类型：变量类型、函数签名、类属性与方法等，均静态确定且不可随意改变
->   - 弱类型：变量类型、函数签名、类属性与方法等，均动态确定且可以随意改变
-> - 生命周期：
->   - 构造
->   - 移动
->   - 销毁
-> - 引用的目的
->   - 避免拷贝/移动
->   - 修改原值
->   - 多态
-
 - C++
 
-  - 变量类型：结构型强类型
-  - 作用域：块作用域`{}`
-  - 所有权：默认一个实例只能有一个所有者
-  - 生命周期：左值拷贝，右值移动，所有者退出作用域时销毁变量
+  - 类型系统：静态类型
+  - 拷贝控制：深拷贝
+  - 生命周期：声明时构造，退出作用域时销毁
 
   ```cpp
   auto foo = other;
@@ -183,10 +167,9 @@
 
 - Rust
 
-  - 变量类型：结构型强类型
-  - 作用域：块作用域`{}`
-  - 所有权：默认一个实例只能有一个所有者
-  - 生命周期：`Copy` trait 拷贝，non-`Copy` trait 移动，所有者退出作用域时销毁变量
+  - 类型系统：静态类型
+  - 生命周期：声明时构造，移动或退出作用域时销毁
+  - 拷贝控制：non-`Copy` 移动，`Copy` 浅拷贝，`Clone` 手动深拷贝
 
   ```rust
   let foo = other;
@@ -204,10 +187,9 @@
 
 - Go
 
-  - 变量类型：结构型强类型
-  - 作用域：块作用域`{}`
-  - 所有权：一个实例可能有多个所有者
-  - 生命周期：直到不再被引用时才会被 GC 回收
+  - 类型系统：静态类型
+  - 生命周期：声明时构造，不再引用后被 GC 回收
+  - 拷贝控制：浅拷贝
 
   ```go
   foo := other
@@ -221,10 +203,9 @@
 
 - Dart
 
-  - 变量类型：引用型强类型
-  - 作用域：块作用域`{}`
-  - 所有权：一个实例可能有多个所有者
-  - 生命周期：直到不再被引用时才会被 GC 回收
+  - 类型系统：静态类型
+  - 生命周期：声明时构造，不再引用后被 GC 回收
+  - 拷贝控制：浅拷贝
 
   ```dart
   var foo = other;
@@ -239,10 +220,9 @@
 
 - TypeScript
 
-  - 变量类型：引用型强类型
-  - 作用域：块作用域`{}`
-  - 所有权：一个实例可能有多个所有者
-  - 生命周期：直到不再被引用时才会被 GC 回收
+  - 类型系统：静态类型
+  - 生命周期：声明时构造，不再引用后被 GC 回收
+  - 拷贝控制：浅拷贝
 
   ```ts
   let foo = other;
@@ -254,10 +234,9 @@
 
 - Python
 
-  - 变量类型：引用型弱类型
-  - 作用域：函数作用域
-  - 所有权：一个实例可能有多个所有者
-  - 生命周期：直到不再被引用时才会被 GC 回收
+  - 类型系统：动态类型
+  - 生命周期：第一次赋值时构造，不再引用后被 GC 回收
+  - 拷贝控制：浅拷贝
 
   ```python
   global GLOBAL_VAR
@@ -950,7 +929,7 @@
     auto operator=(const MyClass&) -> MyClass& = default;
     ~MyClass() = default;
 
-    friend auto operator<=>(const myclass&) -> std::strong_ordering = default;
+    friend auto operator<=>(const myclass&, const myclass&) -> std::strong_ordering = default;
     explicit operator bool() const { return !_state.empty(); }
 
     auto property() const -> const std::string& { return _state; }
@@ -975,7 +954,7 @@
   - 析构控制：`Drop`
   - 拷贝控制：`Copy`, `Clone`
   - 比较操作：`Eq`, `Ord`, `PartialEq`, `PartialOrd`（比较字段）
-  - 语言扩展：通过 trait 实现
+  - 语言扩展：通过 trait 和宏实现
 
   ```rust
   #[derive(Copy, Clone, PartialEq, PartialOrd)]
@@ -1496,11 +1475,11 @@
   - tuple
   - struct
   - list
-  - map (btree or hash)
-  - set (btree or hash)
+  - map
+  - set
   - heap
-  - ring list
   - link list
+  - ring queue
 
 ---
 
@@ -1642,7 +1621,8 @@ let range: RangeInclusive   = begin..=end;
 let range: RangeToInclusive = ..=end;
 
 // 切片：可用于字符串、静态数组、动态数组
-let slice: [i32] = arr[range];
+let slice: &str = "string slice";
+let slice: &[i32] = &array[range];
 
 // 其它集合
 let bmap = std::collections::BTreeMap::new();

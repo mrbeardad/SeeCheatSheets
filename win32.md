@@ -16,10 +16,10 @@ Application Window:
 
 - Nonclient Areas
   - `WS_CAPTION`: title bar
-  - `WS_THICKFRAME`: sizing border
   - `WS_SYSMENU`: window menu, application icon, close button
   - `WS_MINIMIZEBOX`: minimize button
   - `WS_MAXIMIZEBOX`: maximize and restore button
+  - `WS_THICKFRAME`: sizing border
   - `WS_VSCROLL`: vertical scroll bar
   - `WS_HSCROLL`: horizontal scroll bar
 - Client Area

@@ -179,7 +179,7 @@ DELETE FROM table_name [WHERE...] [RETURNING column, ...];
 -- SELECT 语句返回虚拟表
 
 -- 循环处理结果表的每一行
-SELECT [DISTINCT [ON expression]] expression [AS alias], ...  -- DISTINCT 表示对最终结果去重
+SELECT [DISTINCT [ON (expression)]] expression [AS alias], ...  -- DISTINCT 表示根据 ON 表达式去重
 
 -- 将多张表横向连接（笛卡尔积）
 [FROM table_ref [AS alias], ...]              -- table_ref 可以是 table_name, joined_table 或 SELECT...

@@ -1580,12 +1580,12 @@ n 为 0 表示线程启动时清除该信息；n 为 1 表示继承启动该线�
 - killall -SIG Pname
   - -I ：忽略大小写
 - pkill -SIG
-_ -ce ：显示匹配进程的数量并显示每个进程信息
-_ -u ：EUID
-_ -U ：UID
-_ -G ：GID
-_ -P ：PPID
-_ -s ：PSID \* -t ：TTY
+- -ce ：显示匹配进程的数量并显示每个进程信息
+- -u ：EUID
+- -U ：UID
+- -G ：GID
+- -P ：PPID
+- -s ：PSID \* -t ：TTY
 <!-- entry end -->
 
 ## 资源限制
