@@ -410,10 +410,10 @@ default:
     > 接口比较动态类型的动态值、指针比较指针值、通道比较是否为同一底层通道
   - 支持与 nil 进行相等性比较：函数、接口、指针、切片、映射、通道
 - 底层实现
-  - 接口：struct{ptr2type;ptr2rvalue}（拷贝时额外拷贝 rvalue）
+  - 接口：struct{ptr2type;ptr2value}（拷贝时额外拷贝 value）
   - 切片：struct{ptr;len;cap}（string 实现为只读切片）
-  - 映射：ptr2hmap
-  - 通道：ptr2hchan
+  - 映射：ptr2map
+  - 通道：ptr2chan
 - golang 中指针的用途：
   - 避免拷贝参数
   - 修改参数原值

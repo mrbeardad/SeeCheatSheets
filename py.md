@@ -358,7 +358,6 @@ ExtendedContext     # 精度9，舍入ROUND_HALF_EVEN，关闭所有陷阱
 
 ```python
 len(itr)                        # 返回元素数量
-enumerate(itr)                  # 返回元素为(idx, val)的迭代器
 range(N)                        # 返回元素范围[0, N)的迭代器
 range(begin, end, step=1)       # 返回元素范围[begin, end)且步长为step的迭代器
 
@@ -370,7 +369,8 @@ min(itr, [*, key, default])     # 返回范围中最小值。范围为空返回d
 max(arg1, arg2, *args[, key])   # 返回范围中最大值。key(arg)返回元素比较键
 min(arg1, arg2, *args[, key])   # 返回范围中最小值。key(arg)返回元素比较键
 
-sorted(itr, [*, key, reverse]   # 返回范围包含排序后的元素
+enumerate(itr)                  # 返回元素为(idx, val)的迭代器
+sorted(itr, [*, key, reverse])  # 返回范围包含排序后的元素
 reversed(itr)                   # 返回范围包含逆序后的元素
 filter(func, itr)               # 返回范围包含func(elem)为True的元素
 map(func, itr)                  # 返回范围包含func(elem)返回值

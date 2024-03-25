@@ -18,8 +18,8 @@
     - [哈希表](#哈希表)
     - [二分搜索](#二分搜索)
     - [快速排序](#快速排序)
-    - [堆排序](#堆排序)
     - [归并排序](#归并排序)
+    - [堆排序](#堆排序)
     - [滑动窗口](#滑动窗口)
     - [回溯算法](#回溯算法)
     - [动态规划](#动态规划)
@@ -143,130 +143,121 @@
 
 **关键字**：搜索有序序列
 
-```cpp
-// 步骤一：设置循环条件检测
-while ( left <= right ) {       // left <= right可以保证当right一直未移动时能检测到right
-    mid = left + (right - left) / 2
-// 步骤二：检测目标语义
-    if ( Check(mid) )
-        return mid;
-// 步骤三：折半缩减搜索范围
-    else if ( IfTargetInLeftHalf(mid) )
-        right = mid - 1;        // 因为这一句则当left,right为下标时应该使用ssize_t而非size_t
-    else
-        left = mid + 1;
-}
-// 没有在循环中return说明未找到语义点
+```py
+def binary_search(nums: list[int], target: int) -> int:
+    left, right = 0, len(nums) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] > target:
+            right = mid - 1 # right 可能为负，所以不能为 uint
+        else:
+            left = mid + 1
+    return -1
 ```
 
 ### 快速排序
 
-```cpp
-// 参数选择用[begin, end)而非[begin, last]从而可表示空集合
-template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
-void quick_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
-{
-// 递归基准
-    if ( end - begin < 16 ) {   // 注意快排核心算法必须满足范围[begin, end)长度至少为2
-        for ( auto pos = next(begin); pos < end; ++pos )
-            for ( auto swapPos = pos; swapPos > begin && comp(*swapPos, *prev(swapPos)); )
-                swap(*swapPos, *--swapPos);
-        return;
+```go
+func QuickSort(nums []int) {
+    if len(nums) <= 1 {
+        return
     }
-// 选取枢纽点
-    auto mid = begin + (end - begin) / 2, last = end - 1;
-    if ( comp(*begin, *last) )  // 将较小值放尾部
-        swap(*begin, *end);
-    if ( comp(*mid, *last) )    // 将最小值放尾部
-        swap(*mid, *last);
-    if ( comp(*mid, *begin) )   // 将中值放首位
-        swap(*mid, *begin);
-    swap(*begin, *last);        // 最终使最小值在首位，中指在尾部；如此间接放置的原因是当只有两个元素时依然可行
-    auto& piovt = *last;
-// 划分区间
-    left = begin;
-    right = last;
-    for ( ; ; ) {
-        for ( ; comp(*++left, pivot); );     // 尾部元素为中指，不会越界
-        for ( ; comp(pivot, *--right); );    // 首位元素为小值，不会越界
-        if ( left >= right )
-            break;
-        swap(*left, *right);
+    left, right := 0, len(nums) - 1
+    mid := (left + right + 1) / 2
+    // 选取三值的中值作为枢纽值，小值移到首部，将中值移到尾部，如上计算 mid 可使仅有两个元素时依然成立
+    if nums[right] < nums[left] {
+        nums[right], nums[left] = nums[left], nums[right]
     }
-// 递归调用
-    quick_sort(begin, left);
-    quick_sort(left + 1, end);
-}
-```
-
-### 堆排序
-
-```cpp
-// 下滤
-template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
-void percolate_down(RandomIter begin, RandomIter end, RandomIter root, Compare comp=Compare{})
-{
-    for ( RandomIter child{}; (child = begin + (root - begin) * 2 + 1) < end; ) { // 子节点下标 = root * 2 - 1
-        if ( child + 1 < end && comp(*root, child + 1) )
-            ++child;
-        if ( comp(*root, *child) ) {
-            swap(*child, *root);
-            root = child;
-        } else {
-            break;
+    if nums[mid] < nums[left] {
+        nums[mid], nums[left] = nums[left], nums[mid]
+    }
+    if nums[mid] < nums[right] {
+        nums[mid], nums[right] = nums[right], nums[mid]
+    }
+    i, j := left, right
+    for {
+        for i++; nums[i] < nums[right]; { // 尾部元素为中值，不会越界
+            i++
         }
+        for j--; nums[j] > nums[right]; { // 首部元素为小值，不会越界
+            j++
+        }
+        if i >= j {
+            break
+        }
+        nums[i], nums[j] = nums[j], nums[i]
     }
-}
-
-template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
-void heap_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
-{
-// 建堆
-    for ( auto pos = begin + (end - begin) / 2 - 1; pos >= begin; --pos ) { // 父节点下标 = (child + 1) / 2 - 1
-        percolate_down(begin, end, pos, comp);
-    }
-// 堆排
-    for ( last = end - 1; last > begin; --last ) {
-        swap(*begin, *last);
-        percolate_down(begin, last, begin, comp);
-    }
+    nums[i], nums[right] = nums[right], nums[i]
+    QuickSort(nums[:i])
+    QuickSort(nums[i+1:])
 }
 ```
 
 ### 归并排序
 
-```cpp
-template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
-void merge_sort(RandomIter begin, RandomIter end, RandomIter tmpBegin, RandomIter tmpEnd, Compare comp=Compare{})
-{
-    if ( end - begin < 2 )
-        return;
-
-    auto mid = begin + (end - begin) / 2;
-    auto tmpMid = tmpBegin + (tmpEnd - tmpBegin) / 2;
-    merge_sort(begin, mid, tmpBegin, tmpMid);
-    merge_sort(mid, end, tmpMid, tmpEnd);
-    auto left = begin, right = mid, tmpTail = tmpBegin;
-    for ( ; left < mid && right < end; ) {
-        if ( comp(*left, *right) ) {
-            *tmpTail++ = *left++;
-        } else {
-            *tmpTail++ = *right++;
-        }
+```go
+// tmp 保证长度大于等于 nums
+func MergeSort(nums []int, tmp []int) {
+    if len(nums) <= 1 {
+        return
     }
-    for ( ; left < mid; )
-        *tmpTail++ = *left++;
-    for ( ; right < end; )
-        *tmpTail++ = *right++;
-    copy(tmpBegin, tmpEnd, begin);
+    mid := len(nums) / 2
+    MergeSort(nums[:mid], tmp)
+    MergeSort(nums[mid:], tmp)
+    i, j, k := 0, mid, 0
+    for i < mid || j < len(nums) {
+        if i == mid {
+            tmp[k] = nums[j]
+            j++
+        } else if j == len(nums) {
+            tmp[k] = nums[i]
+            i++
+        } else if nums[i] < nums[j] {
+            tmp[k] = nums[i]
+            i++
+        } else {
+            tmp[k] = nums[j]
+            j++
+        }
+        k++
+    }
+    for i := 0; i < k; i++ {
+        nums[i] = tmp[i]
+    }
 }
+```
 
-template<typename RandomIter, typename Compare=less<typename RandomIter::value_type> >
-void merge_sort(RandomIter begin, RandomIter end, Compare comp=Compare{})
-{
-    vector<typename RandomIter::value_type> tmpBuffer(end - begin);
-    merge_sort(begin, end, tmpBuffer.begin(), tmpBuffer.end(), comp);
-}
+### 堆排序
+
+```py
+def sortArray(nums: list[int]) -> list[int]:
+    left_child = lambda i: 2 * i + 1
+    right_child = lambda i: 2 * i + 2
+    parent = lambda i: (i - 1) // 2
+    def down(i, l=len(nums)):
+        while left_child(i) < l:
+            j = left_child(i)
+            if right_child(i) < l and nums[right_child(i)] > nums[left_child(i)]:
+                j = right_child(i)
+            if nums[i] > nums[j]:
+                break
+            nums[i], nums[j] = nums[j], nums[i]
+            i = j
+
+    # 建堆
+    i = left_child(len(nums) - 1)
+    while i >= 0:
+        down(i)
+        i -= 1
+    # 排序
+    j = len(nums) - 1
+    while j > 0:
+        nums[0], nums[j] = nums[j], nums[0]
+        down(0, j)
+        j -= 1
+    return nums
 ```
 
 ### 滑动窗口

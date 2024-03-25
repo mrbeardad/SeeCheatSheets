@@ -36,8 +36,8 @@
 
   - 程序入口：main 函数
   - 依赖单元：一个头文件 + 一个源文件（可选）
-  - 依赖导出：头文件中所有宏与符号
   - 依赖导入：符号限定于命名空间
+  - 依赖导出：头文件中所有宏与符号
   - 依赖初始化：global-constructor
   - 依赖管理：git-submodule + cmake
 
@@ -58,13 +58,13 @@
 
   - 程序入口：`src/main.rs` 或 `src/bin/*.rs` 中的 main 函数
   - 依赖单元：一个源文件（项目内部依赖才需手动导入，外部依赖由 Cargo.toml 导入）
-  - 依赖导出：`pub`声明
   - 依赖导入：符号限定于模块路径
+  - 依赖导出：`pub`声明
   - ~~依赖初始化~~
   - 依赖管理：cargo
 
   ```rust
-  pub mod fileordir;
+  mod fileordir;
 
   use create::fileordir::foo;
   use fileordir::{self, foo, bar};
@@ -75,8 +75,8 @@
 
   - 程序入口：`package main` 中的 main 函数
   - 依赖单元：一个目录（不包括子目录）
-  - 依赖导出：大写字母开头的符号
   - 依赖导入：符号限定于包名
+  - 依赖导出：大写字母开头的符号
   - 依赖初始化：包中所有 init 函数
   - 依赖管理：go-mod
 
@@ -95,8 +95,8 @@
 
   - 程序入口：main 函数
   - 依赖单元：一个源文件
-  - 依赖导出：非`_`开头的符号
   - 依赖导入：符号默认无限定
+  - 依赖导出：非`_`开头的符号
   - ~~依赖初始化~~
   - 依赖管理：dart-pub
 
@@ -113,8 +113,8 @@
 
   - 程序入口：任意源文件顺序执行
   - 依赖单元：一个源文件
-  - 依赖导出：`export`声明
   - 依赖导入：符号默认无限定
+  - 依赖导出：`export`声明
   - 依赖初始化：脚本导入即执行
   - 依赖管理：npm
 
@@ -145,11 +145,17 @@
 
 ## 变量
 
+> 引用语义的目的：
+>
+> 1. 避免拷贝或移动
+> 2. 修改原值
+> 3. 多态
+
 - C++
 
-  - 类型系统：静态类型
-  - 拷贝控制：深拷贝
+  - 变量类型：强类型、结构型
   - 生命周期：声明时构造，退出作用域时销毁
+  - 拷贝控制：左值深拷贝，右值浅拷贝
 
   ```cpp
   auto foo = other;
@@ -167,9 +173,9 @@
 
 - Rust
 
-  - 类型系统：静态类型
+  - 变量类型：强类型、结构型
   - 生命周期：声明时构造，移动或退出作用域时销毁
-  - 拷贝控制：non-`Copy` 移动，`Copy` 浅拷贝，`Clone` 手动深拷贝
+  - 拷贝控制：`Copy` 默认浅拷贝，`Clone` 手动深拷贝
 
   ```rust
   let foo = other;
@@ -187,7 +193,7 @@
 
 - Go
 
-  - 类型系统：静态类型
+  - 变量类型：强类型、结构型
   - 生命周期：声明时构造，不再引用后被 GC 回收
   - 拷贝控制：浅拷贝
 
@@ -203,7 +209,7 @@
 
 - Dart
 
-  - 类型系统：静态类型
+  - 变量类型：强类型、引用型
   - 生命周期：声明时构造，不再引用后被 GC 回收
   - 拷贝控制：浅拷贝
 
@@ -220,7 +226,7 @@
 
 - TypeScript
 
-  - 类型系统：静态类型
+  - 变量类型：强类型、引用型
   - 生命周期：声明时构造，不再引用后被 GC 回收
   - 拷贝控制：浅拷贝
 
@@ -234,7 +240,7 @@
 
 - Python
 
-  - 类型系统：动态类型
+  - 类型系统：弱类型、引用型
   - 生命周期：第一次赋值时构造，不再引用后被 GC 回收
   - 拷贝控制：浅拷贝
 
@@ -263,7 +269,7 @@
 
   ```rust
   enum Enum {
-    ZERO = 0,
+    ZERO,
     ONE,
     TWO,
   }
@@ -278,13 +284,6 @@
     ZERO = iota
     ONE
     TWO
-  )
-
-  const (
-    _, _ = iota, iota
-    KB = 1 << (10 * iota)
-    MB
-    GB
   )
 
   var e int = ZERO
@@ -324,17 +323,17 @@
       ONE = 1
       TWO = 2
 
-  for ev in (EnumT):
+  for ev in EnumT:
       print(ev, ev.value)
   ```
 
 ## 运算符
 
-> 优先级：单元后缀 > 单元前缀 > 算术 > 关系 > 逻辑
+> 优先级：单目后缀 > 单目前缀 > 算术 > 关系 > 逻辑
 
 - C++
 
-  - 单后：`::`, `.`, `->`, `[]`, `()`, `++`, `--`
+  - 单后：`::`, `.`, `->`, `()`, `[]`, `++`, `--`
   - 单前：`&`, `*`, `+`, `-`, `++`, `--`
   - 算数：`*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
@@ -344,7 +343,7 @@
 
 - Rust
 
-  - 单后：`::`, `.`, `[]`, `()`
+  - 单后：`::`, `.`, `()`, `[]`
   - 单前：`&`, `*`, `+`, `-`
   - 算数：`*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
@@ -354,7 +353,7 @@
 
 - Go
 
-  - 单后：`.`, `[]`, `()`, `++`, `--`
+  - 单后：`.`, `()`, `[]`, `++`, `--`
   - 单前：`&`, `*`, `+`, `-`
   - 算数：`*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`
@@ -363,30 +362,30 @@
 
 - Dart
 
-  - 单后：`!`, `.`, `?.`, `[]`, `?[]`, `()`, `++`, `--`
+  - 单后：`!`, `.`, `?.`, `..`, `?..`, `()`, `[]`, `?[]`, `++`, `--`
   - 单前：`+`, `-`, `++`, `--`
   - 算数：`*`, `/`, `~/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `is`, `is!`
-  - 逻辑：`!`, `&&`, `||`
-  - 赋值：`=`, `??=`
-  - 其他：`? :`, `??`, `..`, `?..`
+  - 逻辑：`!`, `&&`, `||`, `??`
+  - 赋值：`=`
+  - 其他：`? :`
 
 - TypeScript
 
-  - 单后：`!`, `.`, `?.`, `[]`, `()`, `++`, `--`
+  - 单后：`.`, `?.`, `[]`, `()`, `++`, `--`
   - 单前：`+`, `-`, `++`, `--`
   - 算数：`**`, `*`, `/`, `%`, `+`, `-`
   - 关系：`<`, `<=`, `>`, `>=`, `==`, `!=`, `===`, `!==`, `in`
-  - 逻辑：`!`, `&&`, `||`
-  - 赋值：`=`, `??=`
-  - 其他：`? :`, `??`
+  - 逻辑：`!`, `&&`, `||`, `??`
+  - 赋值：`=`
+  - 其他：`? :`
 
 - Python
 
-  - 单后：`.`, `[]`, `()`
+  - 单后：`.`, `()`, `[]`
   - 单前：`+`, `-`
   - 算数：`**`, `*`, `/`, `//`, `%`, `+`, `-`
-  - 关系：`a < b <= c > d >= e`, `x == y != z`, `in`
+  - 关系：`a < b <= c`, `a > b >= c`, `a == b != c`, `in`
   - 逻辑：`not`, `and`, `or`
   - 赋值：`a = b = c`
 
@@ -399,14 +398,12 @@
   - 分支
 
     ```cpp
-    // branches
     if (condition) {
       // ...
     } else {
       // ...
     }
 
-    // branches for single expression
     switch (int_or_enum) {
       case fallthrough:
       case constant:
@@ -420,25 +417,22 @@
   - 循环
 
     ```cpp
-    // infinite loop
-    while(true) {
+    while (true) {
       // ...
     }
 
-    // loop with condition
     while (condition) {
       // ...
     }
 
-    // loop for iterator
+    // for 循环中增删元素可能引发错误，因为迭代器失效
     for (const auto& elem : iterabal) {
       // ...
     }
 
-    // loop label
-    label:
     continue;
     break;
+    label:
     goto label;
     ```
 
@@ -464,21 +458,18 @@
   - 分支
 
     ```rust
-    // branches
     if condition {
       // ...
     } else {
       // ...
     }
 
-    // two branches for single expression
     if let pattern = expr {
       // ...
     } else {
       // ...
     }
 
-    // multiple branches for single expression
     match expr {
       pattern => {...},
       pattern => expr,
@@ -489,27 +480,23 @@
   - 循环
 
     ```rust
-    // infinite loop
     loop {
       // ...
     }
 
-    // loop with condition
     while condition {
       // ...
     }
 
-    // loop with pattern
     while let pattern = expr {
       // ...
     }
 
-    // loop for iterator
+    // for 循环中无法增删元素，因为只能有一个可变借用
     for elem in iterator {
       // ...
     }
 
-    // loop label
     'label:
     continue;
     continue 'label;
@@ -523,7 +510,6 @@
   - 分支
 
     ```go
-    // branches
     if condition {
       // ...
     } else {
@@ -537,7 +523,6 @@
         // ...
     }
 
-    // branches for single expression
     switch expr {
       case expr1, expr2:
         fallthrough
@@ -556,22 +541,19 @@
   - 循环
 
     ```go
-    // infinite loop
     for {
       // ...
     }
 
-    // loop with condition
     for condition {
       // ...
     }
 
-    // loop for iterator
+    // for 循环中增删元素，对于 slice 不影响，因为会拷贝 slice 结构，对于 map 会影响后续元素访问
     for elem := range iterabal {
       // ...
     }
 
-    // loop label
     label:
     continue;
     continue label;
@@ -584,14 +566,12 @@
   - 分支
 
     ```dart
-    // branches
     if (condition) {
       // ...
     } else {
       // ...
     }
 
-    // branches for single expression
     switch (expr) {
       case pattern:
         // ...
@@ -603,22 +583,19 @@
   - 循环
 
     ```dart
-    // infinite loop
     while (true) {
       // ...
     }
 
-    // loop with condition
     while (condition) {
       // ...
     }
 
-    // loop for iterator
+    // for 循环中增删元素，会影响后续元素的访问
     for (final elem in iterabal) {
       // ...
     }
 
-    // loop label
     label:
     continue;
     continue label;
@@ -649,14 +626,12 @@
   - 分支
 
     ```ts
-    // branches
     if (condition) {
       // ...
     } else {
       // ...
     }
 
-    // branches for single expression
     switch (expr) {
       case expr:
         // ...
@@ -669,17 +644,15 @@
   - 循环
 
     ```ts
-    // infinite loop
     while (true) {
       // ...
     }
 
-    // loop with condition
     while (condition) {
       // ...
     }
 
-    // loop for iterator
+    // for 循环中增删元素，会影响后续元素的访问
     for (const key_or_index in iterable) {
       // ...
     }
@@ -688,8 +661,7 @@
       // ...
     }
 
-    // loop label
-    label: continue;
+    continue;
     continue label;
     break;
     break label;
@@ -711,89 +683,83 @@
 
   - 分支
 
-  ```python
-  # branches
-  if condition:
-      pass
-  elif condition:
-      pass
-  else:
-      pass
+    ```python
+    if condition:
+        pass
+    elif condition:
+        pass
+    else:
+        pass
 
-  # branches for single expression
-  match expr:
-      case pattern:
-          pass
-      case _:
-          pass
-  ```
+    match expr:
+        case pattern:
+            pass
+        case _:
+            pass
+    ```
 
   - 循环
 
-  ```python
-  # infinite loop
-  while True:
-      pass
+    ```python
+    while True:
+        pass
 
-  # loop with condition
-  while condition:
-      pass
-  else:
-      pass
+    while condition:
+        pass
+    else:
+        pass
 
-  # loop for iterator
-  for element in iterable:
-      pass
-  else:
-      pass
-  ```
+    # for 循环中增删元素，会影响后续元素的访问
+    for element in iterable:
+        pass
+    else:
+        pass
+    ```
 
   - 异常
 
-  ```python
-  try:
-      raise Exception('error0')
-  except Exception:
-      raise Exception('error1')
-  except Exception as excep:
-      raise Exception('error2') from Exception('__cause__')
-  except:
-      raise
-  else:
-      pass
-  finally:
-      pass
+    ```python
+    try:
+        raise Exception('error0')
+    except Exception:
+        raise Exception('error1')
+    except Exception as excep:
+        raise Exception('error2') from Exception('__cause__')
+    except:
+        raise
+    else:
+        pass
+    finally:
+        pass
 
-  with expr as target:
-      pass
-  ```
+    with expr as target:
+        pass
+    ```
 
 ## 函数
 
 - C++
 
-  - 默认实参
   - 函数重载
-  - 泛型
-  - 参数包（`...T`与`arg...`）
+  - 默认实参
+  - 参数包：`...T`、`args...`
 
   ```cpp
   auto return_nothing() -> void {
     return;
   }
 
-  auto normal_function(int a1, const std::string& a2, int& a3) -> char {
-    // ...
-  }
+  auto normal_function(int a1, const std::string& a2, int& a3) -> int {
 
-  auto closure = [&r, v, m = std::move(l)] (auto& elem) mutable {}
+    auto closure = [v, &r, m = std::move(l)] (auto& elem) mutable {};
+
+  }
   ```
 
 - Rust
 
-  - ~~默认实参~~
   - ~~函数重载~~
-  - 泛型
+  - ~~默认实参~~
   - ~~参数包~~
 
   ```rust
@@ -801,99 +767,91 @@
     ()
   }
 
-  fn normal_function(a1: i32, a2: &str, a3: &mut i32) -> char {
-    // ...
-  }
+  fn normal_function(a1: i32, a2: &str, a3: &mut i32) -> i32 {
 
-  let closure_v1 = |x: u32| -> u32 { x + 1 };
-  let closure_v2 = |x|             { x + 1 };
-  let closure_v3 = |x|               x + 1  ;
-  let closure_v4 = move |x: u32| -> u32 { x + outter_cap };
+    let closure_v1 = |x|               x + 1  ;
+    let closure_v2 = |x|             { x + 1 };
+    let closure_v3 = |x: i32| -> i32 { x + 1 };
+    let closure_v4 = move |x: i32| -> i32 { x + outter_cap };
+  }
   ```
 
 - Go
 
-  - ~~默认实参~~
   - ~~函数重载~~
-  - 泛型
-  - 参数包（`args...`）
+  - ~~默认实参~~
+  - 参数包：`args...`
 
   ```go
   func ReturnNothing() {
     return
   }
 
-  func NormalFunction(a1 int, a2 string, a3 *int) (x, y string) {
-    // ...
-    return
-  }
+  func NormalFunction(a1 int, a2 string, a3 *int) (r1, r2 int) {
 
-  closure := func(a int) {
-    return a * a
+    closure := func(a int) int {
+      return a * a
+    }
+
+    return
   }
   ```
 
 - Dart
 
-  - 默认实参
   - ~~函数重载~~
-  - 泛型
-  - 参数包（`...args`）
+  - 默认实参
+  - 参数包：`...args`
 
   ```dart
   void returnNothing() {
     return;
   }
 
-  String positionalParameter(String r1, String? r2 [String o1 = "optional", String? o2]) {
+  String positionalParameter(String r1, String? r2, [String o1 = "optional", String? o2]) {
     // ...
   }
 
   String namedParameter({required String r1, required String? r2, String o1 = "optional", String? o2}) {
-    // ...
-  }
 
-  final closure1 = (args) => expression;
-  final closure2 = (args) {statements;}
+    final closure_v1 = (args) => expression;
+    final closure_v2 = (args) { statements; };
+  }
   ```
 
 - TypeScript
 
-  - 默认实参
   - ~~函数重载~~
-  - ~~泛型~~
-  - 参数包（`...args`）
+  - 默认实参
+  - 参数包：`...args`
 
   ```ts
   function returnNothing(): void {
     return;
   }
 
-  function normalFunction(s: string, i: int) {
-    // ...
+  function normalFunction(a1: number, a2: string) {
+    let closure_v1 = (args) => expression;
+    let closure_v2 = (args) => {
+      statements;
+    };
   }
-
-  let closure1 = (args) => expression;
-  let closure2 = (args) => {
-    statements;
-  };
   ```
 
 - Python
 
-  - 默认实参
   - ~~函数重载~~
-  - ~~泛型~~
-  - 参数包（`*posargs`与`**kwargs`）
+  - 默认实参
+  - 参数包：`*posargs`、`**kwargs`
 
   ```python
   def return_nothing() -> None:
       return
 
-  def normal_function(pos: str, /, pos_or_name: str, *, state: str) -> str:
-      return pos + pos_or_name + state
-
-  closure = lambda x, y: x + y
+  def normal_function(pos: str, /, pos_or_name: str, *, name: str) -> str:
+      def closure_v1():
+          nonlocal pos # capture variable if you want to assign it
+      closure_v2 = lambda x, y: x + y
   ```
 
 ## 面向对象
@@ -906,7 +864,7 @@
 
 - C++
 
-  - 访问控制：`public`, `protected`, `private`(默认)
+  - 访问控制：`public`, `protected`, `private`
   - 构造控制：构造函数
   - 析构控制：析构函数
   - 拷贝控制：拷贝构造函数、移动构造函数、拷贝赋值函数、移动赋值函数
@@ -914,15 +872,14 @@
   - 语言扩展：操作符重载，STL 迭代器
 
   ```cpp
-  #include <compare>
-
   class MyClass {
     std::string _state;
-    static inline std::string _class_state = "";
+    static const std::string _class_state;
 
    public:
+    // 默认构造函数使用值初始化，自定义构造函数未出现在成员初始化列表中的成员使用默认初始化
     MyClass() = default;
-    MyClass(std::string state): _state(std::move(state)) {}
+    explicit MyClass(std::string state): _state(std::move(state)) {}
     MyClass(MyClass&&) = default;
     MyClass(const MyClass&) = default;
     auto operator=(MyClass&&) -> MyClass& = default;
@@ -930,20 +887,15 @@
     ~MyClass() = default;
 
     friend auto operator<=>(const myclass&, const myclass&) -> std::strong_ordering = default;
-    explicit operator bool() const { return !_state.empty(); }
+    explicit operator bool() const;
 
-    auto property() const -> const std::string& { return _state; }
-    auto set_property(std::string state) -> void { _state = std::move(state); }
-    auto method() const -> void {/*...*/};
-
-    static inline auto class_property() -> const std::string& { return _class_state; }
-    static inline auto set_class_property(std::string state) -> void { _class_state = state; }
-    static inline auto class_method() -> void {/*...*/}
+    auto method() const -> void;
+    static auto class_method() -> void;
   };
 
   auto inst = MyClass("");  rinst.method();
+  auto& rinst = inst;       rinst.method();
   auto* pinst = &inst;      pinst->method();
-  auto& rinst = *pinst;     rinst.method();
                             MyClass::class_method();
   ```
 
@@ -958,22 +910,17 @@
 
   ```rust
   #[derive(Copy, Clone, PartialEq, PartialOrd)]
-  pub struct MyClass {
-    pub state: String;
-    // no class state support, use unsafe static variable instead
+  struct MyClass {
+    state: String;
   }
 
   impl MyClass {
-    pub fn new(state: &str) -> MyClass {
+    fn new(state: &str) -> MyClass {
       MyClass { state: String::from(state) }
     }
 
-    pub fn property(&self) -> &str { self.state }
-    pub fn set_property(&mut self, &str state) { self.state = String::from(state); }
-    pub fn method(&self) {/*...*/}
-
-    pub fn class_property() -> &str {/*...*/}
-    pub fn class_method() {/*...*/}
+    fn method(&self) {/*...*/}
+    fn class_method() {/*...*/}
   }
 
   let inst = MyClass::new("");  inst.method();
@@ -983,7 +930,7 @@
 
 - Go
 
-  - 访问控制：大写首字母导出包外，包内代码可随意访问
+  - 访问控制：大写首字母公开到包外，包内代码可随意访问
   - ~~构造控制~~
   - ~~析构控制~~
   - ~~拷贝控制~~
@@ -993,19 +940,11 @@
   ```go
   type MyClass struct {
     state string
-    // no class state support, use global variable instead
   }
 
-  func (this *MyClass) Property() string {
-    return this.state
-  }
-  func (this *MyClass) SetProperty(state string) {
-    this.state = state
-  }
-  func (this *MyClass) Method() {
+  func (self *MyClass) Method() {
     // ...
   }
-  // no class property or class method support, use global function instead
 
   inst := MyClass{state: ""}; inst.Method();
   pinst := &inst;             pinst.Method();
@@ -1027,16 +966,12 @@
 
     // constructor likes function but no return type
     MyClass(String state) { this._state = state; }
-
     // named constructor beacase no funtion overload
     MyClass.named(String state) { this._state = state; }
-
     // using this in constructor, a syntax sugar
     MyClass.useThis(this._state);
-
     // initializer lists: final fields must have values before the constructor body executes
     MyClass.initList(String state) : _state = state;
-
     // redirect to another constructor
     MyClass.redirecting1(String state) : this(state);
     MyClass.redirecting2(String state) : this.named(state);
@@ -1050,13 +985,14 @@
     static void classMethod() {/*...*/}
   }
 
-  var inst = MyClass(""); inst.method();
-                          MyClass.classMethod();
+  var inst = MyClass("");
+  inst.method();
+  MyClass.classMethod();
   ```
 
 - TypeScript
 
-  - 访问控制：`public`(默认), `protected`, `private`
+  - 访问控制：非`#`开头导出
   - 构造控制：构造函数
   - ~~析构控制~~
   - ~~拷贝控制~~
@@ -1065,8 +1001,8 @@
 
   ```ts
   class MyClass {
-    private state: string;
-    private static classState = "";
+    state: string;
+    static classState = "";
 
     constructor(state: string) {
       this.state = state;
@@ -1159,15 +1095,12 @@
   class Abstract {
    public:
     virtual ~Abstract() = defatul;
-    virtual auto abstract_property() -> const std::string& = 0;
     virtual auto abstract_method() -> void = 0;
-    // no abstract class property or abstract class method support
-  }
+  };
 
   class MyClass: public Abstract {
    public:
-    auto abstract_property() -> const std::string& override {/*...*/}
-    auto abstract_method() -> void override {/*...*/}
+    auto abstract_method() -> void override;
   };
 
   Abstract* pintf = new MyClass();
@@ -1178,17 +1111,13 @@
 
   ```rust
   trait Abstract {
-    fn abstract_property(&self) -> &str;
     fn abstract_method(&self);
-    fn abstract_class_property() -> &str;
     fn abstract_class_method();
   }
 
   impl Abstract for MyClass {
-    fn abstract_property(&self) -> &str {/*...*/};
-    fn abstract_method(&self) {/*...*/};
-    fn abstract_class_property() -> &str {/*...*/};
-    fn abstract_class_method() {/*...*/};
+    fn abstract_method(&self);
+    fn abstract_class_method();
   }
 
   let intf: Box<dyn Abstract> = MyClass::new();
@@ -1198,13 +1127,7 @@
 
   ```go
   type Abstract interface {
-    abstractProperty()
     abstractMethod()
-    // no abstract class property or abstract class method support
-  }
-
-  func (this *MyClass) abstractProperty() {
-    // ...
   }
 
   func (this *MyClass) abstractMethod() {
@@ -1470,16 +1393,16 @@
 - 浮点数
 - 字符
 - 日期时间
-- 联合
 - 集合类型
   - tuple
   - struct
-  - list
+  - array
   - map
   - set
-  - heap
-  - link list
+  - linked list
   - ring queue
+  - heap
+- 联合
 
 ---
 
@@ -1496,9 +1419,7 @@ bool b = true || false;
 
 // 整数：字面量的类型根据数值大小推断，最小为 int
 int i = 9'000'000 + 0b1010 + 017 + 0xff;
-unsigned u = 10u;
-size_t uz = 10uz;
-ssize_t z = 10z;
+size_t z = 10uz;
 
 // 浮点数：字面量的类型默认为 double
 double d = 1.0 + 2.5e3;
@@ -1507,13 +1428,9 @@ float f = 2.5f;
 // 字符：索引元素为字节
 char byte = 'A';
 char32_t unicode = U'文';
-const char* cstr = "hello world!\n" R"(raw\n)";
-std::string inter = std::format("state is {state}")
-std::string str = cstr;
-const char* u8 = u8"utf-8 string";
-const char16_t* u16 = u"utf-16 string";
-const char32_t* u32 = U"utf-32 string";
-const wchar_t* u32 = L"utf-16 or utf-32 string";
+const char* cstr = "hello world\n";
+const char* cstr = R"(raw\n)";
+std::string str = std::format("interpolation {}", cstr);
 
 // 日期时间：sys_time 与 local_time 无时区，zoned_time 有时区
 using namespace std::chrono;
@@ -1527,18 +1444,15 @@ auto to_iso = std::format("{0:%F}T{0:%T%Ez}", zoned_time(zone, datetime));
 system_clock::time_point from_iso;
 std::stringstream(to_iso) >> parse("%FT%T%Ez", from_iso);
 
-// 联合
-auto u = std::variant<int, double>(1);
-
 // 元组
-auto t = std::tuple{1, 2.5};
+std::tuple<int, double> t = {1, 2.5}; // std::get<0>(t)
 
 // 结构
-struct StructT {
+struct Struct {
   int f1;
   double f2;
 };
-auto s = StructT{1, 2.5};
+Struct s = {1, 2.5};
 
 // 集合类型
 std::array<int, 3> arr = {1, 2, 3};
@@ -1547,9 +1461,12 @@ std::map<std::string, int> bmap = {{"one", 1}, {"two", 2}};
 std::set<int> bset = {1, 2, 3};
 std::unordered_map<std::string, int> hmap = {{"one", 1}, {"two", 2}};
 std::unordered_set<int> hset = {1, 2, 3};
-std::priority_queue<int> heap;
-std::deque<int> deq = {1, 2, 3};
 std::list<int> list = {1, 2, 3};
+std::deque<int> deq = {1, 2, 3};
+std::priority_queue<int> heap;
+
+// 联合
+auto u = std::variant<int, double>(1);
 ```
 
 #### Rust
@@ -1566,10 +1483,10 @@ let f: f64 = 1.0 + 2.5e3;
 
 // 字符：不允许索引，但允许切片（运行时检测切片字节边界的 UTF-8 有效性）
 let byte: u8 = b'A';
-let c: char = '文';
-let s: &str = "hello world\n" + r"raw\n";
-let inter: String = format!("state is {state}");
-let ss: String = String::from(s);
+let unicode: char = '文';
+let s: &str = "hello world\n"
+let s: &str = r"raw\n";
+let s: String = format!("interpolation {s}");
 
 // 日期时间：SystemTime 无时区，OffsetDateTime 有时区
 use time::format_description::well_known::Iso8601;
@@ -1582,15 +1499,6 @@ let to_unix = datetime.unix_timestamp();
 let from_unix = OffsetDateTime::from_unix_timestamp(to_unix).unwrap().to_offset(time::UtcOffset::current_local_offset().unwrap());
 let to_iso = datetime.format(&Iso8601::DEFAULT).unwrap();
 let from_iso = OffsetDateTime::parse(&to_iso, &Iso8601::DEFAULT);
-
-// 联合（枚举）
-enum Union {
-  None,
-  Tuple(i32, f64),
-  Struct { f1: i32, f2: f64 },
-}
-let u = Union::Tuple(1, 2.5);
-if let Union::Tuple(f1, 2.5) = u { };
 
 // 元组
 let tuple: (i32, f64, &str) = (1, 2.0, "three"); // tuple.0
@@ -1632,6 +1540,15 @@ let hset = std::collections::HashMap::new();
 let heap = std::collections::BinaryHeap::new();
 let deq = std::collections::VecDeque::new();
 let list = std::collections::LinkedList::new();
+
+// 联合（枚举）
+enum Union {
+  None,
+  Tuple(i32, f64),
+  Struct { f1: i32, f2: f64 },
+}
+let u = Union::Tuple(1, 2.5);
+if let Union::Tuple(f1, 2.5) = u { };
 ```
 
 #### Go
@@ -1775,7 +1692,10 @@ let i = 9_000_000 + 0b1010 + 0o17 + 0xff;
 let f = 1.0 + 2.5e3;
 let nan = NaN + Infinity;
 
-// 字符：索引元素为 Unicode
+// 大数
+let n = 9007199254740991n;
+
+// 字符：索引元素为 UTF-16 编码！
 let s = "hello " + "world\n" + String.raw`raw\n but ${state}`;
 let inter = `${state}`;
 let regexp = /pattern/i;
@@ -1803,12 +1723,13 @@ let u: null | number = 1;
 // 数组
 let arr = [1, 2, 3];
 arr = [0, ...arr, 4];
-let [a, ...rest] = arr;
+let [a, , c=default, ...rest] = arr;
+arr[0]
 
 // 对象
 let obj = { one: 1, two: 2, three };
 obj = { ...obj, one: 0 };
-let { one: varone, ["two"]: two, three, ...rest } = obj;
+let { one, two: alias2, ["three"]: alias3, ...rest } = obj;
 obj.one;
 obj["two"];
 ```
@@ -1826,8 +1747,9 @@ i: int = 9_000_000 + 0b1010 + 0o17 + 0xff
 f: float = 1.0 + 2.5e3
 
 # 字符：索引元素为 Unicode
-s: str = 'hello ' + "world\n" + r'raw\n'
-s = f'inter {s}'
+s: str = 'single' + "double"
+s = r'raw\n'
+s = f'interpolation {s}'
 s = '''\
 multiline
 string
@@ -1844,29 +1766,25 @@ from_unix = datetime.fromtimestamp(to_unix).astimezone()
 to_iso = dt.isoformat()
 from_iso = datetime.strptime(to_iso, "%Y-%m-%dT%H:%M:%S%z").astimezone()
 
-# 联合
-u: None | int | float = 1
-
 # 元组
-i1: int = 1
-t1: tuple[int] = (1,)
+tup: tuple[int] = (1,)
 tup: tuple[int, float, str] = (1, 2.0, "three")
 x, y, z = tup = 1, 2.0, "three"
 add_t = tup + tup
 mul_t = tup * 3
 
-# 列表
+# 数组（列表）
 ls: list[int] = [1, 2, 3]
 ls = [i for i in ls if i % 2]
 add_ls = ls + ls
 mul_ls = ls * 3
 
 # 范围
-r = range(stop)
-r = range(start, stop)
-r = range(start, stop, step)
+rg = range(stop)
+rg = range(start, stop)
+rg = range(start, stop, step)
 
-# 切片：可用于线性序列如元素、列表、范围
+# 切片：可用于线性序列如元组、列表、范围
 ls[i]               # 返回浅拷贝：
 ls[i:j]             #   i, j 为负时表示倒数下标，默认 0, len(ls)
 ls[i:j:k]           #   k 为负时表示倒叙，默认为 1
@@ -1891,6 +1809,10 @@ hset |= set1
 hset &= set1
 hset -= set1
 hset ^= set1
+
+# 联合
+u: None | int | float = 1
+
 ```
 
 ### 数字相关

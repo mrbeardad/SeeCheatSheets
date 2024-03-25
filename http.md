@@ -109,10 +109,10 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
   - chunked 编码
   - 缓存控制
 - HTTP/2：
-  - 二进制
   - 多路复用
-  - 压缩首部
-  - 服务器推送
+  - 二进制帧
+  - 首部压缩
+  - 服务端推送
 - HTTP/3：
   - QUIC: 通过 UDP 同时运行多个流，每个流的丢包检测和重传都相互独立
 

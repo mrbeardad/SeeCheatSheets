@@ -97,7 +97,7 @@
 
 ## 开发平台
 
-- [Linux 系统](linuxsum.md)
+- Linux 系统
 
   - [Linux 知识框架](linux.md)
   - [Linux 系统接口](linuxapi.md)
@@ -105,6 +105,7 @@
   - [开发者工具](devtool.md)
 
 - Windows 系统
+
   - [Win32 窗口系统](win32.md)
   - [CMD 命令行](cmd.md)
 
@@ -121,8 +122,8 @@
 
 ## 其它
 
+- [Material Design](material.md)
 - [Markdown](markdown.md)
 - [Regex](regex.md)
 - [Protobuf](protobuf.md)
 - [Bitcoin](bitcoin.md)
-- [Material Design](material.md)

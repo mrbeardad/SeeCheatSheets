@@ -58,7 +58,7 @@ add_library(target STATIC
 add_library(target SHARED
     files...)
 
-# 插件模块：调用dlopen-like运行时动态加载
+# 插件模块：调用 dlopen-like 运行时动态加载
 add_library(target MODULE
     files...)
 

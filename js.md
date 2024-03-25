@@ -43,8 +43,6 @@ export default ...
 let foo = new Bar(args); // 构造
 let foo = initializer; // 拷贝
 let foo = new Bar(other); // 转换
-let [a, ["1"]: b, ...rest] = array; // 解构
-let {a, ["1"]: b, ...rest} = obj; // 解构
 
 // 仅限制常量名无法再重新绑定引用（赋值）
 const CONST_VALUE = value;
@@ -195,7 +193,7 @@ function Child(name, age) {
   this.age = age;
 }
 // 不直接引用Parent.prototype是防止修改Child的prototype时影响到Patent
-Child.prototype = Object.create(Patent.prototype);
+Child.prototype = Object.create(Parent.prototype);
 Child.constructor = Child;
 
 Child.prototype.getName = function () {
@@ -210,35 +208,35 @@ Child.prototype.getName = function () {
 - 基本数据类型
   - undefined
   - null
-  - Boolean
-  - Number
-  - BigInt
-  - String
-  - Symbol
+  - boolean
+  - number
+  - bigint
+  - string
+  - symbol
 - Object 类型
 
-| 原始值              | 转换为数字 | 转换为字符串      | 转换为布尔值 |
-| ------------------- | ---------- | ----------------- | ------------ |
-| undefined           | NaN        | "undefined"       | false        |
-| null                | 0          | "null"            | false        |
-| false               | 0          | "false"           | false        |
-| true                | 1          | "true"            | true         |
-| 0                   | 0          | "0"               | false        |
-| 1                   | 1          | "1"               | true         |
-| NaN                 | NaN        | "NaN"             | false        |
-| Infinity            | Infinity   | "Infinity"        | true         |
-| -Infinity           | -Infinity  | "-Infinity"       | true         |
-| ""                  | 0          | ""                | false        |
-| " "                 | 0          | " "               | true         |
-| " 20 "              | 20         | " 20 "            | true         |
-| "Runoob"            | NaN        | "Runoob"          | true         |
-| [ ]                 | 0          | ""                | true         |
-| [20]                | 20         | "20"              | true         |
-| [10,20]             | NaN        | "10,20"           | true         |
-| ["Runoob"]          | NaN        | "Runoob"          | true         |
-| ["Runoob","Google"] | NaN        | "Runoob,Google"   | true         |
-| { }                 | NaN        | "[object Object]" | true         |
-| function(){}        | NaN        | "function(){}"    | true         |
+| 原始值              | 转换为布尔值 | 转换为数字 | 转换为字符串      |
+| ------------------- | ------------ | ---------- | ----------------- |
+| undefined           | false        | NaN        | "undefined"       |
+| null                | false        | 0          | "null"            |
+| false               | false        | 0          | "false"           |
+| true                | true         | 1          | "true"            |
+| 0                   | false        | 0          | "0"               |
+| 1                   | true         | 1          | "1"               |
+| NaN                 | false        | NaN        | "NaN"             |
+| Infinity            | true         | Infinity   | "Infinity"        |
+| -Infinity           | true         | -Infinity  | "-Infinity"       |
+| ""                  | false        | 0          | ""                |
+| " "                 | true         | 0          | " "               |
+| " 20 "              | true         | 20         | " 20 "            |
+| "Runoob"            | true         | NaN        | "Runoob"          |
+| [ ]                 | true         | 0          | ""                |
+| [20]                | true         | 20         | "20"              |
+| [10,20]             | true         | NaN        | "10,20"           |
+| ["Runoob"]          | true         | NaN        | "Runoob"          |
+| ["Runoob","Google"] | true         | NaN        | "Runoob,Google"   |
+| { }                 | true         | NaN        | "[object Object]" |
+| function(){}        | true         | NaN        | "function(){}"    |
 
 ### 布尔
 

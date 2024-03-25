@@ -95,13 +95,13 @@ $@ $*       # 所有位置参数
 $#          # 位置参数个数
 $$          # 当前 shell 的 PID
 $!          # 上个后台运行命令的 PID
-$?          # 上条命令返回值
+$?          # 上条前台 pipeline 返回值
 
 # 所有字面量均为字符类型；设置变量语句支持变量扩展、命令扩展、算数扩展
 export name                 # 将变量导出到 shell 的环境变量
 parameter=value             # 设置全局变量，等号左右不能有空格
 declare parameter=str       # 设置局部字符变量
-declare -i parameter+=num   # 设置局部数字变量，将 num 解析为算数表达式
+declare -i parameter=num    # 设置局部数字变量，将 num 解析为算数表达式
 declare [-i] array[0]=value # 设置局部数组变量
 declare [-i] array=(v0 v1 v2)
 declare [-i] array=([0]=v0 [1]=v1 [2]=v2)
@@ -113,6 +113,7 @@ declare [-i] array=([0]=v0 [1]=v1 [2]=v2)
 
 ${parameter}                 # 变量值，无歧义时可省略花括号
 ${!parameter}                # 间接变量值，大概意思即 ${$parameter}
+${!prefix@}                  # 扩展前缀为 prefix 的环境变量名
 ${#parameter}                # 字符长度
 ${parameter:+word}           # 若 parameter 非空则扩展为 word
 ${parameter:-word}           # 若 parameter 为空则扩展为 word
@@ -138,9 +139,8 @@ ${parameter//pattern/string} # 模式替换，替换全部匹配
 
 ${array[idx]}                # 数组元素，idx可以是数字，也可以是变量名
 ${array[@]}                  # 数组所有元素
-${#array[@]}                 # 数组长度
 ${!array[@]}                 # 扩展为数组的所有下标
-${!prefix@}                  # 扩展前缀为 prefix 的环境变量名
+${#array[@]}                 # 数组长度
 ${array[@]:offset}           # 子数组
 ${array[@]:offset:length}    # 子数组
 ${array[@]#pattern}          # 删除最短的匹配头部，作用于每个元素
@@ -177,11 +177,12 @@ $((expression))              # 算数扩展
 - 若无匹配路径则默认不扩展
 - 扩展后的路径直接分割为一个个 argv，即使路径名包含分隔符，因为路径扩展在字词分割后进行
 
-| 扩展前 | 备注                        |
-| ------ | --------------------------- |
-| `*`    | 任意长的任意字符（除了`/`） |
-| `?`    | 一个任意字符                |
-| `[]`   | 同正则表达式的`[]`          |
+| 扩展前 | 备注                         |
+| ------ | ---------------------------- |
+| `*`    | 扩展为任意长字符来匹配目录项 |
+| `**`   | 匹配任意子目录中的目录项     |
+| `?`    | 一个任意字符                 |
+| `[]`   | 同正则表达式的`[]`           |
 
 ### 引用移除
 
