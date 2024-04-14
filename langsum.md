@@ -1830,7 +1830,7 @@ u: None | int | float = 1
 
 ### 数据结构与算法
 
-- 容器：表，栈，队列，堆，链表，树，哈希表
+- 容器：数组，栈，队列，循环队列，堆，链表，树，哈希表
 - 算法：搜索，集合，数值，变序，更易
 
 ### 系统相关
@@ -1842,10 +1842,7 @@ u: None | int | float = 1
 
 ### 异步框架
 
-> 通讯中间件类型：Queue, Bus
-
 - Task (async/await)
-- Lock
 - Timer
 - IO
   - 平台信息
@@ -1855,6 +1852,8 @@ u: None | int | float = 1
   - 网络通讯
   - 进程通讯
   - 对象通讯
+- Lock
+- Channel
 
 ### UI
 
@@ -1893,7 +1892,7 @@ u: None | int | float = 1
 > 高 DPI 缩放问题：
 >
 > - 缩放逻辑像素 = dpi_scale × 物理像素
->   （优点是在不同屏幕上的画面元素显示的物理尺寸大约相等）
+>   （优点是可以随系统缩放变化）
 > - 设置基础分辨率 width × height，屏幕宽高不对应时自动缩放或扩充画面
 >   （优点是在不同屏幕上的画面元素显示的相对屏幕大小的比例相近）
 >
@@ -1973,7 +1972,7 @@ u: None | int | float = 1
 
 常用命名前后缀：
 
-- 布尔：`is`，`not`，`any`，`all`，`none`，`has`，`can`，`should`，`must`
+- 布尔：`is`，`not`，`any`，`all`，`none`，`has`，`enable`, `disable`
 - 位置：`idx`，`pos`，`prev`，`next`，`lhs`，`rhs`，`head`，`tail`，`mid`，`begin`，`end`
 - 计数：`count`，`size`，`length`，`width`，`height`，`depth`
 - 时间：`new`，`old`，`orig`，`cur`，`before`，`after`
