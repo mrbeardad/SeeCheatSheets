@@ -745,11 +745,11 @@
   - 参数包：`...T`、`args...`
 
   ```cpp
-  auto return_nothing() -> void {
+  void return_nothing() {
     return;
   }
 
-  auto normal_function(int a1, const std::string& a2, int& a3) -> int {
+  int normal_function(int a1, const std::string& a2, int& a3) {
 
     auto closure = [v, &r, m = std::move(l)] (auto& elem) mutable {};
 
@@ -1859,18 +1859,19 @@ u: None | int | float = 1
 
 - 窗口
 
-  - 位置与大小
-  - Z 轴顺序
-  - 隐藏状态
-  - 最小化状态
+  - 位置
+  - 大小
+  - Z-Order
+  - 可见状态
+  - 最大化/最小化状态
   - 激活状态
   - 禁用状态
 
 - 内容
 
   - 文本（国际化）
-  - 图标
-  - 图像（响应式分辨率）
+  - 图标（矢量图）
+  - 图像（多分辨率）
   - 视频（流式加载）
 
 - 呈现

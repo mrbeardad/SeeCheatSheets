@@ -8,17 +8,21 @@
 ![stars](https://img.shields.io/github/stars/mrbeardad/SeeCheatSheets?style=for-the-badge&color=yellow)
 ![fork](https://img.shields.io/github/forks/mrbeardad/SeeCheatSheets?style=for-the-badge)
 
-![python](https://skillicons.dev/icons?i=py)
-![pytorch](https://skillicons.dev/icons?i=pytorch)
-![unity](https://skillicons.dev/icons?i=unity)
-![godot](https://skillicons.dev/icons?i=godot)
-![react](https://skillicons.dev/icons?i=react)
-![flutter](https://skillicons.dev/icons?i=flutter)
-![qt](https://skillicons.dev/icons?i=qt)
 ![cpp](https://skillicons.dev/icons?i=cpp)
 ![rust](https://skillicons.dev/icons?i=rust)
 ![go](https://skillicons.dev/icons?i=go)
+![dart](https://skillicons.dev/icons?i=dart)
+![js](https://skillicons.dev/icons?i=js)
+![python](https://skillicons.dev/icons?i=py)
+
+![windows](https://skillicons.dev/icons?i=windows)
 ![linux](https://skillicons.dev/icons?i=linux)
+![qt](https://skillicons.dev/icons?i=qt)
+![react](https://skillicons.dev/icons?i=react)
+![flutter](https://skillicons.dev/icons?i=flutter)
+![unity](https://skillicons.dev/icons?i=unity)
+![godot](https://skillicons.dev/icons?i=godot)
+![pytorch](https://skillicons.dev/icons?i=pytorch)
 
 </div>
 
@@ -106,8 +110,8 @@
 
 - Windows 系统
 
-  - [Win32 窗口系统](win32.md)
-  - [CMD 命令行](cmd.md)
+  - [Win32 系统接口](win32.md)
+  - [Cmd 命令行](cmd.md)
 
 ## 底层原理
 
