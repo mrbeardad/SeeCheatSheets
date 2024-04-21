@@ -12,7 +12,7 @@
     - [用户对象](#用户对象)
     - [GDI 对象](#gdi-对象)
   - [窗口系统](#窗口系统)
-    - [绘制原理](#绘制原理)
+    - [渲染流程](#渲染流程)
     - [系统结构](#系统结构)
     - [应用窗口](#应用窗口)
       - [样式](#样式)
@@ -275,7 +275,7 @@ API 拦截：
 
 ## 窗口系统
 
-### 绘制原理
+### 渲染流程
 
 [Windows Graphics Overview](https://learn.microsoft.com/en-us/windows/win32/learnwin32/overview-of-the-windows-graphics-architecture)
 
