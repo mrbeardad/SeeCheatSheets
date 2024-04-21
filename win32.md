@@ -1,7 +1,6 @@
 # Win32
 
 - [Win32](#win32)
-  - [系统启动](#系统启动)
   - [进程系统](#进程系统)
     - [进程加载](#进程加载)
     - [动态链接](#动态链接)
@@ -27,26 +26,19 @@
       - [DPI](#dpi)
       - [Color](#color)
 
-## 系统启动
-
-1. UEFI
-2. Boot Loader
-3. Kernel
-4. Services
-5. Login
-
 ## 进程系统
 
 ### 进程加载
 
-exe 执行流程：
+进程的生命周期：
 
-1. 创建进程对象和线程对象
-2. 加载可执行文件(.exe)和动态库(.dll)
-3. 调用 c/c++ runtime 入口，负责初始化命令行参数、环境变量、全局变量和内存分配器等
-4. 调用用户程序入口
+1. `CreateProcess`
+2. 创建进程和线程的内核对象
+3. 加载可执行文件 (.exe) 和动态库 (.dll)
+4. 调用 c/c++ runtime library 入口，负责初始化命令行参数、环境变量、全局变量和内存分配等
+5. 调用用户程序入口
 
-   - `main`/`wmain` for SUBSYSTEM:CONSOLE, 默认自动创建终端窗口来执行程序
+   - `main`/`wmain` for SUBSYSTEM:CONSOLE, 默认自动创建控制台窗口或继承父进程控制台窗口来执行程序
    - `WinMain`/`wWinMain` for SUBSYSTEM:WINDOWS
 
    ```cpp
@@ -55,40 +47,207 @@ exe 执行流程：
    int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd);
    ```
 
-exe 搜索路径：
+6. 进程终止
+   - 主进程入口函数返回，并由 c/c++ runtime library 做清理后再退出
+   - 直接调用了 `ExitProcess` 或 `TerminateProcess` 函数，没有 c/c++ runtime library 清理
+7. 资源释放
+   - 终止进程中所有线程
+   - 释放进程的用户对象和 GDI 对象，并关闭进程持有的内核对象
+   - 触发线程和进程内核对象
+
+线程的生命周期：
+
+1. `_beginthreadex`
+2. `CreateThread`
+3. 分配线程栈
+4. 执行线程函数
+5. 线程终止
+   - 线程函数返回，并由 c/c++ runtime library 做清理
+   - 调用 `ExitThread` 或 `TerminateThread` 函数，没有 c/c++ runtime library 清理
+
+exe 搜索路径：（仅适用于无路径文件名）
 
 1. 进程 exe 文件所在目录
 2. 进程当前目录
-3. Windows 系统目录
-4. Windows 目录
+3. Windows\System32
+4. Windows\
 5. PATH 环境变量
 
 > 相关接口：
 >
-> - `CreateProcess`
+> - `CreateProcess`: 创建进程、控制句柄继承、控制错误模式继承、控制控制台继承、控制初始窗口命令等
+> - `CreateThread`
 > - `GetCommandLine`
 > - `CommandLineToArgv`
 > - `GetEnvironmentVariable`
 > - `SetEnvironmentVariable`
 > - `ExpandEnvironmentStrings`
+> - `SetCurrentDirectory`
+> - `GetCurrentDirectory`
+> - `GetFullPathName`
 
 ### 动态链接
 
-- 对于进程中加载的每个模块(exe 和 dll)，系统都会为其维护一个引用计数
-- `AddLibrary`和`FreeLibrary`会修改引用计数
-- `GetModuleHandle`可获取进程已加载的模块的基地址 (`HINSTANCE`和`HMODULE`)
-- DllMain 的执行会加锁
+```cpp
+// mydll.h
+#pragma once
 
-- DLL_PROCESS_ATTACH
-- DLL_PROCESS_DETACH
-- DLL_THREAD_ATTACH
-- DLL_THREAD_DETACH
+#ifdef MYDLL_EXPORT
+#define MYDLL_API __declspec(dllexport)
+#else
+#define MYDLL_API __declspec(dllimport)
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
+
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+```
+
+dll 的生命周期：
+
+1. 加载时或运行时进行动态链接
+2. 内存映射
+3. 符号解析
+4. 调用 c/c++ runtime library 动态库入口，负责初始化全局变量等
+5. 调用 DllMain
+
+   ```cpp
+   // 进程内所有 DllMain 的执行都需要获取一个进程唯一的互斥锁
+   BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+     switch (fdwReason) {
+       case DLL_PROCESS_ATTACH:
+         // 首次加载时，在主线程（隐式加载）或调用 LoadLibrary 的线程执行；
+         // lpvReserved 为 non-NULL（隐式加载）或 NULL（LoadLibrary）
+         // 返回 FALSE 表示加载失败并终止进程（隐式加载）或 LoadLibrary 返回 FALSE；
+         break;
+       case DLL_THREAD_ATTACH:
+         // 在新线程创建时由其执行；
+         // 不会在 DLL_PROCESS_ATTACH 的线程执行；
+         // 不会在已创建的线程中执行；
+         // 不会用该参数执行调用了 DisableThreadLibraryCalls 的模块的 DllMain
+         break;
+       case DLL_THREAD_DETACH:
+         // 在线程终止时由其执行；
+         // 可能没有对应的 DLL_THREAD_ATTACH，可能因为加载时线程已创建，或直接调用了 ExitThread；
+         // 不会用该参数执行调用了 DisableThreadLibraryCalls 的模块的 DllMain
+         break;
+       case DLL_PROCESS_DETACH:
+         // 模块卸载时，在调用了 ExitProcess 或 FreeLibrary 的线程中执行；
+         // lpvReserved 为 non-NULL（隐式加载）或 NULL（LoadLibrary）
+         break;
+     }
+     return TRUE;  // Successful DLL_PROCESS_ATTACH.
+   }
+   ```
+
+dll 搜索路径简化版：（适用于相对路径和无路径文件名）
+
+> 更详细 dll 搜索路径见 [MSDN](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)
+
+1. DLL Redirection.
+2. API sets.
+3. SxS manifest redirection.
+4. Loaded-module list.
+5. Known DLLs.
+6. Windows 11, version 21H2 (10.0; Build 22000), and later. The package dependency graph of the process. This is the application's package plus any dependencies specified as `<PackageDependency>` in the `<Dependencies>` section of the application's package manifest. Dependencies are searched in the order they appear in the manifest.
+7. The folder from which the application loaded.
+8. The system folder. Use the GetSystemDirectory function to retrieve the path of this folder.
+9. The 16-bit system folder. There's no function that obtains the path of this folder, but it is searched.
+10. The Windows folder. Use the GetWindowsDirectory function to get the path of this folder.
+11. The current folder.
+12. The directories that are listed in the PATH environment variable. This doesn't include the per-application path specified by the App Paths registry key. The App Paths key isn't used when computing the DLL search path.
+
+dll 注入：
+
+- `SetWindowsHookEx`:
+  - 给指定线程或同 Desktop 下所有线程添加 Hook，Hook 会在下次获取窗口消息时安装，会先加载 dll 然后注册 Hook
+  - 添加全局 Hook 时，异构线程的消息会送给调用安装 Hook 的线程处理，所以需要保证安装 Hook 的线程能正常处理消息
+  - 安装 Hook 的进程退出时会卸载 Hook，卸载 Hook 同时会递减 dll 的引用计数
+- `CreateRemoteThread`
+  - `LoadLibraryW`
+  - `VirtualAllocEx`
+  - `WriteProcessMemory`
+- 木马 dll
+
+API 拦截：
+
+- 覆盖代码
+- 修改导入段
+
+> 相关接口
+>
+> - `LoadLibrary`
+> - `LoadLibraryEx`: 可设置仅加载资源数据，通常不能与`LoadLibrary`混用
+> - `SetDllDirectory`
+> - `GetProcAddress`
+> - `FreeLibrary`
+> - `FreeLibraryAndExitThread`
+> - `__ImageBase`
+> - `GetModuleHandle`: 不增加引用计数
+> - `GetModuleHandleEx`: 默认增加引用技术，可设置 dll 直到进程终止前绝不卸载
+> - `GetModuleFileName`
 
 ### 虚拟内存
 
 ### 线程管理
 
+|                               | IDLE_PRIORITY_CLASS | BELOW_NORMAL_PRIORITY_CLASS | NORMAL_PRIORITY_CLASS | ABOVE_NORMAL_PRIORITY_CLASS | HIGH_PRIORITY_CLASS | REALTIME_PRIORITY_CLASS |
+| ----------------------------- | ------------------- | --------------------------- | --------------------- | --------------------------- | ------------------- | ----------------------- |
+| THREAD_PRIORITY_IDLE          | 1                   | 1                           | 1                     | 1                           | 1                   | 16                      |
+| THREAD_PRIORITY_LOWEST        | 2                   | 4                           | 6                     | 8                           | 11                  | 22                      |
+| THREAD_PRIORITY_BELOW_NORMAL  | 3                   | 5                           | 7                     | 9                           | 12                  | 23                      |
+| THREAD_PRIORITY_NORMAL        | 4                   | 6                           | 8                     | 10                          | 13                  | 24                      |
+| THREAD_PRIORITY_ABOVE_NORMAL  | 5                   | 7                           | 9                     | 11                          | 14                  | 25                      |
+| THREAD_PRIORITY_HIGHEST       | 6                   | 8                           | 10                    | 12                          | 15                  | 26                      |
+| THREAD_PRIORITY_TIME_CRITICAL | 15                  | 15                          | 15                    | 15                          | 15                  | 31                      |
+
+- 线程是调度的基本单位
+- 抢占式调度：只要存在高优先级的线程处于可调度状态，就会先运行高优先级线程
+- 动态提升线程优先级：
+  - 接受新消息
+  - 前台进程中的线程
+  - 长时间处于饥饿状态的低优先级线程
+- CPU 关联性
+
+> 相关接口：
+>
+> - `SuspendThread`
+> - `ResumeThread`
+> - `Sleep`
+> - `SwitchToThread`: 相对`Sleep`，允许切换低优先级线程
+> - `GetThreadTimes`
+> - `GetProcessTimes`
+> - `GetTickCount64`
+> - `SetPriorityClass`
+> - `SetThreadPriority`
+> - `SetProcessAffinityMask`
+> - `SetThreadAffinityMaxk`
+
 ### 进程管理
+
+- 作业：
+  - 限制一组进程对一些资源的访问，比如 CPU 的使用、UI 限制、安全限制等
+  - 将进程移入作业后不可移出
+  - 子进程默认也在作业中
+  - 可以终止作业中所有进程
+  - 可以监听作业中进程的状态
+
+> 相关接口：
+>
+> - `OpenJobObject`
+> - `SetInfomationJobObject`
+> - `QueryInfomationJobObject`
+> - `IsProcessInJob`
+> - `AssignProcessToJobObject`
+> - `TerminateJobOnject`
+> - `GetQueuedCompletionStatus`
 
 ## 资源系统
 
