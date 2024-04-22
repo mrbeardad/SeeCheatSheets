@@ -18,7 +18,6 @@
       - [样式](#样式)
       - [关系](#关系)
       - [状态](#状态)
-      - [通用流程](#通用流程)
     - [消息循环](#消息循环)
       - [生命周期](#生命周期)
       - [用户输入](#用户输入)
@@ -34,9 +33,10 @@
 
 1. `CreateProcess`
 2. 创建进程和线程的内核对象
-3. 加载可执行文件 (.exe) 和动态库 (.dll)
-4. 调用 c/c++ runtime library 入口，负责初始化命令行参数、环境变量、全局变量和内存分配等
-5. 调用用户程序入口
+3. 创建虚拟内存空间
+4. 加载可执行文件 (.exe) 和动态库 (.dll)
+5. 调用 c/c++ runtime library 入口，负责初始化命令行参数、环境变量、全局变量和内存分配等
+6. 调用用户程序入口
 
    - `main`/`wmain` for SUBSYSTEM:CONSOLE, 默认自动创建控制台窗口或继承父进程控制台窗口来执行程序
    - `WinMain`/`wWinMain` for SUBSYSTEM:WINDOWS
@@ -47,23 +47,25 @@
    int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd);
    ```
 
-6. 进程终止
-   - 主进程入口函数返回，并由 c/c++ runtime library 做清理后再退出
+7. 进程终止
+   - 主线程入口函数返回，并由 c/c++ runtime library 做清理后再退出
    - 直接调用了 `ExitProcess` 或 `TerminateProcess` 函数，没有 c/c++ runtime library 清理
-7. 资源释放
+   - 进程执行出错，并弹出错误窗口，可调用 `SetErrorMode` 设置
+8. 资源释放
    - 终止进程中所有线程
    - 释放进程的用户对象和 GDI 对象，并关闭进程持有的内核对象
-   - 触发线程和进程内核对象
+   - 触发线程和进程的内核对象
 
 线程的生命周期：
 
-1. `_beginthreadex`
+1. 调用 c/c++ runtime library 线程入口 `_beginthreadex`，负责初始化 thread_local 变量等
 2. `CreateThread`
 3. 分配线程栈
 4. 执行线程函数
 5. 线程终止
    - 线程函数返回，并由 c/c++ runtime library 做清理
    - 调用 `ExitThread` 或 `TerminateThread` 函数，没有 c/c++ runtime library 清理
+6. 触发线程的内核对象
 
 exe 搜索路径：（仅适用于无路径文件名）
 
@@ -75,7 +77,7 @@ exe 搜索路径：（仅适用于无路径文件名）
 
 > 相关接口：
 >
-> - `CreateProcess`: 创建进程、控制句柄继承、控制错误模式继承、控制控制台继承、控制初始窗口命令等
+> - `CreateProcess`: 创建进程、句柄继承、错误模式继承、控制台继承、初始窗口命令、环境变量、当前目录等，注意 `lpCommandLine` 可能需要用双引号转义
 > - `CreateThread`
 > - `GetCommandLine`
 > - `CommandLineToArgv`
@@ -85,6 +87,7 @@ exe 搜索路径：（仅适用于无路径文件名）
 > - `SetCurrentDirectory`
 > - `GetCurrentDirectory`
 > - `GetFullPathName`
+> - `MAX_PATH`: 260 个字符包含 `D:\some 256-character path string<NUL>`
 
 ### 动态链接
 
@@ -147,7 +150,7 @@ dll 的生命周期：
    }
    ```
 
-dll 搜索路径简化版：（适用于相对路径和无路径文件名）
+dll 标准搜索路径：（适用于相对路径和无路径文件名）
 
 > 更详细 dll 搜索路径见 [MSDN](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)
 
@@ -184,7 +187,7 @@ API 拦截：
 > 相关接口
 >
 > - `LoadLibrary`
-> - `LoadLibraryEx`: 可设置仅加载资源数据，通常不能与`LoadLibrary`混用
+> - `LoadLibraryEx`: 可设置修改标准搜索路径、仅加载资源数据，通常不能与`LoadLibrary`混用
 > - `SetDllDirectory`
 > - `GetProcAddress`
 > - `FreeLibrary`
@@ -209,6 +212,7 @@ API 拦截：
 | THREAD_PRIORITY_TIME_CRITICAL | 15                  | 15                          | 15                    | 15                          | 15                  | 31                      |
 
 - 线程是调度的基本单位
+- 内核线程与用户线程
 - 抢占式调度：只要存在高优先级的线程处于可调度状态，就会先运行高优先级线程
 - 动态提升线程优先级：
   - 接受新消息
@@ -265,9 +269,11 @@ API 拦截：
 - 访问掩码：这个句柄的访问权限
 - 属性标志：如 Protect, Inherit 等
 
-- `GetHandleInformation`
-- `SetHandleInformation`
-- `DuplicateHandle`
+> 相关接口：
+>
+> - `GetHandleInformation`
+> - `SetHandleInformation`
+> - `DuplicateHandle`
 
 ### 用户对象
 
@@ -279,30 +285,40 @@ API 拦截：
 
 [Windows Graphics Overview](https://learn.microsoft.com/en-us/windows/win32/learnwin32/overview-of-the-windows-graphics-architecture)
 
+1. Window
+2. Graphics API: GDI, Direct2D, DirectWrite, OpenGL, Vulkan ...
+3. Paint
+4. Composite
+5. Rasterize
+6. Display
+
 ### 系统结构
 
-- Window Station
-- Desktop
-- Monitor
-- Wallpaper
-- Taskbar
+- Window Station: Winsta0
 
-  - Taskbar Button
-    - Icon and Label
-    - Overlay Icon
-    - Progress Bar
-    - Jump List
-    - Thumbnail Toolbar
-  - Notification Area
-    - Icon
-    - Hover -> Tooltip
-    - Left click -> Popup Window
-    - Left double-click -> Primary UI
-    - Right-click -> Context Menu
+  - Desktop: Default, ScreenSaver, and Winlogon
 
-- Application Window
-  - Non-client Area
-  - Client Area
+    - Monitor
+
+      - Desktop Window
+      - Taskbar
+
+        - Taskbar Button
+          - Icon and Label
+          - Overlay Icon
+          - Progress Bar
+          - Jump List
+          - Thumbnail Toolbar
+        - Notification Area
+          - Icon
+          - Hover -> Tooltip
+          - Left click -> Popup Window
+          - Left double-click -> Primary UI
+          - Right-click -> Context Menu
+
+      - Application Window
+        - Non-client Area
+        - Client Area
 
 ### 应用窗口
 
@@ -350,15 +366,6 @@ API 拦截：
   - 当拥有者窗口最小化时隐藏，当拥有者窗口恢复时显示
   - 跟随拥有者窗口一起销毁
 
-- Layerd Windows
-
-  - `WS_EX_LAYERED`
-  - 一般用于需要复杂形状、动画形状、alpha 混合的窗口
-  - 在调用如下两者前不会显示
-  - `SetLayeredWindowAttributes`：调用后无法调用`UpdateLayeredWindow`，直到清除`WS_EX_LAYERED`
-  - `UpdateLayeredWindow`：应该主要在应用程序必须直接提供分层窗口的形状和内容时使用
-  - `WS_EX_TRANSPARENT`: 整个窗口透过鼠标事件，默认仅 0 alpha 的像素透过鼠标事件
-
 #### 状态
 
 ![coordinates](./images/coordinates.png)
@@ -402,44 +409,14 @@ API 拦截：
   - `GetActiveWindow()`/`SetActiveWindow()`(thread)
   - `GetForegroundWindow()`/`SetForegroundWindow()`(global)
 
-#### 通用流程
+### 消息循环
 
 1. RegisterClassEx：exe 注册的 Class 在退出后销毁，dll 注册的样式需要手动销毁，class 由 classname 和 hinstance 唯一确定
 2. CreateWindowEx
-
-   ```cpp
-   LONG_PTR GetWindowLongPtrW(
-   [in] HWND hWnd,
-   [in] int  nIndex
-   );
-   ```
-
 3. ShowWindow
 4. GetMessage
 5. DispatchMessage
 6. WindowProc
-
-```cpp
-int WINAPI wWinMain(
-    HINSTANCE hInstance,
-    HINSTANCE hPrevInstance,
-    PWSTR pCmdLine,
-    int nCmdShow
-  );
-    switch (uMsg)
-    {
-    case WM_CLOSE:
-        DestroyWindow(hWindow);
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWindow, uMsg, wParam, lParam);
-    }
-```
-
-### 消息循环
 
 #### 生命周期
 
