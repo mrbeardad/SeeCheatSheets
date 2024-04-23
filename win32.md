@@ -13,7 +13,7 @@
     - [GDI 对象](#gdi-对象)
   - [窗口系统](#窗口系统)
     - [渲染流程](#渲染流程)
-    - [系统结构](#系统结构)
+    - [窗口结构](#窗口结构)
     - [应用窗口](#应用窗口)
       - [样式](#样式)
       - [关系](#关系)
@@ -21,7 +21,7 @@
     - [消息循环](#消息循环)
       - [生命周期](#生命周期)
       - [用户输入](#用户输入)
-    - [实现细节](#实现细节)
+    - [其它细节](#其它细节)
       - [DPI](#dpi)
       - [Color](#color)
 
@@ -169,6 +169,9 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 
 dll 注入：
 
+- 注册表`Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs`
+  - 设置空格分隔的 dll 列表，它们会被 User32.dll 加载，注意此时许多 dll 还未被加载
+  - 所有 GUI 程序都会加载 User32.dll
 - `SetWindowsHookEx`:
   - 给指定线程或同 Desktop 下所有线程添加 Hook，Hook 会在下次获取窗口消息时安装，会先加载 dll 然后注册 Hook
   - 添加全局 Hook 时，异构线程的消息会送给调用安装 Hook 的线程处理，所以需要保证安装 Hook 的线程能正常处理消息
@@ -292,7 +295,7 @@ API 拦截：
 5. Rasterize
 6. Display
 
-### 系统结构
+### 窗口结构
 
 - Window Station: Winsta0
 
@@ -411,6 +414,8 @@ API 拦截：
 
 ### 消息循环
 
+[Your First Windows Program](https://learn.microsoft.com/en-us/windows/win32/learnwin32/your-first-windows-program)
+
 1. RegisterClassEx：exe 注册的 Class 在退出后销毁，dll 注册的样式需要手动销毁，class 由 classname 和 hinstance 唯一确定
 2. CreateWindowEx
 3. ShowWindow
@@ -433,7 +438,7 @@ API 拦截：
 
 [User Input](https://learn.microsoft.com/en-us/windows/win32/learnwin32/module-4--user-input)
 
-### 实现细节
+### 其它细节
 
 #### DPI
 
