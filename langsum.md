@@ -395,7 +395,7 @@
 
 - C++
 
-  - 分支
+  - 条件
 
     ```cpp
     if (condition) {
@@ -455,7 +455,7 @@
 
   > Rust 的控制流全是表达式而非语句，因为块作用域符号`{}`本身就是表达式
 
-  - 分支
+  - 条件
 
     ```rust
     if condition {
@@ -507,7 +507,7 @@
 
 - Go
 
-  - 分支
+  - 条件
 
     ```go
     if condition {
@@ -563,7 +563,7 @@
 
 - Dart
 
-  - 分支
+  - 条件
 
     ```dart
     if (condition) {
@@ -623,7 +623,7 @@
 
 - TypeScript
 
-  - 分支
+  - 条件
 
     ```ts
     if (condition) {
@@ -681,7 +681,7 @@
 
 - Python
 
-  - 分支
+  - 条件
 
     ```python
     if condition:

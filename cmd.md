@@ -83,7 +83,7 @@ ENDLOCAL
 
 ## 语句
 
-- 分支
+- 条件
 
 ```batch
 if defined variable           compound-command [else ...]
