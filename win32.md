@@ -27,19 +27,21 @@
 
 ## 进程系统
 
+操作系统提供了“进程”这个概念，简化了对计算机 CPU 和内存的使用，以实现“资源计算”。
+
 ### 进程加载
 
-进程的生命周期：
+**进程的生命周期**：
 
 1. `CreateProcess`
 2. 创建进程和线程的内核对象
-3. 创建虚拟内存空间
-4. 加载可执行文件 (.exe) 和动态库 (.dll)
+3. 创建进程的虚拟地址空间
+4. 加载映像文件（exe 和 dll）
 5. 调用 c/c++ runtime library 入口，负责初始化命令行参数、环境变量、全局变量和内存分配等
 6. 调用用户程序入口
 
-   - `main`/`wmain` for SUBSYSTEM:CONSOLE, 默认自动创建控制台窗口或继承父进程控制台窗口来执行程序
-   - `WinMain`/`wWinMain` for SUBSYSTEM:WINDOWS
+   - `main`/`wmain` for **SUBSYSTEM:CONSOLE**, 默认自动创建控制台窗口或继承父进程控制台窗口来执行程序
+   - `WinMain`/`wWinMain` for **SUBSYSTEM:WINDOWS**
 
    ```cpp
    int main(int argc, char* argv[], char* env[]);
@@ -48,26 +50,27 @@
    ```
 
 7. 进程终止
-   - 主线程入口函数返回，并由 c/c++ runtime library 做清理后再退出
+   - 主线程入口函数返回，然后由 c/c++ runtime library 做清理（如`std::atexit`、static 变量的析构函数等）后再退出
    - 直接调用了 `ExitProcess` 或 `TerminateProcess` 函数，没有 c/c++ runtime library 清理
-   - 进程执行出错，并弹出错误窗口，可调用 `SetErrorMode` 设置
+   - 进程执行出错，并弹出错误窗口（可调用 `SetErrorMode` 设置弹窗）
 8. 资源释放
    - 终止进程中所有线程
    - 释放进程的用户对象和 GDI 对象，并关闭进程持有的内核对象
    - 触发线程和进程的内核对象
 
-线程的生命周期：
+**线程的生命周期**：
 
-1. 调用 c/c++ runtime library 线程入口 `_beginthreadex`，负责初始化 thread_local 变量等
+1. 调用 c/c++ runtime library 线程入口，负责初始化 thread_local 变量等
 2. `CreateThread`
 3. 分配线程栈
 4. 执行线程函数
 5. 线程终止
-   - 线程函数返回，并由 c/c++ runtime library 做清理
-   - 调用 `ExitThread` 或 `TerminateThread` 函数，没有 c/c++ runtime library 清理
+   - 线程函数返回，并由 c/c++ runtime library 做清理（如 thread_local 变量的析构函数）
+   - 直接调用 `ExitThread` 或 `TerminateThread` 函数，没有 c/c++ runtime library 清理
+   - 进程终止（见上）
 6. 触发线程的内核对象
 
-exe 搜索路径：（仅适用于无路径文件名）
+**exe 搜索路径**：（仅适用于无路径文件名）
 
 1. 进程 exe 文件所在目录
 2. 进程当前目录
@@ -77,15 +80,15 @@ exe 搜索路径：（仅适用于无路径文件名）
 
 > 相关接口：
 >
-> - `CreateProcess`: 创建进程、句柄继承、错误模式继承、控制台继承、初始窗口命令、环境变量、当前目录等，注意 `lpCommandLine` 可能需要用双引号转义
+> - `CreateProcess`: 创建进程、句柄继承、错误模式继承、控制台继承、初始窗口命令、环境变量、当前目录等
 > - `CreateThread`
 > - `GetCommandLine`
 > - `CommandLineToArgv`
 > - `GetEnvironmentVariable`
 > - `SetEnvironmentVariable`
 > - `ExpandEnvironmentStrings`
-> - `SetCurrentDirectory`
 > - `GetCurrentDirectory`
+> - `SetCurrentDirectory`
 > - `GetFullPathName`
 > - `MAX_PATH`: 260 个字符包含 `D:\some 256-character path string<NUL>`
 
@@ -113,44 +116,45 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 #endif
 ```
 
-dll 的生命周期：
+**dll 的生命周期**：
 
-1. 加载时或运行时进行动态链接
+1. 动态链接：加载时（加载进程 exe）或运行时（`LoadLibrary`）
 2. 内存映射
 3. 符号解析
 4. 调用 c/c++ runtime library 动态库入口，负责初始化全局变量等
 5. 调用 DllMain
 
    ```cpp
-   // 进程内所有 DllMain 的执行都需要获取一个进程唯一的互斥锁
+   // 进程内所有 DllMain 的执行都需要获取同一个互斥锁（进程唯一）
    BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
      switch (fdwReason) {
        case DLL_PROCESS_ATTACH:
-         // 首次加载时，在主线程（隐式加载）或调用 LoadLibrary 的线程执行；
-         // lpvReserved 为 non-NULL（隐式加载）或 NULL（LoadLibrary）
-         // 返回 FALSE 表示加载失败并终止进程（隐式加载）或 LoadLibrary 返回 FALSE；
+         // 首次加载时，根据加载方式的不同：
+         // 加载时动态链接：在主线程执行，lpvReserved 为 non-NULL，返回 FALSE 表示发生错误而终止进程
+         // 运行时动态链接：在调用 LoadLibrary 的线程执行，lpvReserved 为 NULL，返回 FALSE 表示 LoadLibrary 返回 FALSE
          break;
        case DLL_THREAD_ATTACH:
-         // 在新线程创建时由其执行；
-         // 不会在 DLL_PROCESS_ATTACH 的线程执行；
+         // 创建新线程时，在运行其线程函数前执行
+         // 不会在 DLL_PROCESS_ATTACH 的线程执行
          // 不会在已创建的线程中执行；
          // 不会用该参数执行调用了 DisableThreadLibraryCalls 的模块的 DllMain
          break;
        case DLL_THREAD_DETACH:
-         // 在线程终止时由其执行；
-         // 可能没有对应的 DLL_THREAD_ATTACH，可能因为加载时线程已创建，或直接调用了 ExitThread；
+         // 线程终止时，在运行其线程函数返回后执行
+         // 可能没有对应的 DLL_THREAD_ATTACH，可能因为加载时线程已创建或直接调用了 ExitThread；
          // 不会用该参数执行调用了 DisableThreadLibraryCalls 的模块的 DllMain
          break;
        case DLL_PROCESS_DETACH:
-         // 模块卸载时，在调用了 ExitProcess 或 FreeLibrary 的线程中执行；
-         // lpvReserved 为 non-NULL（隐式加载）或 NULL（LoadLibrary）
+         // 模块卸载时，根据卸载方式的不同：
+         // 进程退出：在主线程或调用了 ExitProcess 的线程中执行，lpvReserved 为 non-NULL
+         // 手动卸载：在调用了 FreeLibrary 的线程中执行，lpvReserved 为 NULL
          break;
      }
-     return TRUE;  // Successful DLL_PROCESS_ATTACH.
+     return TRUE;
    }
    ```
 
-dll 标准搜索路径：（适用于相对路径和无路径文件名）
+**dll 标准搜索路径**：（适用于相对路径和无路径文件名）
 
 > 更详细 dll 搜索路径见 [MSDN](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)
 
@@ -167,7 +171,7 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 11. The current folder.
 12. The directories that are listed in the PATH environment variable. This doesn't include the per-application path specified by the App Paths registry key. The App Paths key isn't used when computing the DLL search path.
 
-dll 注入：
+**dll 注入**：
 
 - 注册表`Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs`
   - 设置空格分隔的 dll 列表，它们会被 User32.dll 加载，注意此时许多 dll 还未被加载
@@ -179,22 +183,16 @@ dll 注入：
 - 远程线程
 - 木马 dll
 
-API 拦截：
-
-- 覆盖代码
-- 修改导入段
-
 > 相关接口
 >
 > - `LoadLibrary`
 > - `LoadLibraryEx`: 可设置修改标准搜索路径、仅加载资源数据，通常不能与`LoadLibrary`混用
-> - `SetDllDirectory`
 > - `GetProcAddress`
 > - `FreeLibrary`
 > - `FreeLibraryAndExitThread`
 > - `__ImageBase`
-> - `GetModuleHandle`: 不增加引用计数
-> - `GetModuleHandleEx`: 默认增加引用技术，可设置 dll 直到进程终止前绝不卸载
+> - `GetModuleHandle`: 不递增引用计数
+> - `GetModuleHandleEx`: 默认递增引用计数，可设置 dll 直到进程终止前绝不卸载
 > - `GetModuleFileName`
 
 ### 虚拟内存
