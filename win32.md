@@ -82,7 +82,6 @@
 > 相关接口：
 >
 > - `CreateProcess`: 创建进程、句柄继承、错误模式继承、控制台继承、初始窗口命令、环境变量、当前目录等
-> - `CreateThread`
 > - `GetCommandLine`
 > - `CommandLineToArgv`
 > - `GetEnvironmentVariable`
@@ -224,7 +223,7 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
     - 第一次访问时无需从页交换文件中加载页面，直接申请物理内存页面并置零
   - `MEM_IMAGE`:
     - 后备存储器为映像文件，如 exe 或 dll，
-    - 映像文件内部有多个不同的段，加载不同的段时会使用不同的页面保护属性
+    - 映像文件为 PE 格式，内部有多个不同的段，加载不同的段时会使用不同的页面保护属性
   - `MEM_MAPPED`:
     - 后备存储器可以为页交换文件（如共享内存）或其它磁盘文件（如文件映射）
 
@@ -243,7 +242,7 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 - 地址访问
 
   - CPU 中的内存管理单元（MMU）负责根据页表基址寄存器（PTBR）存储的页表基址从翻译后备缓冲器（TLB）获取虚拟地址对应的页表表项（PTE）从而翻译为物理地址
-  - 操作系统为每个进程维护一个多级页表，通常只有一级页表常驻内存
+  - 操作系统为每个进程维护一个多级页表，最后一级页表表项记录物理地址，其它级页表表项记录下一级页表基地址，通常只有一级页表常驻内存
   - 当访问的地址没有在内存中时，触发缺页异常，控制流交给操作系统处理异常：
     - 将对应的页面从其后备存储器中加载到内存
     - 当内存中无空闲页面时，根据某种缓存驱逐策略来选择使用页面，若为脏页则先将其冲刷到其后备存储器再使用
@@ -280,18 +279,30 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 | THREAD_PRIORITY_TIME_CRITICAL | 15                  | 15                          | 15                    | 15                          | 15                  | 31                      |
 
 - 线程是调度 CPU 控制流的基本单位
-- 区分内核线程与用户线程，区分同步和异步系统调用
-- 抢占式调度：只要存在高优先级的线程处于可调度状态，就会先运行高优先级线程
-- 动态提升线程优先级：
+
+- 调度优先级：只要存在高优先级的线程处于可调度状态，就会先运行高优先级线程，以下情况可动态提升线程优先级
+
   - 接受新消息
   - 前台进程中的线程
   - 长时间处于饥饿状态的低优先级线程
+
 - CPU 关联性
+
 - 线程同步
-  - 原子变量
-  - 关键段
-  - 读写锁
-  - 条件变量
+  - 为什么需要同步？
+    - 防止读取数据时数据被修改（加锁）
+    - 等待状态被正确初始化（等待事件）
+  - 用户模式
+    - [联锁变量](https://learn.microsoft.com/en-us/windows/win32/sync/interlocked-variable-access)
+    - [关键段](https://learn.microsoft.com/en-us/windows/win32/sync/critical-section-objects)
+    - [读写锁](https://learn.microsoft.com/en-us/windows/win32/sync/slim-reader-writer--srw--locks)
+    - [条件变量](https://learn.microsoft.com/en-us/windows/win32/sync/condition-variables)
+    - [屏障](https://learn.microsoft.com/en-us/windows/win32/sync/synchronization-barriers)
+  - 内核模式
+    - [互斥量](https://learn.microsoft.com/en-us/windows/win32/sync/mutex-objects)
+    - [信号量](https://learn.microsoft.com/en-us/windows/win32/sync/semaphore-objects)
+    - [事件](https://learn.microsoft.com/en-us/windows/win32/sync/event-objects)
+    - [计时器](https://learn.microsoft.com/en-us/windows/win32/sync/waitable-timer-objects)
 
 > 相关接口：
 >
@@ -306,6 +317,10 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 > - `SetThreadPriority`
 > - `SetProcessAffinityMask`
 > - `SetThreadAffinityMaxk`
+> - `WaitForSingleObjectEx`
+> - `WaitForMultipleObjectsEx`
+> - `MsgWaitForMultipleObjectsEx`
+> - `SignalObjectAndWait`
 
 ### 进程管理
 

@@ -88,8 +88,8 @@
 
 ## Coding
 
+- [代码逻辑](coding.md):star:
 - [设计模式](dspt.md):star:
-- [编码逻辑](coding.md):star:
 - [编程语言](langsum.md):star:
 
   - [C++](cpp.md) & [CMake](cmake.md)
@@ -103,10 +103,9 @@
 
 - Linux 系统
 
-  - [Linux 知识框架](linux.md)
+  - [Linux 操作系统](linux.md)
   - [Linux 系统接口](linuxapi.md)
   - [Bash 命令行](bash.md)
-  - [开发者工具](devtool.md)
 
 - Windows 系统
 
