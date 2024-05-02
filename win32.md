@@ -2,15 +2,23 @@
 
 - [Win32](#win32)
   - [进程系统](#进程系统)
-    - [进程加载](#进程加载)
+    - [进程管理](#进程管理)
+      - [进程创建](#进程创建)
+      - [子进程继承](#子进程继承)
+      - [进程终止](#进程终止)
+      - [作业](#作业)
+    - [线程管理](#线程管理)
+      - [线程创建](#线程创建)
+      - [线程终止](#线程终止)
+      - [上下文切换](#上下文切换)
+      - [基本优先级](#基本优先级)
+      - [动态优先级](#动态优先级)
+      - [服务质量](#服务质量)
     - [动态链接](#动态链接)
     - [虚拟内存](#虚拟内存)
-    - [线程管理](#线程管理)
-    - [进程管理](#进程管理)
+    - [线程管理](#线程管理-1)
+    - [进程管理](#进程管理-1)
   - [资源系统](#资源系统)
-    - [内核对象](#内核对象)
-    - [用户对象](#用户对象)
-    - [GDI 对象](#gdi-对象)
   - [窗口系统](#窗口系统)
     - [渲染流程](#渲染流程)
     - [窗口结构](#窗口结构)
@@ -27,50 +35,35 @@
 
 ## 进程系统
 
-操作系统提供了“进程”这个概念，简化了对计算机 CPU 和内存的使用，以实现“资源计算”。
+- 操作系统提供了“进程”与“线程”的概念，简化了应用对计算机 CPU 和内存的使用以实现“资源计算”。
 
-### 进程加载
+- 进程是系统进行资源分配的基本单位，一个进程具有虚拟地址空间、可执行代码、系统对象的句柄、安全上下文、唯一进程标识符、环境变量、优先级类、最小和最大工作集大小，以及至少一个执行线程。
 
-**进程的生命周期**：
+- 线程是系统进行调度执行的基本单位，同一进程中所有线程共享虚拟地址空间和系统资源，此外每个线程都维护自己的异常处理程序、调度优先级、线程本地存储、唯一的线程标识符和线程上下文。
 
-1. `CreateProcess`
-2. 创建进程和线程的内核对象
-3. 创建进程的虚拟地址空间
-4. 加载映像文件（exe 和 dll）
-5. 调用 c/c++ runtime library 入口，负责初始化命令行参数、环境变量、全局变量和内存分配等
-6. 调用用户程序入口
+> 详见 [MSDN](https://learn.microsoft.com/en-us/windows/win32/procthread/processes-and-threads)
 
-   - `main`/`wmain` for **SUBSYSTEM:CONSOLE**, 默认自动创建控制台窗口或继承父进程控制台窗口来执行程序
-   - `WinMain`/`wWinMain` for **SUBSYSTEM:WINDOWS**
+### 进程管理
 
-   ```cpp
-   int main(int argc, char* argv[], char* env[]);
+#### 进程创建
 
-   int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd);
-   ```
+- `CreateProcess`
 
-7. 进程终止
-   - 主线程入口函数返回，然后由 c/c++ runtime library 做清理（如`std::atexit`、static 变量的析构函数等）后再退出
-   - 直接调用了 `ExitProcess` 或 `TerminateProcess` 函数，没有 c/c++ runtime library 清理
-   - 进程执行出错，并弹出错误窗口（可调用 `SetErrorMode` 设置弹窗）
-8. 资源释放
-   - 终止进程中所有线程
-   - 释放进程的用户对象和 GDI 对象，并关闭进程持有的内核对象
-   - 触发线程和进程的内核对象
+  - 对于 GUI 程序，可控制子进程第一次调用 `CreateWindow` 和 `ShowWindow` 的默认参数，如位置、大小、nCmdShow 等
+  - 对于 CUI 程序，可控制子进程的控制台窗口的句柄、位置、大小等
 
-**线程的生命周期**：
+- 用户程序入口函数
 
-1. 调用 c/c++ runtime library 线程入口，负责初始化 thread_local 变量等
-2. `CreateThread`
-3. 分配线程栈
-4. 执行线程函数
-5. 线程终止
-   - 线程函数返回，并由 c/c++ runtime library 做清理（如 thread_local 变量的析构函数）
-   - 直接调用 `ExitThread` 或 `TerminateThread` 函数，没有 c/c++ runtime library 清理
-   - 进程终止（见上）
-6. 触发线程的内核对象
+  - `main`/`wmain` for **SUBSYSTEM:CONSOLE**, 默认自动创建控制台窗口或继承父进程控制台窗口来执行程序
+  - `WinMain`/`wWinMain` for **SUBSYSTEM:WINDOWS**
 
-**exe 搜索路径**：（仅适用于无路径文件名）
+  ```cpp
+  int main(int argc, char* argv[], char* env[]);
+
+  int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd);
+  ```
+
+- exe 搜索路径（指定无路径执行文件时）
 
 1. 进程 exe 所在目录
 2. 进程当前目录
@@ -79,18 +72,186 @@
 5. Windows 系统目录（`C:\Windows`）
 6. 环境变量 PATH
 
-> 相关接口：
->
-> - `CreateProcess`: 创建进程、句柄继承、错误模式继承、控制台继承、初始窗口命令、环境变量、当前目录等
+> - `CreateProcess`：注意若执行文件路径包含空格则需要双引号转义
+> - `OpenProcess`
+> - `GetCurrentProcess`：伪句柄，仅进程内有效，使用 `DuplicateHandle` 转换为真句柄
+> - `GetCurrentProcessId`
+> - `EnumProcesses`
+> - `WTSEnumerateProcesses`
 > - `GetCommandLine`
 > - `CommandLineToArgv`
+> - `GetEnvironmentStrings`：内容形如 `Var0=Value0\0Var1=Value1\0\0`，
+> - `FreeEnvironmentStrings`
+> - `ExpandEnvironmentStrings`：扩展替换变量如 `%USERPROFILE%`
 > - `GetEnvironmentVariable`
 > - `SetEnvironmentVariable`
-> - `ExpandEnvironmentStrings`
 > - `GetCurrentDirectory`
 > - `SetCurrentDirectory`
-> - `GetFullPathName`
-> - `MAX_PATH`: 260 个字符包含 `D:\some 256-character path string<NUL>`
+
+#### 子进程继承
+
+- 子进程**可以**继承父进程如下属性
+
+  - 内核对象句柄
+  - 环境变量
+  - 当前目录
+  - 控制台
+  - 错误模式
+  - 进程 CPU 关联性
+  - 作业
+
+- 子进程**不可**继承父进程如下属性
+
+  - 用户对象和 GDI 对象的句柄
+  - 伪句柄
+  - 虚拟地址空间
+  - 优先级类
+
+- 内核对象句柄继承的必要条件
+  - 创建句柄时指定 bInheritHandle 标志
+  - 创建进程时指定 STARTUPINFO 中的 dwFlags 包含 STARTF_USESTDHANDLES
+
+> - `SetHandleInformation`
+> - `UpdateProcThreadAttribute`
+
+#### 进程终止
+
+- 进程终止原因
+
+  - `ExitProcess`
+    - C run-time library (CRT) 默认主线程退出时会调用 `ExitProcess`
+    - 默认 console control handler 会在接受 CTRL+C or CTRL+BREAK 输入时调用 `ExitProcess`
+  - `TerminateProcess`
+  - 进程中最后一个线程终止
+  - 用户关机或注销
+
+- 进程终止结果
+  - 执行 `DllMain`，除非终止原因是调用 `TerminateProcess`
+  - 终止进程内所有线程
+  - 释放进程资源
+  - 关闭内核对象句柄
+  - 设置进程退出码
+  - 触发进程对象
+
+> - `ExitProcess`
+> - `TerminateProcess`
+> - `GetExitCodeProcess`
+> - `SetProcessShutdownParameters`：设置关机时终止优先级
+
+#### 作业
+
+作业用来管理一组进程，进程关联作业后不可再取消
+
+- 控制子进程的作业继承
+  - `JOB_OBJECT_LIMIT_BREAKAWAY_OK`
+  - `JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK`
+- 限制资源访问
+  - `JOBOBJECT_BASIC_LIMIT_INFORMATION`
+  - `JOBOBJECT_BASIC_UI_RESTRICTIONS`
+  - `JOBOBJECT_CPU_RATE_CONTROL_INFORMATION`
+  - `JOBOBJECT_EXTENDED_LIMIT_INFORMATION`
+  - `JOBOBJECT_NOTIFICATION_LIMIT_INFORMATION`
+- 监视进程状态
+  - `JOBOBJECT_ASSOCIATE_COMPLETION_PORT`
+- 资源使用计算
+  - `JOBOBJECT_BASIC_ACCOUNTING_INFORMATION`
+  - `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION`
+- 作业对象销毁时终止作业内所有进程
+  - `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`
+
+> - `CreateJobObject`
+> - `OpenJobObject`
+> - `SetInfomationJobObject`
+> - `QueryInfomationJobObject`
+> - `AssignProcessToJobObject`
+> - `TerminateJobOnject`
+> - `IsProcessInJob`
+
+### 线程管理
+
+#### 线程创建
+
+- 若线程函数需要访问 C run-time library (CRT)，则应该使用 `_beginthreadex` 而非 `CreateThread` 来保证线程安全
+- 线程栈最大默认 1M，可通过控制编译时链接器参数或运行时 `CreateThread` 参数来改变，大小向上取整 1M
+- 在新线程中执行 `DllMain`
+
+> - `CreateThread`：安全属性、栈大小、暂停状态
+> - `CreateRemoteThread`
+> - `OpenThread`
+
+#### 线程终止
+
+- 线程终止原因
+
+  - 线程函数返回
+  - `ExitThread`
+  - `ExitProcess`
+  - `TerminateThread`
+  - `TerminateProcess`
+
+- 线程终止结果
+  - 执行 `DllMain`，除非终止原因是 `TerminateThread` 或 `TerminateProcess`
+  - 释放线程拥有的资源，如 windows 和 hooks
+  - 设置线程退出码
+  - 触发线程对象
+  - 如果线程是进程里唯一的线程，则终止进程
+
+> - `ExitThread`
+> - `TerminateThread`
+> - `GetExitCodeThread`
+
+#### 上下文切换
+
+- 上下文切换原因
+  - 时间片到期，大概 20 ms
+  - 主动放弃剩余时间片
+  - 被高优先级线程抢占
+  - 进入同步等待状态
+
+> - `SuspendThread`
+> - `ResumeThread`
+> - `Sleep`
+> - `SwitchToThread`
+
+#### 基本优先级
+
+|                               | IDLE_PRIORITY_CLASS | BELOW_NORMAL_PRIORITY_CLASS | NORMAL_PRIORITY_CLASS | ABOVE_NORMAL_PRIORITY_CLASS | HIGH_PRIORITY_CLASS | REALTIME_PRIORITY_CLASS |
+| ----------------------------- | ------------------- | --------------------------- | --------------------- | --------------------------- | ------------------- | ----------------------- |
+| THREAD_PRIORITY_IDLE          | 1                   | 1                           | 1                     | 1                           | 1                   | 16                      |
+| THREAD_PRIORITY_LOWEST        | 2                   | 4                           | 6                     | 8                           | 11                  | 22                      |
+| THREAD_PRIORITY_BELOW_NORMAL  | 3                   | 5                           | 7                     | 9                           | 12                  | 23                      |
+| THREAD_PRIORITY_NORMAL        | 4                   | 6                           | 8                     | 10                          | 13                  | 24                      |
+| THREAD_PRIORITY_ABOVE_NORMAL  | 5                   | 7                           | 9                     | 11                          | 14                  | 25                      |
+| THREAD_PRIORITY_HIGHEST       | 6                   | 8                           | 10                    | 12                          | 15                  | 26                      |
+| THREAD_PRIORITY_TIME_CRITICAL | 15                  | 15                          | 15                    | 15                          | 15                  | 31                      |
+
+- 通过设置进程优先级和线程优先级，系统确认线程使用的基本优先级
+- 基本优先级保留给 zero-page thread，它负责将 free page 置零
+- 注意 `REALTIME_PRIORITY_CLASS` 优先级会中断系统线程，比如键鼠输入、磁盘冲刷等
+
+> - `GetPriorityClass`
+> - `SetPriorityClass`
+> - `GetThreadPriority`
+> - `SetThreadPriority`
+
+#### 动态优先级
+
+- 动态优先级用来最终确认线程的执行优先级
+- 系统在以下情况会动态提升基本优先级 0 - 15 的线程
+  - `NORMAL_PRIORITY_CLASS` 优先级的进程成为前台进程时，提升其优先级大于或等于任何后台进程
+  - 当窗口接受到用户输入时，提升窗口所属的线程的优先级
+  - 当线程同步等待的条件被满足时，提升该线程的优先级
+  - 优先级反转：高优先级线程等待低优先级线程的资源，而中优先级线程一直抢占低优先级线程，导致高优先级线程被中优先级线程阻塞。系统会自动检测这种情况，并动态提升低优先级线程至所有等待它的线程中的最大优先级
+- 动态提升之后，动态优先级每个时间片降低 1 级，且绝不低于基本优先级
+
+> - `GetProcessPriorityBoost`
+> - `SetProcessPriorityBoost`
+> - `GetThreadPriorityBoost`
+> - `SetThreadPriorityBoost`
+
+#### 服务质量
+
+服务质量 (Quality of Service) 会影响线程运行的处理器核心和功率，具体见 [MSDN](https://learn.microsoft.com/en-us/windows/win32/procthread/quality-of-service)
 
 ### 动态链接
 
@@ -242,7 +403,7 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 - 地址访问
 
   - CPU 中的内存管理单元（MMU）负责根据页表基址寄存器（PTBR）存储的页表基址从翻译后备缓冲器（TLB）获取虚拟地址对应的页表表项（PTE）从而翻译为物理地址
-  - 操作系统为每个进程维护一个多级页表，最后一级页表表项记录物理地址，其它级页表表项记录下一级页表基地址，通常只有一级页表常驻内存
+  - 操作系统为每个进程维护一个多级页表，最后一级页表表项记录虚拟地址对应的物理地址，其它级页表表项记录下一级页表基地址，通常只有一级页表常驻内存
   - 当访问的地址没有在内存中时，触发缺页异常，控制流交给操作系统处理异常：
     - 将对应的页面从其后备存储器中加载到内存
     - 当内存中无空闲页面时，根据某种缓存驱逐策略来选择使用页面，若为脏页则先将其冲刷到其后备存储器再使用
@@ -265,18 +426,9 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 > - `HeapReAlloc`
 > - `GetProcessHeap`: 每个进程有一个默认的线程安全的堆
 > - `GetProcessHeaps`
+> - `GetProcessWorkingSetSize `
 
 ### 线程管理
-
-|                               | IDLE_PRIORITY_CLASS | BELOW_NORMAL_PRIORITY_CLASS | NORMAL_PRIORITY_CLASS | ABOVE_NORMAL_PRIORITY_CLASS | HIGH_PRIORITY_CLASS | REALTIME_PRIORITY_CLASS |
-| ----------------------------- | ------------------- | --------------------------- | --------------------- | --------------------------- | ------------------- | ----------------------- |
-| THREAD_PRIORITY_IDLE          | 1                   | 1                           | 1                     | 1                           | 1                   | 16                      |
-| THREAD_PRIORITY_LOWEST        | 2                   | 4                           | 6                     | 8                           | 11                  | 22                      |
-| THREAD_PRIORITY_BELOW_NORMAL  | 3                   | 5                           | 7                     | 9                           | 12                  | 23                      |
-| THREAD_PRIORITY_NORMAL        | 4                   | 6                           | 8                     | 10                          | 13                  | 24                      |
-| THREAD_PRIORITY_ABOVE_NORMAL  | 5                   | 7                           | 9                     | 11                          | 14                  | 25                      |
-| THREAD_PRIORITY_HIGHEST       | 6                   | 8                           | 10                    | 12                          | 15                  | 26                      |
-| THREAD_PRIORITY_TIME_CRITICAL | 15                  | 15                          | 15                    | 15                          | 15                  | 31                      |
 
 - 线程是调度 CPU 控制流的基本单位
 
@@ -290,7 +442,7 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 
 - 线程同步
   - 为什么需要同步？
-    - 防止读取数据时数据被修改（加锁）
+    - 防止读取并操作数据时数据被修改（加锁）
     - 等待状态被正确初始化（等待事件）
   - 用户模式
     - [联锁变量](https://learn.microsoft.com/en-us/windows/win32/sync/interlocked-variable-access)
@@ -299,8 +451,8 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
     - [条件变量](https://learn.microsoft.com/en-us/windows/win32/sync/condition-variables)
     - [屏障](https://learn.microsoft.com/en-us/windows/win32/sync/synchronization-barriers)
   - 内核模式
-    - [互斥量](https://learn.microsoft.com/en-us/windows/win32/sync/mutex-objects)
-    - [信号量](https://learn.microsoft.com/en-us/windows/win32/sync/semaphore-objects)
+    - [互斥量](https://learn.microsoft.com/en-us/windows/win32/sync/mutex-objects)：等于 0 时为触发状态，等于 TID 时为非触发状态
+    - [信号量](https://learn.microsoft.com/en-us/windows/win32/sync/semaphore-objects)：大于 0 时为触发状态，等于 0 时为非触发状态
     - [事件](https://learn.microsoft.com/en-us/windows/win32/sync/event-objects)
     - [计时器](https://learn.microsoft.com/en-us/windows/win32/sync/waitable-timer-objects)
 
@@ -332,8 +484,9 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
   - 可以终止作业中所有进程
   - 可以监听作业中进程的状态
 
-- 会话
-<!-- TODO: 会话 -->
+- Session
+  - Window Station: contains a clipboard, an atom table, and one or more desktop objects
+    - Desktop: A desktop has a logical display surface and contains user interface objects such as windows, menus, and hooks; it can be used to create and manage windows.
 
 > 相关接口：
 >
@@ -347,7 +500,13 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 
 ## 资源系统
 
-### 内核对象
+- 系统启动时默认创建 Session 0 专门用于运行 Services，其中的进程无法访问终端交互设备
+- 第一个登录的用户通常在 Session 1，其中的进程可以访问终端交互设备
+- 内核对象命名空间分为 Global 和 Local，前者跨多个会话，后者仅用于单个会话
+
+- 用户对象
+- GDI 对象
+- 内核对象
 
 进程句柄表：
 
@@ -366,10 +525,6 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 > - `GetHandleInformation`
 > - `SetHandleInformation`
 > - `DuplicateHandle`
-
-### 用户对象
-
-### GDI 对象
 
 ## 窗口系统
 

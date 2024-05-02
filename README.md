@@ -128,5 +128,6 @@
 - [Material Design](material.md)
 - [Markdown](markdown.md)
 - [Regex](regex.md)
+- [Utils](devtool.md)
 - [Protobuf](protobuf.md)
 - [Bitcoin](bitcoin.md)
