@@ -4,7 +4,7 @@
   - [进程系统](#进程系统)
     - [进程管理](#进程管理)
       - [进程创建](#进程创建)
-      - [子进程继承](#子进程继承)
+      - [继承](#继承)
       - [进程终止](#进程终止)
       - [作业](#作业)
     - [线程管理](#线程管理)
@@ -14,11 +14,17 @@
       - [基本优先级](#基本优先级)
       - [动态优先级](#动态优先级)
       - [服务质量](#服务质量)
+      - [线程同步](#线程同步)
     - [动态链接](#动态链接)
     - [虚拟内存](#虚拟内存)
-    - [线程管理](#线程管理-1)
-    - [进程管理](#进程管理-1)
   - [资源系统](#资源系统)
+    - [进程句柄表](#进程句柄表)
+    - [访问控制](#访问控制)
+      - [隔离性](#隔离性)
+      - [访问控制模型](#访问控制模型)
+    - [文件系统](#文件系统)
+    - [注册表](#注册表)
+    - [IPC 机制](#ipc-机制)
   - [窗口系统](#窗口系统)
     - [渲染流程](#渲染流程)
     - [窗口结构](#窗口结构)
@@ -41,9 +47,9 @@
 
 - 线程是系统进行调度执行的基本单位，同一进程中所有线程共享虚拟地址空间和系统资源，此外每个线程都维护自己的异常处理程序、调度优先级、线程本地存储、唯一的线程标识符和线程上下文。
 
-> 详见 [MSDN](https://learn.microsoft.com/en-us/windows/win32/procthread/processes-and-threads)
-
 ### 进程管理
+
+> 参考 [Processes and Threads](https://learn.microsoft.com/en-us/windows/win32/procthread/processes-and-threads)
 
 #### 进程创建
 
@@ -51,6 +57,8 @@
 
   - 对于 GUI 程序，可控制子进程第一次调用 `CreateWindow` 和 `ShowWindow` 的默认参数，如位置、大小、nCmdShow 等
   - 对于 CUI 程序，可控制子进程的控制台窗口的句柄、位置、大小等
+
+- C run-time library (CRT) 入口函数，负责初始化全局变量等，然后调用用户程序入口函数
 
 - 用户程序入口函数
 
@@ -63,7 +71,7 @@
   int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd);
   ```
 
-- exe 搜索路径（指定无路径执行文件时）
+- exe 搜索路径（指定无路径的文件名时）
 
 1. 进程 exe 所在目录
 2. 进程当前目录
@@ -88,7 +96,7 @@
 > - `GetCurrentDirectory`
 > - `SetCurrentDirectory`
 
-#### 子进程继承
+#### 继承
 
 - 子进程**可以**继承父进程如下属性
 
@@ -108,8 +116,8 @@
   - 优先级类
 
 - 内核对象句柄继承的必要条件
-  - 创建句柄时指定 bInheritHandle 标志
-  - 创建进程时指定 STARTUPINFO 中的 dwFlags 包含 STARTF_USESTDHANDLES
+  - 句柄具有 `bInheritHandle` 标志
+  - 创建进程时指定 `STARTUPINFO` 中的 `dwFlags` 包含 `STARTF_USESTDHANDLES`
 
 > - `SetHandleInformation`
 > - `UpdateProcThreadAttribute`
@@ -119,14 +127,13 @@
 - 进程终止原因
 
   - `ExitProcess`
-    - C run-time library (CRT) 默认主线程退出时会调用 `ExitProcess`
+    - CRT 默认主线程返回时会做清理并调用 `ExitProcess`
     - 默认 console control handler 会在接受 CTRL+C or CTRL+BREAK 输入时调用 `ExitProcess`
   - `TerminateProcess`
   - 进程中最后一个线程终止
   - 用户关机或注销
 
 - 进程终止结果
-  - 执行 `DllMain`，除非终止原因是调用 `TerminateProcess`
   - 终止进程内所有线程
   - 释放进程资源
   - 关闭内核对象句柄
@@ -169,11 +176,12 @@
 
 ### 线程管理
 
+> 参考 [Processes and Threads](https://learn.microsoft.com/en-us/windows/win32/procthread/processes-and-threads)
+
 #### 线程创建
 
-- 若线程函数需要访问 C run-time library (CRT)，则应该使用 `_beginthreadex` 而非 `CreateThread` 来保证线程安全
+- 若线程函数需要访问 CRT，则应该使用 `_beginthreadex` 而非 `CreateThread` 来保证线程安全
 - 线程栈最大默认 1M，可通过控制编译时链接器参数或运行时 `CreateThread` 参数来改变，大小向上取整 1M
-- 在新线程中执行 `DllMain`
 
 > - `CreateThread`：安全属性、栈大小、暂停状态
 > - `CreateRemoteThread`
@@ -190,8 +198,7 @@
   - `TerminateProcess`
 
 - 线程终止结果
-  - 执行 `DllMain`，除非终止原因是 `TerminateThread` 或 `TerminateProcess`
-  - 释放线程拥有的资源，如 windows 和 hooks
+  - 释放线程拥有的资源，如 windows, menus, hooks
   - 设置线程退出码
   - 触发线程对象
   - 如果线程是进程里唯一的线程，则终止进程
@@ -211,7 +218,9 @@
 > - `SuspendThread`
 > - `ResumeThread`
 > - `Sleep`
-> - `SwitchToThread`
+> - `SwitchToThread`: 相对 `Sleep(0)`，允许切换低优先级线程
+> - `GetThreadTimes`
+> - `GetProcessTimes`
 
 #### 基本优先级
 
@@ -226,7 +235,7 @@
 | THREAD_PRIORITY_TIME_CRITICAL | 15                  | 15                          | 15                    | 15                          | 15                  | 31                      |
 
 - 通过设置进程优先级和线程优先级，系统确认线程使用的基本优先级
-- 基本优先级保留给 zero-page thread，它负责将 free page 置零
+- 基本优先级 0 保留给 zero-page thread，它负责将 free page 置零
 - 注意 `REALTIME_PRIORITY_CLASS` 优先级会中断系统线程，比如键鼠输入、磁盘冲刷等
 
 > - `GetPriorityClass`
@@ -251,9 +260,35 @@
 
 #### 服务质量
 
-服务质量 (Quality of Service) 会影响线程运行的处理器核心和功率，具体见 [MSDN](https://learn.microsoft.com/en-us/windows/win32/procthread/quality-of-service)
+服务质量 (Quality of Service) 会影响线程运行的处理器核心和功率，具体见 [QoS](https://learn.microsoft.com/en-us/windows/win32/procthread/quality-of-service)
+
+#### 线程同步
+
+- 为什么需要同步？
+  - 保护共享数据被同时读写
+  - 等待某个事件发生
+- 用户模式
+  - [联锁变量](https://learn.microsoft.com/en-us/windows/win32/sync/interlocked-variable-access)
+  - [关键段](https://learn.microsoft.com/en-us/windows/win32/sync/critical-section-objects)
+  - [读写锁](https://learn.microsoft.com/en-us/windows/win32/sync/slim-reader-writer--srw--locks)
+  - [条件变量](https://learn.microsoft.com/en-us/windows/win32/sync/condition-variables)
+  - [屏障](https://learn.microsoft.com/en-us/windows/win32/sync/synchronization-barriers)
+- 内核模式
+  - [互斥量](https://learn.microsoft.com/en-us/windows/win32/sync/mutex-objects)：等于 0 时为触发状态，等于 TID 时为非触发状态
+  - [信号量](https://learn.microsoft.com/en-us/windows/win32/sync/semaphore-objects)：大于 0 时为触发状态，等于 0 时为非触发状态
+  - [事件](https://learn.microsoft.com/en-us/windows/win32/sync/event-objects)
+  - [计时器](https://learn.microsoft.com/en-us/windows/win32/sync/waitable-timer-objects)
+  - 进程
+  - 线程
+
+> - `WaitForSingleObjectEx`
+> - `WaitForMultipleObjectsEx`
+> - `MsgWaitForMultipleObjectsEx`
+> - `SignalObjectAndWait`
 
 ### 动态链接
+
+> 参考 [Dynamic-Link Libraries](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-libraries)
 
 ```cpp
 // mydll.h
@@ -271,22 +306,24 @@ extern "C" {
 
 MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 
-
 #ifdef __cplusplus
 } // extern "C"
 #endif
 ```
 
-**dll 的生命周期**：
+dll 的生命周期：
 
-1. 动态链接：加载时（加载进程 exe）或运行时（`LoadLibrary`）
+1. 动态链接：
+   - 加载时，即创建进程时，此时仅保证 Kernel32.dll 已被加载
+   - 运行时，即调用 `LoadLibrary` 时，注意提前卸载模块可能导致某些地方仍在使用模块内的函数
 2. 内存映射
 3. 符号解析
-4. 调用 c/c++ runtime library 动态库入口，负责初始化全局变量等
+4. 调用 CRT 动态库入口，负责初始化全局变量等
 5. 调用 DllMain
 
    ```cpp
    // 进程内所有 DllMain 的执行都需要获取同一个互斥锁（进程唯一）
+   // 所以谨慎在 DllMain 中调用 LoadLibrary, FreeLibrary, CreateThread, ExitThread 等函数
    BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
      switch (fdwReason) {
        case DLL_PROCESS_ATTACH:
@@ -294,30 +331,32 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
          // 加载时动态链接：在主线程执行，lpvReserved 为 non-NULL，返回 FALSE 表示发生错误而终止进程
          // 运行时动态链接：在调用 LoadLibrary 的线程执行，lpvReserved 为 NULL，返回 FALSE 表示 LoadLibrary 返回 FALSE
          break;
+       case DLL_PROCESS_DETACH:
+         // 模块卸载时，根据卸载方式的不同：
+         // 进程退出：在调用了 ExitProcess 的线程中执行，lpvReserved 为 non-NULL
+         // 手动卸载：在调用了 FreeLibrary 的线程中执行，lpvReserved 为 NULL
+         // 注意，调用了 TerminateThread 或 TerminateProcess 不会调用 DllMain
+         break;
        case DLL_THREAD_ATTACH:
          // 创建新线程时，在运行其线程函数前执行
          // 不会在 DLL_PROCESS_ATTACH 的线程执行
-         // 不会在已创建的线程中执行；
-         // 不会用该参数执行调用了 DisableThreadLibraryCalls 的模块的 DllMain
+         // 不会在已创建的线程中执行
          break;
        case DLL_THREAD_DETACH:
          // 线程终止时，在运行其线程函数返回后执行
-         // 可能没有对应的 DLL_THREAD_ATTACH，可能因为加载时线程已创建或直接调用了 ExitThread；
-         // 不会用该参数执行调用了 DisableThreadLibraryCalls 的模块的 DllMain
-         break;
-       case DLL_PROCESS_DETACH:
-         // 模块卸载时，根据卸载方式的不同：
-         // 进程退出：在主线程或调用了 ExitProcess 的线程中执行，lpvReserved 为 non-NULL
-         // 手动卸载：在调用了 FreeLibrary 的线程中执行，lpvReserved 为 NULL
+         // 可能没有对应的 DLL_THREAD_ATTACH，因为加载时线程已存在
+         // 若线程调用了 DisableThreadLibraryCalls 则不会执行
+         // 注意，调用了 TerminateThread 或 TerminateProcess 不会调用 DllMain
          break;
      }
      return TRUE;
    }
    ```
 
-**dll 标准搜索路径**：（适用于相对路径和无路径文件名）
+dll 标准搜索路径：（适用于相对路径和无路径文件名）
 
-> 更详细 dll 搜索路径见 [MSDN](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)
+> 更详细 dll 搜索路径见 [Dll search order](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)；  
+> 关于 Windows 运行时环境和打包部署建议见 [Deployment](https://learn.microsoft.com/en-us/cpp/windows/deployment-concepts?view=msvc-170)
 
 1. DLL Redirection.
 2. API sets.
@@ -332,33 +371,19 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 11. 进程当前目录
 12. 环境变量 PATH
 
-**dll 注入**：
-
-- 注册表`Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs`
-  - 设置空格分隔的 dll 列表，它们会被 User32.dll 加载，注意此时许多 dll 还未被加载
-  - 所有 GUI 程序都会加载 User32.dll
-- `SetWindowsHookEx`:
-  - 给指定线程或同 Desktop 下所有线程添加 Hook，Hook 会在下次获取窗口消息时安装，会先加载 dll 然后注册 Hook
-  - 添加全局 Hook 时，异构线程的消息会送给调用安装 Hook 的线程处理，所以需要保证安装 Hook 的线程能正常处理消息
-  - 安装 Hook 的进程退出时会卸载 Hook，卸载 Hook 同时会递减 dll 的引用计数
-- 远程线程
-- 木马 dll
-
-> 相关接口
->
 > - `LoadLibrary`
-> - `LoadLibraryEx`: 可设置修改标准搜索路径、仅加载资源数据，通常不能与`LoadLibrary`混用
+> - `LoadLibraryEx`：可设置修改标准搜索路径、仅加载资源数据，通常不能与`LoadLibrary`混用
 > - `GetProcAddress`
 > - `FreeLibrary`
-> - `FreeLibraryAndExitThread`: FreeLibrary 和 ExitThread 可能都会调用 DllMain，虽然 DllMain 加了锁，但是并未验证 DllMain 的有效性（dll 被卸载）
-> - `__ImageBase`: 由链接器创建的变量，位于该模块的基地址
-> - `GetModuleHandle`: 不递增引用计数
-> - `GetModuleHandleEx`: 默认递增引用计数，可设置 dll 直到进程终止前绝不卸载
+> - `FreeLibraryAndExitThread`
+> - `__ImageBase`：由链接器创建的变量，位于该模块的基地址
+> - `GetModuleHandle`：不递增引用计数
+> - `GetModuleHandleEx`：默认递增引用计数，可设置 dll 直到进程终止前绝不卸载
 > - `GetModuleFileName`
->
-> 关于 Windows 运行时环境和打包部署建议见 [MSDN](https://learn.microsoft.com/en-us/cpp/windows/deployment-concepts?view=msvc-170)
 
 ### 虚拟内存
+
+> 参考 [Memory Management](https://learn.microsoft.com/en-us/windows/win32/memory/memory-management)
 
 - 虚拟地址空间
 
@@ -408,14 +433,17 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
     - 将对应的页面从其后备存储器中加载到内存
     - 当内存中无空闲页面时，根据某种缓存驱逐策略来选择使用页面，若为脏页则先将其冲刷到其后备存储器再使用
 
-> 相关接口
->
-> - `GetSystemInfo`: CPU 硬件信息
-> - `GlobalMemoryStatusEx`: 系统内存情况
-> - `VirtualQuery`: 该进程虚拟内存信息
-> - `VirtualAlloc`: 申请内存，设置页面状态
-> - `VirtualFree`: 释放内存
-> - `VirtualProtect`: 设置页面保护
+- 工作集
+  - 每个进程维护一个工作集，管理驻留在内存中的页面
+  - 最小工作集大小默认 50 个页面
+  - 最大工作集大小默认 345 个页面
+
+> - `GetSystemInfo`：CPU 硬件信息
+> - `GlobalMemoryStatusEx`
+> - `VirtualQuery`
+> - `VirtualAlloc`：控制内存页面状态，申请[大页内存](https://learn.microsoft.com/en-us/windows/win32/memory/large-page-support)
+> - `VirtualFree`
+> - `VirtualProtect`
 > - `CreateFile`
 > - `CreateFileMapping`
 > - `MapViewOfFile`
@@ -424,91 +452,22 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
 > - `HeapAlloc`
 > - `HeapFree`
 > - `HeapReAlloc`
-> - `GetProcessHeap`: 每个进程有一个默认的线程安全的堆
+> - `GetProcessHeap`：每个进程有一个默认的线程安全的堆
 > - `GetProcessHeaps`
-> - `GetProcessWorkingSetSize `
-
-### 线程管理
-
-- 线程是调度 CPU 控制流的基本单位
-
-- 调度优先级：只要存在高优先级的线程处于可调度状态，就会先运行高优先级线程，以下情况可动态提升线程优先级
-
-  - 接受新消息
-  - 前台进程中的线程
-  - 长时间处于饥饿状态的低优先级线程
-
-- CPU 关联性
-
-- 线程同步
-  - 为什么需要同步？
-    - 防止读取并操作数据时数据被修改（加锁）
-    - 等待状态被正确初始化（等待事件）
-  - 用户模式
-    - [联锁变量](https://learn.microsoft.com/en-us/windows/win32/sync/interlocked-variable-access)
-    - [关键段](https://learn.microsoft.com/en-us/windows/win32/sync/critical-section-objects)
-    - [读写锁](https://learn.microsoft.com/en-us/windows/win32/sync/slim-reader-writer--srw--locks)
-    - [条件变量](https://learn.microsoft.com/en-us/windows/win32/sync/condition-variables)
-    - [屏障](https://learn.microsoft.com/en-us/windows/win32/sync/synchronization-barriers)
-  - 内核模式
-    - [互斥量](https://learn.microsoft.com/en-us/windows/win32/sync/mutex-objects)：等于 0 时为触发状态，等于 TID 时为非触发状态
-    - [信号量](https://learn.microsoft.com/en-us/windows/win32/sync/semaphore-objects)：大于 0 时为触发状态，等于 0 时为非触发状态
-    - [事件](https://learn.microsoft.com/en-us/windows/win32/sync/event-objects)
-    - [计时器](https://learn.microsoft.com/en-us/windows/win32/sync/waitable-timer-objects)
-
-> 相关接口：
->
-> - `SuspendThread`
-> - `ResumeThread`
-> - `Sleep`
-> - `SwitchToThread`: 相对`Sleep`，允许切换低优先级线程
-> - `GetThreadTimes`
-> - `GetProcessTimes`
-> - `GetTickCount64`
-> - `SetPriorityClass`
-> - `SetThreadPriority`
-> - `SetProcessAffinityMask`
-> - `SetThreadAffinityMaxk`
-> - `WaitForSingleObjectEx`
-> - `WaitForMultipleObjectsEx`
-> - `MsgWaitForMultipleObjectsEx`
-> - `SignalObjectAndWait`
-
-### 进程管理
-
-- 作业（内核对象）：
-
-  - 限制一组进程对一些资源的访问，比如 CPU 的使用、UI 限制、安全限制等
-  - 将进程移入作业后不可移出
-  - 子进程默认也在作业中
-  - 可以终止作业中所有进程
-  - 可以监听作业中进程的状态
-
-- Session
-  - Window Station: contains a clipboard, an atom table, and one or more desktop objects
-    - Desktop: A desktop has a logical display surface and contains user interface objects such as windows, menus, and hooks; it can be used to create and manage windows.
-
-> 相关接口：
->
-> - `OpenJobObject`
-> - `SetInfomationJobObject`
-> - `QueryInfomationJobObject`
-> - `IsProcessInJob`
-> - `AssignProcessToJobObject`
-> - `TerminateJobOnject`
-> - `GetQueuedCompletionStatus`
+> - `GetProcessWorkingSetSize`
+> - `SetProcessWorkingSetSize`
 
 ## 资源系统
 
-- 系统启动时默认创建 Session 0 专门用于运行 Services，其中的进程无法访问终端交互设备
-- 第一个登录的用户通常在 Session 1，其中的进程可以访问终端交互设备
-- 内核对象命名空间分为 Global 和 Local，前者跨多个会话，后者仅用于单个会话
+操作系统提供了“对象”的概念，简化了应用对计算机外设资源的使用以实现“资源 IO”
 
-- 用户对象
-- GDI 对象
-- 内核对象
+- 内核对象：跨进程的通用型资源
+- 用户对象：windows, menus, hooks
+- GDI 对象：图形资源
 
-进程句柄表：
+### 进程句柄表
+
+每个进程维护一张句柄表用于访问内核对象，内核对象句柄仅在进程内有效
 
 - 索引：`HANDLE`
 - 内核对象指针
@@ -517,14 +476,88 @@ MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
   - 名字
     - 全局命名空间：`Global\`前缀，服务会话（sesson 0）默认
     - 会话命名空间：`Local\`前缀，用户会话默认
-- 访问掩码：这个句柄的访问权限
+- 访问掩码：这个句柄的访问权限掩码
 - 属性标志：如 Protect, Inherit 等
 
-> 相关接口：
->
 > - `GetHandleInformation`
 > - `SetHandleInformation`
 > - `DuplicateHandle`
+
+### 访问控制
+
+#### 隔离性
+
+> 参考 [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
+
+![session](./images/session.png)
+
+- Session：由单个用户登录会话产生的所有进程和内核对象组成
+
+  - Session 0 由系统创建专门用于运行服务 (Services)
+  - 内核对象命名空间分为 Global 和 Local，前者可跨多个会话，后者仅用于单个会话内部使用
+
+- Window Station：由一个剪切板、一张原子表和若干 desktop 组成
+
+  - WinSta0 由系统创建，唯一能与用户终端设备交互的 Window Station
+  - 同一 Window Station 内仅允许一个 Desktop 访问用户终端设备
+
+- Desktop：由若干 windows, menus, hooks 组成
+
+  - Winlogon 用于用户登录和 UAC 授权
+  - Default 用于用户应用程序
+  - ScreenSaver 用于屏保
+  - windows, menu, hooks 仅能在同一 Desktop 内部访问
+
+#### 访问控制模型
+
+> 参考 [Access Tokens](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens) 和 [Security Descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors)
+
+- 访问令牌 (Access Token)
+
+  - owner SID
+  - primary group SID
+  - user SID
+  - group SIDs
+  - logon SID
+  - list of restricting SIDs
+  - list of the privileges
+  - default DACL
+  - 是否为模拟令牌
+  - 其他
+
+- 安全描述符 (Security Descriptor)
+
+  - owner SID
+  - primary group SID
+  - DACL
+  - SACL
+  - 一组控制位，用于限定安全描述符或其单个成员的含义
+
+- 访问控制列表 (Access Control Lists)
+
+  - 访问控制表项 (Access Control Entries)
+    - trustee SID
+    - access mask
+    - type flag
+    - inherit flags
+
+- 访问权限 (Access Right)
+  ![acess mask format](./images/access_mask_format_.png)
+  - Generic Access Rights：被映射到 Object-specific Access Right
+  - SACL Access Right：访问对象 SACL 的权限
+  - Standard Access Rights：用于控制对对象本身的操作
+    - `DELETE`
+    - `READ_CONTROL`
+    - `SYNCHRONIZE`
+    - `WRITE_DAC`
+    - `WRITE_OWNER`
+  - Object-specific Access Right：针对不同类型对象的特殊操作的权限
+
+### 文件系统
+
+### 注册表
+
+### IPC 机制
 
 ## 窗口系统
 
