@@ -17,6 +17,7 @@
       - [线程同步](#线程同步)
     - [动态链接](#动态链接)
     - [虚拟内存](#虚拟内存)
+    - [错误处理](#错误处理)
   - [资源系统](#资源系统)
     - [进程句柄表](#进程句柄表)
     - [访问控制](#访问控制)
@@ -213,7 +214,7 @@
   - 时间片到期，大概 20 ms
   - 主动放弃剩余时间片
   - 被高优先级线程抢占
-  - 进入同步等待状态
+  - 进入同步等待状态或暂停状态
 
 > - `SuspendThread`
 > - `ResumeThread`
@@ -356,7 +357,7 @@ dll 的生命周期：
 dll 标准搜索路径：（适用于相对路径和无路径文件名）
 
 > 更详细 dll 搜索路径见 [Dll search order](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)；  
-> 关于 Windows 运行时环境和打包部署建议见 [Deployment](https://learn.microsoft.com/en-us/cpp/windows/deployment-concepts?view=msvc-170)
+> 关于 Windows 运行时环境和打包部署建议见 [Deployment](https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp?view=msvc-170)
 
 1. DLL Redirection.
 2. API sets.
@@ -457,6 +458,10 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 > - `GetProcessWorkingSetSize`
 > - `SetProcessWorkingSetSize`
 
+### 错误处理
+
+<!-- TODO: 错误处理 -->
+
 ## 资源系统
 
 操作系统提供了“对象”的概念，简化了应用对计算机外设资源的使用以实现“资源 IO”
@@ -555,9 +560,15 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 
 ### 文件系统
 
+<!-- TODO: 文件系统 -->
+
 ### 注册表
 
+<!-- TODO: 注册表 -->
+
 ### IPC 机制
+
+<!-- TODO: IPC -->
 
 ## 窗口系统
 
