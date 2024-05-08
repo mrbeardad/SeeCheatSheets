@@ -19,7 +19,7 @@
     - [虚拟内存](#虚拟内存)
     - [错误处理](#错误处理)
   - [资源系统](#资源系统)
-    - [进程句柄表](#进程句柄表)
+    - [句柄表](#句柄表)
     - [访问控制](#访问控制)
       - [隔离性](#隔离性)
       - [访问控制模型](#访问控制模型)
@@ -127,12 +127,14 @@
 
 - 进程终止原因
 
+  - 进程中最后一个线程终止
   - `ExitProcess`
     - CRT 默认主线程返回时会做清理并调用 `ExitProcess`
     - 默认 console control handler 会在接受 CTRL+C or CTRL+BREAK 输入时调用 `ExitProcess`
+    - 用户模式中发生的硬件异常或软件异常未被捕获处理时最终会调用 `ExitProcess`
   - `TerminateProcess`
-  - 进程中最后一个线程终止
-  - 用户关机或注销
+  - 用户注销或关机
+    - 内核模式中发生的硬件异常或软件异常未被捕获时最终会调用 `ExitWindows`
 
 - 进程终止结果
   - 终止进程内所有线程
@@ -460,7 +462,83 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 
 ### 错误处理
 
-<!-- TODO: 错误处理 -->
+- 返回码：几乎所有系统 API 的调用都会失败，通常返回特殊的值表示调用失败
+
+  - `BOOL`: 返回 `FALSE` 表示失败
+  - `HANDLE`: 返回 `NULL` 或 `INVALID_HANDLE_VALUE`（特别注意）
+  - `LPVOID`: 返回 `NULL` 表示失败
+  - `HRESULT`: 使用 `SUCCEEDED(hr)` 或 `FAILED(hr)` 来检测成功或失败
+
+- 错误码：当系统 API 调用失败时（少数是在调用成功时）设置一个线程独立的[**错误码**](https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes)来表示详细原因
+
+```cpp
+std::string GetLastErrorAsString() {
+    DWORD errorMessageID = ::GetLastError();
+    if(errorMessageID == 0) {
+        return std::string();
+    }
+
+    LPSTR messageBuffer = nullptr;
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+    std::string message(messageBuffer, size);
+    LocalFree(messageBuffer);
+
+    return message;
+}
+```
+
+- 错误模式：当进程发生严重错误时，系统默认会显示错误对话框，对话框会挂起进程（同步执行）
+
+  - `SEM_FAILCRITICALERRORS`，不显示对话框转而将错误发送给进程，通常应该设置改标志
+  - `SEM_NOALIGNMENTFAULTEXCEPT`，在支持的平台上自动修复内存对齐错误
+  - `SEM_NOGPFAULTERRORBOX`，不显示 WER 对话框
+  - `SEM_NOOPENFILEERRORBOX`，不显示当 `OpenFile` 传入 `OF_PROMPT` 标志且对应文件不存在时的对话框
+
+- 结构化错误处理 (SEH)
+
+```cpp
+/*
+ * Termination-Handler Syntax
+*/
+__try {
+    // 可以使用 __leave 提前离开 __try 块且避免非正常离开和性能处罚
+} __finally {
+    // 当控制流离开 __try 块时，会执行 __finally 块，除非因线程终止而离开 __try 块
+}
+
+/*
+ * Exception-Handler Syntax
+*/
+__try {
+    // 当发生底层的硬件异常或软件错误时会触发异常，也可以调用 RaiseException 手动触发
+}
+// 过滤表达式结果可以是
+// EXCEPTION_EXECUTE_HANDLER 执行 __except 块
+// EXCEPTION_CONTINUE_SEARCH 继续搜索处理块
+// EXCEPTION_CONTINUE_EXECUTION 在发生异常的地方继续执行，若异常不可继续则触发 EXCEPTION_NONCONTINUABLE_EXCEPTION 异常
+__except (filter-expression) {
+    // 当搜索到匹配的处理块时，进行栈展开 (unwind) 直到处理块所在栈帧，然后执行 __except 块
+}
+
+```
+
+> - `GetLastError`
+> - `SetLastError`
+> - `FormatMessage`
+> - `GetErrorMode`
+> - `SetErrorMode`
+> - `GetThreadErrorMode`
+> - `SetThreadErrorMode`
+> - `RaiseException`
+> - `GetExceptionCode`: 仅可在过滤表达式和 `__except` 块中调用
+> - `GetExceptionInformation`: 仅可在过滤表达式中调用，因为执行 `__except` 块时异常栈帧已被销毁
+> - `AbnormalTermination`: 仅可在 `__finally` 块中调用
+> - `AddVectoredContinueHandler`: 在 debugger 收到通知后，并在栈展开之前，执行注册的处理程序
+> - `RemoveVectoredContinueHandler`
+> - `_controlfp_s`: 默认系统关闭所有浮点异常，因此计算结果可以是 NAN 或 INFINITY 而不是异常。
+> - `_clearfp`: 必须在浮点异常处理块中调用该函数来获取并清除浮点异常标志
 
 ## 资源系统
 
@@ -470,7 +548,7 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 - 用户对象：windows, menus, hooks
 - GDI 对象：图形资源
 
-### 进程句柄表
+### 句柄表
 
 每个进程维护一张句柄表用于访问内核对象，内核对象句柄仅在进程内有效
 
@@ -546,8 +624,9 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
     - type flag
     - inherit flags
 
+![acess mask format](./images/access_mask_format_.png)
+
 - 访问权限 (Access Right)
-  ![acess mask format](./images/access_mask_format_.png)
   - Generic Access Rights：被映射到 Object-specific Access Right
   - SACL Access Right：访问对象 SACL 的权限
   - Standard Access Rights：用于控制对对象本身的操作

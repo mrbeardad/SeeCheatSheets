@@ -36,9 +36,9 @@
   - [Client](#client)
   - [Server](#server)
   - [Coding](#coding)
-  - [开发平台](#开发平台)
-  - [底层原理](#底层原理)
-  - [其它](#其它)
+  - [OS](#os)
+  - [Basics](#basics)
+  - [Others](#others)
 
 ## 前言
 
@@ -96,23 +96,23 @@
   - [Rust](rust.md)
   - [Go](go.md)
   - [Dart](dart.md)
-  - [TypeScript](ts.md)
+  - [JavaScript](js.md)
   - [Python](py.md)
 
-## 开发平台
+## OS
 
-- Linux 系统
+- Linux
 
   - [Linux 操作系统](linux.md)
   - [Linux 系统接口](linuxapi.md)
   - [Bash 命令行](bash.md)
 
-- Windows 系统
+- Windows
 
   - [Win32 系统接口](win32.md)
   - [Cmd 命令行](cmd.md)
 
-## 底层原理
+## Basics
 
 - [面试八股](interview.md)
 
@@ -123,7 +123,7 @@
   - [计算机网络](network.md)
   - [数据结构与算法](dsaa.md)
 
-## 其它
+## Others
 
 - [Material Design](material.md)
 - [Markdown](markdown.md)
