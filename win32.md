@@ -17,7 +17,7 @@
       - [线程同步](#线程同步)
     - [动态链接](#动态链接)
     - [虚拟内存](#虚拟内存)
-    - [错误处理](#错误处理)
+    - [异常处理](#异常处理)
   - [资源系统](#资源系统)
     - [句柄表](#句柄表)
     - [访问控制](#访问控制)
@@ -461,9 +461,9 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 > - `GetProcessWorkingSetSize`
 > - `SetProcessWorkingSetSize`
 
-### 错误处理
+### 异常处理
 
-> 参考 [Error Handling](https://learn.microsoft.com/en-us/windows/win32/debug/error-handling) 与 [Structured Exception Handling](https://learn.microsoft.com/en-us/windows/win32/debug/structured-exception-handling)
+> 参考 [Error Handling](https://learn.microsoft.com/en-us/windows/win32/debug/error-handling)、[Structured Exception Handling](https://learn.microsoft.com/en-us/windows/win32/debug/structured-exception-handling)、[Windows Error Reporting](https://learn.microsoft.com/en-us/windows/win32/wer/windows-error-reporting)
 
 - 返回码：几乎所有系统 API 的调用都会失败，通常返回特殊的值表示调用失败
 
@@ -502,7 +502,7 @@ std::string GetLastErrorAsString() {
   - `SEM_NOGPFAULTERRORBOX`，不显示 WER 对话框
   - `SEM_NOOPENFILEERRORBOX`，不显示当 `OpenFile` 传入 `OF_PROMPT` 标志且对应文件不存在时的对话框
 
-- 结构化异常处理 (SEH)
+- 结构化异常处理 (SEH)：使用 SEH 后编译器禁止在同一栈帧中构造 C++ 对象，因为 SEH 的栈展开不会调用析构函数
 
 ```cpp
 /*
@@ -511,7 +511,7 @@ std::string GetLastErrorAsString() {
 __try {
     // 可以使用 __leave 提前离开 __try 块且避免非正常离开和性能处罚
 } __finally {
-    // 只要控制流离开 __try 块就会执行 __finally 块，除非因线程终止而离开 __try 块
+    // 只要控制流离开 __try 块就会执行 __finally 块，包括栈展开，除非因线程终止而离开 __try 块
 }
 
 /*
@@ -521,9 +521,9 @@ __try {
     // 当发生底层的硬件或软件错误时会触发异常，也可以调用 RaiseException 手动触发
 }
 // 过滤表达式结果可以是以下值之一：
-// EXCEPTION_CONTINUE_EXECUTION 表示继续执行发生异常的指令
-// EXCEPTION_EXECUTE_HANDLER 表示继续执行 __except 块
-// EXCEPTION_CONTINUE_SEARCH 表示继续搜索 __except 块
+// EXCEPTION_CONTINUE_EXECUTION 表示继续执行发生异常的指令，注意可能导致死循环
+// EXCEPTION_EXECUTE_HANDLER 表示执行后续 __except 块
+// EXCEPTION_CONTINUE_SEARCH 表示搜索外部 __except 块
 __except (filter-expression) {
     // 当搜索到能够处理异常的 __except 块时，先进行栈展开 (unwind) 直到 __excpet 块所在栈帧，然后继续执行 __except 块
 }
@@ -531,12 +531,27 @@ __except (filter-expression) {
 
 - 向量化异常处理 (VEH)
 
-  - 注册的向量化异常处理函数，在执行过滤表达式且返回 `EXCEPTION_EXECUTE_HANDLER` 之后，栈展开执行 `__except` 块之前调用
-  - 处理函数仅允许返回 `EXCEPTION_CONTINUE_EXECUTION` 或 `EXCEPTION_CONTINUE_SEARCH`
+  - 在异常触发后且在首次通知调试器后调用
+  - 返回 `EXCEPTION_CONTINUE_EXECUTION` 表示继续执行发生异常的指令，跳过后续 VEH
+  - 返回 `EXCEPTION_CONTINUE_SEARCH` 表示执行后续 VEH，然后开始搜索 SEH
 
 - 向量化继续处理 (VCH)
-  - 注册的向量化继续处理函数在 SEH 或 VEH 返回 `EXCEPTION_CONTINUE_EXECUTION` 之后调用
-  - 处理函数仅允许返回 `EXCEPTION_CONTINUE_EXECUTION` 或 `EXCEPTION_CONTINUE_SEARCH`
+
+  - 在继续执行发生异常的指令之前调用
+  - 返回 `EXCEPTION_CONTINUE_EXECUTION` 表示继续执行发生异常的指令，跳过后续 VCH
+  - 返回 `EXCEPTION_CONTINUE_SEARCH` 表示执行后续 VCH，然后从异常指令开始重新搜索 SEH
+
+- 未处理异常
+
+  - `UnhandledExceptionFilter` 作为最外部的全局 SEH 的过滤表达式
+  - 其内部会调用 `SetUnhandledExceptionFilter` 设置的过滤函数
+  - C++ 程序默认设置了该过滤函数，用来过滤 C++ 异常
+
+- Window 错误报告 (WER)
+  - Dumps: 需要设置 `HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\Windows Error Reporting\LocalDumps`
+  - Recovery: 需要调用 `RegisterApplicationRecoveryCallback`
+  - MessageBox: 需要设置 `HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\Windows Error Reporting\DontShowUI` 为 0，且 `GetErrorMode` 标志没有 `SEM_NOGPFAULTERRORBOX`
+  - Restart: 需要调用`RegisterApplicationRestart`
 
 ![seh](./images/seh.png)
 
@@ -553,12 +568,12 @@ __except (filter-expression) {
 > - `GetExceptionCode`: 仅可在过滤表达式和 `__except` 块中调用
 > - `GetExceptionInformation`: 仅可在过滤表达式中调用，因为执行 `__except` 块时异常栈帧已被销毁
 > - `AbnormalTermination`: 仅可在 `__finally` 块中调用
-> - `UnhandledExceptionFilter`
-> - `SetUnhandledExceptionFilter`
 > - `AddVectoredExceptionHandler`
 > - `RemoveVectoredExceptionHandler`
 > - `AddVectoredContinueHandler`
 > - `RemoveVectoredContinueHandler`
+> - `UnhandledExceptionFilter`
+> - `SetUnhandledExceptionFilter`
 > - `RegisterApplicationRecoveryCallback`
 > - `RegisterApplicationRestart`
 
@@ -615,7 +630,7 @@ __except (filter-expression) {
 
 #### 访问控制模型
 
-> 参考 [Access Tokens](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens) 和 [Security Descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors)
+> 参考 [Access Tokens](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens)、[Security Descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors)、[Privileges](https://learn.microsoft.com/en-us/windows/win32/secauthz/privileges)
 
 - 访问令牌 (Access Token)
 
@@ -625,7 +640,7 @@ __except (filter-expression) {
   - group SIDs
   - logon SID
   - list of restricting SIDs
-  - list of the privileges
+  - list of the privileges (注意 privileges 与 access right 区别)
   - default DACL
   - 是否为模拟令牌
   - 其他
@@ -641,23 +656,21 @@ __except (filter-expression) {
 - 访问控制列表 (Access Control Lists)
 
   - 访问控制表项 (Access Control Entries)
-    - trustee SID
-    - access mask
-    - type flag
     - inherit flags
+    - trustee SID
+    - type flag
+    - access mask
+      - Generic Access Rights：被映射到 Object-specific Access Right
+      - SACL Access Right：访问对象 SACL 的权限
+      - Standard Access Rights：用于控制对对象本身的操作
+        - `DELETE`
+        - `READ_CONTROL`
+        - `SYNCHRONIZE`
+        - `WRITE_DAC`
+        - `WRITE_OWNER`
+      - Object-specific Access Right：针对不同类型对象的特殊操作的权限
 
 ![acess mask format](./images/access_mask_format_.png)
-
-- 访问权限 (Access Right)
-  - Generic Access Rights：被映射到 Object-specific Access Right
-  - SACL Access Right：访问对象 SACL 的权限
-  - Standard Access Rights：用于控制对对象本身的操作
-    - `DELETE`
-    - `READ_CONTROL`
-    - `SYNCHRONIZE`
-    - `WRITE_DAC`
-    - `WRITE_OWNER`
-  - Object-specific Access Right：针对不同类型对象的特殊操作的权限
 
 ### 文件系统
 
