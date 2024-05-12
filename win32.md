@@ -23,6 +23,8 @@
     - [访问控制](#访问控制)
       - [隔离性](#隔离性)
       - [访问控制模型](#访问控制模型)
+      - [强制可信控制](#强制可信控制)
+      - [用户访问控制](#用户访问控制)
     - [文件系统](#文件系统)
     - [注册表](#注册表)
     - [IPC 机制](#ipc-机制)
@@ -376,7 +378,7 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 12. 环境变量 PATH
 
 > - `LoadLibrary`
-> - `LoadLibraryEx`：可设置修改标准搜索路径、仅加载资源数据，通常不能与`LoadLibrary`混用
+> - `LoadLibraryEx`：可设置修改标准搜索路径、仅加载资源数据，通常对同一 dll 不能与 `LoadLibrary` 混用
 > - `GetProcAddress`
 > - `FreeLibrary`
 > - `FreeLibraryAndExitThread`
@@ -487,9 +489,10 @@ std::string GetLastErrorAsString() {
         NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0,
         NULL);
 
-
-    std::string message(messageBuffer, size);
-    LocalFree(messageBuffer);
+    if (size) {
+      std::string message(messageBuffer, size);
+      LocalFree(messageBuffer);
+    }
 
     return message;
 }
@@ -605,9 +608,16 @@ __except (filter-expression) {
 
 ### 访问控制
 
-#### 隔离性
+> 参考
+>
+> - [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
+> - [Access Tokens](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens)
+> - [Security Descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors)
+> - [Mandatory Integrity Control](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control)
+> - [Windows Integrity Mechanism Design](<https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/bb625963(v=msdn.10)>)
+> - [Privileges](https://learn.microsoft.com/en-us/windows/win32/secauthz/privileges)
 
-> 参考 [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
+#### 隔离性
 
 ![session](./images/session.png)
 
@@ -628,37 +638,42 @@ __except (filter-expression) {
   - ScreenSaver 用于屏保
   - windows, menu, hooks 仅能在同一 Desktop 内部访问
 
-#### 访问控制模型
+- UIPI：限制低可信级别对高可信级别的访问机制
+  - 验证窗口句柄
+  - 发送窗口消息（API 调用返回成功，消息被静默丢弃）
+  - Hook 窗口消息
+  - 任何形式注入 dll
 
-> 参考 [Access Tokens](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens)、[Security Descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors)、[Privileges](https://learn.microsoft.com/en-us/windows/win32/secauthz/privileges)
+#### 访问控制模型
 
 - 访问令牌 (Access Token)
 
+  - integrity SIDs
   - owner SID
   - primary group SID
   - user SID
   - group SIDs
   - logon SID
   - list of restricting SIDs
-  - list of the privileges (注意 privileges 与 access right 区别)
   - default DACL
-  - 是否为模拟令牌
-  - 其他
+  - impersonation levels
+  - list of the privileges
+  - others...
 
 - 安全描述符 (Security Descriptor)
 
   - owner SID
   - primary group SID
-  - DACL
-  - SACL
-  - 一组控制位，用于限定安全描述符或其单个成员的含义
+  - DACL 负责控制访问权限
+  - SACL 负责生成审核记录
+  - others...
 
 - 访问控制列表 (Access Control Lists)
 
   - 访问控制表项 (Access Control Entries)
-    - inherit flags
     - trustee SID
     - type flag
+    - inherit flags
     - access mask
       - Generic Access Rights：被映射到 Object-specific Access Right
       - SACL Access Right：访问对象 SACL 的权限
@@ -671,6 +686,32 @@ __except (filter-expression) {
       - Object-specific Access Right：针对不同类型对象的特殊操作的权限
 
 ![acess mask format](./images/access_mask_format_.png)
+
+- 访问控制流程
+  1. 若没有 DACL，则允许所有访问
+  2. 若存在 DACL，则使用第一个匹配的 ACE 访问控制，若没有匹配的 ACE 则拒绝所有访问
+
+#### 强制可信控制
+
+- 系统有四种可信级别 (integrity level): low, medium, high, system
+
+- 大多数系统服务为 system，管理员启动的进程为 high，标准用户启动的进程为 medium，除非 exe 文件设置了 low
+
+- 可信级别以 integrity SIDs 的形式存储在 access token 里
+
+- 强制策略以 ACE 的形式存储在 security descriptors 的 SACL 里
+
+- 可信级别校验发生在 DACL 校验之前，默认拒绝较低可信级别的写入访问
+
+- 某些系统特权 (privileges) 仅允许高可信级别进程运行
+
+#### 用户访问控制
+
+用户访问控制 (UAC) 让标准用户不用重新登录就能使用管理员权限
+
+- Administrator Broker Model：使用 `ShellExecute` 创建管理员权限的新进程
+- Operating System Service Model：使用 IPC 与 Service 通信
+- Elevated Task Model：使用 Task Scheduler 服务运行应用程序
 
 ### 文件系统
 
