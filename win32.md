@@ -10,10 +10,12 @@
     - [线程管理](#线程管理)
       - [线程创建](#线程创建)
       - [线程终止](#线程终止)
-      - [上下文切换](#上下文切换)
-      - [基本优先级](#基本优先级)
-      - [动态优先级](#动态优先级)
-      - [服务质量](#服务质量)
+      - [线程调度](#线程调度)
+        - [上下文切换](#上下文切换)
+        - [基本优先级](#基本优先级)
+        - [动态优先级](#动态优先级)
+        - [服务质量](#服务质量)
+        - [CPU 关联性](#cpu-关联性)
       - [线程同步](#线程同步)
     - [动态链接](#动态链接)
     - [虚拟内存](#虚拟内存)
@@ -46,9 +48,9 @@
 
 - 操作系统提供了“进程”与“线程”的概念，简化了应用对计算机 CPU 和内存的使用以实现“资源计算”。
 
-- 进程是系统进行资源分配的基本单位，一个进程具有虚拟地址空间、可执行代码、系统对象的句柄、安全上下文、唯一进程标识符、环境变量、优先级类、最小和最大工作集大小，以及至少一个执行线程。
+- 进程是系统进行资源分配的基本单位，一个进程具有虚拟地址空间、可执行代码、系统对象的句柄、异常处理程序、安全上下文、唯一进程标识符、环境变量、优先级类、最小和最大工作集大小，以及至少一个执行线程。
 
-- 线程是系统进行调度执行的基本单位，同一进程中所有线程共享虚拟地址空间和系统资源，此外每个线程都维护自己的异常处理程序、调度优先级、线程本地存储、唯一的线程标识符和线程上下文。
+- 线程是系统进行调度执行的基本单位，同一进程中所有线程共享虚拟地址空间和系统资源，此外每个线程都维护自己的调度优先级、线程本地存储、唯一的线程标识符和线程上下文。
 
 ### 进程管理
 
@@ -212,7 +214,9 @@
 > - `TerminateThread`
 > - `GetExitCodeThread`
 
-#### 上下文切换
+#### 线程调度
+
+##### 上下文切换
 
 - 上下文切换原因
   - 时间片到期，大概 20 ms
@@ -227,7 +231,7 @@
 > - `GetThreadTimes`
 > - `GetProcessTimes`
 
-#### 基本优先级
+##### 基本优先级
 
 |                               | IDLE_PRIORITY_CLASS | BELOW_NORMAL_PRIORITY_CLASS | NORMAL_PRIORITY_CLASS | ABOVE_NORMAL_PRIORITY_CLASS | HIGH_PRIORITY_CLASS | REALTIME_PRIORITY_CLASS |
 | ----------------------------- | ------------------- | --------------------------- | --------------------- | --------------------------- | ------------------- | ----------------------- |
@@ -248,7 +252,7 @@
 > - `GetThreadPriority`
 > - `SetThreadPriority`
 
-#### 动态优先级
+##### 动态优先级
 
 - 动态优先级用来最终确认线程的执行优先级
 - 系统在以下情况会动态提升基本优先级 0 - 15 的线程
@@ -256,6 +260,7 @@
   - 当窗口接受到用户输入时，提升窗口所属的线程的优先级
   - 当线程同步等待的条件被满足时，提升该线程的优先级
   - 优先级反转：高优先级线程等待低优先级线程的资源，而中优先级线程一直抢占低优先级线程，导致高优先级线程被中优先级线程阻塞。系统会自动检测这种情况，并动态提升低优先级线程至所有等待它的线程中的最大优先级
+  - 当低优先级线程长时间处于饥饿状态，提升该线程的优先级
 - 动态提升之后，动态优先级每个时间片降低 1 级，且绝不低于基本优先级
 
 > - `GetProcessPriorityBoost`
@@ -263,9 +268,31 @@
 > - `GetThreadPriorityBoost`
 > - `SetThreadPriorityBoost`
 
-#### 服务质量
+##### 服务质量
 
 服务质量 (Quality of Service) 会影响线程运行的处理器核心和功率，具体见 [QoS](https://learn.microsoft.com/en-us/windows/win32/procthread/quality-of-service)
+
+##### CPU 关联性
+
+> 参考 [Processor Groups](https://learn.microsoft.com/en-us/windows/win32/procthread/processor-groups)
+
+利用 CPU 关联性可以限制进程或线程运行在制定的 CPU 上
+
+- 操作系统可包含多个物理处理器 (physical processor)
+- 物理处理器可包含多个核心 (core)
+- 核心可包含多个逻辑处理器 (logical processor)
+- 每 64 个逻辑处理器为一个处理器组 (processor group)
+- Windows 11 之后线程可以跨多个处理器组，默认优先在主组中运行
+
+> - `GetProcessAffinityMask`
+> - `SetProcessAffinityMask`
+> - `GetThreadAffinityMask`
+> - `SetThreadAffinityMask`
+> - `GetProcessGroupAffinity`
+> - `GetThreadGroupAffinity`
+> - `SetThreadGroupAffinity`
+> - `SetThreadIdealProcessor`
+> - `SetThreadIdealProcessorEx`
 
 #### 线程同步
 
