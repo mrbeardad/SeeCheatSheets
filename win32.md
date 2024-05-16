@@ -105,10 +105,10 @@
 
 - 子进程**可以**继承父进程如下属性
 
-  - 内核对象句柄
   - 环境变量
   - 当前目录
   - 控制台
+  - 内核对象句柄
   - 错误模式
   - 进程 CPU 关联性
   - 作业
@@ -167,7 +167,7 @@
   - `JOBOBJECT_NOTIFICATION_LIMIT_INFORMATION`
 - 监视进程状态
   - `JOBOBJECT_ASSOCIATE_COMPLETION_PORT`
-- 资源使用计算
+- 资源使用情况
   - `JOBOBJECT_BASIC_ACCOUNTING_INFORMATION`
   - `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION`
 - 作业对象销毁时终止作业内所有进程
@@ -191,7 +191,7 @@
 - 线程栈最大默认 1M，可通过控制编译时链接器参数或运行时 `CreateThread` 参数来改变，大小向上取整 1M
 
 > - `CreateThread`：安全属性、栈大小、暂停状态
-> - `CreateRemoteThread`
+> - `CreateRemoteThread`: 在其他进程中创建线程
 > - `OpenThread`
 
 #### 线程终止
@@ -466,13 +466,15 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
     - 将对应的页面从其后备存储器中加载到内存
     - 当内存中无空闲页面时，根据某种缓存驱逐策略来选择使用页面，若为脏页则先将其冲刷到其后备存储器再使用
 
-- 工作集
+- 工作集 (Working Set)
   - 每个进程维护一个工作集，管理驻留在内存中的页面
   - 最小工作集大小默认 50 个页面
   - 最大工作集大小默认 345 个页面
 
 > - `GetSystemInfo`：CPU 硬件信息
-> - `GlobalMemoryStatusEx`
+> - `GetPerformanceInfo`: 系统运行时性能信息
+> - `GlobalMemoryStatusEx`: 系统内存使用情况
+> - `GetProcessMemoryInfo`: 进程内存使用情况
 > - `VirtualQuery`
 > - `VirtualAlloc`：控制内存页面状态，申请[大页内存](https://learn.microsoft.com/en-us/windows/win32/memory/large-page-support)
 > - `VirtualFree`
