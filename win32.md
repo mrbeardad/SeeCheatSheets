@@ -22,14 +22,17 @@
     - [异常处理](#异常处理)
   - [IO 系统](#io-系统)
     - [句柄表](#句柄表)
+    - [命名空间](#命名空间)
     - [访问控制](#访问控制)
       - [隔离性](#隔离性)
       - [访问控制模型](#访问控制模型)
       - [强制可信控制](#强制可信控制)
       - [用户访问控制](#用户访问控制)
     - [文件系统](#文件系统)
+      - [磁盘](#磁盘)
       - [文件](#文件)
       - [路径](#路径)
+      - [读写](#读写)
     - [注册表](#注册表)
     - [IPC 机制](#ipc-机制)
   - [窗口系统](#窗口系统)
@@ -93,7 +96,6 @@
 > - `GetCurrentProcess`：伪句柄，仅进程内有效，使用 `DuplicateHandle` 转换为真句柄
 > - `GetCurrentProcessId`
 > - `EnumProcesses`
-> - `WTSEnumerateProcesses`
 > - `GetCommandLine`
 > - `CommandLineToArgv`
 > - `GetEnvironmentStrings`：内容形如 `Var0=Value0\0Var1=Value1\0\0`，
@@ -197,7 +199,7 @@
 > - `CreateRemoteThread`: 在其他进程中创建线程
 > - `OpenThread`
 > - `GetThreadId`
-> - `GetCurrentThread`
+> - `GetCurrentThread`：伪句柄，仅进程内有效，使用 `DuplicateHandle` 转换为真句柄
 > - `GetCurrentThreadId`
 
 #### 线程终止
@@ -416,6 +418,7 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 > - `FreeLibrary`
 > - `FreeLibraryAndExitThread`
 > - `__ImageBase`：由链接器创建的变量，位于该模块的基地址
+> - `EnumProcessModules`
 > - `GetModuleHandle`：不递增引用计数
 > - `GetModuleHandleEx`：默认递增引用计数，可设置 dll 直到进程终止前绝不卸载
 > - `GetModuleBaseName`
@@ -635,8 +638,6 @@ __except (filter-expression) {
   - 1、2、3 保留用作标准输入输出
 - 内核对象指针
   - 名字
-    - 全局命名空间：`Global\`前缀，服务会话（sesson 0）默认
-    - 会话命名空间：`Local\`前缀，用户会话默认
   - 引用计数
   - 安全描述符
   - 其他...
@@ -646,6 +647,26 @@ __except (filter-expression) {
 > - `GetHandleInformation`
 > - `SetHandleInformation`
 > - `DuplicateHandle`
+> - `CloseHandle`
+
+### 命名空间
+
+大多数内核对象都可以通过名字访问，所有对象都实际存在于底层 NT 命名空间内，但不同类型的对象名字处于不同的子命名空间内。可以使用 [WinObj](https://learn.microsoft.com/en-us/sysinternals/downloads/winobj) 查看详细内容。
+
+- 与同步相关的内核对象，如 `Event`, `Mutex`, `Semaphore` 等
+
+  - 不同会话中的对象默认位于不同命名空间
+    - 服务会话（session 0）中的对象名字位于 `\BaseNamedObjects`
+    - 终端会话（如 session 1）中的对象名字位于 `\Sessions\1\BaseNamedObjects`
+  - 这些命名空间内都存在两个符号链接
+    - `Global` 链接到 `\BaseNamedObjects`，用于跨会话共享
+    - `Local` 链接到 `\Session\1\BaseNamedObjects`，用于不跨会话共享
+
+- 与文件相关的内核对象
+  - 文件路径名均位于 `\GLOBAL??`
+  - 其内包含
+    - `C:` 链接到 `\Device\HarddiskVolume3`
+    - `GLOBALROOT` 链接到 `\`
 
 ### 访问控制
 
@@ -758,6 +779,28 @@ __except (filter-expression) {
 
 > 参考 [File Management](https://learn.microsoft.com/en-us/windows/win32/fileio/file-management)
 
+#### 磁盘
+
+| 特性         | MBR 分区表                           | GPT 分区表      |
+| ------------ | ------------------------------------ | --------------- |
+| 适用固件     | BIOS                                 | UEIF            |
+| 分区大小     | 最大支持近 2TB                       | 最大支持近 18EB |
+| 主分区       | 最多只能有 3 个主分区与 1 个扩展分区 | 全部是主分区    |
+| 引导加载器   | 在 MBR 头部以及主分区头部            | 在 ESP 中       |
+| 分区表健壮性 | 无校验、 无备份                      | 有校验、有备份  |
+
+![mbr](./images/MBR.png)
+
+![gpt](./images/GPT.jpg)
+
+> - `FindFirstVolume`
+> - `FindNextVolume`
+> - `FindVolumeClose`
+> - `GetVolumeInformation`
+> - `GetDiskFreeSpaceEx`
+> - `IDiskQuotaControl`
+> - `IEnumDiskQuotaUsers`
+
 #### 文件
 
 - 文件：一个文件由若干个文件流组成，文件流包含了文件的元数据和数据，引用文件流 `file.txt:strm:$DATA`，其中 `$DATA` 为流类型（可忽略），可能需要添加路径 `./` 以防止文件名被解析为盘符
@@ -783,11 +826,38 @@ __except (filter-expression) {
     - 即目录项，每个硬链接指向单独的文件流记录文件名和属性
     - 不可跨文件系统
   - 软连接 (Junctions)
-    - 重解析点，仅可指向目录
+    - 重解析点（类似挂载），仅可指向目录
     - 可跨本地文件系统，不可跨网络文件系统
   - 符号链接
-    - 记录路径
+    - 重解析点
     - 可跨网络文件系统
+
+> - `FindFirstFile`
+> - `FindNextFile`
+> - `FindFirstStream`
+> - `FindNextStream`
+> - `FindClose`
+> - `GetFileInformationByHandle`
+> - `SetFileInformationByHandle`
+> - `GetFileAttributes`
+> - `SetFileAttributes`
+> - `GetFileType`
+> - `GetBinaryType`
+> - `GetFileTime`
+> - `SetFileTime`
+> - `GetFileSize`
+> - `CreateFile`
+> - `DeleteFile`：直到最后一个文件句柄被关闭才真正删除文件，而在此之前文件就无法被打开了
+> - `CopyFile`
+> - `CopyFileExA`：可以获取拷贝进度
+> - `MoveFile`：目标路径不能已存在
+> - `MoveFileEx`：可以获取移动进度
+> - `ReplaceFile`：目标路径必须已存在，仅覆盖数据文件流和少量属性
+> - `CreateDirectory`
+> - `RemoveDirectory`
+> - `ReadDirectoryChangesW`
+> - `CreateHardLink`
+> - `CreateSymbolicLink`
 
 #### 路径
 
@@ -815,24 +885,30 @@ __except (filter-expression) {
 
   - Win32 文件命名空间：如 `\\?\C:\file.txt`
 
-    - 限制最大长度大概为 32767，包含末尾 `NUL`
+    - 限制最大长度大概为 32767，包含末尾 `NUL`，但单个文件名不能超过 255
     - 不能使用 `.` `..` `/`，且必须为完全限定路径
 
   - Win32 设备命名空间：如 `\\.\PhysicalDrive0`
 
     - 直接指定 NT 命名空间中的 `GLOBAL??` 里的设备对象
 
-  - 底层 NT 命名空间：如 `\Device\HarddiskVolume6`
-
-    - Win32 命名空间其实是 NT 命名空间中的子集 `\GLOBAL??`
-    - `\GLOBAL??` 里包含了各种设备文件的符号链接对象，比如 `C:` 就是其中一个符号链接对象可能指向如 `\Device\HarddiskVolume6`
-
-> - `CreateDirectory`
-> - `RemoveDirectory`
-> - `GetCurrentDirectory`
-> - `SetCurrentDirectory`
+> - `GetLongPathName`
+> - `GetShortPathName`
 > - `GetFullPathName`
-> - `ReadDirectoryChangesW`
+> - `GetTempPath2`：返回路径长度最大 MAX_PATH+1，不会校验路径是否已存在
+> - `GetTempFileName`：自动或手动创建唯一文件名 `<prefix><uuuu>.TMP`
+
+#### 读写
+
+创建文件对象时，会包含一个数据文件流的偏移量，称为文件指针，每次调用读写接口都会自动更新指针位置。
+
+> - `ReadFile`
+> - `ReadFileEx`
+> - `WriteFile`
+> - `WriteFileEx`
+> - `FlushFileBuffers`
+> - `SetFilePointer`
+> - `SetEndOfFile`
 
 ### 注册表
 
