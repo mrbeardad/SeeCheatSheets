@@ -28,12 +28,12 @@
       - [访问控制模型](#访问控制模型)
       - [强制可信控制](#强制可信控制)
       - [用户访问控制](#用户访问控制)
+    - [注册表](#注册表)
     - [文件系统](#文件系统)
       - [磁盘](#磁盘)
       - [文件](#文件)
       - [路径](#路径)
       - [读写](#读写)
-    - [注册表](#注册表)
     - [IPC 机制](#ipc-机制)
   - [窗口系统](#窗口系统)
     - [渲染流程](#渲染流程)
@@ -686,7 +686,7 @@ __except (filter-expression) {
 - Session：由单个用户登录会话产生的所有进程和内核对象组成
 
   - Session 0 由系统创建专门用于运行服务 (Services)
-  - 内核对象命名空间分为 Global 和 Local，前者可跨多个会话，后者仅用于单个会话内部使用
+  - 不同会话的内核对象的默认命名空间不同
 
 - Window Station：由一个剪切板、一张原子表和若干 desktop 组成
 
@@ -775,9 +775,64 @@ __except (filter-expression) {
 - Operating System Service Model：使用 IPC 与 Service 通信
 - Elevated Task Model：使用 Task Scheduler 服务运行应用程序
 
+### 注册表
+
+注册表是 Windows 用来存储配置的层次结构数据库(B-Tree)，支持事务。
+
+- Key: Subkey 和 Value 的集合
+  - Name: 不可包含 `\`，忽略大小写
+- Value: 包含数据的记录
+
+  - Name: 可以包含 `\`，忽略大小写
+  - Type
+  - Data
+
+- Computer
+
+  - **HKEY_LOCAL_MACHINE**: 系统全局配置
+
+    - **Software**: 软件配置，32 位程序访问该 Key 会被重定向到 **WOW6432Node**
+
+      - **CLASS**: 文件扩展名配置
+
+    - **WOW6432Node**: 具体见 [Registry Keys Affected by WOW64](https://learn.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys)
+
+  - **HKEY_CURRENT_USER**: 当前用户配置（漫游）
+
+    - **Software**: 软件配置，不会重定向 32 位程序
+
+      - **CLASS**: 文件扩展名配置
+
+    - **Environment**: 用户环境变量
+
+  - **HKEY_CURRENT_USER_LOCAL_SETTINGS**: 当前用户配置（不漫游）
+  - **HKEY_USERS**: 所有用户配置实际所在
+
+> - `RegEnumKeyEx`
+> - `RegQueryInfoKey`
+> - `RegGetKeySecurity`
+> - `RegNotifyChangeKeyValue`
+> - `RegOpenKeyExW`
+> - `RegOpenCurrentUser`：打开当前模拟用户的 **HKEY_CURRENT_USER**
+> - `RegOpenUserClassesRoot`：打开当前模拟用户的 **HKEY_CURRENT_USER\Software\Classes** 和 **HKEY_LOCAL_MACHINE\Software\Classes** 合并后的视图，注意需要模拟用户配置已被加载（比如用户登录），使用 `LoadUserProfile` 手动加载
+> - `RegCreateKeyEx`
+> - `RegDeleteKey`
+> - `RegCloseKey`
+> - `RegFlushKey`
+> - `RegQueryValueEx`
+> - `RegQueryMultipleValues`
+> - `RegSetValueEx`
+> - `RegDeleteValue`
+> - `RegSaveKeyEx`：将注册表条目保存到文件，主要这不同于 `.reg` 文件（用 `regedit.exe` 来导入）
+> - `RegLoadKey`：不覆盖已存在的 key，可以用 `RegUnLoadKey` 还原
+> - `RegReplaceKey`：覆盖已存在的 key
+> - `RegRestoreKey`
+
 ### 文件系统
 
 > 参考 [File Management](https://learn.microsoft.com/en-us/windows/win32/fileio/file-management)
+
+NTFS 支持事务
 
 #### 磁盘
 
@@ -808,6 +863,7 @@ __except (filter-expression) {
   - 唯一对象标识
   - 安全描述符
   - 文件名和属性
+    - 文件名
     - 日期时间（创建、访问、修改）
     - 文件大小（使用、分配）
     - 只读
@@ -861,14 +917,14 @@ __except (filter-expression) {
 
 #### 路径
 
-- 文件名限制
+- 文件名
 
   - 不能包含特殊字符：`<` `>` `:` `"` `/` `\` `|` `?` `*` `NUL` 控制字符等
   - 不能使用保留名称：CON, PRN, AUX, NUL, COM0, LPT0 等，即使如 NUL.txt 带扩展名也不行
   - 不能以 `.` 或 `SPC` 结尾
   - 默认忽略大小写
 
-- 路径名限制
+- 路径名
 
   - 路径是以 `\` 分隔组件名（卷、目录、文件）的字符串
 
@@ -909,10 +965,6 @@ __except (filter-expression) {
 > - `FlushFileBuffers`
 > - `SetFilePointer`
 > - `SetEndOfFile`
-
-### 注册表
-
-<!-- TODO: 注册表 -->
 
 ### IPC 机制
 
