@@ -11,9 +11,9 @@ package foo.bar;
 
 import "google/protobuf/any.proto";
 
-// 编号以 1 开头，编号作为字段标识不能重用，特别是更改协议字段的时候
+// 编号以 1 开头，为保证二进制兼容，编号作为字段标识不能更改或重用
 message Types {
-  // 保留字段，用于更改协议删除字段后防止编号被复用
+  // 保留字段，用于更改协议删除字段后防止编号被重用
   reserved 2, 15, 9 to 11;
   reserved "foo", "bar";
 
@@ -31,14 +31,15 @@ message Types {
   string string = 14;
   bytes string = 15;
 
-  repeated string array = 19;
-  map<string, Project> map = 20; // 键类型只能是 integral or string，且 map 不能为 repeated
+  optional string opt = 16; // Message 字段默认可选，未设置的字段使用默认值
+  repeated string array = 16;
+  map<string, Project> map = 17; // 键类型只能是 integral or string，且 map 不能为 repeated
 
-  google.protobuf.Any any = 16;
   oneof variant {
-    int32 foo = 17;
-    string bar = 18;
+    int32 foo = 18;
+    string bar = 19;
   }
+  google.protobuf.Any any = 16;
 }
 
 // 枚举值以 0 开头，默认不能存在同值枚举名

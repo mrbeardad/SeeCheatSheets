@@ -35,6 +35,7 @@
       - [路径](#路径)
       - [读写](#读写)
     - [IPC 机制](#ipc-机制)
+      - [管道](#管道)
   - [窗口系统](#窗口系统)
     - [渲染流程](#渲染流程)
     - [窗口结构](#窗口结构)
@@ -341,10 +342,12 @@
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C" { // 使用默认调用约定，且禁用名字篡改
 #endif
 
-MYDLL_API int __stdcall my_func(LPCWSTR lpszMsg);
+MYDLL_API int my_func1(LPCWSTR lpszMsg);
+
+MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约定和名字篡改
 
 #ifdef __cplusplus
 } // extern "C"
@@ -417,7 +420,7 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 > - `GetProcAddress`
 > - `FreeLibrary`
 > - `FreeLibraryAndExitThread`
-> - `__ImageBase`：由链接器创建的变量，位于该模块的基地址
+> - `EXTERN_C IMAGE_DOS_HEADER __ImageBase;`：由链接器创建的变量，位于该模块的基地址
 > - `EnumProcessModules`
 > - `GetModuleHandle`：不递增引用计数
 > - `GetModuleHandleEx`：默认递增引用计数，可设置 dll 直到进程终止前绝不卸载
@@ -968,7 +971,20 @@ NTFS 支持事务
 
 ### IPC 机制
 
-<!-- TODO: IPC -->
+#### 管道
+
+- 匿名管道：创建后只能通过继承句柄的方式进行通信
+
+> - `CreatePipe`
+> - `GetStdHandle`
+> - `SetStdHandle`
+
+- 命名管道：
+
+> - `CreateNamedPipe`：服务端创建命名管道
+> - `ConnectNamedPipe`：服务端接受客户端连接
+> - `CreateFile`：客户端连接服务端命名管道
+> - `CallNamedPipe`：客户端连接服务端命名管道同时写入、读取、关闭管道连接
 
 ## 窗口系统
 
