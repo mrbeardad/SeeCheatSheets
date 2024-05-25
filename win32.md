@@ -15,7 +15,7 @@
         - [基本优先级](#基本优先级)
         - [动态优先级](#动态优先级)
         - [服务质量](#服务质量)
-        - [CPU 关联性](#cpu-关联性)
+        - [CPU 亲和性](#cpu-亲和性)
       - [线程同步](#线程同步)
     - [动态链接](#动态链接)
     - [虚拟内存](#虚拟内存)
@@ -36,6 +36,10 @@
       - [读写](#读写)
     - [IPC 机制](#ipc-机制)
       - [管道](#管道)
+      - [套接字](#套接字)
+      - [数据拷贝](#数据拷贝)
+      - [共享内存](#共享内存)
+      - [总结](#总结)
   - [窗口系统](#窗口系统)
     - [渲染流程](#渲染流程)
     - [窗口结构](#窗口结构)
@@ -84,7 +88,7 @@
 
 - exe 搜索路径（指定无路径的文件名时）
 
-1. 进程 exe 所在目录
+1. 进程 exe 文件所在目录
 2. 进程当前目录
 3. 32 位 Windows 系统目录（`C:\Windows\System32`）
 4. 16 位 Windows 系统目录（`C:\Windows\System`）
@@ -281,7 +285,7 @@
 
 服务质量 (Quality of Service) 会影响线程运行的处理器核心和功率，具体见 [QoS](https://learn.microsoft.com/en-us/windows/win32/procthread/quality-of-service)
 
-##### CPU 关联性
+##### CPU 亲和性
 
 > 参考 [Processor Groups](https://learn.microsoft.com/en-us/windows/win32/procthread/processor-groups)
 
@@ -423,7 +427,7 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 > - `EXTERN_C IMAGE_DOS_HEADER __ImageBase;`：由链接器创建的变量，位于该模块的基地址
 > - `EnumProcessModules`
 > - `GetModuleHandle`：不递增引用计数
-> - `GetModuleHandleEx`：默认递增引用计数，可设置 dll 直到进程终止前绝不卸载
+> - `GetModuleHandleEx`：默认递增引用计数
 > - `GetModuleBaseName`
 > - `GetModuleFileName`
 > - `QueryFullProcessImageName`：用来获取其它进程的 exe 文件路径更加高效且准确
@@ -486,9 +490,15 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
        3. 当内存中无空闲页面时，根据某种缓存驱逐策略来选择使用页面，若为脏页则先将其冲刷到其后备存储器再使用
 
 - 工作集 (Working Set)
+
   - 每个进程维护一个工作集，管理驻留在内存中的页面
   - 最小工作集大小默认 50 个页面
   - 最大工作集大小默认 345 个页面
+
+- 内存池 (Memory Pool)
+  - 内核使用的内存分为两种
+  - paged pool: 可交换出物理内存。单处理器系统有 3 个，多处理器系统有 5 个
+  - nonpaged pool: 驻留在物理内存中
 
 > - `GetSystemInfo`：CPU 硬件信息
 > - `GetPerformanceInfo`: 系统运行时性能信息
@@ -673,23 +683,16 @@ __except (filter-expression) {
 
 ### 访问控制
 
-> 参考
->
-> - [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
-> - [Access Tokens](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens)
-> - [Security Descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors)
-> - [Mandatory Integrity Control](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control)
-> - [Windows Integrity Mechanism Design](<https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/bb625963(v=msdn.10)>)
-> - [Privileges](https://learn.microsoft.com/en-us/windows/win32/secauthz/privileges)
-
 #### 隔离性
+
+> 参考 [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
 
 ![session](./images/session.png)
 
 - Session：由单个用户登录会话产生的所有进程和内核对象组成
 
   - Session 0 由系统创建专门用于运行服务 (Services)
-  - 不同会话的内核对象的默认命名空间不同
+  - 不同会话的部分内核对象的默认命名空间不同
 
 - Window Station：由一个剪切板、一张原子表和若干 desktop 组成
 
@@ -703,34 +706,39 @@ __except (filter-expression) {
   - ScreenSaver 用于屏保
   - windows, menu, hooks 仅能在同一 Desktop 内部访问
 
-- UIPI：限制低可信级别对高可信级别的访问机制
-  - 验证窗口句柄
-  - 发送窗口消息（API 调用返回成功，消息被静默丢弃）
-  - Hook 窗口消息
-  - 任何形式注入 dll
-
 #### 访问控制模型
+
+> 参考
+>
+> - [Access Tokens](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens)
+> - [Security Descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors)
+> - [Access Control Lists](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-control-lists)
+> - [Access Control Entries](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-control-entries)
+> - [Access Rights and Access Masks](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-rights-and-access-masks)
+> - [Security Identifiers](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-identifiers)
+> - [Privileges](https://learn.microsoft.com/en-us/windows/win32/secauthz/privileges)
+> - [Client Impersonation](https://learn.microsoft.com/en-us/windows/win32/secauthz/client-impersonation)
 
 - 访问令牌 (Access Token)
 
-  - integrity SIDs
-  - owner SID
-  - primary group SID
   - user SID
   - group SIDs
   - logon SID
-  - list of restricting SIDs
+  - privileges LUIDs
+  - owner SID
+  - primary group SID
+  - integrity SIDs
   - default DACL
-  - impersonation levels
-  - list of the privileges
+  - restricting SIDs
+  - whether impersonation
   - others...
 
 - 安全描述符 (Security Descriptor)
 
   - owner SID
   - primary group SID
-  - DACL 负责控制访问权限
-  - SACL 负责生成审核记录
+  - DACL
+  - SACL
   - others...
 
 - 访问控制列表 (Access Control Lists)
@@ -752,23 +760,42 @@ __except (filter-expression) {
 
 ![acess mask format](./images/access_mask_format_.png)
 
-- 访问控制流程
+- 安全对象的访问控制流程
   1. 若没有 DACL，则允许所有访问
   2. 若存在 DACL，则使用第一个匹配的 ACE 访问控制，若没有匹配的 ACE 则拒绝所有访问
+  3. 根据 SACL 是否记录该访问尝试
 
 #### 强制可信控制
 
-- 系统有四种可信级别 (integrity level): low, medium, high, system
+> 参考
+>
+> - [Mandatory Integrity Control](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control)
+> - [Windows Integrity Mechanism Design](<https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/bb625963(v=msdn.10)>)
+> - [Allow UIAccess](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/security-policy-settings/user-account-control-allow-uiaccess-applications-to-prompt-for-elevation-without-using-the-secure-desktop)
 
-- 大多数系统服务为 system，管理员启动的进程为 high，标准用户启动的进程为 medium，除非 exe 文件设置了 low
+- 可信级别（integrity level）
 
-- 可信级别以 integrity SIDs 的形式存储在 access token 里
+  - system: 通常为系统服务
+  - high: 通常为管理员权限进程
+  - medium: 通常为标准用户权限进程
+  - low: 通常显式设置了 exe 文件的 security descriptors 或进程的 access token
 
-- 强制策略以 ACE 的形式存储在 security descriptors 的 SACL 里
+- access token 中的 integrity SIDs 表示可信级别
 
-- 可信级别校验发生在 DACL 校验之前，默认拒绝较低可信级别的写入访问
+- security descriptors 中的 SACL 中存储可信级别和强制策略
 
-- 某些系统特权 (privileges) 仅允许高可信级别进程运行
+- ACM: 可信级别校验发生在 DACL 校验之前，默认拒绝较低可信级别的写入访问
+
+- Privileges: 某些系统特权仅允许高可信级别进程运行
+
+- UIPI：限制低可信级别对高可信级别的访问机制
+  - 验证窗口句柄
+  - 发送窗口消息（API 调用返回成功，消息被静默丢弃）
+  - 除非应用程序具有 UIAccess 标志且满足以下条件，则允许对高可信级别进程驱动 UI 自动化
+    - 程序具有可信的数字签名
+    - 程序安装在 `%ProgramFiles%` 或 `%WinDir%` (某些标准用户可写的子目录除外) 目录下
+  - Hook
+  - DLL 注入
 
 #### 用户访问控制
 
@@ -885,10 +912,10 @@ NTFS 支持事务
     - 即目录项，每个硬链接指向单独的文件流记录文件名和属性
     - 不可跨文件系统
   - 软连接 (Junctions)
-    - 重解析点（类似挂载），仅可指向目录
+    - 利用重解析点，仅可指向目录
     - 可跨本地文件系统，不可跨网络文件系统
   - 符号链接
-    - 重解析点
+    - 利用重解析点
     - 可跨网络文件系统
 
 > - `FindFirstFile`
@@ -973,18 +1000,34 @@ NTFS 支持事务
 
 #### 管道
 
-- 匿名管道：创建后只能通过继承句柄的方式进行通信
+- 匿名管道：
+  - 单向通讯
+  - 创建后只能通过子进程继承的方式获取 handle
+  - 见示例 [Creating a Child Process with Redirected Input and Output](https://learn.microsoft.com/en-us/windows/win32/procthread/creating-a-child-process-with-redirected-input-and-output)
 
 > - `CreatePipe`
 > - `GetStdHandle`
 > - `SetStdHandle`
 
 - 命名管道：
+  - 支持单向和双向
+  - 创建后可通过管道名字的方式获取 handle，如 `\\.\pipe\PipeName`
+  - 仅当服务端存在空闲的命名管道实例，客户端才能打开它
+  - 见示例 [Named Pipe Server](https://learn.microsoft.com/en-us/windows/win32/ipc/named-pipe-server-using-overlapped-i-o) 和 [Named Pipe Client](https://learn.microsoft.com/en-us/windows/win32/ipc/named-pipe-client)
 
 > - `CreateNamedPipe`：服务端创建命名管道
-> - `ConnectNamedPipe`：服务端接受客户端连接
+> - `ConnectNamedPipe`：服务端等待连接，客户端可能在此之前就打开管道了，比如在 `CreateNamedPipe` 或 `DisconnectNamedPipe` 之后
+> - `DisconnectNamedPipe`：服务端关闭连接，使客户端句柄失效（客户端仍需要调用 CloseHandle），同时丢弃缓冲区中的数据
 > - `CreateFile`：客户端连接服务端命名管道
-> - `CallNamedPipe`：客户端连接服务端命名管道同时写入、读取、关闭管道连接
+> - `WaitNamedPipe`：客户端等待服务端空闲管道
+
+#### 套接字
+
+#### 数据拷贝
+
+#### 共享内存
+
+#### 总结
 
 ## 窗口系统
 
