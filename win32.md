@@ -1000,6 +1000,31 @@ NTFS 支持事务
 
 #### 套接字
 
+- Server
+
+  1. `WSAStartup`
+  2. `WSASocket`
+  3. `bind`
+  4. `listen` (tcp only)
+  5. `WSAAccept`
+  6. `WSASend`/`WSARecv`
+  7. `WSASendDisconnect` (tcp only)
+  8. `closesocket`
+  9. `WSACleanup`
+
+- Client
+
+  1. `WSAStartup`
+  2. `WSASocket`
+  3. `GetAddrInfoEx`
+  4. `WSAConnect` (implicit `bind`, tcp only)
+  5. `FreeAddrInfoEx`
+  6. `WSASend`/`WSARecv`
+  7. `WSASendDisconnect` (tcp only)
+  8. `WSARecv`
+  9. `closesocket`
+  10. `WSACleanup`
+
 #### 管道
 
 - 匿名管道：
@@ -1025,6 +1050,19 @@ NTFS 支持事务
 
 #### 数据拷贝
 
+> 参考 [Why can't I PostMessage the WM_COPYDATA message](https://devblogs.microsoft.com/oldnewthing/20110916-00/?p=9623)
+
+```cpp
+auto data = COPYDATASTRUCT {
+  .dwData = data_type,
+  .cbData = data_size,
+  .lpData = data_buf,
+};
+
+// WM_COPYDATA 只能使用同步消息发送 API，如 SendMessage, SendMessageTimeout 等
+SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
+```
+
 #### 共享内存
 
 #### 总结
@@ -1044,15 +1082,15 @@ NTFS 支持事务
 
 - 数据拷贝
 
-  - 消息直接发送到对端的窗口消息队列中
+  - 每次发送数据都需要分配缓冲区，且只能同步发送
   - 有缓冲区管理，没有连接管理，不支持流传输
-  - **使用场景：适用于 P2P 模型，而非传统 C/S 模型**
+  - **使用场景：UI 同步逻辑通讯**
 
 - 共享内存
   - 可以直接在共享内存中**构造**消息对象，单次通讯可省去一次拷贝（构造期间需要加锁，通常来说构造数据比拷贝更慢）
-  - 可以直接在共享内存中**访问并处理**消息对象，单次通讯可省去一次拷贝（处理期间需要加锁，通常来说处理数据比拷贝更慢，除非数据很大）
+  - 可以直接在共享内存中**访问并处理**消息对象，单次通讯可省去一次拷贝（处理期间需要加锁，通常来说处理数据比拷贝更慢）
   - 没有缓冲区管理，没有连接管理，没有流传输
-  - **适用场景：传输音视频数据**
+  - **适用场景：传输位图纹理**
 
 ## 窗口系统
 
