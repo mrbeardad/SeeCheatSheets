@@ -88,9 +88,9 @@
 
 ## Coding
 
-- [代码逻辑](coding.md):star:
-- [设计模式](dspt.md):star:
-- [编程语言](langsum.md):star:
+- [代码逻辑](coding.md)
+- [设计模式](dspt.md)
+- [编程语言](langsum.md)
 
   - [C++](cpp.md) & [CMake](cmake.md)
   - [Rust](rust.md)

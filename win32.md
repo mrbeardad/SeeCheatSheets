@@ -40,6 +40,7 @@
       - [数据拷贝](#数据拷贝)
       - [共享内存](#共享内存)
       - [总结](#总结)
+    - [异步 IO](#异步-io)
   - [窗口系统](#窗口系统)
     - [渲染流程](#渲染流程)
     - [窗口结构](#窗口结构)
@@ -68,23 +69,23 @@
 
 #### 进程创建
 
-- `CreateProcess`
+1. `CreateProcess`
 
-  - 对于 GUI 程序，可控制子进程第一次调用 `CreateWindow` 和 `ShowWindow` 的默认参数，如位置、大小、nCmdShow 等
-  - 对于 CUI 程序，可控制子进程的控制台窗口的句柄、位置、大小等
+   - 对于 GUI 程序，可控制子进程第一次调用 `CreateWindow` 和 `ShowWindow` 的默认参数，如位置、大小、nCmdShow 等
+   - 对于 CUI 程序，可控制子进程的控制台窗口的句柄、位置、大小等
 
-- C run-time library (CRT) 入口函数，负责初始化全局变量等，然后调用用户程序入口函数
+2. C Run-Time library (CRT) 入口函数，负责初始化全局变量等，然后调用用户程序入口函数
 
-- 用户程序入口函数
+3. 用户程序入口函数
 
-  - `main`/`wmain` for **SUBSYSTEM:CONSOLE**, 默认自动创建控制台窗口或继承父进程控制台窗口来执行程序
-  - `WinMain`/`wWinMain` for **SUBSYSTEM:WINDOWS**
+   - `main`/`wmain` for **SUBSYSTEM:CONSOLE**, 默认自动创建控制台窗口或继承父进程控制台窗口来执行程序
+   - `WinMain`/`wWinMain` for **SUBSYSTEM:WINDOWS**
 
-  ```cpp
-  int main(int argc, char* argv[], char* env[]);
+   ```cpp
+   int main(int argc, char* argv[], char* env[]);
 
-  int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd);
-  ```
+   int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd);
+   ```
 
 - exe 搜索路径（指定无路径的文件名时）
 
@@ -95,15 +96,15 @@
 5. Windows 系统目录（`C:\Windows`）
 6. 环境变量 PATH
 
-> - `CreateProcess`：注意若执行文件路径包含空格则需要双引号转义
+> - `CreateProcess`
 > - `OpenProcess`
 > - `GetProcessId`
-> - `GetCurrentProcess`：伪句柄，仅进程内有效，使用 `DuplicateHandle` 转换为真句柄
+> - `GetCurrentProcess`：伪句柄，仅进程内有效
 > - `GetCurrentProcessId`
 > - `EnumProcesses`
 > - `GetCommandLine`
 > - `CommandLineToArgv`
-> - `GetEnvironmentStrings`：内容形如 `Var0=Value0\0Var1=Value1\0\0`，
+> - `GetEnvironmentStrings`：格式为 `Var0=Value0\0Var1=Value1\0\0`
 > - `FreeEnvironmentStrings`
 > - `ExpandEnvironmentStrings`：扩展替换变量如 `%USERPROFILE%`
 > - `GetEnvironmentVariable`
@@ -118,9 +119,9 @@
   - 环境变量
   - 当前目录
   - 控制台
-  - 内核对象句柄
+  - 内核对象句柄（句柄具有 `bInheritHandle` 且 `bInheritHandles` 设置 `true`）
   - 错误模式
-  - 进程 CPU 关联性
+  - 进程 CPU 亲和性（`dwCreationFlags` 设置 `INHERIT_PARENT_AFFINITY`）
   - 作业
 
 - 子进程**不可**继承父进程如下属性
@@ -130,10 +131,6 @@
   - 虚拟地址空间
   - 优先级类
 
-- 内核对象句柄继承的必要条件
-  - 句柄具有 `bInheritHandle` 标志
-  - 创建进程时指定 `STARTUPINFO` 中的 `dwFlags` 包含 `STARTF_USESTDHANDLES`
-
 > - `SetHandleInformation`
 > - `UpdateProcThreadAttribute`
 
@@ -141,21 +138,36 @@
 
 - 进程终止原因
 
-  - 进程中最后一个线程终止
   - `ExitProcess`
-    - CRT 默认主线程返回时会做清理并调用 `ExitProcess`
-    - 用户模式中发生的硬件异常或软件异常未被捕获处理时最终会调用 `ExitProcess`
-    - 默认 console control handler 会在接受 CTRL+C or CTRL+BREAK 输入时调用 `ExitProcess`
+
+    - 进程中最后一个线程终止
+    - 用户模式中发生的硬件异常或软件异常未被捕获处理时
+    - 调用 `ExitWindowsEx` 时
+      - 用户注销或关机时
+      - 内核模式中发生的硬件异常或软件异常未被捕获时（蓝屏）
+
   - `TerminateProcess`
-  - 用户注销或关机
-    - 内核模式中发生的硬件异常或软件异常未被捕获时最终会调用 `ExitWindows`
 
 - 进程终止结果
-  - 终止进程内所有线程
-  - 释放进程资源
-  - 关闭内核对象句柄
-  - 设置进程退出码
-  - 触发进程对象
+
+  1. 终止进程内所有线程，并释放线程资源
+  2. 主线程退出前，卸载所有动态模块
+  3. 释放其他进程资源，如关闭内核对象句柄
+  4. 设置进程退出码
+  5. 触发进程对象
+
+- C++ 进程的生命周期
+  - 构造
+    1. `static`
+    2. `thread_local`
+    3. in-block `static`/`thread_local`
+  - 析构（保证按构造顺序逆序销毁）
+    1. `thread_load`
+    2. in-block `thread_local`
+    3. `static`
+    4. in-block `static`
+    5. `std::atexit` 保证在注册时就已初始化的任何 `static` 销毁之前调用
+  - **注意：以上析构函数会在线程退出、模块卸载或进程退出时发生，但无法保证一定会发生**
 
 > - `ExitProcess`
 > - `TerminateProcess`
@@ -211,14 +223,14 @@
 
 - 线程终止原因
 
-  - 线程函数返回
   - `ExitThread`
+    - 线程函数返回
   - `ExitProcess`
   - `TerminateThread`
   - `TerminateProcess`
 
 - 线程终止结果
-  - 释放线程拥有的资源，如 windows, menus, hooks
+  - 释放线程拥有的资源，如 thread-local-storage(STL), windows, menus, hooks
   - 设置线程退出码
   - 触发线程对象
   - 如果线程是进程里唯一的线程，则终止进程
@@ -289,7 +301,7 @@
 
 > 参考 [Processor Groups](https://learn.microsoft.com/en-us/windows/win32/procthread/processor-groups)
 
-利用 CPU 关联性可以限制进程或线程运行在制定的 CPU 上
+利用 CPU 亲和性可以限制进程或线程运行在制定的 CPU 上
 
 - 操作系统可包含多个物理处理器 (physical processor)
 - 物理处理器可包含多个核心 (core)
@@ -563,7 +575,7 @@ std::string GetLastErrorAsString() {
   - `SEM_NOGPFAULTERRORBOX`，不显示 WER 对话框
   - `SEM_NOOPENFILEERRORBOX`，不显示当 `OpenFile` 传入 `OF_PROMPT` 标志且对应文件不存在时的对话框
 
-- 结构化异常处理 (SEH)：使用 SEH 后编译器禁止在同一栈帧中构造 C++ 对象，因为 SEH 的栈展开不会调用析构函数
+- 结构化异常处理 (SEH)：使用 SEH 后编译器禁止在同一栈帧中构造 C++ 对象，**因为 SEH 的栈展开不会调用析构函数**
 
 ```cpp
 /*
@@ -606,7 +618,7 @@ __except (filter-expression) {
 
   - `UnhandledExceptionFilter` 作为最外部的全局 SEH 的过滤表达式
   - 其内部会调用 `SetUnhandledExceptionFilter` 设置的过滤函数
-  - C++ 程序默认设置了该过滤函数，用来过滤 C++ 异常
+  - C++ 程序默认设置了未处理异常过滤函数，用来过滤 C++ 异常
 
 - Window 错误报告 (WER)
   - Dumps: 需要设置 `HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\Windows Error Reporting\LocalDumps`
@@ -853,7 +865,7 @@ __except (filter-expression) {
 > - `RegQueryMultipleValues`
 > - `RegSetValueEx`
 > - `RegDeleteValue`
-> - `RegSaveKeyEx`：将注册表条目保存到文件，主要这不同于 `.reg` 文件（用 `regedit.exe` 来导入）
+> - `RegSaveKeyEx`：将注册表条目保存到文件，注意这不同于 `.reg` 文件（用 `regedit.exe` 来导入）
 > - `RegLoadKey`：不覆盖已存在的 key，可以用 `RegUnLoadKey` 还原
 > - `RegReplaceKey`：覆盖已存在的 key
 > - `RegRestoreKey`
@@ -892,6 +904,7 @@ NTFS 支持事务
 
   - 唯一对象标识
   - 安全描述符
+  - 重解析点
   - 文件名和属性
     - 文件名
     - 日期时间（创建、访问、修改）
@@ -986,7 +999,15 @@ NTFS 支持事务
 
 #### 读写
 
-创建文件对象时，会包含一个数据文件流的偏移量，称为文件指针，每次调用读写接口都会自动更新指针位置。
+- 以下标志会影响缓存行为
+
+  - `FILE_FLAG_RANDOM_ACCESS`
+  - `FILE_FLAG_SEQUENTIAL_SCAN`
+  - `FILE_FLAG_NO_BUFFERING`
+  - `FILE_FLAG_WRITE_THROUGH`
+  - `FILE_ATTRIBUTE_TEMPORARY`
+
+- 创建文件对象时，会包含一个数据文件流的偏移量，称为文件指针，每次调用读写接口都会自动更新指针位置。
 
 > - `ReadFile`
 > - `ReadFileEx`
@@ -1006,9 +1027,9 @@ NTFS 支持事务
   2. `WSASocket`
   3. `bind`
   4. `listen` (tcp only)
-  5. `WSAAccept`
+  5. `AcceptEx` (tcp only)
   6. `WSASend`/`WSARecv`
-  7. `WSASendDisconnect` (tcp only)
+  7. `LPFN_DISCONNECTEX` (tcp only)
   8. `closesocket`
   9. `WSACleanup`
 
@@ -1020,7 +1041,7 @@ NTFS 支持事务
   4. `WSAConnect` (implicit `bind`, tcp only)
   5. `FreeAddrInfoEx`
   6. `WSASend`/`WSARecv`
-  7. `WSASendDisconnect` (tcp only)
+  7. `LPFN_DISCONNECTEX` (tcp only)
   8. `WSARecv`
   9. `closesocket`
   10. `WSACleanup`
@@ -1059,7 +1080,7 @@ auto data = COPYDATASTRUCT {
   .lpData = data_buf,
 };
 
-// WM_COPYDATA 只能使用同步消息发送 API，如 SendMessage, SendMessageTimeout 等
+// WM_COPYDATA 只能使用同步消息发送 API，如 SendMessage, SendMessageTimeout 等，因为系统需要确定何时释放缓冲区
 SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
 ```
 
@@ -1091,6 +1112,39 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
   - 可以直接在共享内存中**访问并处理**消息对象，单次通讯可省去一次拷贝（处理期间需要加锁，通常来说处理数据比拷贝更慢）
   - 没有缓冲区管理，没有连接管理，没有流传输
   - **适用场景：传输位图纹理**
+
+### 异步 IO
+
+1. 创建 IOCP `CreateIoCompletionPort`
+2. 关联 HANDLE `CreateIoCompletionPort`
+3. 调用异步 IO
+4. 等待 IOCP `GetQueuedCompletionStatus`
+5. IO 事件完成
+6. FIFO 顺序通知等待线程
+   - IOCP 设置有最大并发数，超过后阻塞后续等待线程
+   - 当线程处于其他阻塞状态时（如 `SuspendThread` 或
+
+IOCP 支持的异步 IO 有：
+
+- `ReadFile`
+- `WriteFile`
+- `AcceptEx`
+- `LPFN_CONNECTEX`
+- `LPFN_DISCONNECTEX`
+- `WSASend`
+- `WSASendTo`
+- `WSASendMsg`
+- `WSARecv`
+- `WSARecvFrom`
+- `LPFN_WSARECVMSG`
+- `ConnectNamedPipe`
+- `TransactNamedPipe`
+- `WaitCommEvent`
+- `LockFileEx`
+- `DeviceIoControl`
+- `ReadDirectoryChangesW`
+
+`WaitForMultipleObjectsEx` 不支持 IOCP
 
 ## 窗口系统
 
