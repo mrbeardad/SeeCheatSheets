@@ -1,6 +1,7 @@
 # Win32
 
 - [Win32](#win32)
+  - [前言](#前言)
   - [进程系统](#进程系统)
     - [进程管理](#进程管理)
       - [进程创建](#进程创建)
@@ -54,6 +55,15 @@
     - [其它细节](#其它细节)
       - [DPI](#dpi)
       - [Color](#color)
+
+## 前言
+
+- 宏 Windows SDK 最低支持版本
+  - `_WIN32_WINNT` 指定大版本
+  - `NTDDI_VERSION` 指定更细化的版本，需要同时指定 `_WIN32_WINNT`
+- 宏 减小头文件内容以加速编译
+  - `WIN32_LEAN_AND_MEAN`
+  - `NOCOMM`
 
 ## 进程系统
 
@@ -1115,36 +1125,47 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
 
 ### 异步 IO
 
-1. 创建 IOCP `CreateIoCompletionPort`
-2. 关联 HANDLE `CreateIoCompletionPort`
-3. 调用异步 IO
-4. 等待 IOCP `GetQueuedCompletionStatus`
-5. IO 事件完成
-6. FIFO 顺序通知等待线程
-   - IOCP 设置有最大并发数，超过后阻塞后续等待线程
-   - 当线程处于其他阻塞状态时（如 `SuspendThread` 或
+> 注意，`WaitForMultipleObjectsEx` 不支持 IOCP
 
-IOCP 支持的异步 IO 有：
+- 使用流程
 
-- `ReadFile`
-- `WriteFile`
-- `AcceptEx`
-- `LPFN_CONNECTEX`
-- `LPFN_DISCONNECTEX`
-- `WSASend`
-- `WSASendTo`
-- `WSASendMsg`
-- `WSARecv`
-- `WSARecvFrom`
-- `LPFN_WSARECVMSG`
-- `ConnectNamedPipe`
-- `TransactNamedPipe`
-- `WaitCommEvent`
-- `LockFileEx`
-- `DeviceIoControl`
-- `ReadDirectoryChangesW`
+  1. 创建 IOCP `CreateIoCompletionPort`
+  2. 关联 HANDLE `CreateIoCompletionPort`
+  3. 调用异步 IO
+  4. 等待 IOCP `GetQueuedCompletionStatus`
+  5. IO 事件完成
+  6. FIFO 顺序通知等待线程
+     - IOCP 设置有最大并发数，超过后阻塞后续等待线程
+     - 当线程处于其他阻塞状态时（如 `SuspendThread` 或
 
-`WaitForMultipleObjectsEx` 不支持 IOCP
+- IOCP 支持的异步 IO 有：
+
+  - `ReadFile`
+  - `WriteFile`
+  - `AcceptEx`
+  - `LPFN_CONNECTEX`
+  - `LPFN_DISCONNECTEX`
+  - `WSASend`
+  - `WSASendTo`
+  - `WSASendMsg`
+  - `WSARecv`
+  - `WSARecvFrom`
+  - `LPFN_WSARECVMSG`
+  - `ConnectNamedPipe`
+  - `TransactNamedPipe`
+  - `WaitCommEvent`
+  - `LockFileEx`
+  - `DeviceIoControl`
+  - `ReadDirectoryChangesW`
+
+- 取消异步 IO
+
+  - `CancelIo`
+  - `CancelIoEx`
+
+- 线程池
+  - `BindIoCompletionCallback`
+  - 详细内容见 [Thread Pool API](https://learn.microsoft.com/en-us/windows/win32/procthread/thread-pool-api)
 
 ## 窗口系统
 
