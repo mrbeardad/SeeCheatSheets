@@ -132,6 +132,6 @@ echo The value of index is %index%
 exit /b 0
 ```
 
-- `start cmd /c a.cmd`：执行在子 cmd
+- `start /wait cmd /c a.cmd`：执行在子 cmd
 - `call a.cmd`：执行在当前 cmd
 - 同一 cmd 执行的脚本共享所有变量，子 cmd 继承父 cmd 调用处的所有变量

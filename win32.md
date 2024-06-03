@@ -219,7 +219,7 @@
 
 #### 线程创建
 
-- 若线程函数需要访问 CRT，则应该使用 `_beginthreadex` 而非 `CreateThread` 来保证线程安全
+- **若线程函数需要访问 CRT，则应该使用 `_beginthreadex` 而非 `CreateThread` 来保证线程安全**
 - 线程栈最大默认 1M，可通过控制编译时链接器参数或运行时 `CreateThread` 参数来改变，大小向上取整 1M
 
 > - `CreateThread`：安全属性、栈大小、暂停状态
@@ -240,7 +240,7 @@
   - `TerminateProcess`
 
 - 线程终止结果
-  - 释放线程拥有的资源，如 thread-local-storage(STL), windows, menus, hooks
+  - 释放线程拥有的资源，如 thread-local-storage(TLS), windows, menus, hooks
   - 设置线程退出码
   - 触发线程对象
   - 如果线程是进程里唯一的线程，则终止进程
@@ -387,7 +387,7 @@ dll 的生命周期：
    - 运行时，即调用 `LoadLibrary` 时，注意提前卸载模块可能导致某些地方仍在使用模块内的函数
 2. 内存映射
 3. 符号解析
-4. 调用 CRT 动态库入口，负责初始化全局变量等
+4. 调用 CRT 动态库入口，负责构造和析构全局变量等
 5. 调用 DllMain
 
    ```cpp
@@ -1029,6 +1029,8 @@ NTFS 支持事务
 
 ### IPC 机制
 
+> 参考 [Interprocess communications](https://learn.microsoft.com/en-us/windows/win32/ipc/interprocess-communications)
+
 #### 套接字
 
 - Server
@@ -1048,7 +1050,7 @@ NTFS 支持事务
   1. `WSAStartup`
   2. `WSASocket`
   3. `GetAddrInfoEx`
-  4. `WSAConnect` (implicit `bind`, tcp only)
+  4. `LPFN_CONNECTEX` (implicit `bind`, tcp only)
   5. `FreeAddrInfoEx`
   6. `WSASend`/`WSARecv`
   7. `LPFN_DISCONNECTEX` (tcp only)
@@ -1090,11 +1092,18 @@ auto data = COPYDATASTRUCT {
   .lpData = data_buf,
 };
 
-// WM_COPYDATA 只能使用同步消息发送 API，如 SendMessage, SendMessageTimeout 等，因为系统需要确定何时释放缓冲区
+// 系统需要确定何时释放缓冲区，所以 WM_COPYDATA 只能使用同步发送消息，如 SendMessage, SendMessageTimeout 等
 SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
 ```
 
 #### 共享内存
+
+> 参考 [Creating Named Shared Memory](https://learn.microsoft.com/en-us/windows/win32/memory/creating-named-shared-memory)
+>
+> - `CreateFileMapping`
+> - `OpenFileMapping`
+> - `MapViewOfFile`
+> - `UnmapViewOfFile`
 
 #### 总结
 
@@ -1115,13 +1124,13 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
 
   - 每次发送数据都需要分配缓冲区，且只能同步发送
   - 有缓冲区管理，没有连接管理，不支持流传输
-  - **使用场景：UI 同步逻辑通讯**
+  - **适用场景：UI 同步逻辑通讯**
 
 - 共享内存
   - 可以直接在共享内存中**构造**消息对象，单次通讯可省去一次拷贝（构造期间需要加锁，通常来说构造数据比拷贝更慢）
   - 可以直接在共享内存中**访问并处理**消息对象，单次通讯可省去一次拷贝（处理期间需要加锁，通常来说处理数据比拷贝更慢）
   - 没有缓冲区管理，没有连接管理，没有流传输
-  - **适用场景：传输位图纹理**
+  - **适用场景：传输 Raw Data**
 
 ### 异步 IO
 
