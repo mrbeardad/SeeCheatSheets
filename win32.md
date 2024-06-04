@@ -166,18 +166,19 @@
   4. 设置进程退出码
   5. 触发进程对象
 
-- C++ 进程的生命周期
+- C++ 静态生命周期的变量
+  - 仅能保证同一编译单元中的构造和析构顺序，且析构顺序与构造顺序相反
   - 构造
-    1. `static`
-    2. `thread_local`
-    3. in-block `static`/`thread_local`
-  - 析构（保证按构造顺序逆序销毁）
-    1. `thread_load`
-    2. in-block `thread_local`
-    3. `static`
-    4. in-block `static`
+    1. `static`（模块加载）
+    2. `thread_local`（线程加载）
+    3. in-block `static`/`thread_local`（首次调用函数）
+  - 析构
+    1. `thread_load`（线程退出）
+    2. in-block `thread_local`（线程退出）
+    3. `static`（模块卸载）
+    4. in-block `static`（模块卸载）
     5. `std::atexit` 保证在注册时就已初始化的任何 `static` 销毁之前调用
-  - **注意：以上析构函数会在线程退出、模块卸载或进程退出时发生，但无法保证一定会发生**
+  - **注意：无法保证静态生命周期的变量的析构函数一定会被调用**
 
 > - `ExitProcess`
 > - `TerminateProcess`
@@ -309,7 +310,10 @@
 
 ##### CPU 亲和性
 
-> 参考 [Processor Groups](https://learn.microsoft.com/en-us/windows/win32/procthread/processor-groups)
+> 参考
+>
+> - [Processor Groups](https://learn.microsoft.com/en-us/windows/win32/procthread/processor-groups)
+> - [CPU Sets](https://learn.microsoft.com/en-us/windows/win32/procthread/cpu-sets)
 
 利用 CPU 亲和性可以限制进程或线程运行在制定的 CPU 上
 
@@ -318,16 +322,6 @@
 - 核心可包含多个逻辑处理器 (logical processor)
 - 每 64 个逻辑处理器为一个处理器组 (processor group)
 - Windows 11 之后线程可以跨多个处理器组，默认优先在主组中运行
-
-> - `GetProcessAffinityMask`
-> - `SetProcessAffinityMask`
-> - `GetThreadAffinityMask`
-> - `SetThreadAffinityMask`
-> - `GetProcessGroupAffinity`
-> - `GetThreadGroupAffinity`
-> - `SetThreadGroupAffinity`
-> - `SetThreadIdealProcessor`
-> - `SetThreadIdealProcessorEx`
 
 #### 线程同步
 
@@ -688,6 +682,8 @@ __except (filter-expression) {
 
 大多数内核对象都可以通过名字访问，所有对象都实际存在于底层 NT 命名空间内，但不同类型的对象名字处于不同的子命名空间内。可以使用 [WinObj](https://learn.microsoft.com/en-us/sysinternals/downloads/winobj) 查看详细内容。
 
+![winobj](./images/winobj2.png)
+
 - 与同步相关的内核对象，如 `Event`, `Mutex`, `Semaphore` 等
 
   - 不同会话中的对象默认位于不同命名空间
@@ -696,6 +692,10 @@ __except (filter-expression) {
   - 这些命名空间内都存在两个符号链接
     - `Global` 链接到 `\BaseNamedObjects`，用于跨会话共享
     - `Local` 链接到 `\Session\1\BaseNamedObjects`，用于不跨会话共享
+
+---
+
+![winobj](./images/winobj.png)
 
 - 与文件相关的内核对象
   - 文件路径名均位于 `\GLOBAL??`
@@ -1109,14 +1109,14 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
 
 - 套接字
 
-  - 每个连接需要单独的 2 对读写缓冲区
+  - 每个连接需要单独的 2 对读写缓冲区，缓冲可以被复用
   - 完善的缓冲区管理和连接管理，支持流传输
   - 服务端监听网络端口需要设置防火墙规则
   - **适用场景：跨机器的网络通讯**
 
 - 双向命名管道
 
-  - 每个连接需要单独的 1 对读写缓冲区，连接可以被复用
+  - 每个连接需要单独的 1 对读写缓冲区，缓冲可以被复用
   - 有缓冲区管理，但需要自己完善连接管理（特别是断开连接会丢弃缓冲区数据），支持流传输
   - **适用场景：本机的进程间通讯**
 
@@ -1130,22 +1130,31 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
   - 可以直接在共享内存中**构造**消息对象，单次通讯可省去一次拷贝（构造期间需要加锁，通常来说构造数据比拷贝更慢）
   - 可以直接在共享内存中**访问并处理**消息对象，单次通讯可省去一次拷贝（处理期间需要加锁，通常来说处理数据比拷贝更慢）
   - 没有缓冲区管理，没有连接管理，没有流传输
-  - **适用场景：传输 Raw Data**
+  - **适用场景：传输 Raw Data（数据量大且处理快）**
 
 ### 异步 IO
 
-> 注意，`WaitForMultipleObjectsEx` 不支持 IOCP
+> 参考 [I/O Completion Ports](https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports)
+
+Windows 支持三种异步 IO 机制：
+
+- Overlapped IO：利用可同步对象
+- APC：利用 APC 任务队列
+- IOCP：利用 IOCP 消息队列
+
+其中前两者可以使用同一个多路复用接口 `MsgWaitForMultipleObjectsEx` 一起监听，而 IOCP 则不行。
 
 - 使用流程
 
-  1. 创建 IOCP `CreateIoCompletionPort`
-  2. 关联 HANDLE `CreateIoCompletionPort`
-  3. 调用异步 IO
-  4. 等待 IOCP `GetQueuedCompletionStatus`
-  5. IO 事件完成
-  6. FIFO 顺序通知等待线程
+  1. 创建 IOCP `CreateIoCompletionPort` (iocp only)
+  2. **创建 HANDLE `CreateFile` 使用 `FILE_FLAG_OVERLAPPED` 标志**
+  3. 关联 HANDLE `CreateIoCompletionPort` (iocp only)
+  4. **调用异步 IO 接口**
+  5. **等待 IO 事件完成** `GetQueuedCompletionStatus`/`WaitForMultipleObjectsEx`
+  6. **IO 事件完成**
+  7. FIFO 顺序通知等待线程
      - IOCP 设置有最大并发数，超过后阻塞后续等待线程
-     - 当线程处于其他阻塞状态时（如 `SuspendThread` 或
+     - 当线程处于其他阻塞状态时（如 `SuspendThread` 或 `WaitForMultipleObjectsEx`），系统会通知其他线程，这时如果阻塞线程被唤醒，则 IOCP 关联线程会超过最大并发数
 
 - IOCP 支持的异步 IO 有：
 
@@ -1166,6 +1175,13 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
   - `LockFileEx`
   - `DeviceIoControl`
   - `ReadDirectoryChangesW`
+
+- APC 支持的异步 IO 有：
+
+  - `ReadFileEx`
+  - `WriteFileEx`
+  - `SetWaitableTimer`
+  - `SetWaitableTimerEx`
 
 - 取消异步 IO
 
