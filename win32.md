@@ -43,8 +43,7 @@
       - [总结](#总结)
     - [异步 IO](#异步-io)
   - [窗口系统](#窗口系统)
-    - [渲染流程](#渲染流程)
-    - [窗口结构](#窗口结构)
+    - [桌面环境](#桌面环境)
     - [应用窗口](#应用窗口)
       - [样式](#样式)
       - [关系](#关系)
@@ -150,7 +149,7 @@
 
   - `ExitProcess`
 
-    - 进程中最后一个线程终止
+    - 进程中最后一个线程终止（默认 CRT 实现主线程退出时终止进程）
     - 用户模式中发生的硬件异常或软件异常未被捕获处理时
     - 调用 `ExitWindowsEx` 时
       - 用户注销或关机时
@@ -241,7 +240,7 @@
   - `TerminateProcess`
 
 - 线程终止结果
-  - 释放线程拥有的资源，如 thread-local-storage(TLS), windows, menus, hooks
+  - 释放线程拥有的资源，如 TLS (Thread Local Storage), windows, menus, hooks
   - 设置线程退出码
   - 触发线程对象
   - 如果线程是进程里唯一的线程，则终止进程
@@ -1134,7 +1133,11 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
 
 ### 异步 IO
 
-> 参考 [I/O Completion Ports](https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports)
+> 参考
+>
+> - [Synchronization and Overlapped Input and Output](https://learn.microsoft.com/en-us/windows/win32/sync/synchronization-and-overlapped-input-and-output)
+> - [Asynchronous Procedure Calls](https://learn.microsoft.com/en-us/windows/win32/sync/asynchronous-procedure-calls)
+> - [I/O Completion Ports](https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports)
 
 Windows 支持三种异步 IO 机制：
 
@@ -1151,12 +1154,17 @@ Windows 支持三种异步 IO 机制：
   3. 关联 HANDLE `CreateIoCompletionPort` (iocp only)
   4. **调用异步 IO 接口**
   5. **等待 IO 事件完成** `GetQueuedCompletionStatus`/`WaitForMultipleObjectsEx`
-  6. **IO 事件完成**
-  7. FIFO 顺序通知等待线程
-     - IOCP 设置有最大并发数，超过后阻塞后续等待线程
-     - 当线程处于其他阻塞状态时（如 `SuspendThread` 或 `WaitForMultipleObjectsEx`），系统会通知其他线程，这时如果阻塞线程被唤醒，则 IOCP 关联线程会超过最大并发数
+  6. **IO 事件完成，唤醒等待线程**
+     - Overlapped IO
+       - 唤醒等待对应 Event 对象的线程
+     - APC
+       - 唤醒 Alertable 状态的线程并执行对应回调函数
+     - IOCP
+       - FIFO 顺序通知等待线程
+       - IOCP 设置有最大并发数，超过后阻塞后续等待线程
+       - 当线程处于其他阻塞状态时（如 `SuspendThread` 或 `WaitForMultipleObjectsEx`），系统会通知其他线程，这时如果阻塞线程被唤醒，则 IOCP 关联线程会超过最大并发数
 
-- IOCP 支持的异步 IO 有：
+- Overlapped-IO/IOCP 支持的异步 IO 有：
 
   - `ReadFile`
   - `WriteFile`
@@ -1194,44 +1202,38 @@ Windows 支持三种异步 IO 机制：
 
 ## 窗口系统
 
-### 渲染流程
+### 桌面环境
 
-[Windows Graphics Overview](https://learn.microsoft.com/en-us/windows/win32/learnwin32/overview-of-the-windows-graphics-architecture)
+> 参考
+>
+> - [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
 
-1. Window
-2. Graphics API: GDI, Direct2D, DirectWrite, OpenGL, Vulkan ...
-3. Paint
-4. Composite
-5. Rasterize
-6. Display
+- Window Station
 
-### 窗口结构
+  - Desktops
 
-- Window Station: Winsta0
-
-  - Desktop: Default, ScreenSaver, and Winlogon
-
-    - Monitor
+    - Monitors
 
       - Desktop Window
       - Taskbar
 
-        - Taskbar Button
-          - Icon and Label
-          - Overlay Icon
-          - Progress Bar
-          - Jump List
-          - Thumbnail Toolbar
-        - Notification Area
-          - Icon
-          - Hover -> Tooltip
-          - Left click -> Popup Window
-          - Left double-click -> Primary UI
-          - Right-click -> Context Menu
-
       - Application Window
+
         - Non-client Area
         - Client Area
+
+- Taskbar Button
+  - Icon and Label
+  - Overlay Icon
+  - Progress Bar
+  - Jump List
+  - Thumbnail Toolbar
+- Notification Area
+  - Icon
+  - Hover -> Tooltip
+  - Left click -> Popup Window
+  - Left double-click -> Primary UI
+  - Right-click -> Context Menu
 
 ### 应用窗口
 
