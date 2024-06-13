@@ -1,7 +1,6 @@
 # Win32
 
 - [Win32](#win32)
-  - [前言](#前言)
   - [进程系统](#进程系统)
     - [进程管理](#进程管理)
       - [进程创建](#进程创建)
@@ -54,15 +53,9 @@
     - [其它细节](#其它细节)
       - [DPI](#dpi)
       - [Color](#color)
-
-## 前言
-
-- 宏 Windows SDK 最低支持版本
-  - `_WIN32_WINNT` 指定大版本
-  - `NTDDI_VERSION` 指定更细化的版本，需要同时指定 `_WIN32_WINNT`
-- 宏 减小头文件内容以加速编译
-  - `WIN32_LEAN_AND_MEAN`
-  - `NOCOMM`
+  - [其他](#其他)
+    - [头文件宏](#头文件宏)
+    - [字符集](#字符集)
 
 ## 进程系统
 
@@ -152,7 +145,7 @@
     - 进程中最后一个线程终止（默认 CRT 实现主线程退出时终止进程）
     - 用户模式中发生的硬件异常或软件异常未被捕获处理时
     - 调用 `ExitWindowsEx` 时
-      - 用户注销或关机时
+      - [用户注销或关机时](https://learn.microsoft.com/en-us/windows/win32/shutdown/shutting-down)
       - 内核模式中发生的硬件异常或软件异常未被捕获时（蓝屏）
 
   - `TerminateProcess`
@@ -1183,6 +1176,7 @@ Windows 支持三种异步 IO 机制：
   - `LockFileEx`
   - `DeviceIoControl`
   - `ReadDirectoryChangesW`
+  - `PostQueuedCompletionStatus` (iocp only)
 
 - APC 支持的异步 IO 有：
 
@@ -1190,6 +1184,7 @@ Windows 支持三种异步 IO 机制：
   - `WriteFileEx`
   - `SetWaitableTimer`
   - `SetWaitableTimerEx`
+  - `QueueUserAPC`
 
 - 取消异步 IO
 
@@ -1381,3 +1376,40 @@ Alpha mode:
 - `D2D1_ALPHA_MODE_IGNORE`: 忽略 alpha 可提高性能
 - `D2D1_ALPHA_MODE_STRAIGHT`: RGB 通道值乘以 A
 - `D2D1_ALPHA_MODE_PREMULTIPLIED`" RGB 通道值已经是乘以 A 后的值了
+
+## 其他
+
+### 头文件宏
+
+- Windows SDK 最低支持版本
+  - `_WIN32_WINNT` 指定大版本
+  - `NTDDI_VERSION` 指定更细化的版本，需要同时指定 `_WIN32_WINNT`
+- 减小头文件内容以加速编译
+  - `WIN32_LEAN_AND_MEAN`
+  - `NOCOMM`
+
+### 字符集
+
+> 参考
+>
+> - [Character Sets](https://learn.microsoft.com/en-us/windows/win32/intl/character-sets)
+> - [Code Page Identifiers](https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers)
+> - [Unicode in the Windows API](https://learn.microsoft.com/en-us/windows/win32/intl/unicode-in-the-windows-api)
+>
+> 因为 UTF-8 诞生之前，Windows 就应用了 UTF-16 作为 Unicode 编码，故 UTF-8 仅作为 Code Page 中的一个兼容选项。虽然绝大多数 API 交互使用 UTF-16，但系统中的文件数据都应该存储为 UTF-8。
+
+Windows API 通常有三种格式：
+
+- `CreateFile` 宏，根据不同编译参数扩展成以下二者之一
+- `CreateFileW` Unicode 版本，使用 UTF-16
+- `CreateFileA` ANSI 版本，使用 Windows Code Page （又名 ANSI Code Pages）
+  - 单字节字符集，如 `OEM United States`、`IBM EBCDIC International`
+  - 多字节字符集，如 `Chinese Simplified (GB2312)`、`utf-8`
+
+字符串编码转换：
+
+- `TCHAR`
+- `TEXT`
+- `WideCharToMultiByte`
+- `MultiByteToWideChar`
+- 系统自动转换窗口消息中的字符串
