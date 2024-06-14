@@ -132,6 +132,12 @@ echo The value of index is %index%
 exit /b 0
 ```
 
-- `start /wait cmd /c a.cmd`：执行在子 cmd
-- `call a.cmd`：执行在当前 cmd
-- 同一 cmd 执行的脚本共享所有变量，子 cmd 继承父 cmd 调用处的所有变量
+- 命令运行在 cmd 中的 script 里，用 `cmd` 命令创建子 cmd，用 `call` 命令创建子 script
+- 相同 cmd 执行的脚本共享所有变量，子 cmd 继承父 cmd 调用处的所有变量
+- `a.cmd`：执行在当前 cmd 和当前 script，当 `a.cmd` 执行完毕时立即停止当前 script
+- `call a.cmd`：执行在当前 cmd 和子 script，当 `a.cmd` 执行完毕后继续执行当前 script 后续命令
+- `cmd /c a.cmd`：执行在子 cmd（同一窗口），当 `a.cmd` 里调用 `exit` 时不会退出当前 cmd
+- `start /wait cmd /c a.cmd`：执行在子 cmd（新窗口），当 `a.cmd` 里调用 `exit` 时不会退出当前 cmd
+  - `/wait` 表示同步等待 `start` 命令执行完毕，默认异步
+  - `/c` 表示执行指定脚本且在完成时关闭窗口，`/k` 表示执行指定脚本且在完成时保留窗口
+- 第二种调用形式用于内部脚本，后两种调用形式用于外部脚本
