@@ -20,9 +20,6 @@ simple-command [ | simple-command2 ... ]
 
 # List
 pipeline [ [& or && or ||] pipeline2 ... ]
-
-# Compound Commands
-( list )
 ```
 
 | 重定向         | 功能                                       |
@@ -43,7 +40,7 @@ pipeline [ [& or && or ||] pipeline2 ... ]
 
 :: 所有字面量均为字符类型；设置变量语句支持变量扩展
 
-:: 开启设置局部变量，否则为全局变量（环境变量）
+:: 开启设置局部变量，否则为全局变量
 SETLOCAL
 
 :: 设置字符变量，等号左右不能有空格
@@ -133,7 +130,7 @@ exit /b 0
 ```
 
 - 命令运行在 cmd 中的 script 里，用 `cmd` 命令创建子 cmd，用 `call` 命令创建子 script
-- 相同 cmd 执行的脚本共享所有变量，子 cmd 继承父 cmd 调用处的所有变量
+- 同一 cmd 中执行的脚本共享所有变量，子进程（子 cmd）继承父 cmd 调用处的所有变量
 - `a.cmd`：执行在当前 cmd 和当前 script，当 `a.cmd` 执行完毕时立即停止当前 script
 - `call a.cmd`：执行在当前 cmd 和子 script，当 `a.cmd` 执行完毕后继续执行当前 script 后续命令
 - `cmd /c a.cmd`：执行在子 cmd（同一窗口），当 `a.cmd` 里调用 `exit` 时不会退出当前 cmd

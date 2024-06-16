@@ -1203,32 +1203,40 @@ Windows 支持三种异步 IO 机制：
 >
 > - [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
 
+![desktop](./images/desktop.png)
+
 - Window Station
-
   - Desktops
-
-    - Monitors
-
-      - Desktop Window
+    - Desktop Window (Cross Multi-Monitors)
       - Taskbar
-
+        - Start Button
+        - Taskbar Buttons
+        - Notification Area
       - Application Window
-
-        - Non-client Area
+        - Non-Client Area
+          - Title Bar
+            - Application Icon
+            - Window Menu
+            - Window Title
+            - Minimize and Maximize Button
+            - Close Button
+          - Menu Bar
+          - Border
+          - Scroll Bar
         - Client Area
 
-- Taskbar Button
-  - Icon and Label
-  - Overlay Icon
-  - Progress Bar
-  - Jump List
-  - Thumbnail Toolbar
-- Notification Area
-  - Icon
-  - Hover -> Tooltip
-  - Left click -> Popup Window
-  - Left double-click -> Primary UI
-  - Right-click -> Context Menu
+> - Taskbar Button
+>   - Icon and Label
+>   - Overlay Icon
+>   - Progress Bar
+>   - Jump List
+>   - Thumbnail Toolbar
+> - Notification Area
+>   - Icon
+>   - Hover -> Tooltip
+>   - Left click -> Popup Window
+>   - Left double-click -> Primary UI
+>   - Right-click -> Context Menu
 
 ### 应用窗口
 
@@ -1344,6 +1352,8 @@ Windows 支持三种异步 IO 机制：
 #### 用户输入
 
 [User Input](https://learn.microsoft.com/en-us/windows/win32/learnwin32/module-4--user-input)
+
+[Input Method Manager](https://learn.microsoft.com/en-us/windows/win32/intl/input-method-manager)
 
 ### 其它细节
 
