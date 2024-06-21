@@ -1,6 +1,15 @@
 # Win32
 
 - [Win32](#win32)
+  - [资源访问](#资源访问)
+    - [对象](#对象)
+    - [句柄表](#句柄表)
+    - [命名空间](#命名空间)
+    - [访问控制](#访问控制)
+      - [隔离性](#隔离性)
+      - [访问控制模型](#访问控制模型)
+      - [强制可信控制](#强制可信控制)
+      - [用户访问控制](#用户访问控制)
   - [进程系统](#进程系统)
     - [进程管理](#进程管理)
       - [进程创建](#进程创建)
@@ -17,17 +26,10 @@
         - [服务质量](#服务质量)
         - [CPU 亲和性](#cpu-亲和性)
       - [线程同步](#线程同步)
-    - [动态链接](#动态链接)
+    - [模块管理](#模块管理)
     - [虚拟内存](#虚拟内存)
     - [异常处理](#异常处理)
   - [IO 系统](#io-系统)
-    - [句柄表](#句柄表)
-    - [命名空间](#命名空间)
-    - [访问控制](#访问控制)
-      - [隔离性](#隔离性)
-      - [访问控制模型](#访问控制模型)
-      - [强制可信控制](#强制可信控制)
-      - [用户访问控制](#用户访问控制)
     - [注册表](#注册表)
     - [文件系统](#文件系统)
       - [磁盘](#磁盘)
@@ -44,8 +46,8 @@
   - [窗口系统](#窗口系统)
     - [桌面环境](#桌面环境)
     - [应用窗口](#应用窗口)
+      - [类型](#类型)
       - [样式](#样式)
-      - [关系](#关系)
       - [状态](#状态)
     - [消息循环](#消息循环)
       - [生命周期](#生命周期)
@@ -56,6 +58,187 @@
   - [其他](#其他)
     - [头文件宏](#头文件宏)
     - [字符集](#字符集)
+
+## 资源访问
+
+### 对象
+
+程序本质可看做对资源的访问和计算，Windows 系统将资源抽象成对象
+
+- Kernel Object：通用型资源，如 Process, Thread, Mutex, File 等，由进程管理
+- User Object：用户交互资源，如 Window, Menu, Hook 等，由线程管理
+- GDI Object：图形资源
+
+内核对象作为最主要的资源对象，系统为其提供许多机制来方便管理
+
+### 句柄表
+
+每个进程维护一张句柄表用于访问内核对象，内核对象句柄仅在进程内有效
+
+- 索引：`HANDLE`
+  - 0 保留作为无效句柄
+  - 1、2、3 保留用作标准输入输出
+- 内核对象指针
+  - 名字
+  - 引用计数
+  - 安全描述符
+  - 其他...
+- 访问掩码：这个句柄的访问权限掩码
+- 属性标志：如 Protect, Inherit 等
+
+> - `GetHandleInformation`
+> - `SetHandleInformation`
+> - `DuplicateHandle`
+> - `CloseHandle`
+
+### 命名空间
+
+大多数内核对象都可以通过名字访问，所有对象都实际存在于底层 NT 命名空间内，但不同类型的对象名字处于不同的子命名空间内。可以使用 [WinObj](https://learn.microsoft.com/en-us/sysinternals/downloads/winobj) 查看详细内容。
+
+![winobj](./images/winobj2.png)
+
+- 与同步相关的内核对象，如 `Event`, `Mutex`, `Semaphore` 等
+
+  - 不同会话中的对象默认位于不同命名空间
+    - 服务会话（session 0）中的对象名字位于 `\BaseNamedObjects`
+    - 终端会话（如 session 1）中的对象名字位于 `\Sessions\1\BaseNamedObjects`
+  - 这些命名空间内都存在两个符号链接
+    - `Global` 链接到 `\BaseNamedObjects`，用于跨会话共享
+    - `Local` 链接到 `\Session\1\BaseNamedObjects`，用于不跨会话共享
+
+---
+
+![winobj](./images/winobj.png)
+
+- 与文件相关的内核对象
+  - 文件路径名均位于 `\GLOBAL??`
+  - 其内包含
+    - `C:` 链接到 `\Device\HarddiskVolume3`
+    - `GLOBALROOT` 链接到 `\`
+
+### 访问控制
+
+#### 隔离性
+
+> 参考 [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
+
+![session](./images/session.png)
+
+- Session：由单个用户登录会话产生的所有进程和内核对象组成
+
+  - Session 0 由系统创建专门用于运行服务 (Services)
+  - 不同会话的部分内核对象的默认命名空间不同
+
+- Window Station：由一个剪切板、一张原子表和若干 desktop 组成
+
+  - WinSta0 由系统创建，唯一能与用户终端设备交互的 Window Station
+  - 同一 Window Station 内仅允许一个 Desktop 访问用户终端设备
+
+- Desktop：由若干 windows, menus, hooks 组成
+
+  - Winlogon 用于用户登录和 UAC 授权
+  - Default 用于用户应用程序
+  - ScreenSaver 用于屏保
+  - windows, menu, hooks 仅能在同一 Desktop 内部访问
+
+#### 访问控制模型
+
+> 参考
+>
+> - [Access Tokens](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens)
+> - [Security Descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors)
+> - [Access Control Lists](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-control-lists)
+> - [Access Control Entries](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-control-entries)
+> - [Access Rights and Access Masks](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-rights-and-access-masks)
+> - [Security Identifiers](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-identifiers)
+> - [Privileges](https://learn.microsoft.com/en-us/windows/win32/secauthz/privileges)
+> - [Client Impersonation](https://learn.microsoft.com/en-us/windows/win32/secauthz/client-impersonation)
+
+- 访问令牌 (Access Token)
+
+  - user SID
+  - group SIDs
+  - logon SID
+  - privileges LUIDs
+  - owner SID
+  - primary group SID
+  - integrity SIDs
+  - default DACL
+  - restricting SIDs
+  - whether impersonation
+  - others...
+
+- 安全描述符 (Security Descriptor)
+
+  - owner SID
+  - primary group SID
+  - DACL
+  - SACL
+  - others...
+
+- 访问控制列表 (Access Control Lists)
+
+  - 访问控制表项 (Access Control Entries)
+    - trustee SID
+    - type flag
+    - inherit flags
+    - access mask
+      - Generic Access Rights：被映射到 Object-specific Access Right
+      - SACL Access Right：访问对象 SACL 的权限
+      - Standard Access Rights：用于控制对对象本身的操作
+        - `DELETE`
+        - `READ_CONTROL`
+        - `SYNCHRONIZE`
+        - `WRITE_DAC`
+        - `WRITE_OWNER`
+      - Object-specific Access Right：针对不同类型对象的特殊操作的权限
+
+![acess mask format](./images/access_mask_format_.png)
+
+- 安全对象的访问控制流程
+  1. 若没有 DACL，则允许所有访问
+  2. 若存在 DACL，则使用第一个匹配的 ACE 访问控制，若没有匹配的 ACE 则拒绝所有访问
+  3. 根据 SACL 是否记录该访问尝试
+
+#### 强制可信控制
+
+> 参考
+>
+> - [Mandatory Integrity Control](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control)
+> - [Windows Integrity Mechanism Design](<https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/bb625963(v=msdn.10)>)
+> - [Allow UIAccess](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/security-policy-settings/user-account-control-allow-uiaccess-applications-to-prompt-for-elevation-without-using-the-secure-desktop)
+
+- 可信级别（integrity level）
+
+  - system: 通常为系统服务
+  - high: 通常为管理员权限进程
+  - medium: 通常为标准用户权限进程
+  - low: 通常显式设置了 exe 文件的 security descriptors 或进程的 access token
+
+- access token 中的 integrity SIDs 表示可信级别
+
+- security descriptors 中的 SACL 中存储可信级别和强制策略
+
+- ACM: 可信级别校验发生在 DACL 校验之前，默认拒绝较低可信级别的写入访问
+
+- Privileges: 某些系统特权仅允许高可信级别进程运行
+
+- UIPI：限制低可信级别对高可信级别的访问机制
+  - 验证窗口句柄
+  - 发送窗口消息（API 调用返回成功，消息被静默丢弃）
+  - 除非应用程序具有 UIAccess 标志且满足以下条件，则允许对高可信级别进程驱动 UI 自动化
+    - 程序具有可信的数字签名
+    - 程序安装在 `%ProgramFiles%` 或 `%WinDir%` (某些标准用户可写的子目录除外) 目录下
+  - Hook
+  - DLL 注入
+
+#### 用户访问控制
+
+用户访问控制 (UAC) 让标准用户不用重新登录就能使用管理员权限
+
+- Administrator Broker Model：使用 `ShellExecute` 创建管理员权限的新进程
+- Operating System Service Model：使用 IPC 与 Service 通信
+- Elevated Task Model：使用 Task Scheduler 服务运行应用程序
 
 ## 进程系统
 
@@ -339,7 +522,7 @@
 > - `MsgWaitForMultipleObjectsEx`
 > - `SignalObjectAndWait`
 
-### 动态链接
+### 模块管理
 
 > 参考 [Dynamic-Link Libraries](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-libraries)
 
@@ -649,175 +832,6 @@ __except (filter-expression) {
 ## IO 系统
 
 操作系统提供了“内核对象”的机制，简化了程序对系统中“IO 资源”的使用，如设备、文件、网络、IPC 等。
-
-### 句柄表
-
-每个进程维护一张句柄表用于访问内核对象，内核对象句柄仅在进程内有效
-
-- 索引：`HANDLE`
-  - 0 保留作为无效句柄
-  - 1、2、3 保留用作标准输入输出
-- 内核对象指针
-  - 名字
-  - 引用计数
-  - 安全描述符
-  - 其他...
-- 访问掩码：这个句柄的访问权限掩码
-- 属性标志：如 Protect, Inherit 等
-
-> - `GetHandleInformation`
-> - `SetHandleInformation`
-> - `DuplicateHandle`
-> - `CloseHandle`
-
-### 命名空间
-
-大多数内核对象都可以通过名字访问，所有对象都实际存在于底层 NT 命名空间内，但不同类型的对象名字处于不同的子命名空间内。可以使用 [WinObj](https://learn.microsoft.com/en-us/sysinternals/downloads/winobj) 查看详细内容。
-
-![winobj](./images/winobj2.png)
-
-- 与同步相关的内核对象，如 `Event`, `Mutex`, `Semaphore` 等
-
-  - 不同会话中的对象默认位于不同命名空间
-    - 服务会话（session 0）中的对象名字位于 `\BaseNamedObjects`
-    - 终端会话（如 session 1）中的对象名字位于 `\Sessions\1\BaseNamedObjects`
-  - 这些命名空间内都存在两个符号链接
-    - `Global` 链接到 `\BaseNamedObjects`，用于跨会话共享
-    - `Local` 链接到 `\Session\1\BaseNamedObjects`，用于不跨会话共享
-
----
-
-![winobj](./images/winobj.png)
-
-- 与文件相关的内核对象
-  - 文件路径名均位于 `\GLOBAL??`
-  - 其内包含
-    - `C:` 链接到 `\Device\HarddiskVolume3`
-    - `GLOBALROOT` 链接到 `\`
-
-### 访问控制
-
-#### 隔离性
-
-> 参考 [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
-
-![session](./images/session.png)
-
-- Session：由单个用户登录会话产生的所有进程和内核对象组成
-
-  - Session 0 由系统创建专门用于运行服务 (Services)
-  - 不同会话的部分内核对象的默认命名空间不同
-
-- Window Station：由一个剪切板、一张原子表和若干 desktop 组成
-
-  - WinSta0 由系统创建，唯一能与用户终端设备交互的 Window Station
-  - 同一 Window Station 内仅允许一个 Desktop 访问用户终端设备
-
-- Desktop：由若干 windows, menus, hooks 组成
-
-  - Winlogon 用于用户登录和 UAC 授权
-  - Default 用于用户应用程序
-  - ScreenSaver 用于屏保
-  - windows, menu, hooks 仅能在同一 Desktop 内部访问
-
-#### 访问控制模型
-
-> 参考
->
-> - [Access Tokens](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens)
-> - [Security Descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors)
-> - [Access Control Lists](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-control-lists)
-> - [Access Control Entries](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-control-entries)
-> - [Access Rights and Access Masks](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-rights-and-access-masks)
-> - [Security Identifiers](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-identifiers)
-> - [Privileges](https://learn.microsoft.com/en-us/windows/win32/secauthz/privileges)
-> - [Client Impersonation](https://learn.microsoft.com/en-us/windows/win32/secauthz/client-impersonation)
-
-- 访问令牌 (Access Token)
-
-  - user SID
-  - group SIDs
-  - logon SID
-  - privileges LUIDs
-  - owner SID
-  - primary group SID
-  - integrity SIDs
-  - default DACL
-  - restricting SIDs
-  - whether impersonation
-  - others...
-
-- 安全描述符 (Security Descriptor)
-
-  - owner SID
-  - primary group SID
-  - DACL
-  - SACL
-  - others...
-
-- 访问控制列表 (Access Control Lists)
-
-  - 访问控制表项 (Access Control Entries)
-    - trustee SID
-    - type flag
-    - inherit flags
-    - access mask
-      - Generic Access Rights：被映射到 Object-specific Access Right
-      - SACL Access Right：访问对象 SACL 的权限
-      - Standard Access Rights：用于控制对对象本身的操作
-        - `DELETE`
-        - `READ_CONTROL`
-        - `SYNCHRONIZE`
-        - `WRITE_DAC`
-        - `WRITE_OWNER`
-      - Object-specific Access Right：针对不同类型对象的特殊操作的权限
-
-![acess mask format](./images/access_mask_format_.png)
-
-- 安全对象的访问控制流程
-  1. 若没有 DACL，则允许所有访问
-  2. 若存在 DACL，则使用第一个匹配的 ACE 访问控制，若没有匹配的 ACE 则拒绝所有访问
-  3. 根据 SACL 是否记录该访问尝试
-
-#### 强制可信控制
-
-> 参考
->
-> - [Mandatory Integrity Control](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control)
-> - [Windows Integrity Mechanism Design](<https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/bb625963(v=msdn.10)>)
-> - [Allow UIAccess](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/security-policy-settings/user-account-control-allow-uiaccess-applications-to-prompt-for-elevation-without-using-the-secure-desktop)
-
-- 可信级别（integrity level）
-
-  - system: 通常为系统服务
-  - high: 通常为管理员权限进程
-  - medium: 通常为标准用户权限进程
-  - low: 通常显式设置了 exe 文件的 security descriptors 或进程的 access token
-
-- access token 中的 integrity SIDs 表示可信级别
-
-- security descriptors 中的 SACL 中存储可信级别和强制策略
-
-- ACM: 可信级别校验发生在 DACL 校验之前，默认拒绝较低可信级别的写入访问
-
-- Privileges: 某些系统特权仅允许高可信级别进程运行
-
-- UIPI：限制低可信级别对高可信级别的访问机制
-  - 验证窗口句柄
-  - 发送窗口消息（API 调用返回成功，消息被静默丢弃）
-  - 除非应用程序具有 UIAccess 标志且满足以下条件，则允许对高可信级别进程驱动 UI 自动化
-    - 程序具有可信的数字签名
-    - 程序安装在 `%ProgramFiles%` 或 `%WinDir%` (某些标准用户可写的子目录除外) 目录下
-  - Hook
-  - DLL 注入
-
-#### 用户访问控制
-
-用户访问控制 (UAC) 让标准用户不用重新登录就能使用管理员权限
-
-- Administrator Broker Model：使用 `ShellExecute` 创建管理员权限的新进程
-- Operating System Service Model：使用 IPC 与 Service 通信
-- Elevated Task Model：使用 Task Scheduler 服务运行应用程序
 
 ### 注册表
 
@@ -1202,6 +1216,7 @@ Windows 支持三种异步 IO 机制：
 > 参考
 >
 > - [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
+> - [The Windows 7 Desktop](https://learn.microsoft.com/en-us/windows/win32/uxguide/winenv-desktop)
 
 ![desktop](./images/desktop.png)
 
@@ -1240,6 +1255,48 @@ Windows 支持三种异步 IO 机制：
 
 ### 应用窗口
 
+#### 类型
+
+- Top-level Window
+
+  - 一般用作主窗口
+  - 条件：
+    - `dwStyle` 包含 `WS_OVERLAPPED` 或 `WS_POPUP`
+    - `hWndParent` 为 `NULL`（即 Desktop Window 的子窗口）
+  - 特点：
+    - 默认显示 Taskbar Button
+
+- Child Window
+
+  - 一般用作控件窗口
+  - 条件：
+    - `dwStyle` 包含 `WS_CHILD`
+    - `hWndParent` 为父窗口的 `HWND`
+    - `hMenu` 为自定义子窗口 ID
+  - 特点：
+    - 使用基于父窗口 Client Area 的坐标系
+    - 超出父窗口 Client Area 部分将被裁剪
+    - 跟随父窗口一同显示、移动、销毁
+  - `WS_CLIPCHILDREN`: 父窗口的绘制不再覆盖该子窗口
+  - `WS_CLIPSIBLINGS`: 同级窗口的绘制不再覆盖该子窗口
+  - 禁用状态的子窗口的消息直接发送给父窗口
+  - 父窗口将`hMenu`置为子窗口标识符来识别子窗口消息
+  - `GetParent()`
+  - `SetParent()`: 移动到新父窗口中，父窗口置空则成为 Top-Level Window
+  - `IsChild()`: 判断是否为子窗口或后代窗口
+  - `EnumChildWindows()`: 遍历子窗口与后代窗口
+
+- Owned Window
+
+  - 一般用作对话窗口、悬浮弹窗
+  - 条件：
+    - `dwStyle` 包含 `WS_POPUP` 或 `WS_OVERLAPPED`
+    - `pWndParent` 为 Owner 窗口的 `HWND`（Owner 窗口不能是子窗口）
+  - 特点：
+    - 总是在 Owner 窗口上方
+    - 当 Owner 窗口最小化时隐藏，当 Owner 窗口恢复时显示
+    - 跟随 Owner 窗口一起销毁
+
 #### 样式
 
 - `WS_CAPTION`: title bar and unsizing border
@@ -1259,30 +1316,6 @@ Windows 支持三种异步 IO 机制：
   - `WS_POPUPWINDOW | WS_CAPTION`
 - Child
   - `WS_CHILD`: only client area (cannot have a menu bar, cannot be used with the `WS_POPUP`)
-
-#### 关系
-
-- Child Window
-
-  - 一般用于控件窗口来接收用户输入以及布局
-  - 使用基于父窗口客户区的坐标系
-  - 跟随父窗口一同显示、移动、销毁
-  - 超出父窗口客户端部分将被裁剪
-  - `WS_CLIPCHILDREN`: 父窗口的绘制不再覆盖该子窗口
-  - `WS_CLIPSIBLINGS`: 同级窗口的绘制不再覆盖该子窗口
-  - 禁用状态的子窗口的消息直接发送给父窗口
-  - 父窗口将`hMenu`置为子窗口标识符来识别子窗口消息
-  - `GetParent()`
-  - `SetParent()`: 移动到新父窗口中，父窗口置空则成为 Top-Level Window
-  - `IsChild()`: 判断是否为子窗口或后代窗口
-  - `EnumChildWindows()`: 遍历子窗口与后代窗口
-
-- Owned Window
-
-  - `pWndParent` set to a Overlapped/Pop-up Window
-  - 总是在拥有者窗口上方
-  - 当拥有者窗口最小化时隐藏，当拥有者窗口恢复时显示
-  - 跟随拥有者窗口一起销毁
 
 #### 状态
 
