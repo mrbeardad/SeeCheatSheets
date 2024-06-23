@@ -46,10 +46,18 @@
   - [窗口系统](#窗口系统)
     - [桌面环境](#桌面环境)
     - [应用窗口](#应用窗口)
-      - [类型](#类型)
-      - [样式](#样式)
-      - [状态](#状态)
-    - [消息循环](#消息循环)
+      - [创建窗口](#创建窗口)
+      - [窗口类型](#窗口类型)
+      - [非客户区样式](#非客户区样式)
+      - [窗口名](#窗口名)
+      - [位置与大小](#位置与大小)
+      - [Z 轴顺序](#z-轴顺序)
+      - [前台激活](#前台激活)
+      - [最大化和最小化](#最大化和最小化)
+      - [显示或隐藏](#显示或隐藏)
+      - [启用或禁用](#启用或禁用)
+      - [透明背景](#透明背景)
+    - [窗口消息](#窗口消息)
       - [生命周期](#生命周期)
       - [用户输入](#用户输入)
     - [其它细节](#其它细节)
@@ -65,29 +73,43 @@
 
 程序本质可看做对资源的访问和计算，Windows 系统将资源抽象成对象
 
-- Kernel Object：通用型资源，如 Process, Thread, Mutex, File 等，由进程管理
-- User Object：用户交互资源，如 Window, Menu, Hook 等，由线程管理
-- GDI Object：图形资源
+- [Kernel Object](https://learn.microsoft.com/en-us/windows/win32/sysinfo/kernel-objects)
 
-内核对象作为最主要的资源对象，系统为其提供许多机制来方便管理
+  - 负责计算和 IO 资源的访问，如 Process, Thread, FileMapping, File 等
+  - 一个内核对象可以创建多个句柄，只要创建的进程具有对象名字和访问权限
+  - 内核对象在最后一个句柄关闭后才会销毁，进程终止时会自动关闭进程持有的内核对象句柄
+
+- [User Object](https://learn.microsoft.com/en-us/windows/win32/sysinfo/user-objects)
+
+  - 负责窗口资源的访问，如 Window, Menu, Hook, Icon, Cursor 等
+  - 一个用户对象只能创建一个句柄，但句柄是公开的，只要进程属于同一 Desktop 且具有句柄值和访问权限就能访问
+  - 用户对象在调用相应销毁函数后立即被销毁，进程终止时会自动销毁进程创建的用户对象，特别的，Window, Hook, Window Position, DDE conversation 在创建线程终止时就被销毁
+
+- [GDI Object](https://learn.microsoft.com/en-us/windows/win32/sysinfo/gdi-objects)
+  - 负责图形资源的访问，如 Bitmap, Brush, Font, DC 等
+  - 一个 GDI 用户只能创建一个句柄，且仅能在创建进程内部访问
+  - GDI 对象在调用相应销毁函数后立即被销毁，进程终止时会自动销毁进程创建的用户对象
+
+内核对象作为最主要的资源对象，系统为其提供许多机制来加强管理
 
 ### 句柄表
 
 每个进程维护一张句柄表用于访问内核对象，内核对象句柄仅在进程内有效
 
 - 索引：`HANDLE`
-  - 0 保留作为无效句柄
+  - -1、0 保留作为无效句柄
   - 1、2、3 保留用作标准输入输出
 - 内核对象指针
   - 名字
   - 引用计数
   - 安全描述符
   - 其他...
-- 访问掩码：这个句柄的访问权限掩码
+- 访问掩码：该句柄的访问权限掩码
 - 属性标志：如 Protect, Inherit 等
 
 > - `GetHandleInformation`
 > - `SetHandleInformation`
+> - `CompareObjectHandles`
 > - `DuplicateHandle`
 > - `CloseHandle`
 
@@ -95,26 +117,24 @@
 
 大多数内核对象都可以通过名字访问，所有对象都实际存在于底层 NT 命名空间内，但不同类型的对象名字处于不同的子命名空间内。可以使用 [WinObj](https://learn.microsoft.com/en-us/sysinternals/downloads/winobj) 查看详细内容。
 
-![winobj](./images/winobj2.png)
-
-- 与同步相关的内核对象，如 `Event`, `Mutex`, `Semaphore` 等
-
-  - 不同会话中的对象默认位于不同命名空间
-    - 服务会话（session 0）中的对象名字位于 `\BaseNamedObjects`
-    - 终端会话（如 session 1）中的对象名字位于 `\Sessions\1\BaseNamedObjects`
-  - 这些命名空间内都存在两个符号链接
-    - `Global` 链接到 `\BaseNamedObjects`，用于跨会话共享
-    - `Local` 链接到 `\Session\1\BaseNamedObjects`，用于不跨会话共享
-
----
-
-![winobj](./images/winobj.png)
-
-- 与文件相关的内核对象
+- 文件相关的内核对象
   - 文件路径名均位于 `\GLOBAL??`
   - 其内包含
     - `C:` 链接到 `\Device\HarddiskVolume3`
     - `GLOBALROOT` 链接到 `\`
+
+![winobj](./images/winobj.png)
+
+- 其它内核对象
+
+  - 不同会话中创建的对象默认位于不同命名空间
+    - 服务会话（session 0）默认位于 `\BaseNamedObjects`
+    - 终端会话（如 session 1）默认位于 `\Sessions\1\BaseNamedObjects`
+  - 这些命名空间内都存在两个符号链接
+    - `Global` 链接到 `\BaseNamedObjects`，用于跨会话共享
+    - `Local` 链接到 `\Session\1\BaseNamedObjects`，用于不跨会话共享
+
+![winobj](./images/winobj2.png)
 
 ### 访问控制
 
@@ -124,22 +144,22 @@
 
 ![session](./images/session.png)
 
-- Session：由单个用户登录会话产生的所有进程和内核对象组成
+- Session：包含单个用户登录会话产生的所有进程和内核对象
 
   - Session 0 由系统创建专门用于运行服务 (Services)
   - 不同会话的部分内核对象的默认命名空间不同
 
-- Window Station：由一个剪切板、一张原子表和若干 desktop 组成
+- Window Station：包含一个剪切板、一张原子表和若干 desktop 组成
 
   - WinSta0 由系统创建，唯一能与用户终端设备交互的 Window Station
   - 同一 Window Station 内仅允许一个 Desktop 访问用户终端设备
 
-- Desktop：由若干 windows, menus, hooks 组成
+- Desktop：包含若干 windows, menus, hooks 等用户对象
 
   - Winlogon 用于用户登录和 UAC 授权
   - Default 用于用户应用程序
   - ScreenSaver 用于屏保
-  - windows, menu, hooks 仅能在同一 Desktop 内部访问
+  - windows, menu, hooks 等用户对象仅能在同一 Desktop 内部访问
 
 #### 访问控制模型
 
@@ -621,6 +641,7 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 > - `GetModuleHandleEx`：默认递增引用计数
 > - `GetModuleBaseName`
 > - `GetModuleFileName`
+> - `GetWindowModuleFileName`
 > - `QueryFullProcessImageName`：用来获取其它进程的 exe 文件路径更加高效且准确
 
 ### 虚拟内存
@@ -1217,8 +1238,10 @@ Windows 支持三种异步 IO 机制：
 >
 > - [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
 > - [The Windows 7 Desktop](https://learn.microsoft.com/en-us/windows/win32/uxguide/winenv-desktop)
+> - [Windows and Messages](https://learn.microsoft.com/en-us/windows/win32/winmsg/windowing)
 
 ![desktop](./images/desktop.png)
+![taskbar](./images/taskbar.png)
 
 - Window Station
   - Desktops
@@ -1226,8 +1249,19 @@ Windows 支持三种异步 IO 机制：
       - Taskbar
         - Start Button
         - Taskbar Buttons
+          - Icon and Label
+          - Overlay Icon
+          - Progress Bar
+          - Jump List
+          - Thumbnail Toolbar
         - Notification Area
-      - Application Window
+          - Icon
+          - Tooltip (Hover)
+          - Popup Window (Left click)
+          - Primary UI (Left double-click)
+          - Context Menu (Right-click)
+      - Application Window  
+        ![appwindow](./images/appwindow.png)
         - Non-Client Area
           - Title Bar
             - Application Icon
@@ -1240,64 +1274,118 @@ Windows 支持三种异步 IO 机制：
           - Scroll Bar
         - Client Area
 
-> - Taskbar Button
->   - Icon and Label
->   - Overlay Icon
->   - Progress Bar
->   - Jump List
->   - Thumbnail Toolbar
-> - Notification Area
->   - Icon
->   - Hover -> Tooltip
->   - Left click -> Popup Window
->   - Left double-click -> Primary UI
->   - Right-click -> Context Menu
-
 ### 应用窗口
 
-#### 类型
+#### 创建窗口
+
+```cpp
+HWND CreateWindowExW(
+  [in]           DWORD     dwExStyle,   // 扩展样式，控制窗口状态和行为
+  [in, optional] LPCWSTR   lpClassName, // 窗口类，用于控制窗口状态和行为，通常在多个窗口间共享
+  [in, optional] LPCWSTR   lpWindowName,// 窗口名，用于描述应用，通常显示在窗口标题栏和任务栏按钮上
+  [in]           DWORD     dwStyle,     // 基础样式，控制窗口状态和行为
+  [in]           int       X,           // 窗口左上角位置
+  [in]           int       Y,
+  [in]           int       nWidth,      // 窗口大小
+  [in]           int       nHeight,
+  [in, optional] HWND      hWndParent,  // 指定父窗口 (for child window) 或 Owner 窗口 (for top-level window)
+  [in, optional] HMENU     hMenu,       // 指定子窗口 ID (for child window) 或 Menu 句柄 (for top-level window)
+  [in, optional] HINSTANCE hInstance,   // 指定窗口关联的模块，用于搜索窗口类
+  [in, optional] LPVOID    lpParam      // 窗口自定义数据，通常将窗口封装成 class 并在这里传递 this 指针
+);
+
+typedef struct tagWNDCLASSEXW {
+  UINT      cbSize;
+  UINT      style;
+  WNDPROC   lpfnWndProc;
+  int       cbClsExtra;
+  int       cbWndExtra;
+  HINSTANCE hInstance;
+  HICON     hIcon;
+  HCURSOR   hCursor;
+  HBRUSH    hbrBackground;
+  LPCWSTR   lpszMenuName;
+  LPCWSTR   lpszClassName;
+  HICON     hIconSm;
+} WNDCLASSEXW, *PWNDCLASSEXW, *NPWNDCLASSEXW, *LPWNDCLASSEXW;
+```
+
+> - `RegisterClass`
+> - `RegisterClassEx`
+> - `CreateWindow`
+> - `CreateWindowEx`
+> - `IsWindow`：检测 HWND 是否有效
+> - `IsWindowUnicode`
+> - `DestroyWindow`
+> - `EndTask`：先尝试发送 `WM_CLOSE`，若失败则可以选择强制关闭窗口
+> - `UnregisterClass`
+
+MVVM 作为现代经典的 UI 设计模式，引入了数据驱动的概念，即 UI 是状态的纯函数，只要状态数据相同，呈现的 UI 也一定相同，通过更改数据来更新 UI
+
+#### 窗口类型
 
 - Top-level Window
 
-  - 一般用作主窗口
   - 条件：
     - `dwStyle` 包含 `WS_OVERLAPPED` 或 `WS_POPUP`
-    - `hWndParent` 为 `NULL`（即 Desktop Window 的子窗口）
   - 特点：
-    - 默认显示 Taskbar Button
+    - 作为 Desktop Window 的子窗口
+    - 若无 Owner 则默认显示 Taskbar Button
+      - `WS_EX_APPWINDOW` 强制显示 Taskbar Button
+      - `WS_EX_TOOLWINDOW` 强制不显示 Taskbar Button
 
-- Child Window
-
-  - 一般用作控件窗口
-  - 条件：
-    - `dwStyle` 包含 `WS_CHILD`
-    - `hWndParent` 为父窗口的 `HWND`
-    - `hMenu` 为自定义子窗口 ID
-  - 特点：
-    - 使用基于父窗口 Client Area 的坐标系
-    - 超出父窗口 Client Area 部分将被裁剪
-    - 跟随父窗口一同显示、移动、销毁
-  - `WS_CLIPCHILDREN`: 父窗口的绘制不再覆盖该子窗口
-  - `WS_CLIPSIBLINGS`: 同级窗口的绘制不再覆盖该子窗口
-  - 禁用状态的子窗口的消息直接发送给父窗口
-  - 父窗口将`hMenu`置为子窗口标识符来识别子窗口消息
-  - `GetParent()`
-  - `SetParent()`: 移动到新父窗口中，父窗口置空则成为 Top-Level Window
-  - `IsChild()`: 判断是否为子窗口或后代窗口
-  - `EnumChildWindows()`: 遍历子窗口与后代窗口
+> - `GetDesktopWindow`
+> - `GetShellWindow`
+> - `EnumWindows`
+> - `EnumThreadWindows`
+> - `FindWindow`：根据 Window name 和 Class name 查找窗口
 
 - Owned Window
 
-  - 一般用作对话窗口、悬浮弹窗
   - 条件：
-    - `dwStyle` 包含 `WS_POPUP` 或 `WS_OVERLAPPED`
-    - `pWndParent` 为 Owner 窗口的 `HWND`（Owner 窗口不能是子窗口）
+    - Top-Level Window
+    - `pWndParent` 为 Owner 窗口的 `HWND`（Owner 也必须是 Top-level Window）
   - 特点：
     - 总是在 Owner 窗口上方
     - 当 Owner 窗口最小化时隐藏，当 Owner 窗口恢复时显示
     - 跟随 Owner 窗口一起销毁
 
-#### 样式
+> - `GetLastActivePopup`
+> - `ShowOwnedPopups`
+> - `GetWindow`：可以获取 Owner 窗口
+
+- Child Window
+
+  - 条件：
+    - `dwStyle` 包含 `WS_CHILD`
+    - `hWndParent` 为父窗口的 `HWND` （不能为 `NULL`）
+    - `hMenu` 为自定义子窗口 ID
+  - 特点：
+    - 总是在父窗口上方
+    - 跟随父窗口一同显示/隐藏、移动、销毁
+    - 超出父窗口 Client Area 部分将被裁剪
+    - 禁用状态的子窗口的消息直接发送给父窗口
+
+> - `IsChild`
+> - `GetParent`
+> - `SetParent`
+> - `GetAncestor`
+> - `EnumChildWindows`
+> - `FindWindowEx`
+> - `ChildWindowFromPoint`：检测坐标属于哪个子窗口
+> - `ChildWindowFromPointEx`：可以跳过某些状态的子窗口
+> - `RealChildWindowFromPoint`：仅检测直系子窗口
+> - `WS_CLIPCHILDREN`: 从该父窗口的绘制区域裁剪掉其子窗口区域，防止覆盖子窗口
+> - `WS_CLIPSIBLINGS`: 从该子窗口的绘制区域裁剪掉其兄弟窗口区域，防止覆盖兄弟窗口
+
+- Message-only Window
+  - 条件
+    - Child Window
+    - `hWndParent` 为 `HWND_MESSAGE`
+  - 特点
+    - 仅用于接受并处理消息，不会显示
+
+#### 非客户区样式
 
 - `WS_CAPTION`: title bar and unsizing border
 - `WS_SYSMENU`: application icon, window menu and close button (requrie `WS_CAPTION`)
@@ -1317,50 +1405,120 @@ Windows 支持三种异步 IO 机制：
 - Child
   - `WS_CHILD`: only client area (cannot have a menu bar, cannot be used with the `WS_POPUP`)
 
-#### 状态
+> - `GetTitleBarInfo`
+> - `GetWindowLongPtr`
+> - `SetWindowLongPtr`
+
+#### 窗口名
+
+窗口名通常会显示在窗口的 title bar 和 taskbar button 里，搜索窗口时通常也会用到窗口名
+
+- `GetWindowTextLength`：对于其他进程中的 Child Window 无效
+- `GetWindowText`：对于其他进程中的 Child Window 无效
+- `SetWindowText`：对于其他进程中的 Child Window 无效
+- `WM_GETTEXTLENGTH`
+- `WM_GETTEXT`
+- `WM_SETTEXT`
+- `InternalGetWindowText`：直接读取结构体获取，而非上面的接口通过窗口消息，保证返回 Unidoe String
+
+#### 位置与大小
+
+Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户区坐标系
 
 ![coordinates](./images/coordinates.png)
 
-- `GetWindowLongPtr()`/`SetWindowLongPtr()`
+- `WS_CAPTION`：可以让用户拖动窗口改变位置
+- `WS_THICKFRAME`：可以让用户拖动边框改变大小
+- `CW_USEDEFAULT`：创建窗口时初始位置和大小，仅对 Overlapped Window 有效，默认位置基于屏幕左上角偏移
+- `GetWindowInfo`
+- `GetWindowRect`：若窗口已经显示过一次，则返回大小包含边缘阴影
+- `GetClientRect`
+- `WindowFromPoint`
+- `ChildWindowFromPoint`
+- `ChildWindowFromPointEx`
+- `RealChildWindowFromPoint`
+- `ClientToScreen`
+- `ScreenToClient`
+- `MapWindowPoints`
+- `AdjustWindowRect`：根据 client-area 大小和 style 计算窗口大小
+- `AdjustWindowRectEx`
+- `CalculatePopupWindowPosition`：计算弹窗位置，不超出屏幕或 work area
+- `MoveWindow`：改变窗口位置和大小，并控制窗口绘制
+- `SetWindowPos`：（可以异步）改变窗口位置和大小、Z-Order、显示状态等
+- `SetWindowPlacement`：设置正常、最小化、最大化状态的位置与大小，还有显示状态
+- `BeginDeferWindowPos`
+- `DeferWindowPos`：同时更改多个窗口位置大小、Z-Order、显示状态等
+- `EndDeferWindowPos`
 
-- 坐标系中的位置与大小：
-  - `CW_USEDEFAULT`：默认位置与大小
-  - `SetWindowPlacement()`：设置最小化位置、最大化位置与还原位置与大小，还有显示状态
-  - `SetWindowPos()`：设置位置与大小，还有显示状态
-  - `MoveWindow()`：仅设置位置与大小
-  - `GetWindowRect()`：获取基于屏幕坐标系的位置与大小
-  - `ScreenToClient()`/`MapWindowPoints()`：将子窗口的屏幕坐标系 RECT 转换为父窗口客户区坐标系 RECT
-  - `WM_GETMINMAXINFO`：当位置与大小改变时发送该消息，`MINMAXINFO`包含最大化位置与尺寸、最大最小可变尺寸
-  - `WM_WINDOWPOSCHANGING`：当位置、大小、Z-Order、显示状态改变时发送该消息，`WINDOWPOS`包含新的位置、大小、Z-Order 和显示状态
-- Z-Order：
-  - `WS_EX_TOPMOST`：每级 Z 轴分两段 —— 普通与置顶
-  - `GetNextWindow()`
-  - `SetWindowPos()`
-  - `BringWindowToTop()`：将窗口置于同段 Z 轴顶部
-  - `GetTopWindow()`：获取指定父窗口的 Z 轴最高的子窗口
-- 显示状态：
-  - `WS_VISIBLE`
-  - `IsWindowVisible()`
-  - `ShowWindow()`
-  - `SetWindowLong()`
-  - `ShowOwnedPopups()`
-  - `WM_SHOWWINDOW`
-- 最大化最小化状态：
-  - `WS_MAXIMIZE`/`WS_MINIMIZE`
-  - `IsZoomed()`/`IsIconic()`
-  - `OpenIcon()`
-  - `CloseWindow()`
-  - `ShowWindow()`
-  - `SetWindowPlacement()`
-  - `GetWindowPlacement()`
-- 禁用状态：
-  - `WS_DISABLED`
-  - `EnableWindow()`
-- 前台状态与激活状态：
-  - `GetActiveWindow()`/`SetActiveWindow()`(thread)
-  - `GetForegroundWindow()`/`SetForegroundWindow()`(global)
+#### Z 轴顺序
 
-### 消息循环
+- `WS_EX_TOPMOST`：可将 Z 轴视作 Normal 和 Topmost 两段，Topmost 窗口始终保持在 Normal 窗口和 taskbar 上面
+- `GetWindow`
+- `GetNextWindow`
+- `GetTopWindow`
+- `BringWindowToTop`
+- `SetWindowPos`：（可以异步）改变窗口位置和大小、Z-Order、显示状态等
+- `CascadeWindows`
+- `BeginDeferWindowPos`
+- `DeferWindowPos`：同时更改多个窗口位置大小、Z-Order、显示状态等
+- `EndDeferWindowPos`
+
+#### 前台激活
+
+前台状态和激活状态通常指窗口是否获取键盘焦点（通常也意味位于 Z 轴顶部 ），因为[历史原因](https://devblogs.microsoft.com/oldnewthing/20081006-00/?p=20643)导致出现了两个术语。将窗口设置为前台窗口需要调用者满足一些[必要条件](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow#remarks)。
+
+- `GetActiveWindow`：获取前台窗口（仅限当前线程）
+- `SetActiveWindow`：设置前台窗口（仅限当前线程）
+- `GetLastActivePopup`
+- `GetForegroundWindow`
+- `SetForegroundWindow`
+- `AllowSetForegroundWindow`：在下次用户输入或下次某进程调用 `AllowSetForegroundWindow` 时失效
+- `LockSetForegroundWindow`：短暂时间后自动解锁
+
+#### 最大化和最小化
+
+- `WS_MANIMIZEBOX`：为用户提供最大化按钮
+- `WS_MINIMIZEBOX`：为用户提供最小化按钮
+- `WS_MAXIMIZE`：创建窗口时设置初始最大化
+- `WS_MINIMIZE`：创建窗口时设置初始最小化
+- `IsZoomed`：窗口是否最大化
+- `IsIconic`：窗口是否最小化
+- `CloseWindow`：最小化窗口
+- `OpenIcon`：从最小化恢复窗口
+- `ShowWindow`：最小化、最大化、恢复、显示、隐藏、默认状态、控制是否前台激活
+- `ShowWindowAsync`：异步 ShowWindow
+- `SetWindowPlacement`：设置正常、最小化、最大化状态的位置与大小，还有显示状态
+- `GetWindowPlacement`
+
+#### 显示或隐藏
+
+若当前进程在被创建时指定了 `STARTUPINFO.wShowWindow` 且 `STARTUPINFO.dwFlag` 包含 `STARTF_USESHOWWINDOW`，则进程第一次调用 `ShowWindow` 的参数被忽略，而强制使用父进程指定的参数。
+
+- `WS_VISIBLE`：创建窗口后自动调用 `ShowWindow(SW_SHOW)`，对于 Overlapped Window 若 `x` 设置为 `CW_USEDEFAULT` 则 `y` 也需要设置为 `CW_USEDEFAULT` 才有效
+- `IsWindowVisible()`
+- `ShowWindow`：最小化、最大化、恢复、显示、隐藏、默认状态、控制是否前台激活
+- `ShowWindowAsync`：异步 ShowWindow
+- `AnimateWindow`：显示隐藏时展示动画（仅 client area）
+- `ShowOwnedPopups`
+
+#### 启用或禁用
+
+禁用子窗口导致子窗口的消息被父窗口接收处理，禁用前台激活窗口导致键盘失焦且不会转移到其他窗口
+
+- `WS_DISABLED`：创建窗口时设置初始禁用状态
+- `IsWindowEnabled`
+- `EnableWindow`
+
+#### 透明背景
+
+- `WS_EX_LAYERED`：窗口支持透明度从而可以实现半透明效果和非矩形窗口，若 Alpha 通道为 0 则透过鼠标事件
+- `WS_EX_TRANSPARENT`：透过所有鼠标事件
+- `SetLayeredWindowAttributes`：通过图层混合的方式确认最终的窗口像素 Alpha 通道
+- `UpdateLayeredWindow`：直接绘制包含 Alpha 通道的像素纹理
+
+在调用 `SetLayeredWindowAttributes` 或 `UpdateLayeredWindow` 之前窗口不会被绘制，调用 `SetLayeredWindowAttributes` 设置属性将导致 `UpdateLayeredWindow` 失效，除非清除设置的属性
+
+### 窗口消息
 
 [Your First Windows Program](https://learn.microsoft.com/en-us/windows/win32/learnwin32/your-first-windows-program)
 
@@ -1370,6 +1528,9 @@ Windows 支持三种异步 IO 机制：
 4. GetMessage
 5. DispatchMessage
 6. WindowProc
+
+- `WM_GETMINMAXINFO`：当位置与大小改变时发送该消息，`MINMAXINFO`包含最大化位置与尺寸、最大最小可变尺寸
+- `WM_WINDOWPOSCHANGING`：当位置、大小、Z-Order、显示状态改变时发送该消息，`WINDOWPOS`包含新的位置、大小、Z-Order 和显示状态
 
 #### 生命周期
 
