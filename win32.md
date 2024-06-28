@@ -57,8 +57,11 @@
       - [显示或隐藏](#显示或隐藏)
       - [启用或禁用](#启用或禁用)
       - [透明背景](#透明背景)
+      - [窗口属性](#窗口属性)
     - [窗口消息](#窗口消息)
-      - [生命周期](#生命周期)
+      - [消息队列](#消息队列)
+      - [窗口过程](#窗口过程)
+      - [窗口挂钩](#窗口挂钩)
       - [用户输入](#用户输入)
     - [其它细节](#其它细节)
       - [DPI](#dpi)
@@ -1293,21 +1296,6 @@ HWND CreateWindowExW(
   [in, optional] HINSTANCE hInstance,   // 指定窗口关联的模块，用于搜索窗口类
   [in, optional] LPVOID    lpParam      // 窗口自定义数据，通常将窗口封装成 class 并在这里传递 this 指针
 );
-
-typedef struct tagWNDCLASSEXW {
-  UINT      cbSize;
-  UINT      style;
-  WNDPROC   lpfnWndProc;
-  int       cbClsExtra;
-  int       cbWndExtra;
-  HINSTANCE hInstance;
-  HICON     hIcon;
-  HCURSOR   hCursor;
-  HBRUSH    hbrBackground;
-  LPCWSTR   lpszMenuName;
-  LPCWSTR   lpszClassName;
-  HICON     hIconSm;
-} WNDCLASSEXW, *PWNDCLASSEXW, *NPWNDCLASSEXW, *LPWNDCLASSEXW;
 ```
 
 > - `RegisterClass`
@@ -1320,7 +1308,7 @@ typedef struct tagWNDCLASSEXW {
 > - `EndTask`：先尝试发送 `WM_CLOSE`，若失败则可以选择强制关闭窗口
 > - `UnregisterClass`
 
-MVVM 作为现代经典的 UI 设计模式，引入了数据驱动的概念，即 UI 是状态的纯函数，只要状态数据相同，呈现的 UI 也一定相同，通过更改数据来更新 UI
+MVVM 作为现代流行的 UI 设计模式，引入了数据驱动的概念，即 UI 是状态的纯函数，只要状态数据相同，呈现的 UI 也一定相同，通过更改数据来更新 UI
 
 #### 窗口类型
 
@@ -1409,6 +1397,37 @@ MVVM 作为现代经典的 UI 设计模式，引入了数据驱动的概念，�
 > - `GetWindowLongPtr`
 > - `SetWindowLongPtr`
 
+```cpp
+typedef struct tagWNDCLASSEXW {
+  UINT      cbSize;         // 该结构体大小
+  UINT      style;          // 控制一些绘制行为
+  WNDPROC   lpfnWndProc;    // 窗口处理函数
+  int       cbClsExtra;     // 通常为 0
+  int       cbWndExtra;     // 通常为 0
+  HINSTANCE hInstance;      // 该窗口类关联的模块
+  HICON     hIcon;          // 图标，会显示在 start, taskbar, title bar, system tray 等
+  HCURSOR   hCursor;        // 鼠标
+  HBRUSH    hbrBackground;  // 窗口背景颜色
+  LPCWSTR   lpszMenuName;   // 菜单资源名，通常使用 MAKEINTRESOURCE
+  LPCWSTR   lpszClassName;  // 窗口名
+  HICON     hIconSm;        // 小图标，若为空则自动从原图标创建
+} WNDCLASSEXW, *PWNDCLASSEXW, *NPWNDCLASSEXW, *LPWNDCLASSEXW;
+```
+
+- 创建窗口时会提供窗口类名和模块句柄，用来搜索对应的窗口类
+  1. local class
+  2. global class: `style` 设置 `CS_GLOBALCLASS`
+  3. system class: 第一次调用窗口函数时创建
+
+> - `RegisterClassEx`
+> - `UnregisterClass`
+> - `GetClassName`
+> - `GetClassInfoEx`
+> - `GetClassName`
+> - `SetClassInfoEx`
+> - `SetClassLongPtr`
+> - `SetClassLongPtr`
+
 #### 窗口名
 
 窗口名通常会显示在窗口的 title bar 和 taskbar button 里，搜索窗口时通常也会用到窗口名
@@ -1449,6 +1468,9 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 - `BeginDeferWindowPos`
 - `DeferWindowPos`：同时更改多个窗口位置大小、Z-Order、显示状态等
 - `EndDeferWindowPos`
+
+- `WM_GETMINMAXINFO`：当位置与大小改变时发送该消息，`MINMAXINFO`包含最大化位置与尺寸、最大最小可变尺寸
+- `WM_WINDOWPOSCHANGING`：当位置、大小、Z-Order、显示状态改变时发送该消息，`WINDOWPOS`包含新的位置、大小、Z-Order 和显示状态
 
 #### Z 轴顺序
 
@@ -1518,30 +1540,118 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 
 在调用 `SetLayeredWindowAttributes` 或 `UpdateLayeredWindow` 之前窗口不会被绘制，调用 `SetLayeredWindowAttributes` 设置属性将导致 `UpdateLayeredWindow` 失效，除非清除设置的属性
 
+#### 窗口属性
+
+除了窗口用户数据（`CreateWindowEx` 最后一个参数，可通过 `GetWindowLongPtr` 和 `GetWindowLongPtr` 读写），还可以使用窗口属性为窗口附加额外的数据。
+
+- `EnumProps`
+- `EnumPropsEx`
+- `GetProp`
+- `SetProp`
+- `RemoveProp`：通常在 `WM_DESTROY` 消息处理中调用
+
 ### 窗口消息
 
-[Your First Windows Program](https://learn.microsoft.com/en-us/windows/win32/learnwin32/your-first-windows-program)
+#### 消息队列
 
-1. RegisterClassEx：exe 注册的 Class 在退出后销毁，dll 注册的样式需要手动销毁，class 由 classname 和 hinstance 唯一确定
-2. CreateWindowEx
-3. ShowWindow
-4. GetMessage
-5. DispatchMessage
-6. WindowProc
+当线程第一次调用窗口系统相关函数时，会创建一个消息队列用来接收消息。该线程创建的窗口的消息都被发送到该线程的消息队列中。
 
-- `WM_GETMINMAXINFO`：当位置与大小改变时发送该消息，`MINMAXINFO`包含最大化位置与尺寸、最大最小可变尺寸
-- `WM_WINDOWPOSCHANGING`：当位置、大小、Z-Order、显示状态改变时发送该消息，`WINDOWPOS`包含新的位置、大小、Z-Order 和显示状态
+```cpp
+MSG msg{};
+while (true) {
+    auto res = GetMessage(&msg, NULL, 0, 0); // 同步阻塞读取消息队列
+    if (res == 0) {
+        break; // WM_QUIT
+    }
+    if (res == -1) {
+        // handle error
+        break;
+    }
+    TranslateMessage(&msg); // 将键盘按键消息翻译生成字符消息，放入消息队列
+    DispatchMessage(&msg); // 将消息分派到对应的窗口处理函数
+}
+```
 
-#### 生命周期
+- `GetMessage`：同步阻塞读取消息，可设置消息过滤（无法过滤 `WM_QUIT`）
+- `PeekMessage`：同步非阻塞读取消息，可设置消息过滤（无法过滤 `WM_QUIT`），可选择是否从队列中删除消息（无法删除 `WM_PAINT` 除非更新区域为空）
+- `SendMessage`：同步发送消息，`GetMessage` 和 `PeekMessage` 内部直接调用 `DispatchMessage` 来处理该消息，即同步发送消息可以“插队”
+- `PostMessage`：异步发送消息，发送到消息队列
+- `PostThreadMessage`：异步发送消息，指定线程而非指定窗口（该消息的 `hwnd` 为 `NULL`）
+- `PostQuitMessage`：异步发送 `WM_QUIT`，该消息无法被忽略
 
-1. WM_NCCREATE
-2. WM_NCCALCSIZE
-3. WM_CREATE
-4. WM_PAINT
-5. WM_CLOSE
-6. WM_DESTROY
-7. WM_NCDESTROY
-8. WM_QUIT
+#### 窗口过程
+
+窗口过程(Window Procdure)或称窗口处理函数，由窗口类提供。
+
+```cpp
+LRESULT CALLBACK MainWndProc(
+    HWND hwnd,        // 窗口句柄
+    UINT uMsg,        // 消息 ID
+    WPARAM wParam,    // 消息特定参数 1
+    LPARAM lParam)    // 消息特定参数 2
+{
+    switch (uMsg) {
+        case WM_NCCREATE:
+            // non-client area 创建完成时
+            // lParam 指向结构包含窗口创建信息
+            // 返回 TRUE 表示正常，返回 FALSE 导致 CreateWindowEx 返回 NULL
+            return TRUE;
+
+        case WM_CREATE:
+            // client area 创建完成时
+            // lParam 指向结构包含窗口创建信息
+            // 返回 0 表示正常，返回 -1 导致 CreateWindowEx 返回 NULL
+            return 0;
+
+        case WM_PAINT:
+            // 当窗口更新区域不为空时（如窗口被遮挡或暴露），或窗口消息队列无其他消息时，或调用 UpdateWindow（仅当更新区域不为空时有效） 或 RedrawWindow（仅当设置 RDW_INTERNALPAINT 时有效）
+            return 0;
+
+        case WM_CLOSE:
+            // 窗口关闭请求，如点击右上角关闭按钮、任务栏关闭按钮、Alt-F4 快捷键、消息发送等
+            // 通常在此调用 DestroyWindow
+            return 0;
+
+        case WM_DESTROY:
+            // 窗口已被销毁，此时子窗口还未销毁
+            // 通常在此调用 PostQuitMessage
+            return 0;
+
+        case WM_NCDESTROY:
+            // 窗口已被销毁，此时子窗口已被销毁
+            // 默认在此释放窗口相关的所有内存
+            return 0;
+
+        case WM_QUIT:
+            // 通常无法接收到此消息，因为该消息导致 GetMeesage 返回 0 从而退出消息循环
+            return 0;
+
+        default:
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+}
+```
+
+> - `DefWindowProc`：系统默认窗口处理函数
+> - `CallWindowProc`：调用窗口处理函数，会将消息转为 Unicode 或 ANSI
+> - `GetWindowLongPtr`：可以用来获取指定窗口的窗口处理函数
+> - `SetWindowLongPtr`：可以用来设置指定窗口的窗口处理函数，新的处理函数可以通过 `CallWindowProc` 调用旧的处理函数，以实现基类扩展
+> - `GetClassLongPtr`
+> - `SetClassLongPtr`：也可以设置窗口类的窗口处理函数，这样会影响到所有使用该类的窗口
+
+#### 窗口挂钩
+
+- hook 分为局部（仅作用于目标线程的消息队列）和全局（作用于 desktop 内消息队列）
+- hook 会在目标处理特定消息的时候被调用，可能在消息入队后、`GetMessage`后、处理前、处理后
+- 若目标位于其他线程，则系统会先为目标所在进程加载包含 hook 的 dll
+  - 32 位进程无法为 64 位进程注入 dll，反之亦然
+  - 虽然异构的 dll 无法注入，但异构的 hook 仍然有效，原理是在被注入目标处理消息时，系统将消息同步转发给注入进程，注入进程将调用 hook 函数处理消息，然后再由系统返回到被注入目标。如果注入进程没有消息循环，则可能导致异构的被注入目标卡死。
+- hook 会在线程终止时被销毁，hook 被销毁时会卸载被注入目标因 hook 而加载的 dll
+
+> - `SetWindowsHookEx`
+> - `UnhookWindowsHookEx`
+> - `CallNextHookEx`
+> - `CallMsgFilter`
 
 #### 用户输入
 
@@ -1599,21 +1709,27 @@ Alpha mode:
 > - [Character Sets](https://learn.microsoft.com/en-us/windows/win32/intl/character-sets)
 > - [Code Page Identifiers](https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers)
 > - [Unicode in the Windows API](https://learn.microsoft.com/en-us/windows/win32/intl/unicode-in-the-windows-api)
->
-> 因为 UTF-8 诞生之前，Windows 就应用了 UTF-16 作为 Unicode 编码，故 UTF-8 仅作为 Code Page 中的一个兼容选项。虽然绝大多数 API 交互使用 UTF-16，但系统中的文件数据都应该存储为 UTF-8。
 
-Windows API 通常有三种格式：
+Windows 系统主要存在三类字符集：
 
-- `CreateFile` 宏，根据不同编译参数扩展成以下二者之一
-- `CreateFileW` Unicode 版本，使用 UTF-16
-- `CreateFileA` ANSI 版本，使用 Windows Code Page （又名 ANSI Code Pages）
-  - 单字节字符集，如 `OEM United States`、`IBM EBCDIC International`
-  - 多字节字符集，如 `Chinese Simplified (GB2312)`、`utf-8`
+- Unicode
+  - `W` 版本的 API 函数
+  - `W` 版本窗口类的消息
+  - 使用 UTF-16 编码
+- ANSI
+  - `A` 结尾的 API 函数
+  - `A` 版本窗口类的消息
+  - 不同的语系地区使用不同的字符集和编码
+    - 单字节字符集，如 `OEM United States`、`IBM EBCDIC International`
+    - 多字节字符集，如 `Chinese Simplified (GB2312)`、`utf-8`
+- OEM
+  - 终端输入输出
+  - FAT32 文件系统非扩展文件名
 
-字符串编码转换：
+系统底层使用 Unicode (UTF-16)，当使用 ANSI 与系统交互时，系统会尝试自动转换字符集。
 
-- `TCHAR`
-- `TEXT`
-- `WideCharToMultiByte`
-- `MultiByteToWideChar`
-- 系统自动转换窗口消息中的字符串
+> - `GetACP`
+> - `GetOEMCP`
+> - `GetCPInfoEx`
+> - `MultiByteToWideChar`
+> - `WideCharToMultiByte`
