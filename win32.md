@@ -33,6 +33,7 @@
     - [注册表](#注册表)
     - [文件系统](#文件系统)
       - [磁盘](#磁盘)
+      - [目录结构](#目录结构)
       - [文件](#文件)
       - [路径](#路径)
       - [读写](#读写)
@@ -63,7 +64,12 @@
       - [窗口过程](#窗口过程)
       - [窗口挂钩](#窗口挂钩)
       - [用户输入](#用户输入)
-    - [其它细节](#其它细节)
+    - [窗口渲染](#窗口渲染)
+      - [DWM](#dwm)
+      - [GDI](#gdi)
+    - [窗口杂项](#窗口杂项)
+      - [系统窗口](#系统窗口)
+      - [多显示器](#多显示器)
       - [DPI](#dpi)
       - [Color](#color)
   - [其他](#其他)
@@ -78,7 +84,7 @@
 
 - [Kernel Object](https://learn.microsoft.com/en-us/windows/win32/sysinfo/kernel-objects)
 
-  - 负责计算和 IO 资源的访问，如 Process, Thread, FileMapping, File 等
+  - 负责计算和 IO 资源的访问，如 Process, Thread, Mutex, FileMapping, File 等
   - 一个内核对象可以创建多个句柄，只要创建的进程具有对象名字和访问权限
   - 内核对象在最后一个句柄关闭后才会销毁，进程终止时会自动关闭进程持有的内核对象句柄
 
@@ -93,7 +99,7 @@
   - 一个 GDI 用户只能创建一个句柄，且仅能在创建进程内部访问
   - GDI 对象在调用相应销毁函数后立即被销毁，进程终止时会自动销毁进程创建的用户对象
 
-内核对象作为最主要的资源对象，系统为其提供许多机制来加强管理
+其中，内核对象作为最主要的资源对象，系统为其提供许多机制来加强管理
 
 ### 句柄表
 
@@ -137,7 +143,7 @@
     - `Global` 链接到 `\BaseNamedObjects`，用于跨会话共享
     - `Local` 链接到 `\Session\1\BaseNamedObjects`，用于不跨会话共享
 
-![winobj](./images/winobj2.png)
+![winobj2](./images/winobj2.png)
 
 ### 访问控制
 
@@ -231,12 +237,13 @@
 > - [Windows Integrity Mechanism Design](<https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/bb625963(v=msdn.10)>)
 > - [Allow UIAccess](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/security-policy-settings/user-account-control-allow-uiaccess-applications-to-prompt-for-elevation-without-using-the-secure-desktop)
 
-- 可信级别（integrity level）
+- 可信级别（Integrity Level）
 
   - system: 通常为系统服务
   - high: 通常为管理员权限进程
   - medium: 通常为标准用户权限进程
   - low: 通常显式设置了 exe 文件的 security descriptors 或进程的 access token
+  - untrust: 同上
 
 - access token 中的 integrity SIDs 表示可信级别
 
@@ -249,11 +256,11 @@
 - UIPI：限制低可信级别对高可信级别的访问机制
   - 验证窗口句柄
   - 发送窗口消息（API 调用返回成功，消息被静默丢弃）
+  - Hooks
+  - DLL 注入
   - 除非应用程序具有 UIAccess 标志且满足以下条件，则允许对高可信级别进程驱动 UI 自动化
     - 程序具有可信的数字签名
     - 程序安装在 `%ProgramFiles%` 或 `%WinDir%` (某些标准用户可写的子目录除外) 目录下
-  - Hook
-  - DLL 注入
 
 #### 用户访问控制
 
@@ -286,7 +293,7 @@
 
 3. 用户程序入口函数
 
-   - `main`/`wmain` for **SUBSYSTEM:CONSOLE**, 默认自动创建控制台窗口或继承父进程控制台窗口来执行程序
+   - `main`/`wmain` for **SUBSYSTEM:CONSOLE**, 默认继承父进程控制台窗口或自动创建新控制台窗口
    - `WinMain`/`wWinMain` for **SUBSYSTEM:WINDOWS**
 
    ```cpp
@@ -327,7 +334,7 @@
   - 环境变量
   - 当前目录
   - 控制台
-  - 内核对象句柄（句柄具有 `bInheritHandle` 且 `bInheritHandles` 设置 `true`）
+  - 内核对象句柄（句柄标志 `bInheritHandle` 且创建进程参数 `bInheritHandles` 都设置为 `true`）
   - 错误模式
   - 进程 CPU 亲和性（`dwCreationFlags` 设置 `INHERIT_PARENT_AFFINITY`）
   - 作业
@@ -373,9 +380,9 @@
   - 析构
     1. `thread_load`（线程退出）
     2. in-block `thread_local`（线程退出）
-    3. `static`（模块卸载）
-    4. in-block `static`（模块卸载）
-    5. `std::atexit` 保证在注册时就已初始化的任何 `static` 销毁之前调用
+    3. `std::atexit` 保证在注册时就已初始化的任何 `static` 销毁之前调用
+    4. `static`（模块卸载）
+    5. in-block `static`（模块卸载）
   - **注意：无法保证变量的析构函数一定会被调用**
 
 > - `ExitProcess`
@@ -422,7 +429,7 @@
 - 线程栈最大默认 1M，可通过控制编译时链接器参数或运行时 `CreateThread` 参数来改变，大小向上取整 1M
 
 > - `CreateThread`：安全属性、栈大小、暂停状态
-> - `CreateRemoteThread`: 在其他进程中创建线程
+> - `CreateRemoteThread`：在其他进程中创建线程
 > - `OpenThread`
 > - `GetThreadId`
 > - `GetCurrentThread`：伪句柄，仅进程内有效，使用 `DuplicateHandle` 转换为真句柄
@@ -461,7 +468,7 @@
 > - `SuspendThread`
 > - `ResumeThread`
 > - `Sleep`
-> - `SwitchToThread`: 相对 `Sleep(0)`，允许切换低优先级线程
+> - `SwitchToThread`：相对 `Sleep(0)`，允许切换低优先级线程
 > - `GetThreadTimes`
 > - `GetProcessTimes`
 
@@ -620,16 +627,16 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 > 更详细 dll 搜索路径见 [Dll search order](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)；  
 > 关于 Windows 运行时环境和打包部署建议见 [Deployment](https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp?view=msvc-170)
 
-1. DLL Redirection.
-2. API sets.
-3. SxS manifest redirection.
-4. Loaded-module list.
-5. Known DLLs.
-6. The package dependency graph of the process.
+1. DLL Redirection
+2. API sets
+3. SxS manifest redirection
+4. Loaded-module list
+5. Known DLLs
+6. The package dependency graph of the process
 7. 进程 exe 所在目录
-8. 32 位 Windows 系统目录（`C:\Windows\System32`）
-9. 16 位 Windows 系统目录（`C:\Windows\System`）
-10. Windows 系统目录（`C:\Windows`）
+8. 系统目录（`C:\Windows\System32`）
+9. 16 位兼容系统目录（`C:\Windows\System`）
+10. Windows 目录（`C:\Windows`）
 11. 进程当前目录
 12. 环境变量 PATH
 
@@ -664,9 +671,9 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 
 - 页面状态
 
-  - `MEM_FREE`: 该地址尚未被分配，无法访问
-  - `MEM_RESERVE`: 该地址已被分配，但还未调拨存储器，无法访问
-  - `MEM_COMMIT`: 该地址已被分配，且已调拨存储器 (storage)，第一次访问时系统会为其准备物理内存页面和对应数据
+  - `MEM_FREE`：该地址尚未被分配，无法访问
+  - `MEM_RESERVE`：该地址已被分配，但还未调拨存储器，无法访问
+  - `MEM_COMMIT`：该地址已被分配，且已调拨存储器 (storage)，第一次访问时系统会为其准备物理内存页面和对应数据
 
 - 页面类型
 
@@ -689,7 +696,7 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
   - `PAGE_EXECUTE_READ`
   - `PAGE_EXECUTE_READWRITE`
   - `PAGE_EXECUTE_WRITECOPY`
-  - `PAGE_GUARD`: 设置一次性内存访问异常处理
+  - `PAGE_GUARD`：设置一次性内存访问异常处理
 
 - 地址访问
 
@@ -716,9 +723,9 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
   - nonpaged pool: 驻留在物理内存中
 
 > - `GetSystemInfo`：CPU 硬件信息
-> - `GetPerformanceInfo`: 系统运行时性能信息
-> - `GlobalMemoryStatusEx`: 系统内存使用情况
-> - `GetProcessMemoryInfo`: 进程内存使用情况
+> - `GetPerformanceInfo`：系统运行时性能信息
+> - `GlobalMemoryStatusEx`：系统内存使用情况
+> - `GetProcessMemoryInfo`：进程内存使用情况
 > - `VirtualQuery`
 > - `VirtualAlloc`：控制内存页面状态，申请[大页内存](https://learn.microsoft.com/en-us/windows/win32/memory/large-page-support)
 > - `VirtualFree`
@@ -740,12 +747,12 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 
 > 参考 [Error Handling](https://learn.microsoft.com/en-us/windows/win32/debug/error-handling)、[Structured Exception Handling](https://learn.microsoft.com/en-us/windows/win32/debug/structured-exception-handling)、[Windows Error Reporting](https://learn.microsoft.com/en-us/windows/win32/wer/windows-error-reporting)
 
-- 返回码：几乎所有系统 API 的调用都会失败，通常返回特殊的值表示调用失败
+- 返回码：几乎所有系统 API 的调用都可能会失败，通常返回特殊的值表示调用失败
 
-  - `BOOL`: 返回 `FALSE` 表示失败
-  - `HANDLE`: 返回 `NULL` 或 `INVALID_HANDLE_VALUE`（特别注意）
-  - `LPVOID`: 返回 `NULL` 表示失败
-  - `HRESULT`: 使用 `SUCCEEDED(hr)` 或 `FAILED(hr)` 来检测成功或失败
+  - `BOOL`：返回 `FALSE` 表示失败
+  - `HANDLE`：返回 `NULL` 或 `INVALID_HANDLE_VALUE`（特别注意）
+  - `LPVOID`：返回 `NULL` 表示失败
+  - `HRESULT`：使用 `SUCCEEDED(hr)` 或 `FAILED(hr)` 来检测成功或失败
 
 - 错误码：当系统 API 调用失败时（少数是在调用成功时）设置一个线程独立的[**错误码**](https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes)来表示失败（或成功）的原因
 
@@ -778,7 +785,7 @@ std::string GetLastErrorAsString() {
   - `SEM_NOGPFAULTERRORBOX`，不显示 WER 对话框
   - `SEM_NOOPENFILEERRORBOX`，不显示当 `OpenFile` 传入 `OF_PROMPT` 标志且对应文件不存在时的对话框
 
-- 结构化异常处理 (SEH)：使用 SEH 后编译器禁止在同一栈帧中构造 C++ 对象，**因为 SEH 的栈展开不会调用析构函数**
+- 结构化异常处理 (SEH)：使用 SEH 后编译器禁止在 `__try` 中构造 C++ 对象，**因为 SEH 的栈展开不会调用析构函数**
 
 ```cpp
 /*
@@ -838,12 +845,12 @@ __except (filter-expression) {
 > - `SetErrorMode`
 > - `GetThreadErrorMode`
 > - `SetThreadErrorMode`
-> - `_controlfp_s`: 默认系统关闭所有浮点异常，因此计算结果可以是 NAN 或 INFINITY 而不是异常。
-> - `_clearfp`: 必须在浮点异常处理块中调用该函数来获取并清除浮点异常标志
+> - `_controlfp_s`：默认系统关闭所有浮点异常，因此计算结果可以是 NAN 或 INFINITY 而不是异常。
+> - `_clearfp`：必须在浮点异常处理块中调用该函数来获取并清除浮点异常标志
 > - `RaiseException`
-> - `GetExceptionCode`: 仅可在过滤表达式和 `__except` 块中调用
-> - `GetExceptionInformation`: 仅可在过滤表达式中调用，因为执行 `__except` 块时异常栈帧已被销毁
-> - `AbnormalTermination`: 仅可在 `__finally` 块中调用
+> - `GetExceptionCode`：仅可在过滤表达式和 `__except` 块中调用
+> - `GetExceptionInformation`：仅可在过滤表达式中调用，因为执行 `__except` 块时异常栈帧已被销毁
+> - `AbnormalTermination`：仅可在 `__finally` 块中调用
 > - `AddVectoredExceptionHandler`
 > - `RemoveVectoredExceptionHandler`
 > - `AddVectoredContinueHandler`
@@ -862,7 +869,9 @@ __except (filter-expression) {
 注册表是 Windows 用来存储配置的层次结构数据库(B-Tree)，支持事务。
 
 - Key: Subkey 和 Value 的集合
+
   - Name: 不可包含 `\`，忽略大小写
+
 - Value: 包含数据的记录
 
   - Name: 可以包含 `\`，忽略大小写
@@ -937,6 +946,24 @@ NTFS 支持事务
 > - `GetDiskFreeSpaceEx`
 > - `IDiskQuotaControl`
 > - `IEnumDiskQuotaUsers`
+
+#### 目录结构
+
+- C:\
+  - Windows `%SystemRoot%`：Window 系统目录
+    - System：16 位兼容系统目录
+    - System32：**64 位**系统目录
+    - SystemWOW64：**32 位**系统目录
+  - Program Files `%ProgramFiles%`：64 位应用程序安装目录（所有用户）
+  - Program Files (x86) `%ProgramFiles(x86)%`：32 位应用程序安装目录（所有用户）
+  - Program Data `%ProgramData%`：应用程序数据（所有用户）
+  - Users
+    - username `%USERPROFILE%`
+      - AppData
+        - Local `%LOCALAPPDATA%`：应用程序状态数据（当前用户）
+          - Programs：应用程序安装目录（当前用户）
+          - Temp `%TEMP%`：应用程序缓存数据（当前用户（
+        - Roaming `%APPDATA%`：应用程序配置数据（当前用户）
 
 #### 文件
 
@@ -1246,36 +1273,34 @@ Windows 支持三种异步 IO 机制：
 ![desktop](./images/desktop.png)
 ![taskbar](./images/taskbar.png)
 
-- Window Station
-  - Desktops
-    - Desktop Window (Cross Multi-Monitors)
-      - Taskbar
-        - Start Button
-        - Taskbar Buttons
-          - Icon and Label
-          - Overlay Icon
-          - Progress Bar
-          - Jump List
-          - Thumbnail Toolbar
-        - Notification Area
-          - Icon
-          - Tooltip (Hover)
-          - Popup Window (Left click)
-          - Primary UI (Left double-click)
-          - Context Menu (Right-click)
-      - Application Window  
-        ![appwindow](./images/appwindow.png)
-        - Non-Client Area
-          - Title Bar
-            - Application Icon
-            - Window Menu
-            - Window Title
-            - Minimize and Maximize Button
-            - Close Button
-          - Menu Bar
-          - Border
-          - Scroll Bar
-        - Client Area
+- Desktop Window
+  - Taskbar
+    - Start Button
+    - Taskbar Buttons
+      - Icon and Label
+      - Overlay Icon
+      - Progress Bar
+      - Jump List
+      - Thumbnail Toolbar
+    - Notification Area
+      - Icon
+      - Tooltip (Hover)
+      - Popup Window (Left click)
+      - Primary Window (Left double-click)
+      - Context Menu (Right-click)
+  - Application Window
+    ![appwindow](./images/appwindow.png)
+    - Non-Client Area
+      - Title Bar
+        - Application Icon
+        - Window Menu
+        - Window Title
+        - Minimize and Maximize Button
+        - Close Button
+      - Menu Bar
+      - Border
+      - Scroll Bar
+    - Client Area
 
 ### 应用窗口
 
@@ -1298,15 +1323,12 @@ HWND CreateWindowExW(
 );
 ```
 
-> - `RegisterClass`
-> - `RegisterClassEx`
-> - `CreateWindow`
+> - `RegisterClassEx`：返回 Atom 可以通过宏 MAKEINTATOM 转换当窗口类名来用
+> - `UnregisterClassEx`
 > - `CreateWindowEx`
 > - `IsWindow`：检测 HWND 是否有效
-> - `IsWindowUnicode`
 > - `DestroyWindow`
 > - `EndTask`：先尝试发送 `WM_CLOSE`，若失败则可以选择强制关闭窗口
-> - `UnregisterClass`
 
 MVVM 作为现代流行的 UI 设计模式，引入了数据驱动的概念，即 UI 是状态的纯函数，只要状态数据相同，呈现的 UI 也一定相同，通过更改数据来更新 UI
 
@@ -1322,8 +1344,6 @@ MVVM 作为现代流行的 UI 设计模式，引入了数据驱动的概念，�
       - `WS_EX_APPWINDOW` 强制显示 Taskbar Button
       - `WS_EX_TOOLWINDOW` 强制不显示 Taskbar Button
 
-> - `GetDesktopWindow`
-> - `GetShellWindow`
 > - `EnumWindows`
 > - `EnumThreadWindows`
 > - `FindWindow`：根据 Window name 和 Class name 查找窗口
@@ -1331,12 +1351,12 @@ MVVM 作为现代流行的 UI 设计模式，引入了数据驱动的概念，�
 - Owned Window
 
   - 条件：
-    - Top-Level Window
-    - `pWndParent` 为 Owner 窗口的 `HWND`（Owner 也必须是 Top-level Window）
+    - Top-level Window
+    - `pWndParent` 为 owner 窗口的 `HWND`（owner 也必须是 Top-level Window）
   - 特点：
-    - 总是在 Owner 窗口上方
-    - 当 Owner 窗口最小化时隐藏，当 Owner 窗口恢复时显示
-    - 跟随 Owner 窗口一起销毁
+    - 总是在 owner 窗口上方
+    - 当 owner 窗口最小化时隐藏，当 owner 窗口恢复时显示
+    - 跟随 owner 窗口一起销毁
 
 > - `GetLastActivePopup`
 > - `ShowOwnedPopups`
@@ -1351,9 +1371,11 @@ MVVM 作为现代流行的 UI 设计模式，引入了数据驱动的概念，�
   - 特点：
     - 总是在父窗口上方
     - 跟随父窗口一同显示/隐藏、移动、销毁
-    - 超出父窗口 Client Area 部分将被裁剪
+    - 超出父窗口 client area 部分将被裁剪
     - 禁用状态的子窗口的消息直接发送给父窗口
 
+> - `WS_CLIPCHILDREN`：从该父窗口的绘制区域裁剪掉其子窗口区域，防止覆盖子窗口
+> - `WS_CLIPSIBLINGS`：从该子窗口的绘制区域裁剪掉其兄弟窗口区域，防止覆盖兄弟窗口
 > - `IsChild`
 > - `GetParent`
 > - `SetParent`
@@ -1363,8 +1385,6 @@ MVVM 作为现代流行的 UI 设计模式，引入了数据驱动的概念，�
 > - `ChildWindowFromPoint`：检测坐标属于哪个子窗口
 > - `ChildWindowFromPointEx`：可以跳过某些状态的子窗口
 > - `RealChildWindowFromPoint`：仅检测直系子窗口
-> - `WS_CLIPCHILDREN`: 从该父窗口的绘制区域裁剪掉其子窗口区域，防止覆盖子窗口
-> - `WS_CLIPSIBLINGS`: 从该子窗口的绘制区域裁剪掉其兄弟窗口区域，防止覆盖兄弟窗口
 
 - Message-only Window
   - 条件
@@ -1375,23 +1395,22 @@ MVVM 作为现代流行的 UI 设计模式，引入了数据驱动的概念，�
 
 #### 非客户区样式
 
-- `WS_CAPTION`: title bar and unsizing border
-- `WS_SYSMENU`: application icon, window menu and close button (requrie `WS_CAPTION`)
-- `WS_MINIMIZEBOX`: minimize button
-- `WS_MAXIMIZEBOX`: maximize and restore button
-- `WS_BORDER`: unsizing border
-- `WS_THICKFRAME`: sizing border
-- `WS_VSCROLL`: vertical scroll bar
-- `WS_HSCROLL`: horizontal scroll bar
+- `WS_CAPTION`：title bar and unsizing border
+- `WS_SYSMENU`：application icon, window menu and close button (requrie `WS_CAPTION`)
+- `WS_MINIMIZEBOX`：minimize button
+- `WS_MAXIMIZEBOX`：maximize and restore button
+- `WS_BORDER`：unsizing border
+- `WS_THICKFRAME`：sizing border
+- `WS_VSCROLL`：vertical scroll bar
+- `WS_HSCROLL`：horizontal scroll bar
 - Overlapped
-  - `WS_OVERLAPPED`: title bar and unsizing border
-  - `WS_OVERLAPPEDWINDOW`: `WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME`
+  - `WS_OVERLAPPED`：title bar and unsizing border
+  - `WS_OVERLAPPEDWINDOW` = `WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME`
 - Popup
-  - `WS_POPUP`: only client area
-  - `WS_POPUPWINDOW`: `WS_POPUP | WS_BORDER | WS_SYSMENU`
-  - `WS_POPUPWINDOW | WS_CAPTION`
+  - `WS_POPUP`：only client area
+  - `WS_POPUPWINDOW | WS_CAPTION` = `WS_POPUP | WS_BORDER | WS_SYSMENU | WS_CAPTION`
 - Child
-  - `WS_CHILD`: only client area (cannot have a menu bar, cannot be used with the `WS_POPUP`)
+  - `WS_CHILD`：only client area (cannot have a menu bar, cannot be used with the `WS_POPUP`)
 
 > - `GetTitleBarInfo`
 > - `GetWindowLongPtr`
@@ -1423,9 +1442,7 @@ typedef struct tagWNDCLASSEXW {
 > - `UnregisterClass`
 > - `GetClassName`
 > - `GetClassInfoEx`
-> - `GetClassName`
-> - `SetClassInfoEx`
-> - `SetClassLongPtr`
+> - `GetClassLongPtr`
 > - `SetClassLongPtr`
 
 #### 窗口名
@@ -1438,7 +1455,7 @@ typedef struct tagWNDCLASSEXW {
 - `WM_GETTEXTLENGTH`
 - `WM_GETTEXT`
 - `WM_SETTEXT`
-- `InternalGetWindowText`：直接读取结构体获取，而非上面的接口通过窗口消息，保证返回 Unidoe String
+- `InternalGetWindowText`：直接读取结构体获取，而非上面的接口通过窗口消息，且保证返回 Unidoe String
 
 #### 位置与大小
 
@@ -1468,9 +1485,10 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 - `BeginDeferWindowPos`
 - `DeferWindowPos`：同时更改多个窗口位置大小、Z-Order、显示状态等
 - `EndDeferWindowPos`
-
-- `WM_GETMINMAXINFO`：当位置与大小改变时发送该消息，`MINMAXINFO`包含最大化位置与尺寸、最大最小可变尺寸
-- `WM_WINDOWPOSCHANGING`：当位置、大小、Z-Order、显示状态改变时发送该消息，`WINDOWPOS`包含新的位置、大小、Z-Order 和显示状态
+- `WM_ENTERSIZEMOVE`：当点击标题栏（移动位置）、边框（改变大小）或 `WM_SYSCOMMAND` 处理 `SC_MOVE` 或 `SC_SIZE` 时
+- `WM_EXITSIZEMOVE`：结束以上操作时
+- `WM_WINDOWPOSCHANGING`：当位置、大小、Z-Order、显示/隐藏将要改变时，对包含 `WS_OVERLAPPED` 和 `WS_THICKFRAME` 样式的窗口额外发送 `WM_GETMINMAXINFO` 消息
+- `WM_WINDOWPOSCHANGED`：当位置、大小、Z-Order、显示/隐藏将要改变时，若位置或/和大小改变则额外发送 `WM_MOVE` 或/和 `WM_SIZE`
 
 #### Z 轴顺序
 
@@ -1496,6 +1514,8 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 - `SetForegroundWindow`
 - `AllowSetForegroundWindow`：在下次用户输入或下次某进程调用 `AllowSetForegroundWindow` 时失效
 - `LockSetForegroundWindow`：短暂时间后自动解锁
+- `WM_ACTIVATEAPP`：当焦点切换到不同的应用程序时，发送给涉及的两个程序的所有窗口
+- `WM_ACTIVE`：当窗口聚焦或失焦时发送
 
 #### 最大化和最小化
 
@@ -1517,11 +1537,12 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 若当前进程在被创建时指定了 `STARTUPINFO.wShowWindow` 且 `STARTUPINFO.dwFlag` 包含 `STARTF_USESHOWWINDOW`，则进程第一次调用 `ShowWindow` 的参数被忽略，而强制使用父进程指定的参数。
 
 - `WS_VISIBLE`：创建窗口后自动调用 `ShowWindow(SW_SHOW)`，对于 Overlapped Window 若 `x` 设置为 `CW_USEDEFAULT` 则 `y` 也需要设置为 `CW_USEDEFAULT` 才有效
-- `IsWindowVisible()`
+- `IsWindowVisible`
 - `ShowWindow`：最小化、最大化、恢复、显示、隐藏、默认状态、控制是否前台激活
 - `ShowWindowAsync`：异步 ShowWindow
 - `AnimateWindow`：显示隐藏时展示动画（仅 client area）
 - `ShowOwnedPopups`
+- `WM_SHOWWINDOW`
 
 #### 启用或禁用
 
@@ -1530,6 +1551,7 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 - `WS_DISABLED`：创建窗口时设置初始禁用状态
 - `IsWindowEnabled`
 - `EnableWindow`
+- `WM_ENABLE`：`EnableWindow` 返回前发送该消息
 
 #### 透明背景
 
@@ -1572,12 +1594,20 @@ while (true) {
 }
 ```
 
+- 消息可能由系统发送、其他窗口发送、默认处理函数或其他 API 函数创建发送
 - `GetMessage`：同步阻塞读取消息，可设置消息过滤（无法过滤 `WM_QUIT`）
 - `PeekMessage`：同步非阻塞读取消息，可设置消息过滤（无法过滤 `WM_QUIT`），可选择是否从队列中删除消息（无法删除 `WM_PAINT` 除非更新区域为空）
+- `GetMessageTime`：获取上次 `GetMessage` 的时间，通常用于计算消息处理间隔时间
 - `SendMessage`：同步发送消息，`GetMessage` 和 `PeekMessage` 内部直接调用 `DispatchMessage` 来处理该消息，即同步发送消息可以“插队”
-- `PostMessage`：异步发送消息，发送到消息队列
+- `SendMessageTimeout`
+- `SendNotifyMessage`：目标窗口同线程则同步发送，不同线程则异步发送消息
+- `InSendMessageEx`
+- `ReplyMessage`：使消息的同步发送者即刻返回，不用继续等待
+- `PostMessage`：异步发送消息，发送到消息队列（无法插队）
 - `PostThreadMessage`：异步发送消息，指定线程而非指定窗口（该消息的 `hwnd` 为 `NULL`）
 - `PostQuitMessage`：异步发送 `WM_QUIT`，该消息无法被忽略
+- `ChangeWindowMessageFilter`：允许低可信级别发送指定到指定进程（不推荐）
+- `ChangeWindowMessageFilterEx`：允许低可信级别发送指定到指定窗口
 
 #### 窗口过程
 
@@ -1591,12 +1621,6 @@ LRESULT CALLBACK MainWndProc(
     LPARAM lParam)    // 消息特定参数 2
 {
     switch (uMsg) {
-        case WM_NCCREATE:
-            // non-client area 创建完成时
-            // lParam 指向结构包含窗口创建信息
-            // 返回 TRUE 表示正常，返回 FALSE 导致 CreateWindowEx 返回 NULL
-            return TRUE;
-
         case WM_CREATE:
             // client area 创建完成时
             // lParam 指向结构包含窗口创建信息
@@ -1617,11 +1641,6 @@ LRESULT CALLBACK MainWndProc(
             // 通常在此调用 PostQuitMessage
             return 0;
 
-        case WM_NCDESTROY:
-            // 窗口已被销毁，此时子窗口已被销毁
-            // 默认在此释放窗口相关的所有内存
-            return 0;
-
         case WM_QUIT:
             // 通常无法接收到此消息，因为该消息导致 GetMeesage 返回 0 从而退出消息循环
             return 0;
@@ -1632,12 +1651,25 @@ LRESULT CALLBACK MainWndProc(
 }
 ```
 
+| 范围             | 描述                                                      |
+| ---------------- | --------------------------------------------------------- |
+| 0 ~ WM_USER-1    | 系统保留                                                  |
+| WM_USER ~ 0x7FFF | 在窗口类内部使用的自定义消息                              |
+| WM_APP ~ 0xBFFF  | 应用程序内部使用的自定义消息                              |
+| 0xC000 ~ 0xFFFF  | IPC 消息，调用 `RegisterWindowMessage` 返回以保证系统唯一 |
+| 0xFFFF ~         | 系统保留                                                  |
+
 > - `DefWindowProc`：系统默认窗口处理函数
 > - `CallWindowProc`：调用窗口处理函数，会将消息转为 Unicode 或 ANSI
 > - `GetWindowLongPtr`：可以用来获取指定窗口的窗口处理函数
 > - `SetWindowLongPtr`：可以用来设置指定窗口的窗口处理函数，新的处理函数可以通过 `CallWindowProc` 调用旧的处理函数，以实现基类扩展
 > - `GetClassLongPtr`
 > - `SetClassLongPtr`：也可以设置窗口类的窗口处理函数，这样会影响到所有使用该类的窗口
+> - `GetWindowThreadProcessId`
+> - `GetGUIThreadInfo`
+> - `IsGUIThread`
+> - `IsHungAppWindow`
+> - `IsWindowUnicode`
 
 #### 窗口挂钩
 
@@ -1659,7 +1691,48 @@ LRESULT CALLBACK MainWndProc(
 
 [Input Method Manager](https://learn.microsoft.com/en-us/windows/win32/intl/input-method-manager)
 
-### 其它细节
+### 窗口渲染
+
+#### DWM
+
+> 参考
+>
+> - [DWM Overviews](https://learn.microsoft.com/en-us/windows/win32/dwm/desktop-window-manager-overviews)
+> - [Win32 Window Custom Title Bar (Caption)](https://kubyshkin.name/posts/win32-window-custom-title-bar-caption/)
+
+Desktop Window Manager 负责绘制所有 client area 之外的图形区域，比如窗口标题栏、边框圆角和阴影、缩略图、半透明背景合成等。
+
+Non-client area 的标题栏占据了重要位置，如何能在标题栏上绘制 UI 并保留原本的标题栏功能呢？
+
+1. 在 `WM_CREATE` 中使用 `SWP_FRAMECHANGED` 参数调用 `SetWindowPos` 以保证生成 `WM_NCCALCSIZE` 消息
+2. 处理 `WM_NCCALCSIZE` 以扩展 client area 大小。注意左右下边界有 margin 和 padding，上边界仅在窗口最大化时有 margin 和 padding
+3. 绘制标题栏，注意处理 `WM_ACTIVE` 消息要重绘标题栏
+4. 处理标题栏鼠标输入
+
+- `DwmGetWindowAttribute`
+- `DwmSetWindowAttribute`
+- `DwmGetColorizationColor`
+- `DwmRegisterThumbnail`
+- `DwmSetIconicThumbnail`
+- `DwmUpdateThumbnailProperties`
+- `DwmQueryThumbnailSourceSize`
+- `DwmUnregisterThumbnail`
+- `DwmExtendFrameIntoClientArea`
+- `DwmDefWindowProc`
+- `WM_DWMCOLORIZATIONCOLORCHANGED`
+
+#### GDI
+
+### 窗口杂项
+
+#### 系统窗口
+
+- `GetDesktopWindow`
+- `GetShellWindow`
+- `SystemParametersInfo`
+- `GetSystemMetrics`
+
+#### 多显示器
 
 #### DPI
 
@@ -1687,8 +1760,8 @@ D2D Color 用浮点数表示 RGBA，但实现上有三种表示方式：
 
 Alpha mode:
 
-- `D2D1_ALPHA_MODE_IGNORE`: 忽略 alpha 可提高性能
-- `D2D1_ALPHA_MODE_STRAIGHT`: RGB 通道值乘以 A
+- `D2D1_ALPHA_MODE_IGNORE`：忽略 alpha 可提高性能
+- `D2D1_ALPHA_MODE_STRAIGHT`：RGB 通道值乘以 A
 - `D2D1_ALPHA_MODE_PREMULTIPLIED`" RGB 通道值已经是乘以 A 后的值了
 
 ## 其他
