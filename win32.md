@@ -758,9 +758,11 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 
 ```cpp
 std::string GetLastErrorAsString() {
+    std::string message;
+
     DWORD errorMessageID = ::GetLastError();
     if(errorMessageID == 0) {
-        return std::string();
+        return message;
     }
 
     LPSTR messageBuffer = nullptr;
@@ -770,7 +772,7 @@ std::string GetLastErrorAsString() {
         NULL);
 
     if (size) {
-      std::string message(messageBuffer, size);
+      message = std::string(messageBuffer, size);
       LocalFree(messageBuffer);
     }
 
@@ -831,10 +833,10 @@ __except (filter-expression) {
   - C++ 程序默认设置了未处理异常过滤函数，用来过滤 C++ 异常
 
 - Window 错误报告 (WER)
-  - Dumps: 需要设置 `HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\Windows Error Reporting\LocalDumps`
-  - Recovery: 需要调用 `RegisterApplicationRecoveryCallback`
-  - MessageBox: 需要设置 `HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\Windows Error Reporting\DontShowUI` 为 0，且 `GetErrorMode` 标志没有 `SEM_NOGPFAULTERRORBOX`
-  - Restart: 需要调用`RegisterApplicationRestart`
+  1. Dumps: 需要设置 `HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\Windows Error Reporting\LocalDumps`
+  2. Recovery: 需要调用 `RegisterApplicationRecoveryCallback`
+  3. MessageBox: 需要设置 `HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\Windows Error Reporting\DontShowUI` 为 0，且 `GetErrorMode` 标志没有 `SEM_NOGPFAULTERRORBOX`
+  4. Restart: 需要调用`RegisterApplicationRestart`
 
 ![seh](./images/seh.png)
 
@@ -953,7 +955,7 @@ NTFS 支持事务
   - Windows `%SystemRoot%`：Window 系统目录
     - System：16 位兼容系统目录
     - System32：**64 位**系统目录
-    - SystemWOW64：**32 位**系统目录
+    - SystemWOW64：**32 位**系统目录，(**W**indows 32-bit **o**n **W**indows **64**-bit)
   - Program Files `%ProgramFiles%`：64 位应用程序安装目录（所有用户）
   - Program Files (x86) `%ProgramFiles(x86)%`：32 位应用程序安装目录（所有用户）
   - Program Data `%ProgramData%`：应用程序数据（所有用户）
@@ -989,9 +991,9 @@ NTFS 支持事务
 - 链接
 
   - 硬链接
-    - 即目录项，每个硬链接指向单独的文件流记录文件名和属性
+    - 即目录项，每个硬链接指向单独的文件流记录“文件名和属性”
     - 不可跨文件系统
-  - 软连接 (Junctions)
+  - _软连接 (Junctions)_
     - 利用重解析点，仅可指向目录
     - 可跨本地文件系统，不可跨网络文件系统
   - 符号链接
@@ -1097,7 +1099,7 @@ NTFS 支持事务
   3. `bind`
   4. `listen` (tcp only)
   5. `AcceptEx` (tcp only)
-  6. `WSASend`/`WSARecv`
+  6. `WSASend`/`WSASendTo`/`WSARecv`/`WSARecvFrom`
   7. `LPFN_DISCONNECTEX` (tcp only)
   8. `closesocket`
   9. `WSACleanup`
@@ -1109,11 +1111,13 @@ NTFS 支持事务
   3. `GetAddrInfoEx`
   4. `LPFN_CONNECTEX` (implicit `bind`, tcp only)
   5. `FreeAddrInfoEx`
-  6. `WSASend`/`WSARecv`
+  6. `WSASend`/`WSASendTo`/`WSARecv`/`WSARecvFrom`
   7. `LPFN_DISCONNECTEX` (tcp only)
   8. `WSARecv`
   9. `closesocket`
   10. `WSACleanup`
+
+> 通过 `WSAIoctl` 可以获取不同的底层 service provider 提供特定的 API
 
 #### 管道
 
@@ -1171,7 +1175,7 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
   - 服务端监听网络端口需要设置防火墙规则
   - **适用场景：跨机器的网络通讯**
 
-- 双向命名管道
+- 双向命名管道（Windows 10 之后支持 [UNIX Domain Socket](https://devblogs.microsoft.com/commandline/af_unix-comes-to-windows/) 代替命名管道）
 
   - 每个连接需要单独的 1 对读写缓冲区，缓冲可以被复用
   - 有缓冲区管理，但需要自己完善连接管理（特别是断开连接会丢弃缓冲区数据），支持流传输
@@ -1467,7 +1471,7 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 - `WS_THICKFRAME`：可以让用户拖动边框改变大小
 - `CW_USEDEFAULT`：创建窗口时初始位置和大小，仅对 Overlapped Window 有效，默认位置基于屏幕左上角偏移
 - `GetWindowInfo`
-- `GetWindowRect`：若窗口已经显示过一次，则返回大小包含边缘阴影
+- `GetWindowRect`：若窗口已经显示过一次，则返回大小包含边缘阴影（Windows 10 之后窗口周围存在看不见的 margin 和 padding，正常大小只有下左右三边存在，最大化窗口上下左右四边都存在）
 - `GetClientRect`
 - `WindowFromPoint`
 - `ChildWindowFromPoint`
@@ -1651,13 +1655,13 @@ LRESULT CALLBACK MainWndProc(
 }
 ```
 
-| 范围             | 描述                                                      |
-| ---------------- | --------------------------------------------------------- |
-| 0 ~ WM_USER-1    | 系统保留                                                  |
-| WM_USER ~ 0x7FFF | 在窗口类内部使用的自定义消息                              |
-| WM_APP ~ 0xBFFF  | 应用程序内部使用的自定义消息                              |
-| 0xC000 ~ 0xFFFF  | IPC 消息，调用 `RegisterWindowMessage` 返回以保证系统唯一 |
-| 0xFFFF ~         | 系统保留                                                  |
+| 范围             | 描述                                                                    |
+| ---------------- | ----------------------------------------------------------------------- |
+| 0 ~ WM_USER-1    | 系统保留                                                                |
+| WM_USER ~ 0x7FFF | 在窗口类内部使用的自定义消息                                            |
+| WM_APP ~ 0xBFFF  | 应用程序内部使用的自定义消息                                            |
+| 0xC000 ~ 0xFFFF  | 非以上两者的自定义消息，调用 `RegisterWindowMessage` 返回以保证系统唯一 |
+| 0xFFFF ~         | 系统保留                                                                |
 
 > - `DefWindowProc`：系统默认窗口处理函数
 > - `CallWindowProc`：调用窗口处理函数，会将消息转为 Unicode 或 ANSI
@@ -1678,7 +1682,7 @@ LRESULT CALLBACK MainWndProc(
 - 若目标位于其他线程，则系统会先为目标所在进程加载包含 hook 的 dll
   - 32 位进程无法为 64 位进程注入 dll，反之亦然
   - 虽然异构的 dll 无法注入，但异构的 hook 仍然有效，原理是在被注入目标处理消息时，系统将消息同步转发给注入进程，注入进程将调用 hook 函数处理消息，然后再由系统返回到被注入目标。如果注入进程没有消息循环，则可能导致异构的被注入目标卡死。
-- hook 会在线程终止时被销毁，hook 被销毁时会卸载被注入目标因 hook 而加载的 dll
+- hook 会在线程终止时被销毁，hook 被销毁时不会自动卸载被注入目标因 hook 而加载的 dll
 
 > - `SetWindowsHookEx`
 > - `UnhookWindowsHookEx`
@@ -1706,7 +1710,7 @@ Non-client area 的标题栏占据了重要位置，如何能在标题栏上绘�
 
 1. 在 `WM_CREATE` 中使用 `SWP_FRAMECHANGED` 参数调用 `SetWindowPos` 以保证生成 `WM_NCCALCSIZE` 消息
 2. 处理 `WM_NCCALCSIZE` 以扩展 client area 大小。注意左右下边界有 margin 和 padding，上边界仅在窗口最大化时有 margin 和 padding
-3. 绘制标题栏，注意处理 `WM_ACTIVE` 消息要重绘标题栏
+3. 绘制标题栏，注意处理 `WM_ACTIVE` 消息并重绘标题栏
 4. 处理标题栏鼠标输入
 
 - `DwmGetWindowAttribute`
