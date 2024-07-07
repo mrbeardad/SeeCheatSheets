@@ -13,7 +13,7 @@
   - [进程系统](#进程系统)
     - [进程管理](#进程管理)
       - [进程创建](#进程创建)
-      - [继承](#继承)
+      - [进程继承](#进程继承)
       - [进程终止](#进程终止)
       - [作业](#作业)
     - [线程管理](#线程管理)
@@ -25,8 +25,12 @@
         - [动态优先级](#动态优先级)
         - [服务质量](#服务质量)
         - [CPU 亲和性](#cpu-亲和性)
-      - [线程同步](#线程同步)
+        - [同步阻塞](#同步阻塞)
     - [模块管理](#模块管理)
+      - [模块构建](#模块构建)
+      - [生命周期](#生命周期)
+      - [搜索路径](#搜索路径)
+      - [应用部署](#应用部署)
     - [虚拟内存](#虚拟内存)
     - [异常处理](#异常处理)
   - [IO 系统](#io-系统)
@@ -302,7 +306,7 @@
    int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd);
    ```
 
-- exe 搜索路径（指定无路径的文件名时）
+- EXE 搜索路径（仅当指定无路径的文件名时）
 
 1. 进程 exe 文件所在目录
 2. 进程当前目录
@@ -327,7 +331,7 @@
 > - `GetCurrentDirectory`
 > - `SetCurrentDirectory`
 
-#### 继承
+#### 进程继承
 
 - 子进程**可以**继承父进程如下属性
 
@@ -528,7 +532,7 @@
 - 每 64 个逻辑处理器为一个处理器组 (processor group)
 - Windows 11 之后线程可以跨多个处理器组，默认优先在主组中运行
 
-#### 线程同步
+##### 同步阻塞
 
 - 为什么需要同步？
   - 保护共享数据被同时读写
@@ -546,6 +550,7 @@
   - [计时器](https://learn.microsoft.com/en-us/windows/win32/sync/waitable-timer-objects)
   - 进程
   - 线程
+  - ...
 
 > - `WaitForSingleObjectEx`
 > - `WaitForMultipleObjectsEx`
@@ -555,6 +560,8 @@
 ### 模块管理
 
 > 参考 [Dynamic-Link Libraries](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-libraries)
+
+#### 模块构建
 
 ```cpp
 // mydll.h
@@ -579,7 +586,7 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
 #endif
 ```
 
-dll 的生命周期：
+#### 生命周期
 
 1. 动态链接：
    - 加载时，即创建进程时，此时仅保证 Kernel32.dll 已被加载
@@ -622,24 +629,6 @@ dll 的生命周期：
    }
    ```
 
-dll 标准搜索路径：（适用于相对路径和无路径文件名）
-
-> 更详细 dll 搜索路径见 [Dll search order](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)；  
-> 关于 Windows 运行时环境和打包部署建议见 [Deployment](https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp?view=msvc-170)
-
-1. DLL Redirection
-2. API sets
-3. SxS manifest redirection
-4. Loaded-module list
-5. Known DLLs
-6. The package dependency graph of the process
-7. 进程 exe 所在目录
-8. 系统目录（`C:\Windows\System32`）
-9. 16 位兼容系统目录（`C:\Windows\System`）
-10. Windows 目录（`C:\Windows`）
-11. 进程当前目录
-12. 环境变量 PATH
-
 > - `LoadLibrary`
 > - `LoadLibraryEx`：可设置修改标准搜索路径、仅加载资源数据，通常对同一 dll 不能与 `LoadLibrary` 混用
 > - `GetProcAddress`
@@ -653,6 +642,49 @@ dll 标准搜索路径：（适用于相对路径和无路径文件名）
 > - `GetModuleFileName`
 > - `GetWindowModuleFileName`
 > - `QueryFullProcessImageName`：用来获取其它进程的 exe 文件路径更加高效且准确
+
+#### 搜索路径
+
+DLL 标准搜索路径：（当指定相对路径和无路径文件名），更详细 DLL 搜索路径见 [Dll search order](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)
+
+1. DLL Redirection (`app.exe.local`)
+2. API sets (`api-*`/`ext-*`)
+3. SxS manifest redirection
+4. Loaded-module list
+5. Known DLLs (`HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\KnownDLLs`)
+6. The package dependency graph of the process
+7. 进程 exe 所在目录
+8. 系统目录（`C:\Windows\System32`）
+9. 16 位兼容系统目录（`C:\Windows\System`）
+10. Windows 目录（`C:\Windows`）
+11. 进程当前目录
+12. 环境变量 PATH
+
+#### 应用部署
+
+> 关于 Windows 运行时环境和打包部署建议见 [Deployment](https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp?view=msvc-170)
+
+- 部署方案
+
+  - 集中部署：利用微软提供的部署工具将依赖的 dll 下载并安装到系统目录且随系统升级，详细教程见 [Redistributing Visual C++ Files](https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files)
+  - 本地部署：将依赖的 dll 放到应用程序目录，在搜索系统目录之前会先搜索应用程序目录
+  - 静态链接：将依赖用 `/MT` 链接参数静态链接到 exe 或 dll，可能导致同时使用多个不同版本的库
+
+- [C++ 依赖库](https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features)
+  - `ucrtbase.dll`
+    - C 标准库，Windows 10 之后系统自带
+    - 其中还包括一些转发 [API Sets](https://learn.microsoft.com/en-us/windows/win32/apiindex/windows-apisets)
+    - 位于 `C:\Program Files (x86)\Windows Kits\10\Redist\10.0.22000.0\ucrt\DLLs\`
+  - `libcmt.lib`/`msvcrt.lib`
+    - 初始化 CRT 的库，只能静态链接，两个 lib 分别用于 `/MT` 和 `/MD`
+  - `vcruntime<version>.dll`
+    - C++ 运行时库，包含异常处理、调试支持、运行检测等功能
+    - `vcruntime140.dll` 是基础库，`vcruntime140_1.dll` 是扩展库，后者保证与前者的 ABI 兼容
+    - 位于 64 和 32 位系统目录
+  - `msvcp<version>.dll`
+    - C++ 标准库，包含 STL 等
+    - `<version>` 同上
+    - 位于 64 和 32 位系统目录
 
 ### 虚拟内存
 
@@ -882,32 +914,24 @@ __except (filter-expression) {
 
 - Computer
 
-  - **HKEY_LOCAL_MACHINE**: 系统全局配置
-
-    - **Software**: 软件配置，32 位程序访问该 Key 会被重定向到 **WOW6432Node**
-
-      - **CLASS**: 文件扩展名配置
-
-    - **WOW6432Node**: 具体见 [Registry Keys Affected by WOW64](https://learn.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys)
-
-  - **HKEY_CURRENT_USER**: 当前用户配置（漫游）
-
-    - **Software**: 软件配置，不会重定向 32 位程序
-
-      - **CLASS**: 文件扩展名配置
-
-    - **Environment**: 用户环境变量
-
-  - **HKEY_CURRENT_USER_LOCAL_SETTINGS**: 当前用户配置（不漫游）
-  - **HKEY_USERS**: 所有用户配置实际所在
+  - `HKEY_LOCAL_MACHINE`：系统全局配置
+    - `Software`：软件配置，32 位程序访问该 Key 会被重定向到 `WOW6432Node`
+      - `CLASS`：文件扩展名配置
+    - `WOW6432Node`：具体见 [Registry Keys Affected by WOW64](https://learn.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys)
+  - `HKEY_CURRENT_USER`：当前用户配置
+    - `Software`：软件配置，不会重定向 32 位程序
+      - `CLASS`：文件扩展名配置
+    - `Environment`：用户环境变量
+  - `HKEY_CLASSES_ROOT`：包含 `HKEY_CURRENT_USER\Software\Classes` 和 `HKEY_LOCAL_MACHINE\Software\Classes` 合并后的视图
+  - `HKEY_USERS`：所有用户配置实际所在，`HKEY_CURRENT_USER` 重定向到某子项
 
 > - `RegEnumKeyEx`
 > - `RegQueryInfoKey`
 > - `RegGetKeySecurity`
 > - `RegNotifyChangeKeyValue`
 > - `RegOpenKeyExW`
-> - `RegOpenCurrentUser`：打开当前模拟用户的 **HKEY_CURRENT_USER**
-> - `RegOpenUserClassesRoot`：打开当前模拟用户的 **HKEY_CURRENT_USER\Software\Classes** 和 **HKEY_LOCAL_MACHINE\Software\Classes** 合并后的视图，注意需要模拟用户配置已被加载（比如用户登录），使用 `LoadUserProfile` 手动加载
+> - `RegOpenCurrentUser`：打开当前模拟用户的 `HKEY_CURRENT_USER`
+> - `RegOpenUserClassesRoot`：打开当前模拟用户的 `HKEY_CLASSES_ROOT` 视图，注意需要模拟用户配置已被加载（比如用户登录），使用 `LoadUserProfile` 手动加载
 > - `RegCreateKeyEx`
 > - `RegDeleteKey`
 > - `RegCloseKey`
@@ -1175,7 +1199,7 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
   - 服务端监听网络端口需要设置防火墙规则
   - **适用场景：跨机器的网络通讯**
 
-- 双向命名管道（Windows 10 之后支持 [UNIX Domain Socket](https://devblogs.microsoft.com/commandline/af_unix-comes-to-windows/) 代替命名管道）
+- 双向命名管道（Windows 10 之后支持 [UNIX Domain Socket](https://devblogs.microsoft.com/commandline/af_unix-comes-to-windows/) 可以代替命名管道）
 
   - 每个连接需要单独的 1 对读写缓冲区，缓冲可以被复用
   - 有缓冲区管理，但需要自己完善连接管理（特别是断开连接会丢弃缓冲区数据），支持流传输
@@ -1509,11 +1533,14 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 
 #### 前台激活
 
-前台状态和激活状态通常指窗口是否获取键盘焦点（通常也意味位于 Z 轴顶部 ），因为[历史原因](https://devblogs.microsoft.com/oldnewthing/20081006-00/?p=20643)导致出现了两个术语。将窗口设置为前台窗口需要调用者满足一些[必要条件](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow#remarks)。
+前台窗口 (Foreground Window) 或激活窗口 (Active Window) 指用户当前正在使用的 Top-level 窗口，即键盘焦点位于该窗口或其子窗口（通常称为 Focused Window），前台激活窗口通常位于 (normal or topmost) Z 轴顶部。将窗口设置为前台窗口需要调用者满足一些[必要条件](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow#remarks)。
 
-- `GetActiveWindow`：获取前台窗口（仅限当前线程）
-- `SetActiveWindow`：设置前台窗口（仅限当前线程）
+> 因为[历史原因](https://devblogs.microsoft.com/oldnewthing/20081006-00/?p=20643)导致出现了 foregound 和 active 两个术语。
+
 - `GetLastActivePopup`
+- `GetActiveWindow`：获取前台激活窗口（仅限当前线程）
+- `SetActiveWindow`：设置前台激活窗口（仅限当前线程）
+- `GetGUIThreadInfo`：可以获取前台激活窗口（可以指定其他进程）
 - `GetForegroundWindow`
 - `SetForegroundWindow`
 - `AllowSetForegroundWindow`：在下次用户输入或下次某进程调用 `AllowSetForegroundWindow` 时失效
@@ -1612,6 +1639,8 @@ while (true) {
 - `PostQuitMessage`：异步发送 `WM_QUIT`，该消息无法被忽略
 - `ChangeWindowMessageFilter`：允许低可信级别发送指定到指定进程（不推荐）
 - `ChangeWindowMessageFilterEx`：允许低可信级别发送指定到指定窗口
+- `AttachThreadInput`：与指定线程共享键鼠输入状态
+- `IsGUIThread`
 
 #### 窗口过程
 
@@ -1670,8 +1699,6 @@ LRESULT CALLBACK MainWndProc(
 > - `GetClassLongPtr`
 > - `SetClassLongPtr`：也可以设置窗口类的窗口处理函数，这样会影响到所有使用该类的窗口
 > - `GetWindowThreadProcessId`
-> - `GetGUIThreadInfo`
-> - `IsGUIThread`
 > - `IsHungAppWindow`
 > - `IsWindowUnicode`
 
