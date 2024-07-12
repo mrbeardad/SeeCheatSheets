@@ -7,7 +7,7 @@
     - [URL](#url)
     - [方法](#方法)
     - [状态码](#状态码)
-    - [版本](#版本)
+    - [连接](#连接)
   - [重定向](#重定向)
   - [认证](#认证)
   - [缓存](#缓存)
@@ -99,7 +99,7 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
 | 400    | Bad Request           | 客户端请求错误 |
 | 500    | Internal Server Error | 服务器处理错误 |
 
-### 版本
+### 连接
 
 - HTTP/1.0
   - 可扩展性
@@ -114,7 +114,14 @@ http://www.example.com:80/path/to/index.html?key1=value1&key2=value2#anchor
   - 首部压缩
   - 服务端推送
 - HTTP/3：
-  - QUIC: 通过 UDP 同时运行多个流，每个流的丢包检测和重传都相互独立
+  - QUIC: 通过 UDP 实现可靠传输，且同时运行多个流，每个流的丢包检测和重传都相互独立
+
+浏览器发起的初始协议可能是 http/1.x 或 http/2，根据浏览器实现有所不同，大致如下
+
+- 若非 TLS 连接，则使用简单的 http 报文头部的协议字段协商协议版本，仅支持 http/1.x
+- 若是 TLS 连接，则尝试使用 ALPN (Application-Layer Protocol Negotiation, as part of TLS handshake) 协商协议版本，若检测到服务器不支持则回退 http/1.x，否则使用服务器返回的版本（通常是 http/2）
+- 若服务器返回 Alt-Svc 头部或 ALTSVC 帧，则升级到 http/3
+- 特别的，http/1.1 支持 `Connection: Upgrade` 来升级协议到 http/2（不常用）和 Websocket
 
 ## 重定向
 

@@ -568,9 +568,9 @@
 #pragma once
 
 #ifdef MYDLL_EXPORT
-#define MYDLL_API __declspec(dllexport)
+#define MYDLL_API __declspec(dllexport) // dll 实现文件中使用
 #else
-#define MYDLL_API __declspec(dllimport)
+#define MYDLL_API __declspec(dllimport) // 用户文件中使用
 #endif
 
 #ifdef __cplusplus

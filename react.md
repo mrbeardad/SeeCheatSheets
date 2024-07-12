@@ -38,7 +38,7 @@ function Component(porps) {
   - JSX 必须闭合，如`<tag></tag>`或`<tag/>`
 - 在 JSX 表达式中嵌入 JS 表达式
   - 属性，如`<tag src={name}>`或`<tag {...name}>`
-  - 子元素，如`<tag>{name}</tag>`，合法类型包括 null、undefined、Boolean、Number、String、Array、JSX，其中前三者不会被渲染
+  - 子元素，如`<tag>{name}</tag>`，合法类型包括 undefined、null、Boolean、Number、String、Array、JSX，其中前三者不会被渲染
 
 ## Component
 
@@ -95,7 +95,7 @@ const inputRef = useRef(null);
 const handler = () => inputRef.current.focus();
 
 // 利用 ref 属性将该 DOM 赋值给 inputRef
-<input ref={ref} />;
+<input ref={inputRef} />;
 ```
 
 - Effect Hooks: 仅在发生特定的状态转移时执行逻辑
