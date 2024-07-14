@@ -58,7 +58,7 @@
       - [位置与大小](#位置与大小)
       - [Z 轴顺序](#z-轴顺序)
       - [前台激活](#前台激活)
-      - [最大化和最小化](#最大化和最小化)
+      - [最大化与最小化](#最大化与最小化)
       - [显示或隐藏](#显示或隐藏)
       - [启用或禁用](#启用或禁用)
       - [透明背景](#透明背景)
@@ -67,7 +67,9 @@
       - [消息队列](#消息队列)
       - [窗口过程](#窗口过程)
       - [窗口挂钩](#窗口挂钩)
-      - [用户输入](#用户输入)
+      - [键盘输入](#键盘输入)
+      - [鼠标输入](#鼠标输入)
+      - [输入法编辑](#输入法编辑)
     - [窗口渲染](#窗口渲染)
       - [DWM](#dwm)
       - [GDI](#gdi)
@@ -1521,7 +1523,7 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 #### Z 轴顺序
 
 - `WS_EX_TOPMOST`：可将 Z 轴视作 Normal 和 Topmost 两段，Topmost 窗口始终保持在 Normal 窗口和 taskbar 上面
-- `GetWindow`
+- `GetWindow`：可以根据 Z-order 获取子窗口
 - `GetNextWindow`
 - `GetTopWindow`
 - `BringWindowToTop`
@@ -1545,10 +1547,17 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 - `SetForegroundWindow`
 - `AllowSetForegroundWindow`：在下次用户输入或下次某进程调用 `AllowSetForegroundWindow` 时失效
 - `LockSetForegroundWindow`：短暂时间后自动解锁
-- `WM_ACTIVATEAPP`：当焦点切换到不同的应用程序时，发送给涉及的两个程序的所有窗口
+- `WM_ACTIVATEAPP`：当焦点切换到不同的应用程序时，发送给涉及的两个应用的所有窗口
 - `WM_ACTIVE`：当窗口聚焦或失焦时发送
 
-#### 最大化和最小化
+激活窗口必须是 Top-level 窗口，焦点窗口 (Focused Window) 是激活窗口本身或其子窗口
+
+- `GetFocus`
+- `SetFocus`
+- `WM_KILLFOCUS`
+- `WM_SETFOCUS`
+
+#### 最大化与最小化
 
 - `WS_MANIMIZEBOX`：为用户提供最大化按钮
 - `WS_MINIMIZEBOX`：为用户提供最小化按钮
@@ -1613,11 +1622,10 @@ Top-level Window 默认使用屏幕坐标系，Child Window 默认使用客户�
 MSG msg{};
 while (true) {
     auto res = GetMessage(&msg, NULL, 0, 0); // 同步阻塞读取消息队列
-    if (res == 0) {
-        break; // WM_QUIT
+    if (res == -1) { // Error
+        break;
     }
-    if (res == -1) {
-        // handle error
+    if (res == 0) { // WM_QUIT
         break;
     }
     TranslateMessage(&msg); // 将键盘按键消息翻译生成字符消息，放入消息队列
@@ -1645,6 +1653,7 @@ while (true) {
 #### 窗口过程
 
 窗口过程(Window Procdure)或称窗口处理函数，由窗口类提供。
+注意在处理消息时先查看对应的文档，因为不同消息的参数和返回值的意义不同。
 
 ```cpp
 LRESULT CALLBACK MainWndProc(
@@ -1716,11 +1725,178 @@ LRESULT CALLBACK MainWndProc(
 > - `CallNextHookEx`
 > - `CallMsgFilter`
 
-#### 用户输入
+#### 键盘输入
 
-[User Input](https://learn.microsoft.com/en-us/windows/win32/learnwin32/module-4--user-input)
+> 参考：
+>
+> - [Keyboard Input Overview](https://learn.microsoft.com/en-us/windows/win32/inputdev/about-keyboard-input)
+> - [About Keyboard Accelerators](https://learn.microsoft.com/en-us/windows/win32/menurc/about-keyboard-accelerators)
 
-[Input Method Manager](https://learn.microsoft.com/en-us/windows/win32/intl/input-method-manager)
+1. 当按下和抬起键盘按键时，键盘会发送扫描码 (scan code) 到 CPU
+2. 键盘驱动程序接受扫描码，并将其转换成设备无关的虚拟键码 (virtual key code)
+3. 封装成窗口消息发送到系统消息队列
+4. 系统再将消息分派到焦点 (focus) 窗口或激活 (active) 窗口
+
+![keyboard input modle](./images/kim.png)
+
+- `WM_KEYDOWN`
+- `WM_KEYUP`
+- `WM_SYSKEYDOWN`
+- `WM_SYSKEYUP`
+
+系统仅在以下情况发送 `WM_SYSKEY*` 而非 `WM_KEY*` 消息
+
+- 按下或抬起 F10
+- ALT 键处于按下状态
+- 没有焦点窗口，转而发送给激活窗口
+
+![keystroke message flag](images/kmf.png)
+
+```cpp
+case WM_KEYDOWN:
+case WM_KEYUP:
+case WM_SYSKEYDOWN:
+case WM_SYSKEYUP:
+{
+    WORD vkCode = LOWORD(wParam);                                 // virtual-key code
+
+    WORD keyFlags = HIWORD(lParam);
+
+    WORD scanCode = LOBYTE(keyFlags);                             // scan code
+    BOOL isExtendedKey = (keyFlags & KF_EXTENDED) == KF_EXTENDED; // extended-key flag, 1 if scancode has 0xE0 prefix
+
+    if (isExtendedKey)
+        scanCode = MAKEWORD(scanCode, 0xE0);
+
+    BOOL wasKeyDown = (keyFlags & KF_REPEAT) == KF_REPEAT;        // previous key-state flag, 1 on autorepeat
+    WORD repeatCount = LOWORD(lParam);                            // repeat count, > 0 if several keydown messages was combined into one message
+
+    BOOL isKeyReleased = (keyFlags & KF_UP) == KF_UP;             // transition-state flag, 1 on keyup
+
+}
+break;
+```
+
+- `WM_CHAR`：Unicode 窗口过程为 UTF-16 编码，可以包含一对或两对，ANSI 窗口过程为 ANSI Page Code
+- `WM_UNICHA`：UTF-32 编码，通常由应用发送
+- `WM_SYSCHAR`：ALT 键为按下状态时按下的字符键
+
+`TranslateMessage` 函数处理按键消息，并根据系统键盘布局，会额外生成字符消息放到消息队列
+
+- `MapVirtualKey`：转换 virtual-key code 为 scan code 或 character，或转换 scan code 为 virtual-key code
+- `VkKeyScanEx`：转换 character 为 virtual-key code 和 shift state
+- `ToUnicode`：转换 virtual-key code 和键盘状态为 character
+
+获取或影响键盘状态
+
+- `GetKeyState`：获取当前消息生成时的按键状态
+- `GetAsyncKeyState`：获取处理当前消息时的硬件级按键状态
+- `GetKeyNameText`：获取按键名称
+- `SendInput`：模拟用户输入，该函数不会重置按键状态，所以调用之前的按键状态会影响该函数产生的消息
+- `BlockInput`：阻止非模拟用户输入事件发送到应用程序
+
+快捷键 (Shorcut) 指在应用内部使用的按键组合，可以执行应用功能，该功能通常在 menu 中提供
+
+```cpp
+MSG msg{};
+while (true) {
+    auto res = GetMessage(&msg, NULL, 0, 0); // 同步阻塞读取消息队列
+    if (res == -1) { // Error
+        break;
+    }
+    if (res == 0) { // WM_QUIT
+        break;
+    }
+    if (!TranslateAccelerator(hwndMain, haccel, &msg)) {
+        TranslateMessage(&msg); // 将键盘按键消息翻译生成字符消息，放入消息队列
+        DispatchMessage(&msg); // 将消息分派到对应的窗口处理函数
+    }
+}
+```
+
+- `TranslateAccelerator`：根据设置的快捷键表，将 `WM_KEYDOWN` 和 `WM_SYSKEYDOWN` 翻译成 `WM_COMMAND` 或 `WM_SYSCOMMAND`
+- `LoadAccelerators`
+- `CreateAcceleratorTable`
+- `DestroyAcceleratorTable`
+- `WM_COMMAND`：可能由菜单命令、子控件通知消息、快捷键发送
+- `WM_SYSCOMMAND`：可能由窗口菜单命令、触发窗口菜单命令的快捷键发送
+- `WM_APPCOMMAND`：`DefWindowProc` 会处理 `WM_XBUTTONUP` 和 `WM_NCXBUTTONUP`，和键盘上的多媒体按键，并生成该消息，若消息未被处理则冒泡到父窗口。
+
+热键 (Hotkey) 指全局响应的按键组合，当用户按下指定热键时窗口会收到 `WM_HOTKEY` 消息，即使窗口不是焦点窗口或激活窗口。
+
+- `RegisterHotKey`
+- `UnregisterHotKey`
+- `WM_HOTKEY`
+
+#### 鼠标输入
+
+> 参考 [Mouse Input Overview](https://learn.microsoft.com/en-us/windows/win32/inputdev/about-mouse-input)
+
+- 用户移动鼠标 (Mouse) 时屏幕上显示的表示光标 (Cursor) 的位图也会跟着移动，光标位图的其中一个像素用于定位，称为 hot spot
+- 默认仅 hot spot 下面的窗口会接收鼠标输入事件，即使该窗口不是激活窗口
+- 前台窗口可以使用 `SetCapture` 捕获所有区域的鼠标事件，直到调用 `RealseCapture` 或用户点击了另一个线程的窗口
+
+| Message            | Meaning                                                     |
+| ------------------ | ----------------------------------------------------------- |
+| `WM_NCHITTEST`     | 点击测试，用于确认鼠标位于 Client area 还是 Non-client area |
+| `WM_LBUTTONDOWN`   | 主键单击按下                                                |
+| `WM_LBUTTONDBLCLK` | 主键双击按下                                                |
+| `WM_LBUTTONUP`     | 主键抬起                                                    |
+| `WM_RBUTTONDOWN`   | 辅键单击按下                                                |
+| `WM_RBUTTONDBLCLK` | 辅键双击按下                                                |
+| `WM_RBUTTONUP`     | 辅键抬起                                                    |
+| `WM_MBUTTONDOWN`   | 中键单机按下                                                |
+| `WM_MBUTTONDBLCLK` | 中键双击按下                                                |
+| `WM_MBUTTONUP`     | 中键抬起                                                    |
+| `WM_XBUTTONDOWN`   | 四/五键单机按下                                             |
+| `WM_XBUTTONDBLCLK` | 四/五键双击按下                                             |
+| `WM_XBUTTONUP`     | 四/五键抬起                                                 |
+| `WM_MOUSEWHEEL`    | 滚轮滚动                                                    |
+| `WM_MOUSEMOVE`     | 鼠标移动                                                    |
+| `WM_MOUSEHOVER`    | 鼠标悬停                                                    |
+| `WM_MOUSELEAVE`    | 鼠标离开客户区                                              |
+
+- 在所有鼠标事件发送前，会前发送 `WM_NCHITTEST` 进行点击测试判断鼠标事件发生在客户区还是非客户区，根据返回值不同发送不同消息，主要分为 `WM_*` 和 `WM_NC*` 两种
+- 调用 `TrackMouseEvent` 可以跟踪额外鼠标事件 `WM_MOUSEHOVER` 和 `WM_MOUSELEAVE`，当后者触发时则跟踪失效，需要重新调用函数才能继续跟踪
+- 双击事件需要设置窗口类样式 `CS_DBLCLKS`
+- 双击事件顺序
+  1. `WM_LBUTTONDOWN`
+  2. `WM_LBUTTONUP`
+  3. `WM_LBUTTONDBLCLK`
+  4. `WM_LBUTTONUP`
+- Mouse Sonar：提示用户光标位置
+  - `SPI_GETMOUSESONAR`
+  - `SPI_SETMOUSESONAR`
+- Mouse Vanish：隐藏光标
+  - `SPI_GETMOUSEVANISH`
+  - `SPI_SETMOUSEVANISH`
+
+#### 输入法编辑
+
+> 参考 [Input Method Manager](https://learn.microsoft.com/en-us/windows/win32/intl/input-method-manager)
+
+- 输入法编辑器 (IME) 作为 DLL 加载到应用程序，应用程序利用输入法管理器 (IMM) 接口与 IME 交互
+
+- 系统为每个线程分配一个输入上下文用于维护输入法状态，默认线程中所有窗口共享一个输入上下文
+
+- 默认输入控件会创建 IME 窗口
+
+  - 状态窗口：指示 IME 已打开，并能设置转换模式
+  - 组合窗口：显示输入字符和转换后的字符
+  - 候选窗口：显示转换字符的候选列表
+
+> - `ImmGetContext`
+> - `ImmReleaseContext`
+> - `ImmCreateContext`
+> - `ImmAssociateContext`
+> - `ImmGetCompositionString`
+> - `ImmSetCompositionString`：组合字符存储状态包括属性、分句信息、输入字符、文本输入光标位置
+> - `ImmGetCandidateListCount`
+> - `ImmGetCandidateList`
+> - `WM_IME_SETCONTEXT`：窗口被激活并显示 IME 窗口
+> - `WM_IME_NOTIFY`：IME 窗口状态发生改变
+> - `WM_IME_COMPOSITION`：组合字符状态发生改变
+> - `WM_IME_CHAR`：组合字符转换完成，默认将该消息转换为 `WM_CHAR`
 
 ### 窗口渲染
 
