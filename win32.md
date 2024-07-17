@@ -74,12 +74,13 @@
       - [DWM](#dwm)
       - [GDI](#gdi)
     - [窗口杂项](#窗口杂项)
-      - [系统窗口](#系统窗口)
+      - [系统设置](#系统设置)
       - [多显示器](#多显示器)
-      - [DPI](#dpi)
-      - [Color](#color)
+      - [高 DPI](#高-dpi)
+      - [原生控件](#原生控件)
   - [其他](#其他)
-    - [头文件宏](#头文件宏)
+    - [头文件](#头文件)
+    - [编译资源](#编译资源)
     - [字符集](#字符集)
 
 ## 资源访问
@@ -977,7 +978,7 @@ NTFS 支持事务
 
 #### 目录结构
 
-- C:\
+- **_C:_**
   - Windows `%SystemRoot%`：Window 系统目录
     - System：16 位兼容系统目录
     - System32：**64 位**系统目录
@@ -1299,6 +1300,7 @@ Windows 支持三种异步 IO 机制：
 > - [Window Stations and Desktops](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations-and-desktops)
 > - [The Windows 7 Desktop](https://learn.microsoft.com/en-us/windows/win32/uxguide/winenv-desktop)
 > - [Windows and Messages](https://learn.microsoft.com/en-us/windows/win32/winmsg/windowing)
+> - [Windows Shell](https://learn.microsoft.com/en-us/windows/win32/shell/shell-entry)
 
 ![desktop](./images/desktop.png)
 ![taskbar](./images/taskbar.png)
@@ -1714,11 +1716,11 @@ LRESULT CALLBACK MainWndProc(
 #### 窗口挂钩
 
 - hook 分为局部（仅作用于目标线程的消息队列）和全局（作用于 desktop 内消息队列）
-- hook 会在目标处理特定消息的时候被调用，可能在消息入队后、`GetMessage`后、处理前、处理后
-- 若目标位于其他线程，则系统会先为目标所在进程加载包含 hook 的 dll
+- hook 会在目标处理特定消息的时候被调用，可能在消息入队后、`GetMessage` 后、处理前、处理后
+- hook 创建后，在目标线程下次处理消息时，会加载 hook dll
   - 32 位进程无法为 64 位进程注入 dll，反之亦然
   - 虽然异构的 dll 无法注入，但异构的 hook 仍然有效，原理是在被注入目标处理消息时，系统将消息同步转发给注入进程，注入进程将调用 hook 函数处理消息，然后再由系统返回到被注入目标。如果注入进程没有消息循环，则可能导致异构的被注入目标卡死。
-- hook 会在线程终止时被销毁，hook 被销毁时不会自动卸载被注入目标因 hook 而加载的 dll
+- hook 会在线程终止时被销毁，hook 被销毁后，在目标线程下次处理消息时，会卸载 hook dll
 
 > - `SetWindowsHookEx`
 > - `UnhookWindowsHookEx`
@@ -1930,35 +1932,6 @@ Non-client area 的标题栏占据了重要位置，如何能在标题栏上绘�
 
 #### GDI
 
-### 窗口杂项
-
-#### 系统窗口
-
-- `GetDesktopWindow`
-- `GetShellWindow`
-- `SystemParametersInfo`
-- `GetSystemMetrics`
-
-#### 多显示器
-
-#### DPI
-
-[DPI and device-independent pixels](https://learn.microsoft.com/en-us/windows/win32/learnwin32/dpi-and-device-independent-pixels)
-
-DPI Awareness:
-
-- Unaware: 按照系统 DPI 缩放比例，自动将绘制后的窗口缩放，可能会导致模糊
-- System Aware
-- Per-Monitor Aware
-
-DIP:
-
-- GDI 绘制不支持缩放，但是字体渲染支持缩放
-- Direct2D 绘制和 DirectWrite 字体渲染均支持缩放
-- 注意：窗口和鼠标信息通常为物理像素，而非自动缩放的逻辑像素
-
-#### Color
-
 D2D Color 用浮点数表示 RGBA，但实现上有三种表示方式：
 
 - `DXGI_FORMAT_B8G8R8A8_UNORM`
@@ -1969,18 +1942,119 @@ Alpha mode:
 
 - `D2D1_ALPHA_MODE_IGNORE`：忽略 alpha 可提高性能
 - `D2D1_ALPHA_MODE_STRAIGHT`：RGB 通道值乘以 A
-- `D2D1_ALPHA_MODE_PREMULTIPLIED`" RGB 通道值已经是乘以 A 后的值了
+- `D2D1_ALPHA_MODE_PREMULTIPLIED` RGB 通道值已经是乘以 A 后的值了
+
+### 窗口杂项
+
+#### 系统设置
+
+绝大多数与 UI 交互相关的设置都可以通过以下两个函数获取或设置
+
+- `SystemParametersInfo`
+- `GetSystemMetrics`
+
+#### 多显示器
+
+![alt text](images/virtual-screen.png)
+
+- 主屏的左上角为坐标原点 (0, 0)，其他屏幕的坐标可能是负数
+- 不同虚拟桌面的使用同一个坐标系，但位于不同虚拟桌面的窗口不可见
+- `GetDesktopWindow` 位置和大小等于主屏
+- `GetShellWindow` 位置和大小等于虚拟屏幕
+- `EnumDisplayMonitors`
+- `EnumDisplayDevices`
+- `GetMonitorInfo`
+- `EnumDisplaySettingsEx`
+- `ChangeDisplaySettingsEx`
+- `MonitorFromPoint`
+- `MonitorFromRect`
+- `MonitorFromWindow`
+
+#### 高 DPI
+
+> 参考
+>
+> - [High DPI](https://learn.microsoft.com/en-us/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows)
+> - [DPI and device-independent pixels](https://learn.microsoft.com/en-us/windows/win32/learnwin32/dpi-and-device-independent-pixels)
+
+DPI Awareness Mode
+
+- Unaware：应用不感知 DPI，系统自动缩放窗口渲染位图（导致模糊）
+
+- System Awareness：应用使用系统主屏的 DPI，当 DPI 变化时系统自动缩放其渲染位图（导致模糊），比如移动窗口到其他屏幕或改变屏幕 DPI 设置
+
+- Per-Monitor Awareness V1：应用使用窗口主要显示的屏幕的 DPI，当 DPI 变化时会收到窗口消息 `WM_DPICHANGED`
+
+- Per-Monitor Awareness V2：相较 V1，可以自动缩放非客户区和系统组件
+
+| API                           | Minimum version of Windows | DPI Unaware                                                  | System DPI Aware                                                  | Per Monitor DPI Aware V1                                               |                                                                           |
+| ----------------------------- | -------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| SetProcessDPIAware            | Windows Vista              | -                                                            | SetProcessDPIAware()                                              | -                                                                      | -                                                                         |
+| SetProcessDpiAwareness        | Windows 8.1                | SetProcessDpiAwareness(PROCESS_DPI_UNAWARE)                  | SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE)                  | SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE)                  | -                                                                         |
+| SetProcessDpiAwarenessContext | Windows 10, version 1607   | SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_UNAWARE) | SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE) | SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE) | SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) |
+
+> 在 DPI awareness 被设置一次后，上述函数调用会返回失败
+
+Windows 10 之前 DPI Awareness 是进程级的属性，现在则是 Top-level 窗口级的属性（Child 窗口必须与其所属的 Top-level 窗口统一），用法是在创建窗口前调用 `SetThreadDpiAwarenessContext` 改变 DPI Awareness Context，创建完成后可以还原设置。
+
+DPI Awareness 常见问题：
+
+- 使用 `WM_DPICHANGED` 中提供的窗口 rect 可以保证鼠标位于相同的相对位置
+- 因为大多数 API 文档缺乏 DPI 相关内容，所以当使用 DPI Unaware 或 System DPI Aware 时注意有些 API 返回的位置尺寸信息是逻辑像素而非物理像素
+- 如果两个 DPI Awareness Context 不同的窗口组成一个 Top-level 窗口，则系统会自动继承或重置窗口该属性
+
+| Operation                 | Windows 8.1                              | Windows 10 (1607 and earlier)            | Windows 10 (1703 and later)              |
+| ------------------------- | ---------------------------------------- | ---------------------------------------- | ---------------------------------------- |
+| CreateWindow (In-Proc)    | N/A                                      | Child inherits (mixed mode)              | Child inherits (mixed mode)              |
+| CreateWindow (Cross-Proc) | Forced reset (of caller's process)       | Child inherits (mixed mode)              | Forced reset (of caller's process)       |
+| SetParent (In-Proc)       | N/A                                      | Forced reset (of current process)        | Fail (ERROR_INVALID_STATE)               |
+| SetParent (Cross-Proc)    | Forced reset (of child window's process) | Forced reset (of child window's process) | Forced reset (of child window's process) |
+
+High DPI 常用的适配方案主要有两种
+
+- 设备无关像素 (DIP)：开发时使用设备无关像素，其实际大小根据系统或屏幕缩放设置变化，优点是保证字体等尺寸总是具有适合的物理显示大小，一般用于 UI 框架
+
+- 固定分辨率：开发时假定窗口为固定的长 x 宽分辨率，在实际应用时，当窗口高度变化时缩放尺寸，当窗口宽度变化时显示更多画面，一般用于游戏引擎
+
+> - `GetSystemMetricsForDpi`
+> - `SystemParametersInfoForDpi`
+> - `AdjustWindowRectExForDpi`
+> - `GetDpiForWindow`
+> - `GetDpiForMonitor`
+> - `GetDpiForSystem`
+
+#### 原生控件
+
+> 参考
+>
+> - [Windows Controls](https://learn.microsoft.com/en-us/windows/win32/controls/window-controls)
+> - [Dialog Boxes](https://learn.microsoft.com/en-us/windows/win32/dlgbox/dialog-boxes)
+> - [Design and code Windows apps](https://learn.microsoft.com/en-us/windows/apps/design/)
 
 ## 其他
 
-### 头文件宏
+### 头文件
+
+> 参考 [Using the Windows Header](https://learn.microsoft.com/en-us/windows/win32/winprog/using-the-windows-headers)
 
 - Windows SDK 最低支持版本
+
   - `_WIN32_WINNT` 指定大版本
   - `NTDDI_VERSION` 指定更细化的版本，需要同时指定 `_WIN32_WINNT`
+
 - 减小头文件内容以加速编译
-  - `WIN32_LEAN_AND_MEAN`
-  - `NOCOMM`
+  - `WIN32_LEAN_AND_MEAN`：去除 Cryptography, DDE, RPC, Shell, and Windows Sockets 等很少用到的 API
+  - `NOapi`：其中 `api` 可换成诸如 `COMM`（去除 serial communication API）等
+
+### 编译资源
+
+> 参考 [Menus and Other Resources](https://learn.microsoft.com/en-us/windows/win32/menurc/resources)
+
+利用资源编译器 `rc` 可以将一些二进制数据集成进 exe 里。
+
+1. `resource.h` 声明资源数据接口
+2. `resource.rc` 导入 `resource.h` 并定义资源数据
+3. `desktop.cpp` 导入 `resource.h` 引用资源
 
 ### 字符集
 
@@ -1989,27 +2063,33 @@ Alpha mode:
 > - [Character Sets](https://learn.microsoft.com/en-us/windows/win32/intl/character-sets)
 > - [Code Page Identifiers](https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers)
 > - [Unicode in the Windows API](https://learn.microsoft.com/en-us/windows/win32/intl/unicode-in-the-windows-api)
+> - [Stackoverflow](https://stackoverflow.com/a/72143879/21201111)
 
-Windows 系统主要存在三类字符集：
+Windows 系统中每个 locale 设置包含了 4 个不同的 code pages
 
-- Unicode
-  - `W` 版本的 API 函数
-  - `W` 版本窗口类的消息
-  - 使用 UTF-16 编码
-- ANSI
-  - `A` 结尾的 API 函数
-  - `A` 版本窗口类的消息
-  - 不同的语系地区使用不同的字符集和编码
-    - 单字节字符集，如 `OEM United States`、`IBM EBCDIC International`
-    - 多字节字符集，如 `Chinese Simplified (GB2312)`、`utf-8`
-- OEM
-  - 终端输入输出
-  - FAT32 文件系统非扩展文件名
+- ANSI：`A` 后缀版本的系统 API 交互
+- OEM：Console 交互的默认字符集编码，FAT32 文件系统非扩展文件名
+- EBCDIC
+- Mac
 
-系统底层使用 Unicode (UTF-16)，当使用 ANSI 与系统交互时，系统会尝试自动转换字符集。
+现代 Windows 系统所有 locale 设置都能使用 Unicode
+
+- Unicode (UTF-16)：`W` 后缀版本的系统 API 交互，系统底层使用 UTF-16 编码，调用 `A` 后缀版本 API 时会先尝试根据将 ANSI 转换为 Unicode
+- Unicode (UTF-8)：推荐的文本文件存储编码
+
+在 Code Page 时代字符集和编码指同一个东西，而后来 Unicode 时代则区分了几个概念
+
+![unicode](./images/unicode.jpg)
+
+- 字符集 (character set)：指具有语义的人类可读的字符 (character) 集合，Unicode 根据用途将字符集合分为多个平面 (plane)，其中每个字符都有一个编号称为码点 (code point)
+- 编码 (encoding)：将抽象的字符转换为机器可识别的数据，通常就是将字符的码点进行编码，比如 UTF-8, UTF-16, UTF-32
+- 字形 (glyph)：最终在屏幕上显示的图像符号，一个字形可能由多个 Unicode 字符组成，比如 ☝🏿 由 ☝ 和 🏿 组成，`à` 由 `a` 和 `̀ ` 组成
+
+![unicode](./images/unicode2utf8.jpeg)
 
 > - `GetACP`
 > - `GetOEMCP`
+> - `GetConsoleCP`
 > - `GetCPInfoEx`
 > - `MultiByteToWideChar`
 > - `WideCharToMultiByte`
