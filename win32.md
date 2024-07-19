@@ -77,6 +77,7 @@
       - [系统设置](#系统设置)
       - [多显示器](#多显示器)
       - [高 DPI](#高-dpi)
+      - [剪切板](#剪切板)
       - [原生控件](#原生控件)
   - [其他](#其他)
     - [头文件](#头文件)
@@ -600,8 +601,10 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
 5. 调用 DllMain
 
    ```cpp
-   // 进程内所有 DllMain 的执行都需要获取同一个互斥锁（进程唯一）
-   // 所以谨慎在 DllMain 中调用 LoadLibrary, FreeLibrary, CreateThread, ExitThread 等函数
+   /*
+    * 进程内所有 DllMain 的执行都需要获取同一个互斥锁（进程唯一）
+    * 所以谨慎在 DllMain 中调用 LoadLibrary, FreeLibrary, CreateThread, ExitThread 等函数
+   */
    BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
      switch (fdwReason) {
        case DLL_PROCESS_ATTACH:
@@ -632,12 +635,27 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
    }
    ```
 
+常见问题：
+
+- `LoadLibrary` 会增加模块引用计数，`FreeLibrary` 会减少模块引用计数
+- `CreateThread` 会增加启动函数所在的模块的引用计数，`ExitThread` 线程终止时减少对应的引用计数
+- 引用计数为 0 时卸载模块，此时会调用 DllMain
+- 同一进程中的所有 DllMain 执行前需要获取同一把互斥锁，为避免死锁
+  - 谨慎在 DllMain 中调用 `LoadLibrary`/`FreeLibrary`
+  - 禁止在 DllMain 中等待线程退出
+- 如何优雅地卸载模块
+  1. 提供 `Deinitialize` 方法发送请求给 Controller 线程
+  2. Controller 线程负责终止其他所有模块相关的线程
+  3. 然后 Controller 作为最后一个模块相关线程，调用 `FreeLibraryAndExitThread` 卸载模块并退出
+  4. 最后在 `DllMain DLL_PROCESS_DETACH` 中销毁静态变量（如果有的话）
+
 > - `LoadLibrary`
 > - `LoadLibraryEx`：可设置修改标准搜索路径、仅加载资源数据，通常对同一 dll 不能与 `LoadLibrary` 混用
 > - `GetProcAddress`
 > - `FreeLibrary`
 > - `FreeLibraryAndExitThread`
 > - `EXTERN_C IMAGE_DOS_HEADER __ImageBase;`：由链接器创建的变量，位于该模块的基地址
+> - `DisableThreadLibraryCalls`：**线程创建和终止不在调用指定模块的 DllMain，通常不应该调用此函数因为 CRT 和 TLS 依赖模块的线程通知**
 > - `EnumProcessModules`
 > - `GetModuleHandle`：不递增引用计数
 > - `GetModuleHandleEx`：默认递增引用计数
@@ -884,6 +902,7 @@ __except (filter-expression) {
 > - `SetThreadErrorMode`
 > - `_controlfp_s`：默认系统关闭所有浮点异常，因此计算结果可以是 NAN 或 INFINITY 而不是异常。
 > - `_clearfp`：必须在浮点异常处理块中调用该函数来获取并清除浮点异常标志
+> - `_set_se_translator`：将结构化异常翻译为 C++ 异常从而可以被 `try-catch` 语句捕获
 > - `RaiseException`
 > - `GetExceptionCode`：仅可在过滤表达式和 `__except` 块中调用
 > - `GetExceptionInformation`：仅可在过滤表达式中调用，因为执行 `__except` 块时异常栈帧已被销毁
@@ -1639,7 +1658,7 @@ while (true) {
 - `GetMessage`：同步阻塞读取消息，可设置消息过滤（无法过滤 `WM_QUIT`）
 - `PeekMessage`：同步非阻塞读取消息，可设置消息过滤（无法过滤 `WM_QUIT`），可选择是否从队列中删除消息（无法删除 `WM_PAINT` 除非更新区域为空）
 - `GetMessageTime`：获取上次 `GetMessage` 的时间，通常用于计算消息处理间隔时间
-- `SendMessage`：同步发送消息，`GetMessage` 和 `PeekMessage` 内部直接调用 `DispatchMessage` 来处理该消息，即同步发送消息可以“插队”
+- `SendMessage`：同步发送消息，让目标调用的 `GetMessage` 和 `PeekMessage` 内部直接调用 `DispatchMessage` 来处理该消息，即同步发送消息可以“插队”
 - `SendMessageTimeout`
 - `SendNotifyMessage`：目标窗口同线程则同步发送，不同线程则异步发送消息
 - `InSendMessageEx`
@@ -1720,7 +1739,7 @@ LRESULT CALLBACK MainWndProc(
 - hook 创建后，在目标线程下次处理消息时，会加载 hook dll
   - 32 位进程无法为 64 位进程注入 dll，反之亦然
   - 虽然异构的 dll 无法注入，但异构的 hook 仍然有效，原理是在被注入目标处理消息时，系统将消息同步转发给注入进程，注入进程将调用 hook 函数处理消息，然后再由系统返回到被注入目标。如果注入进程没有消息循环，则可能导致异构的被注入目标卡死。
-- hook 会在线程终止时被销毁，hook 被销毁后，在目标线程下次处理消息时，会卸载 hook dll
+- hook 会在线程终止时被销毁，hook 被销毁后，在目标线程下次处理消息时，会尝试卸载 hook dll
 
 > - `SetWindowsHookEx`
 > - `UnhookWindowsHookEx`
@@ -2022,6 +2041,8 @@ High DPI 常用的适配方案主要有两种
 > - `GetDpiForWindow`
 > - `GetDpiForMonitor`
 > - `GetDpiForSystem`
+
+#### 剪切板
 
 #### 原生控件
 
