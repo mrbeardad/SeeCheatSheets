@@ -73,12 +73,12 @@
     - [窗口渲染](#窗口渲染)
       - [DWM](#dwm)
       - [GDI](#gdi)
+    - [原生控件](#原生控件)
     - [窗口杂项](#窗口杂项)
       - [系统设置](#系统设置)
       - [多显示器](#多显示器)
       - [高 DPI](#高-dpi)
       - [剪切板](#剪切板)
-      - [原生控件](#原生控件)
   - [其他](#其他)
     - [头文件](#头文件)
     - [编译资源](#编译资源)
@@ -88,7 +88,7 @@
 
 ### 对象
 
-程序本质可看做对资源的访问和计算，Windows 系统将资源抽象成对象
+从资源的角度来说，程序本质可看做对资源的访问和计算，Windows 系统将资源抽象成对象
 
 - [Kernel Object](https://learn.microsoft.com/en-us/windows/win32/sysinfo/kernel-objects)
 
@@ -100,7 +100,7 @@
 
   - 负责窗口资源的访问，如 Window, Menu, Hook, Icon, Cursor 等
   - 一个用户对象只能创建一个句柄，但句柄是公开的，只要进程属于同一 Desktop 且具有句柄值和访问权限就能访问
-  - 用户对象在调用相应销毁函数后立即被销毁，进程终止时会自动销毁进程创建的用户对象，特别的，Window, Hook, Window Position, DDE conversation 在创建线程终止时就被销毁
+  - 用户对象在调用相应销毁函数后立即被销毁，进程终止时会自动销毁进程创建的用户对象，特别的，Window, Hook 等资源在创建线程终止时就被销毁
 
 - [GDI Object](https://learn.microsoft.com/en-us/windows/win32/sysinfo/gdi-objects)
   - 负责图形资源的访问，如 Bitmap, Brush, Font, DC 等
@@ -114,13 +114,13 @@
 每个进程维护一张句柄表用于访问内核对象，内核对象句柄仅在进程内有效
 
 - 索引：`HANDLE`
-  - -1、0 保留作为无效句柄
-  - 1、2、3 保留用作标准输入输出
+  - 0, -1 保留作为无效句柄
+  - 1, 2, 3 保留用作标准输入输出
 - 内核对象指针
   - 名字
   - 引用计数
   - 安全描述符
-  - 其他...
+  - ...
 - 访问掩码：该句柄的访问权限掩码
 - 属性标志：如 Protect, Inherit 等
 
@@ -251,7 +251,7 @@
   - high: 通常为管理员权限进程
   - medium: 通常为标准用户权限进程
   - low: 通常显式设置了 exe 文件的 security descriptors 或进程的 access token
-  - untrust: 同上
+  - untrust: 同上，但级别更低
 
 - access token 中的 integrity SIDs 表示可信级别
 
@@ -301,8 +301,8 @@
 
 3. 用户程序入口函数
 
-   - `main`/`wmain` for **SUBSYSTEM:CONSOLE**, 默认继承父进程控制台窗口或自动创建新控制台窗口
-   - `WinMain`/`wWinMain` for **SUBSYSTEM:WINDOWS**
+   - `main` for **SUBSYSTEM:CONSOLE**, 默认继承父进程控制台窗口或自动创建新控制台窗口
+   - `WinMain` for **SUBSYSTEM:WINDOWS**
 
    ```cpp
    int main(int argc, char* argv[], char* env[]);
@@ -454,7 +454,7 @@
   - `TerminateProcess`
 
 - 线程终止结果
-  - 释放线程拥有的资源，如 TLS (Thread Local Storage), windows, menus, hooks
+  - 释放线程拥有的资源，如 TLS (Thread Local Storage), windows, hooks 等
   - 设置线程退出码
   - 触发线程对象
   - 如果线程是进程里唯一的线程，则终止进程
@@ -644,7 +644,7 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
   - 谨慎在 DllMain 中调用 `LoadLibrary`/`FreeLibrary`
   - 禁止在 DllMain 中等待线程退出
 - 如何优雅地卸载模块
-  1. 提供 `Deinitialize` 方法发送请求给 Controller 线程
+  1. 提供 Deinitialize 方法发送请求给 Controller 线程
   2. Controller 线程负责终止其他所有模块相关的线程
   3. 然后 Controller 作为最后一个模块相关线程，调用 `FreeLibraryAndExitThread` 卸载模块并退出
   4. 最后在 `DllMain DLL_PROCESS_DETACH` 中销毁静态变量（如果有的话）
@@ -900,9 +900,9 @@ __except (filter-expression) {
 > - `SetErrorMode`
 > - `GetThreadErrorMode`
 > - `SetThreadErrorMode`
+> - `_set_se_translator`：将结构化异常翻译为 C++ 异常从而可以被 `try-catch` 语句捕获
 > - `_controlfp_s`：默认系统关闭所有浮点异常，因此计算结果可以是 NAN 或 INFINITY 而不是异常。
 > - `_clearfp`：必须在浮点异常处理块中调用该函数来获取并清除浮点异常标志
-> - `_set_se_translator`：将结构化异常翻译为 C++ 异常从而可以被 `try-catch` 语句捕获
 > - `RaiseException`
 > - `GetExceptionCode`：仅可在过滤表达式和 `__except` 块中调用
 > - `GetExceptionInformation`：仅可在过滤表达式中调用，因为执行 `__except` 块时异常栈帧已被销毁
@@ -1963,6 +1963,14 @@ Alpha mode:
 - `D2D1_ALPHA_MODE_STRAIGHT`：RGB 通道值乘以 A
 - `D2D1_ALPHA_MODE_PREMULTIPLIED` RGB 通道值已经是乘以 A 后的值了
 
+### 原生控件
+
+> 参考
+>
+> - [Windows Controls](https://learn.microsoft.com/en-us/windows/win32/controls/window-controls)
+> - [Dialog Boxes](https://learn.microsoft.com/en-us/windows/win32/dlgbox/dialog-boxes)
+> - [Design and code Windows apps](https://learn.microsoft.com/en-us/windows/apps/design/)
+
 ### 窗口杂项
 
 #### 系统设置
@@ -2044,13 +2052,72 @@ High DPI 常用的适配方案主要有两种
 
 #### 剪切板
 
-#### 原生控件
-
 > 参考
 >
-> - [Windows Controls](https://learn.microsoft.com/en-us/windows/win32/controls/window-controls)
-> - [Dialog Boxes](https://learn.microsoft.com/en-us/windows/win32/dlgbox/dialog-boxes)
-> - [Design and code Windows apps](https://learn.microsoft.com/en-us/windows/apps/design/)
+> - [Clipboard Operations](https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-operations)
+> - [Standard Clipboard Formats](https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats)
+
+剪切板在 Window Station 中共享，任何剪切板操作都应该由用户驱动，即任何用户无法感知到的剪切板操作都是不可取的。
+
+```cpp
+// 打开剪切板
+if (!OpenClipboard(hwnd))
+    return FALSE;
+
+// 使用 GlobalAlloc 带 GMEM_MOVEABLE 标志分配内存
+auto hglbCopy = GlobalAlloc(GMEM_MOVEABLE, (length + 1) * sizeof(TCHAR));
+if (hglbCopy == NULL) {
+    CloseClipboard();
+    return FALSE;
+}
+
+// 锁定内存，获取指针，拷贝数据，解锁内存
+auto lptstrCopy = GlobalLock(hglbCopy);
+memcpy(lptstrCopy, data, length * sizeof(TCHAR));
+lptstrCopy[length] = (TCHAR) 0;
+GlobalUnlock(hglbCopy);
+
+// 清空剪切板并写入数据
+EmptyClipboard();
+SetClipboardData(CF_TEXT, hglbCopy);
+```
+
+- 延迟拷贝
+
+  - 调用 `SetClipboardData` 时数据内存参数为 `NULL`，则表示延迟拷贝
+  - 当某处需要粘贴时，选择延迟拷贝的窗口会收到 `WM_RENDERFORMAT`，此时应该调用 `SetClipboardData` 来写入数据，此时无需提前调用 `OpenClipboard`
+  - 当选择延迟拷贝的窗口将被销毁时，为避免丢失拷贝数据，窗口会收到 `WM_RENDERALLFORMATS`，此时应该先尝试 `OpenClipboard`，在写入所有格式的数据
+  - 通常当数据小于 100 KiB 时，延迟拷贝内部开销将总是大于数据拷贝开销
+
+- 拷贝数据
+
+  - 同一份数据可以提供多种格式，比如 `CF_TEXT`, `CF_UNICODETEXT`，系统内部会根据粘贴请求的格式，尝试进行数据格式转换
+  - 系统会自动释放标准格式（除了 `CF_OWNERDISPLAY`）数据的内存。其他格式，如自定义格式，则在 `WM_DESTROYCLIPBOARD` 中需要手动释放
+
+- 剪切板监听，详见 [Creating a Clipboard Viewer Window](https://learn.microsoft.com/en-us/windows/win32/dataxchg/using-the-clipboard#creating-a-clipboard-viewer-window)
+  - `SetClipboardViewer`
+  - `WM_CHANGECBCHAIN`
+  - `ChangeClipboardChain`
+  - `WM_DRAWCLIPBOARD`
+
+> 拷贝
+>
+> - `GetOpenClipboardWindow`：可获取当前打开剪切板的窗口
+> - `GetClipboardOwner`：可获取上个写入剪切板的窗口
+> - `OpenClipboard`：打开剪切板，内部会尝试获取互斥锁，同时只能有一个窗口打开剪切板，但并不阻止多个窗口写入剪切板
+> - `EmptyClipboard`：清空剪切板内容，会向上个写入剪切板的窗口发送 `WM_DESTROYCLIPBOARD` 消息
+> - `SetClipboardData`：写入数据到剪切板，需要指定数据格式和数据内存
+> - `RegisterClipboardFormat`：注册自定义格式
+> - `GetClipboardFormatName`：获取格式名称
+> - `CloseClipboard`：关闭剪切板，内部释放互斥锁
+>
+> 粘贴
+>
+> - `EnumClipboardFormats`
+> - `GetPriorityClipboardFormat`
+> - `IsClipboardFormatAvailable`
+> - `CountClipboardFormats`
+> - `GetClipboardData`
 
 ## 其他
 
