@@ -1970,6 +1970,7 @@ Alpha mode:
 > - [Windows Controls](https://learn.microsoft.com/en-us/windows/win32/controls/window-controls)
 > - [Dialog Boxes](https://learn.microsoft.com/en-us/windows/win32/dlgbox/dialog-boxes)
 > - [Design and code Windows apps](https://learn.microsoft.com/en-us/windows/apps/design/)
+> - [Windows Shell](https://learn.microsoft.com/en-us/windows/win32/shell/shell-entry)
 
 ### 窗口杂项
 
