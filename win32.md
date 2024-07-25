@@ -919,6 +919,8 @@ __except (filter-expression) {
 
 ### 服务管理
 
+> 参考 [About Services](https://learn.microsoft.com/en-us/windows/win32/services/about-services)
+
 - Service Control Manager
 
   - 加载顺序
