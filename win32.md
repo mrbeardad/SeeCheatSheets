@@ -33,6 +33,7 @@
       - [应用部署](#应用部署)
     - [虚拟内存](#虚拟内存)
     - [异常处理](#异常处理)
+    - [服务管理](#服务管理)
   - [IO 系统](#io-系统)
     - [注册表](#注册表)
     - [文件系统](#文件系统)
@@ -637,11 +638,11 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
 
 常见问题:
 
-- `LoadLibrary` 会增加模块引用计数, `FreeLibrary` 会减少模块引用计数
-- `CreateThread` 会增加启动函数所在的模块的引用计数, `ExitThread` 线程终止时减少对应的引用计数
+- `LoadLibrary`/`GetModuleHandleEx` 会增加模块引用计数, `FreeLibrary` 会减少模块引用计数
+- `_beginthreadex` 会增加启动函数所在的模块的引用计数, 同时在其线程终止时减少对应的引用计数
 - 引用计数为 0 时卸载模块, 此时会调用 DllMain
 - 同一进程中的所有 DllMain 执行前需要获取同一把互斥锁, 为避免死锁
-  - 谨慎在 DllMain 中调用 `LoadLibrary`/`FreeLibrary`
+  - 谨慎在 DllMain 中调用 `LoadLibrary`/`GetModuleHandleEx`/`FreeLibrary`
   - 禁止在 DllMain 中等待线程退出
 - 如何优雅地卸载模块
   1. 提供 Deinitialize 方法发送请求给 Controller 线程
@@ -915,6 +916,52 @@ __except (filter-expression) {
 > - `SetUnhandledExceptionFilter`
 > - `RegisterApplicationRecoveryCallback`
 > - `RegisterApplicationRestart`
+
+### 服务管理
+
+- Service Control Manager
+
+  - 加载顺序
+    - 顺序组: HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\ServiceGroupOrder
+    - 组内顺序: HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\GroupOrderList
+    - 依赖顺序
+  - last-known-good (LKG) configuration: 每次成功启动系统, 都会将启动配置备份, 当下次启动失败时则使用该备份配置尝试重新启动
+
+- Service Configuration Program
+
+  - `OpenSCManager`
+  - `CreateService`
+  - `OpenService`
+  - `ChangeServiceConfig`
+  - `QueryServiceConfig`
+  - `DeleteService`
+  - `GetServiceKeyName`
+  - `GetServiceDisplayName`
+  - `EnumServicesStatusEx`
+  - `EnumDependentServices`
+  - `sc.exe`
+
+- Service Control Program
+
+  - `StartService`
+  - `ControlService`
+  - `QueryServiceStatusEx`
+  - `sc.exe`
+
+- Service Program
+
+  - `StartServiceCtrlDispatcher` -> `ServiceMain`
+  - `RegisterServiceCtrlHandlerEx` -> `LPHANDLER_FUNCTION_EX` (be called in main thread)
+  - `SetServiceStatus`
+
+- User Accounts
+  - `NT AUTHORITY\LocalService`
+  - `NT AUTHORITY\NetworkService`
+  - `LocalSystem`
+
+![service](images/service.png)
+
+![srevice2](images/service2.png)
 
 ## IO 系统
 
@@ -2124,10 +2171,16 @@ SetClipboardData(CF_TEXT, hglbCopy);
   - 当选择延迟拷贝的窗口将被销毁时, 为避免丢失拷贝数据, 窗口会收到 `WM_RENDERALLFORMATS`, 此时应该先尝试 `OpenClipboard`, 在写入所有格式的数据
   - 通常当数据小于 100 KiB 时, 延迟拷贝内部开销将总是大于数据拷贝开销
 
-- 拷贝数据
+- 数据格式
 
   - 同一份数据可以提供多种格式, 比如 `CF_TEXT`, `CF_UNICODETEXT`, 系统内部会根据粘贴请求的格式, 尝试进行数据格式转换
   - 系统会自动释放标准格式 (除了 `CF_OWNERDISPLAY`) 数据的内存。其他格式, 如自定义格式, 则在 `WM_DESTROYCLIPBOARD` 中需要手动释放
+
+- 剪切板历史
+
+  - `ExcludeClipboardContentFromMonitorProcessing`: 写入该格式的数据到剪切板会防止剪切板中所有格式的数据被保留到本地或云端剪切板历史
+  - `CanIncludeInClipboardHistory`: 写入 `DWORD` 0 到该格式的数据到剪切板会防止剪切板中所有格式的数据被同步到本地剪切板历史(不影响同步云端剪切板历史), 写入 `DWORD` 1 则指明要保留到本地剪切板历史
+  - `CanUploadToCloudClipboard`: 写入 `DWORD` 0 到该格式的数据到剪切板会防止剪切板中所有格式的数据被同步到云端剪切板历史(不影响同步本地剪切板历史), 写入 `DWORD` 1 则指明保留要到云端剪切板历史
 
 - 剪切板监听, 详见 [Creating a Clipboard Viewer Window](https://learn.microsoft.com/en-us/windows/win32/dataxchg/using-the-clipboard#creating-a-clipboard-viewer-window)
   - `SetClipboardViewer`
@@ -2216,3 +2269,4 @@ Windows 系统中每个 locale 设置包含了 4 个不同的 code pages
 > - `GetCPInfoEx`
 > - `MultiByteToWideChar`
 > - `WideCharToMultiByte`
+> - `chcp.com`: 命令行工具用于更改当前终端的 code page
