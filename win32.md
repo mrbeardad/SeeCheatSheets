@@ -80,6 +80,7 @@
       - [多显示器](#多显示器)
       - [高 DPI](#高-dpi)
       - [剪切板](#剪切板)
+      - [音视频](#音视频)
   - [其他](#其他)
     - [头文件](#头文件)
     - [编译资源](#编译资源)
@@ -647,7 +648,7 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
 - 如何优雅地卸载模块
   1. 提供 Deinitialize 方法发送请求给 Controller 线程
   2. Controller 线程负责终止其他所有模块相关的线程
-  3. 然后 Controller 作为最后一个模块相关线程, 调用 `FreeLibraryAndExitThread` 卸载模块并退出
+  3. 然后 Controller 作为最后一个模块相关线程退出, 不要调用 `ExitThread` 或 `FreeLibraryAndExitThread` 之类的 Win32 API 退出线程, 否则清理代码不会执行, 比如引用计数不会减少
   4. 最后在 `DllMain DLL_PROCESS_DETACH` 中销毁静态变量 (如果有的话)
 
 > - `LoadLibrary`
@@ -2208,6 +2209,17 @@ SetClipboardData(CF_TEXT, hglbCopy);
 > - `IsClipboardFormatAvailable`
 > - `CountClipboardFormats`
 > - `GetClipboardData`
+
+#### 音视频
+
+> 参考
+>
+> - [Audio and Video](https://learn.microsoft.com/en-us/windows/win32/audio-and-video)
+> - [About the Windows Core Audio APIs](https://learn.microsoft.com/en-us/windows/win32/coreaudio/about-the-windows-core-audio-apis)
+> - [User-Mode Audio Components](https://learn.microsoft.com/en-us/windows/win32/coreaudio/user-mode-audio-components)
+> - [Digital video concepts](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Video_concepts)
+
+![audio](images/audio.png)
 
 ## 其他
 
