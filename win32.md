@@ -1901,7 +1901,10 @@ while (true) {
 
 #### 鼠标输入
 
-> 参考 [Mouse Input Overview](https://learn.microsoft.com/en-us/windows/win32/inputdev/about-mouse-input)
+> 参考
+>
+> - [Mouse Input Overview](https://learn.microsoft.com/en-us/windows/win32/inputdev/about-mouse-input)
+> - [About Cursor](https://learn.microsoft.com/en-us/windows/win32/menurc/about-cursors)
 
 - 用户移动鼠标 (Mouse) 时屏幕上显示的表示光标 (Cursor) 的位图也会跟着移动, 光标位图的其中一个像素用于定位, 称为 hot spot
 - 默认仅 hot spot 下面的窗口会接收鼠标输入事件, 即使该窗口不是激活窗口
