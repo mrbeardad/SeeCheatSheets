@@ -1,5 +1,51 @@
 # Unity
 
+## Editor
+
+> 参考 [Unity’s interface](https://docs.unity3d.com/6000.0/Documentation/Manual/UsingTheEditor.html)
+
+![unity interface](images/unityeditor.png)
+
+- Scene View
+  - 场景视图存在一个独立场景之外专用于视图窗口的相机
+  - `Alt`+`LeftDrag`: 移动场景视角
+  - `Ctrl`+`P`: 开始
+  - `LeftClick`: 选择物体, 当点击位置存在多个物体, 则多次点击会切换物体
+  - `LeftDrag`: 选择多个物体
+  - `Ctrl`+`Shift`+`RightClick`: 显示菜单展示点击位置的所有物体
+  - `Shift`+`LeftClick`: 添加选择物体
+  - `Shift`+`LeftDrag`: 添加选择多个物体
+  - `Ctrl`+`LeftClick`: 取消选择物体
+  - `Ctrl`+`LeftDrag`: 取消选择多个物体
+- Overlay Menu
+  - `` ` ``: 显示或隐藏 overlay menu
+  - `q`: 移动视图, 移动平面平行于场景视图
+  - `w`: 移动物体
+  - `e`: 旋转物体, 最外层灰色圆圈旋平面为场景视图
+  - `r`: 缩放物体
+  - `t`: 选择并自由变换物体
+  - `y`: 移动, 旋转, 缩放物体
+  - Center/Pivot: 当选择多个物体时, handle 位于所有选择物体的中心或激活物体的 pivot
+  - Global/Local: 当进行旋转物体时, handle 角度为全局角度或者激活物体的角度
+  - `\`: 开启或关闭吸附
+  - `Ctrl`+`\`: 吸附当前选择物体
+  - `Ctrl`+`[`: 减小吸附网格尺寸
+  - `Ctrl`+`]`: 增大吸附网格尺寸
+- Hierarchy Window
+  - `LeftClick`: 选择物体
+  - `Shift`+`LeftClick`: 添加选择物体
+  - `Ctrl`+`LeftClick`: 切换选择物体
+  - `LeftDrag`: 改变物体位置或层级关系
+  - 眼睛图标 (图标带小点表示存在子物体的状态不同于其他物体)
+    - `LeftClick`: 显示或隐藏所有子层级
+    - `Alt`+`LeftClick`: 显示或隐藏仅选中物体
+  - 手指图标 (图标带小点表示存在子物体的状态不同于其他物体)
+    - `LeftCLick`: 是否可被选中所有子层级
+    - `Alt`+`LeftClick`: 是否可被选中仅选中物体
+  - 三角图标
+    - `LeftCLick`: 展开或收起选中层级
+    - `Alt`+`LeftClick`: 展开或收起选中所有子层级
+
 ## UI
 
 - 屏幕显示画面来源
