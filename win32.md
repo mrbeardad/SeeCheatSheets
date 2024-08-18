@@ -1249,7 +1249,7 @@ auto data = COPYDATASTRUCT {
   .lpData = data_buf,
 };
 
-// 系统需要确定何时释放缓冲区, 所以 WM_COPYDATA 只能使用同步发送消息, 如 SendMessage, SendMessageTimeout 等
+// 系统需要确定何时释放缓冲区, 所以 WM_COPYDATA 只能使用 SendMessage 同步发送消息
 SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
 ```
 
@@ -1279,7 +1279,7 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
 
 - 数据拷贝
 
-  - 每次发送数据都需要分配缓冲区, 且只能同步发送
+  - 每次发送数据都需要分配缓冲区, 且只能同步发送, 但消息不用排队
   - 有缓冲区管理, 没有连接管理, 不支持流传输
   - **适用场景: UI 同步逻辑通讯**
 
@@ -1685,6 +1685,8 @@ Top-level Window 默认使用屏幕坐标系, Child Window 默认使用客户区
 
 ### 窗口消息
 
+> 参考 [About Messages and Message Queues](https://learn.microsoft.com/en-us/windows/win32/winmsg/about-messages-and-message-queues)
+
 #### 消息队列
 
 当线程第一次调用窗口系统相关函数时, 会创建一个消息队列用来接收消息。该线程创建的窗口的消息都被发送到该线程的消息队列中。
@@ -1705,15 +1707,18 @@ while (true) {
 ```
 
 - 消息可能由系统发送、其他窗口发送、默认处理函数或其他 API 函数创建发送
+- `WM_TIEMR`, `WM_PAINT`, `WM_QUIT` 会保持在队列中直到队列中无其他消息再处理, 其中多个 `WM_PAINT` 会合并成一个
 - `GetMessage`: 同步阻塞读取消息, 可设置消息过滤 (无法过滤 `WM_QUIT`)
 - `PeekMessage`: 同步非阻塞读取消息, 可设置消息过滤 (无法过滤 `WM_QUIT`) , 可选择是否从队列中删除消息 (无法删除 `WM_PAINT` 除非更新区域为空)
-- `GetMessageTime`: 获取上次 `GetMessage` 的时间, 通常用于计算消息处理间隔时间
-- `SendMessage`: 同步发送消息, 让目标调用的 `GetMessage` 和 `PeekMessage` 内部直接调用 `DispatchMessage` 来处理该消息, 即同步发送消息可以“插队”
-- `SendMessageTimeout`
+- `GetMessageTime`: 获取当前消息的创建时间
+- `GetMessageCursor`: 获取当前消息创建时的光标位置
+- `SendMessage`: 同步发送消息, 让目标调用的 `GetMessage` 和 `PeekMessage` 内部直接调用 `DispatchMessage` 来处理该消息 (非排队消息), 同步阻塞期间仍然可以处理非排队消息
+- `SendMessageTimeout`: 同步发送消息
 - `SendNotifyMessage`: 目标窗口同线程则同步发送, 不同线程则异步发送消息
+- `SendMessageCallback`: 目标窗口同线程则同步发送, 不同线程则异步发送消息
 - `InSendMessageEx`
 - `ReplyMessage`: 使消息的同步发送者即刻返回, 不用继续等待
-- `PostMessage`: 异步发送消息, 发送到消息队列 (无法插队)
+- `PostMessage`: 异步发送消息, 发送到消息队列
 - `PostThreadMessage`: 异步发送消息, 指定线程而非指定窗口 (该消息的 `hwnd` 为 `NULL`)
 - `PostQuitMessage`: 异步发送 `WM_QUIT`, 该消息无法被忽略
 - `ChangeWindowMessageFilter`: 允许低可信级别发送指定到指定进程 (不推荐)
@@ -1944,6 +1949,16 @@ while (true) {
 - Mouse Vanish: 隐藏光标
   - `SPI_GETMOUSEVANISH`
   - `SPI_SETMOUSEVANISH`
+
+> - `GetMessageCursor`: 获取当前消息创建时的光标位置
+> - `GetCursorPos`: 获取当前光标位置
+> - `SetCursorPos`: 设置当前光标位置
+> - `GetClipCursor`: 获取光标限制区域
+> - `ClipCursor`: 设置光标限制区域
+> - `GetCursor`: 获取光标
+> - `GetCursorInfo`: 获取光标信息
+> - `SetCursor`: 设置光标, 为 NULL 则删除光标
+> - `ShowCursor`: 增加或减小计数, 其大于或等于 0 时显示光标, 小于 0 时隐藏光标
 
 #### 输入法编辑
 

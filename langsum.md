@@ -1845,15 +1845,11 @@ u: None | int | float = 1
 - Task (async/await)
 - Timer
 - IO
-  - 平台信息
-  - 系统事件
-  - 本地文件
-  - 网络文件
+  - 文件系统
   - 网络通讯
   - 进程通讯
   - 对象通讯
-- Lock
-- Channel
+  - 同步事件
 
 ### UI
 
