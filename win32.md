@@ -70,6 +70,7 @@
       - [窗口挂钩](#窗口挂钩)
       - [键盘输入](#键盘输入)
       - [鼠标输入](#鼠标输入)
+      - [原始输入](#原始输入)
       - [输入法编辑](#输入法编辑)
     - [窗口渲染](#窗口渲染)
       - [GDI](#gdi)
@@ -106,7 +107,7 @@
 
 - [GDI Object](https://learn.microsoft.com/en-us/windows/win32/sysinfo/gdi-objects)
   - 负责图形资源的访问, 如 Bitmap, Brush, Font, DC 等
-  - 一个 GDI 用户只能创建一个句柄, 且仅能在创建进程内部访问
+  - 一个 GDI 对象只能创建一个句柄, 且仅能在创建进程内部访问
   - GDI 对象在调用相应销毁函数后立即被销毁, 进程终止时会自动销毁进程创建的用户对象
 
 其中, 内核对象作为最主要的资源对象, 系统为其提供许多机制来加强管理
@@ -644,7 +645,7 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
 - 引用计数为 0 时卸载模块, 此时会调用 DllMain
 - 同一进程中的所有 DllMain 执行前需要获取同一把互斥锁, 为避免死锁
   - 谨慎在 DllMain 中调用 `LoadLibrary`/`GetModuleHandleEx`/`FreeLibrary`
-  - 禁止在 DllMain 中等待线程退出
+  - 禁止在 DllMain 中等待线程启动或线程退出
 - 如何优雅地卸载模块
   1. 提供 Deinitialize 方法发送请求给 Controller 线程
   2. Controller 线程负责终止其他所有模块相关的线程
@@ -1648,7 +1649,7 @@ Top-level Window 默认使用屏幕坐标系, Child Window 默认使用客户区
 若当前进程在被创建时指定了 `STARTUPINFO.wShowWindow` 且 `STARTUPINFO.dwFlag` 包含 `STARTF_USESHOWWINDOW`, 则进程第一次调用 `ShowWindow` 的参数被忽略, 而强制使用父进程指定的参数。
 
 - `WS_VISIBLE`: 创建窗口后自动调用 `ShowWindow(SW_SHOW)`, 对于 Overlapped Window 若 `x` 设置为 `CW_USEDEFAULT` 则 `y` 也需要设置为 `CW_USEDEFAULT` 才有效
-- `IsWindowVisible`
+- `IsWindowVisible`: `WS_VISIBLE` 仅表示该窗口是否在其父窗口中可见, 而若其父窗口不可见则该窗口也不可见
 - `ShowWindow`: 最小化、最大化、恢复、显示、隐藏、默认状态、控制是否前台激活
 - `ShowWindowAsync`: 异步 ShowWindow
 - `AnimateWindow`: 显示隐藏时展示动画 (仅 client area)
@@ -1685,9 +1686,9 @@ Top-level Window 默认使用屏幕坐标系, Child Window 默认使用客户区
 
 ### 窗口消息
 
-> 参考 [About Messages and Message Queues](https://learn.microsoft.com/en-us/windows/win32/winmsg/about-messages-and-message-queues)
-
 #### 消息队列
+
+> 参考 [About Messages and Message Queues](https://learn.microsoft.com/en-us/windows/win32/winmsg/about-messages-and-message-queues)
 
 当线程第一次调用窗口系统相关函数时, 会创建一个消息队列用来接收消息。该线程创建的窗口的消息都被发送到该线程的消息队列中。
 
@@ -1706,13 +1707,32 @@ while (true) {
 }
 ```
 
-- 消息可能由系统发送、其他窗口发送、默认处理函数或其他 API 函数创建发送
-- `WM_TIEMR`, `WM_PAINT`, `WM_QUIT` 会保持在队列中直到队列中无其他消息再处理, 其中多个 `WM_PAINT` 会合并成一个
+| 范围             | 描述                                                                    |
+| ---------------- | ----------------------------------------------------------------------- |
+| 0 ~ WM_USER-1    | 系统保留                                                                |
+| WM_USER ~ 0x7FFF | 在窗口类内部使用的自定义消息                                            |
+| WM_APP ~ 0xBFFF  | 应用程序内部使用的自定义消息                                            |
+| 0xC000 ~ 0xFFFF  | 非以上两者的自定义消息, 调用 `RegisterWindowMessage` 返回以保证系统唯一 |
+| 0xFFFF ~         | 系统保留                                                                |
+
+消息可能由系统发送、其他窗口发送、默认处理函数或其他 API 函数创建发送
+
 - `GetMessage`: 同步阻塞读取消息, 可设置消息过滤 (无法过滤 `WM_QUIT`)
 - `PeekMessage`: 同步非阻塞读取消息, 可设置消息过滤 (无法过滤 `WM_QUIT`) , 可选择是否从队列中删除消息 (无法删除 `WM_PAINT` 除非更新区域为空)
+
+消息读取的优先级
+
+1. Sent message (内部直接处理, 不会返回消息)
+2. Posted message
+3. Input (hardware) messages and system internal events
+4. Sent messages (again, 内部直接处理, 不会返回消息)
+5. `WM_PAINT` 多个消息会合并成一个 (脏区合并)
+6. `WM_TIMER`
+7. `WM_QUIT`
+
 - `GetMessageTime`: 获取当前消息的创建时间
 - `GetMessageCursor`: 获取当前消息创建时的光标位置
-- `SendMessage`: 同步发送消息, 让目标调用的 `GetMessage` 和 `PeekMessage` 内部直接调用 `DispatchMessage` 来处理该消息 (非排队消息), 同步阻塞期间仍然可以处理非排队消息
+- `SendMessage`: 同步发送消息
 - `SendMessageTimeout`: 同步发送消息
 - `SendNotifyMessage`: 目标窗口同线程则同步发送, 不同线程则异步发送消息
 - `SendMessageCallback`: 目标窗口同线程则同步发送, 不同线程则异步发送消息
@@ -1727,6 +1747,8 @@ while (true) {
 - `IsGUIThread`
 
 #### 窗口过程
+
+> 参考 [Window Procedures](https://learn.microsoft.com/en-us/windows/win32/winmsg/about-window-procedures)
 
 窗口过程(Window Procdure)或称窗口处理函数, 由窗口类提供。
 注意在处理消息时先查看对应的文档, 因为不同消息的参数和返回值的意义不同。
@@ -1769,14 +1791,6 @@ LRESULT CALLBACK MainWndProc(
 }
 ```
 
-| 范围             | 描述                                                                    |
-| ---------------- | ----------------------------------------------------------------------- |
-| 0 ~ WM_USER-1    | 系统保留                                                                |
-| WM_USER ~ 0x7FFF | 在窗口类内部使用的自定义消息                                            |
-| WM_APP ~ 0xBFFF  | 应用程序内部使用的自定义消息                                            |
-| 0xC000 ~ 0xFFFF  | 非以上两者的自定义消息, 调用 `RegisterWindowMessage` 返回以保证系统唯一 |
-| 0xFFFF ~         | 系统保留                                                                |
-
 > - `DefWindowProc`: 系统默认窗口处理函数
 > - `CallWindowProc`: 调用窗口处理函数, 会将消息转为 Unicode 或 ANSI
 > - `GetWindowLongPtr`: 可以用来获取指定窗口的窗口处理函数
@@ -1788,6 +1802,8 @@ LRESULT CALLBACK MainWndProc(
 > - `IsWindowUnicode`
 
 #### 窗口挂钩
+
+> 参考 [Hook](https://learn.microsoft.com/en-us/windows/win32/winmsg/about-hooks)
 
 - hook 分为局部 (仅作用于目标线程的消息队列) 和全局 (作用于 desktop 内消息队列)
 - hook 会在目标处理特定消息的时候被调用, 可能在消息入队后、`GetMessage` 后、处理前、处理后
@@ -1946,7 +1962,7 @@ while (true) {
 - Mouse Sonar: 提示用户光标位置
   - `SPI_GETMOUSESONAR`
   - `SPI_SETMOUSESONAR`
-- Mouse Vanish: 隐藏光标
+- Mouse Vanish: 输入时隐藏光标
   - `SPI_GETMOUSEVANISH`
   - `SPI_SETMOUSEVANISH`
 
@@ -1959,6 +1975,19 @@ while (true) {
 > - `GetCursorInfo`: 获取光标信息
 > - `SetCursor`: 设置光标, 为 NULL 则删除光标
 > - `ShowCursor`: 增加或减小计数, 其大于或等于 0 时显示光标, 小于 0 时隐藏光标
+
+#### 原始输入
+
+> 参考 [Raw Input](https://learn.microsoft.com/en-us/windows/win32/inputdev/raw-input)
+
+Raw Input 机制用于直接获取设备的原始输入, 比如获取鼠标相对移动距离等. 每个进程针对同一设备仅能注册一次, 只有最新注册的那次才生效
+
+> - `GetRawInputDeviceList`
+> - `GetRawInputDeviceInfo`
+> - `GetRegisteredRawInputDevices`
+> - `RegisterRawInputDevices`: 注册设备, 可以设置标志来禁止系统产生 `WM_MOUSEMOVE` 等 legacy input 消息
+> - `GetRawInputBuffer`: 用于直接读取多个 `WM_RAWINPUT` 消息, 跳过 `GetMessage`
+> - `GetRawInputData`: 用于将 `WM_RAWINPUT` 消息转换为 `RAWINPUT` 结构
 
 #### 输入法编辑
 
