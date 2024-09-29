@@ -1053,6 +1053,7 @@ NTFS 支持事务
     - System: 16 位兼容系统目录
     - System32: **64 位**系统目录
     - SystemWOW64: **32 位**系统目录, (**W**indows 32-bit **o**n **W**indows **64**-bit)
+    - **注意文件系统重定向，对于 32 位程序，System32 被重定向到 SysWOW64，使用 Sysnative 访问真正的 System32**，具体细节见 [File System Redirector](https://learn.microsoft.com/en-us/windows/win32/winprog64/file-system-redirector)
   - Program Files `%ProgramFiles%`: 64 位应用程序安装目录 (所有用户)
   - Program Files (x86) `%ProgramFiles(x86)%`: 32 位应用程序安装目录 (所有用户)
   - Program Data `%ProgramData%`: 应用程序数据 (所有用户)
