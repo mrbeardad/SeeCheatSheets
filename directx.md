@@ -10,7 +10,7 @@ DirectX 包含了多套 API 用于增强图形和游戏的交互，其中最主�
 
 DirectX API 是基于 COM 的
 
-- 对象都直接或间接由工厂构造，构造时需要指定抽象接口的 GUID `__uuidof(IDXGIFactory2)`
+- 对象都直接或间接由工厂构造，构造时需要指定抽象接口的 GUID `__uuidof(IDXGIFactory2)` `IID_PPV_ARGS(&pID3D11Texture2D)`
 - 仅通过抽象接口与具体对象进行交互，可以尝试扩展或转换接口 `IUnknown::QueryInterface`
 - 利用 COM 智能指针管理对象生命周期 `#include <wrl/client.h>` `Microsoft::WRL::ComPtr`
 - 返回结果均为 `HRESULT`，可以使用宏 `SUCCEEDED` 和 `FAILED` 来检测结果
@@ -31,8 +31,8 @@ DirectX API 是基于 COM 的
       - `IDXGIResource`：代表显存资源
 
 > - 不要混用 DXGI 1.0 (IDXGIFactory) 和 DXGI 1.1 (IDXGIFactory1)
-> - 不要在 DllMain 中调用 DXGI
-> - 当渲染线程和窗口线程分开时，渲染线程可能会同步等待窗口线程 (SendMessage)，注意避免死锁
+> - 不要在 DllMain 中调用 DXGI，因为 DXGI 可能需要加载 DLL
+> - 不要再窗口线程中等待渲染线程，调用 Present 时渲染线程会同步等待 (SendMessage) 窗口线程
 
 以下情况可能会触发错误 `DXGI_ERROR_DEVICE_REMOVED` 或 `DXGI_ERROR_DEVICE_RESET`
 
@@ -41,17 +41,97 @@ DirectX API 是基于 COM 的
 - 显卡未响应或被重置
 - 显卡被插入或移除
 
-可以在调用 `IDXGISwapChain::Present` 和 `WM_SIZE` -> `IDXGISwapChain::ResizeBuffers` 后检测并处理，届时需要销毁所有 DXGI 资源并重新创建
+可以在调用 `IDXGISwapChain::Present` 或 `WM_SIZE` -> `IDXGISwapChain::ResizeBuffers` 后检测并处理，届时需要销毁所有 DXGI 资源并重新创建
 
 ### Device
 
-`IDXGIDevice` 通常使用 `D3D11CreateDevice`/`D3D12CreateDevice` 这些 D3D API 来构造，`ID3D11Device`/`ID3D12Device` 均实现了 `IDXGIDevice` 接口
+`IDXGIDevice` 通常使用 D3D API 如 `D3D11CreateDevice`/`D3D12CreateDevice` 来构造，`ID3D11Device`/`ID3D12Device` 均实现了 `IDXGIDevice` 接口
 
-在 D3D API 中
+在 DXGI 中`IDXGIDevice` 负责创建资源和提交指令，但在上层的 D3D API 中则将其功能拆分出来了
 
-- `ID3D11Device`/`ID3D12Device` 负责创建资源对象
-- D3D11 中 `ID3D11DeviceContext` 负责录制并在适当时机自动提交 GPU 指令
-- D3D12 中则更加底层，`ID3D12CommandList` 负责录制 GPU 指令，`ID3D12CommandQueue` 负责提交指令，不同的 CommandQueue 负责提交不同的指令（比如图形、拷贝、计算等）
+- 在 D3D11 中
+  - `ID3D11Device` 负责创建资源对象
+  - `ID3D11DeviceContext` 负责录制 GPU 指令并在适当时机自动提交
+    - 调用 `IDXGISwapChain::Present` 时
+    - 调用 `ID3D11DeviceContext::Flush` 时
+    - 指令缓冲区满时
+    - CPU 同步等待 GPU 结果时，比如 `ID3D11DeviceContext::Map`
+- 在 D3D12 中则更加底层
+  - `ID3D12Device` 负责创建资源对象
+  - `ID3D12CommandList` 负责录制 GPU 指令
+  - `ID3D12CommandQueue` 负责提交指令，不同类型的 CommandQueue 可以并行提交指令（比如图形、拷贝、计算等）
+
+### Resource
+
+> <https://learn.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-types>
+
+D3D 资源即对数据结构的抽象，其通常存储于 GPU 显存中用作渲染管线的输入输出
+
+- Buffer
+  - Vertex
+  - Index
+  - Constant
+- Texture
+  - 1D (Array)
+  - 2D (Array)
+  - 3D
+
+![vertex_buffer](images/vertex_buffer.png)
+
+Vertex Buffer 用于存储结构化数据的数组，比如上图中每个元素是一个包含节点位置、法线、纹理坐标的结构
+
+![index_buffer](images/index_buffer.png)
+
+Index Buffer 用于存储索引的数组，因为节点信息通常有大量的重复，使用索引来引用节点数据可以减少冗余
+
+![constant_buffer](images/constant_buffer.png)
+
+Constant Buffer 用于为着色器提供常量
+
+![texture1d](images/texture1d.png)
+![texture2d](images/texture2d.png)
+![texture3d](images/texture3d.png)
+
+Texture 纹理是用于存储像素的数组，特别地，纹理支持多重采样和多级贴图
+
+![subresource](images/subresource.png)
+![arrayslice](images/arrayslice.png)
+![mipslice](images/mipslice.png)
+
+Subresources 同于引用内部资源，某些资源内部可以包含多个资源，比如每个 LOD 都是一个独立资源。通过一个索引数据来引用子资源，索引编号如上图。可以用 `D3D10CalcSubresource` 来计算资源索引，其中 Array Slice 表示第几个 texture，Mip Slice 表示第几级 mip
+
+每个元素的格式分为两类，强类型和弱类型。强类型即再创建资源时就指定，且不可再更改，可以被优化。弱类型资源则通过资源视图来引用，只要元素位长相同就可以重新解释为不同的类型。
+
+> **GPU 资源如何与 CPU 内存交互？**  
+> <https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_usage>
+
+| Resource Usage | Default | Dynamic | Immutable | Staging |
+| -------------- | ------- | ------- | --------- | ------- |
+| GPU-Read       | yes     | yes     | yes       | yes¹    |
+| GPU-Write      | yes     |         |           | yes¹    |
+| CPU-Read       |         |         |           | yes¹    |
+| CPU-Write      |         | yes     |           | yes¹    |
+
+| Resource Can Be Bound As | Default | Dynamic | Immutable | Staging |
+| ------------------------ | ------- | ------- | --------- | ------- |
+| Input to a Stage         | yes²    | yes³    | yes       |         |
+| Output from a Stage      | yes²    |         |           |         |
+
+> 1. GPU 不能直接读写 Staging 资源，只能通过拷贝到另一个资源来读写
+> 2. Default 资源不能同时对同一个子资源进行读写
+> 3. Dynamic 资源只能是单个子资源，不能是数组，不能有 mipmap
+
+- CPU -> GPU
+  - `D3D11_SUBRESOURCE_DATA* pInitialData` (All)
+  - `ID3D11DeviceContext::Map` (Dynamic|Staging)
+  - `ID3D11DeviceContext::UpdateSubresource` (Default|Staging)
+- GPU -> GPU
+  - `ID3D11DeviceContext::CopyResource` (dst:Default|Staging, src:All)
+  - `ID3D11DeviceContext::CopySubresourceRegion` (dst:Default|Staging, src:All)
+- GPU -> CPU
+  - `ID3D11DeviceContext::Map` (Staging)
+
+4 种类型中只有 Dynamic 和 Staging 可以利用 Map 将虚拟内存映射到 GPU 显存，Map 是同步的，需要等待 GPU 将资源更新完毕才返回，CPU 使用完资源后需要成对的调用 Unmap 来将数据异步写到 GPU。
 
 ### SwapChian
 
@@ -134,3 +214,5 @@ Blt 模式本身就没有前缓冲区，自然无法从前缓冲区拷贝帧内�
 >   - Fast：关闭垂直同步，但当渲染帧率超过屏幕刷新率则丢弃多余帧
 >   - Adaptive：开启垂直同步，但当渲染帧率低于屏幕刷新率时关闭
 >   - Adaptive2：开启垂直同步，但帧率限制为屏幕刷新率的一半
+
+## D3D
