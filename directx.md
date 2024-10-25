@@ -105,17 +105,17 @@ Subresources 同于引用内部资源，某些资源内部可以包含多个资�
 > **GPU 资源如何与 CPU 内存交互？**  
 > <https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_usage>
 
-| Resource Usage | Default | Dynamic | Immutable | Staging |
-| -------------- | ------- | ------- | --------- | ------- |
-| GPU-Read       | yes     | yes     | yes       | yes¹    |
-| GPU-Write      | yes     |         |           | yes¹    |
-| CPU-Read       |         |         |           | yes¹    |
-| CPU-Write      |         | yes     |           | yes¹    |
+| Resource Usage | Default | Immutable | Dynamic | Staging |
+| -------------- | ------- | --------- | ------- | ------- |
+| GPU-Read       | yes     | yes       | yes     | yes¹    |
+| GPU-Write      | yes     |           |         | yes¹    |
+| CPU-Read       |         |           |         | yes¹    |
+| CPU-Write      |         |           | yes     | yes¹    |
 
-| Resource Can Be Bound As | Default | Dynamic | Immutable | Staging |
-| ------------------------ | ------- | ------- | --------- | ------- |
-| Input to a Stage         | yes²    | yes³    | yes       |         |
-| Output from a Stage      | yes²    |         |           |         |
+| Resource Can Be Bound As | Default | Immutable | Dynamic | Staging |
+| ------------------------ | ------- | --------- | ------- | ------- |
+| Input to a Stage         | yes²    | yes       | yes³    |         |
+| Output from a Stage      | yes²    |           |         |         |
 
 > 1. GPU 不能直接读写 Staging 资源，只能通过拷贝到另一个资源来读写
 > 2. Default 资源不能同时对同一个子资源进行读写
@@ -126,12 +126,12 @@ Subresources 同于引用内部资源，某些资源内部可以包含多个资�
   - `ID3D11DeviceContext::Map` (Dynamic|Staging)
   - `ID3D11DeviceContext::UpdateSubresource` (Default|Staging)
 - GPU -> GPU
-  - `ID3D11DeviceContext::CopyResource` (dst:Default|Staging, src:All)
-  - `ID3D11DeviceContext::CopySubresourceRegion` (dst:Default|Staging, src:All)
+  - `ID3D11DeviceContext::CopyResource` (Default|Staging)
+  - `ID3D11DeviceContext::CopySubresourceRegion` (Default|Staging)
 - GPU -> CPU
   - `ID3D11DeviceContext::Map` (Staging)
 
-4 种类型中只有 Dynamic 和 Staging 可以利用 Map 将虚拟内存映射到 GPU 显存，Map 是同步的，需要等待 GPU 将资源更新完毕才返回，CPU 使用完资源后需要成对的调用 Unmap 来将数据异步写到 GPU。
+4 种类型针对不同应用场景做了优化，同一个类型，GPU 访问优化好，CPU 访问优化自然就差，反之亦然。其中只有 Dynamic 和 Staging 可以利用 Map 将虚拟内存映射到 GPU 显存，Map 调用是同步的，需要等待 GPU 将资源更新完毕才返回，CPU 使用完资源后需要成对的调用 Unmap 来将数据异步写到 GPU。
 
 ### SwapChian
 
