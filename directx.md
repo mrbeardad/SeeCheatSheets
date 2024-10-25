@@ -55,7 +55,7 @@ DirectX API 是基于 COM 的
     - 调用 `IDXGISwapChain::Present` 时
     - 调用 `ID3D11DeviceContext::Flush` 时
     - 指令缓冲区满时
-    - CPU 同步等待 GPU 结果时，比如 `ID3D11DeviceContext::Map`
+    - CPU 同步等待 GPU 结果时，比如 `ID3D11DeviceContext::Map` 或 `ID3D11DeviceContext::GetData` 等
 - 在 D3D12 中则更加底层
   - `ID3D12Device` 负责创建资源对象
   - `ID3D12CommandList` 负责录制 GPU 指令
