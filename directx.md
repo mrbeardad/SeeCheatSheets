@@ -40,6 +40,7 @@ DirectX API 是基于 COM 的
 - 系统切换使用显卡
 - 显卡未响应或被重置
 - 显卡被插入或移除
+- GPU 超时检测和恢复
 
 可以在调用 `IDXGISwapChain::Present` 或 `WM_SIZE` -> `IDXGISwapChain::ResizeBuffers` 后检测并处理，届时需要销毁所有 DXGI 资源并重新创建
 
@@ -52,10 +53,10 @@ DirectX API 是基于 COM 的
 - 在 D3D11 中
   - `ID3D11Device` 负责创建资源对象
   - `ID3D11DeviceContext` 负责录制 GPU 指令并在适当时机自动提交
-    - 调用 `IDXGISwapChain::Present` 时
-    - 调用 `ID3D11DeviceContext::Flush` 时
     - 指令缓冲区满时
     - CPU 同步等待 GPU 结果时，比如 `ID3D11DeviceContext::Map` 或 `ID3D11DeviceContext::GetData` 等
+    - 调用 `IDXGISwapChain::Present` 时
+    - 调用 `ID3D11DeviceContext::Flush` 时
 - 在 D3D12 中则更加底层
   - `ID3D12Device` 负责创建资源对象
   - `ID3D12CommandList` 负责录制 GPU 指令
@@ -98,7 +99,7 @@ Texture 纹理是用于存储像素的数组，特别地，纹理支持多重采
 ![arrayslice](images/arrayslice.png)
 ![mipslice](images/mipslice.png)
 
-Subresources 同于引用内部资源，某些资源内部可以包含多个资源，比如每个 LOD 都是一个独立资源。通过一个索引数据来引用子资源，索引编号如上图。可以用 `D3D10CalcSubresource` 来计算资源索引，其中 Array Slice 表示第几个 texture，Mip Slice 表示第几级 mip
+Subresources 同于引用内部资源，某些资源内部可以包含多个资源，比如每个 LOD 都是一个独立资源。通过一个索引数据来引用子资源，索引编号如上图。可以用 `D3D11CalcSubresource` 来计算资源索引，其中 Array Slice 表示第几个 texture，Mip Slice 表示第几级 mip
 
 每个元素的格式分为两类，强类型和弱类型。强类型即再创建资源时就指定，且不可再更改，可以被优化。弱类型资源则通过资源视图来引用，只要元素位长相同就可以重新解释为不同的类型。
 
