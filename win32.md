@@ -81,11 +81,11 @@
       - [多显示器](#多显示器)
       - [高 DPI](#高-dpi)
       - [剪切板](#剪切板)
-      - [音视频](#音视频)
   - [其他](#其他)
     - [头文件](#头文件)
     - [编译资源](#编译资源)
     - [字符集](#字符集)
+    - [音视频](#音视频)
 
 ## 资源访问
 
@@ -2258,17 +2258,6 @@ SetClipboardData(CF_TEXT, hglbCopy);
 > - `CountClipboardFormats`
 > - `GetClipboardData`
 
-#### 音视频
-
-> 参考
->
-> - [Audio and Video](https://learn.microsoft.com/en-us/windows/win32/audio-and-video)
-> - [About the Windows Core Audio APIs](https://learn.microsoft.com/en-us/windows/win32/coreaudio/about-the-windows-core-audio-apis)
-> - [User-Mode Audio Components](https://learn.microsoft.com/en-us/windows/win32/coreaudio/user-mode-audio-components)
-> - [Digital video concepts](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Video_concepts)
-
-![audio](images/audio.png)
-
 ## 其他
 
 ### 头文件
@@ -2332,3 +2321,14 @@ Windows 系统中每个 locale 设置包含了 4 个不同的 code pages
 > - `MultiByteToWideChar`
 > - `WideCharToMultiByte`
 > - `chcp.com`: 命令行工具用于更改当前终端的 code page
+
+### 音视频
+
+> 参考
+>
+> - [Audio and Video](https://learn.microsoft.com/en-us/windows/win32/audio-and-video)
+> - [About the Windows Core Audio APIs](https://learn.microsoft.com/en-us/windows/win32/coreaudio/about-the-windows-core-audio-apis)
+> - [User-Mode Audio Components](https://learn.microsoft.com/en-us/windows/win32/coreaudio/user-mode-audio-components)
+> - [Digital video concepts](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Video_concepts)
+
+![audio](images/audio.png)
