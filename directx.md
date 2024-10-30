@@ -216,9 +216,9 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 
 可以利用 `DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT` 来将 `Present` 的延迟提前到 CPU 阶段之前从而降低帧内延迟，代价是 FPS 可能会降低。若渲染时长超过一个 VBLANK 则至少需要设置最大帧延迟为 2 来保证让 CPU 和 GPU 可以并行运行。
 
-除此之外，还可以利用全屏模式或全屏窗口可以降低 DWM 引入的延迟，因为此时直接将应用的 Front Buffer 输出到屏幕
-
 ![present2](images/present2.png)
+
+除此之外，还可以利用全屏模式或全屏窗口可以降低 DWM 引入的延迟，因为此时直接将应用的 Front Buffer 输出到屏幕
 
 - 全屏时若缓冲区内容同时被读取到屏幕和写入渲染结果，则会出现画面撕裂，考虑以下 Nvidia 设置中的权衡
   - Off：关闭垂直同步，高 FPS，低延迟，但可能出现画面撕裂
