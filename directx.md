@@ -208,7 +208,7 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 
 ![present](images/present.png)
 
-默认情况：2 Buffer, 3 Maximum Frame Latency, Present Without Vsync, CPU Time < GPU Time
+通常情况：2 Buffer, 3 Maximum Frame Latency, Present Without Vsync, CPU Time < GPU Time
 
 如下图，当 GPU 渲染时间大于 CPU 渲染时间（即性能瓶颈在 GPU）时，为了限制 CPU 一直提交渲染指令给 GPU 而导致指令累积，然后导致帧延迟无限增大，提供了 Maximum Frame Latency 机制来限制已提交但未完成的帧数量，当超过限制时 `Present` 调用会阻塞直到队列中有一帧渲染完成
 
