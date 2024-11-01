@@ -662,8 +662,8 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
 > - `EnumProcessModules`
 > - `GetModuleHandle`: 不递增引用计数
 > - `GetModuleHandleEx`: 默认递增引用计数
-> - `GetModuleBaseName`
 > - `GetModuleFileName`
+> - `GetModuleBaseName`
 > - `GetWindowModuleFileName`
 > - `QueryFullProcessImageName`: 用来获取其它进程的 exe 文件路径更加高效且准确
 
@@ -1826,7 +1826,7 @@ LRESULT CALLBACK MainWndProc(
 > - [About Keyboard Accelerators](https://learn.microsoft.com/en-us/windows/win32/menurc/about-keyboard-accelerators)
 
 1. 当按下和抬起键盘按键时, 键盘会发送扫描码 (scan code) 到 CPU
-2. 键盘驱动程序接受扫描码, 并将其转换成设备无关的虚拟键码 (virtual key code)
+2. 键盘驱动程序接受扫描码, 并根据键盘布局 (layout) 将其转换成设备无关的虚拟键码 (virtual key code)
 3. 封装成窗口消息发送到系统消息队列
 4. 系统再将消息分派到焦点 (focus) 窗口或激活 (active) 窗口
 
