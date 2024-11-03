@@ -1,12 +1,12 @@
 # DirectX
 
-> <https://learn.microsoft.com/en-us/windows/win32/directx>
+> [DirectX graphics and gaming](https://learn.microsoft.com/en-us/windows/win32/directx)
 
 DirectX 包含了多套 API 用于增强图形和游戏的交互，其中最主要的就是 Direct3D
 
 ## COM
 
-> <https://learn.microsoft.com/en-us/windows/win32/prog-dx-with-com>
+> [Programming DirectX with COM](https://learn.microsoft.com/en-us/windows/win32/prog-dx-with-com)
 
 DirectX API 是基于 COM 的
 
@@ -17,7 +17,7 @@ DirectX API 是基于 COM 的
 
 ## DXGI
 
-> <https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi>
+> [DXGI overview](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi)
 
 ![dxgi](images/dxgi.png)
 
@@ -64,7 +64,7 @@ DirectX API 是基于 COM 的
 
 ### Resource
 
-> <https://learn.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-types>
+> [Resources](https://learn.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources)
 
 D3D 资源即对数据结构的抽象，其通常存储于 GPU 显存中用作渲染管线的输入输出
 
@@ -104,7 +104,7 @@ Subresources 同于引用内部资源，某些资源内部可以包含多个资�
 每个元素的格式分为两类，强类型和弱类型。强类型即再创建资源时就指定，且不可再更改，可以被优化。弱类型资源则通过资源视图来引用，只要元素位长相同就可以重新解释为不同的类型。
 
 > **GPU 资源如何与 CPU 内存交互？**  
-> <https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_usage>
+> [D3D11_USAGE](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_usage)
 
 | Resource Usage | Default | Immutable | Dynamic | Staging |
 | -------------- | ------- | --------- | ------- | ------- |
@@ -136,9 +136,10 @@ Subresources 同于引用内部资源，某些资源内部可以包含多个资�
 
 ### SwapChian
 
-> <https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi>  
-> <https://jackmin.home.blog/2018/12/14/swapchains-present-and-present-latency/>  
-> <https://www.intel.com/content/www/us/en/developer/articles/code-sample/sample-application-for-direct3d-12-flip-model-swap-chains.html>
+> [DXGI overview](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi)  
+> [Present Latency, DWM and Waitable Swapchains](https://jackmin.home.blog/2018/12/14/swapchains-present-and-present-latency/)  
+> [Sample Application for Direct3D 12 Flip Model Swap Chains](https://www.intel.com/content/www/us/en/developer/articles/code-sample/sample-application-for-direct3d-12-flip-model-swap-chains.html)  
+> [Advanced API Performance: Swap Chains](https://developer.nvidia.com/blog/advanced-api-performance-swap-chains/)
 
 SwapChain 新的构造函数（如 `IDXGIFactory2::CreateSwapChainForHwnd`）通常需要如下步骤
 
@@ -156,29 +157,11 @@ SwapChain 新的构造函数（如 `IDXGIFactory2::CreateSwapChainForHwnd`）通
   4. `ID3D12Device::CreateCommandQueue`
   5. `IDXGIFactory2::CreateSwapChainForHwnd`
 
-SwapChain 有若干个缓冲区，通常会将其中一个作为渲染目标，渲染完成后会将缓冲区内容输出到窗口
-
-- `IDXGIFactory::MakeWindowAssociation`：监听窗口消息，`Alt+Enter` 切换全屏模式，`Print-Screen` 截屏
-- `IDXGISwapChain::SetFullscreenState`：切换全屏模式，通常步骤如下
-  1. `IDXGISwapChain::GetContainingOutput` 选择一个合适的屏幕
-  2. `IDXGIOutput::FindClosestMatchingMode` 选择一个合适的屏幕分辨率
-  3. `IDXGISwapChain::ResizeTarget` 调整窗口大小/屏幕分辨率
-  4. 触发 `WM_SIZE` 消息
-     1. 释放所有 SwapChain 相关的 Buffer
-     2. `IDXGISwapChain::ResizeBuffers` 调整 Buffer 大小
-     3. 重新获取 SwapChain 相关的 Buffer
-  5. `IDXGISwapChain::SetFullscreenState` 切换全屏模式
-
-> - `DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH` 该创建标志使得全屏模式下调用 `IDXGISwapChain::ResizeTarget` 会自动设置屏幕分辨率
-> - 全屏模式下如果 Target 大小和 Buffer 大小不匹配，则 Flip 模式会退化为 Blt 模式
-> - 有窗口遮挡时自动退出全屏
-> - 注意退出全屏模式后再释放 SwapChain
-
-SwapChain 有两种工作模式与 DWM(Desktop Window Manager) 交互：新的 Flip 和旧的 Blt
+SwapChain 有若干个缓冲区，通常会将其中一个作为渲染目标，渲染完成后会将缓冲区内容输出到窗口，SwapChain 有两种工作模型与 DWM(Desktop Window Manager) 交互：新的 Flip 和旧的 Blt
 
 Blt 模式下（指定 `DXGI_SWAP_EFFECT_DISCARD` 或 `DXGI_SWAP_EFFECT_SEQUENTIAL`），SwapChain 的后缓冲区需要先位块传输到 DWM 中的前缓冲区，再进行窗口合成，然后显示到屏幕。
 
-Flip 模式下（指定 `DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL` 或 `DXGI_SWAP_EFFECT_FLIP_DISCARD`），SwapChain 的所有缓冲区与 DWM 共享，所以节约了一次复制，但是 DWM 无法读取正在被使用的缓冲区（比如用作渲染目标），所以 Flip 模式下 SwapChain 至少需要 2 个缓冲区。
+Flip 模式下（指定 `DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL` 或 `DXGI_SWAP_EFFECT_FLIP_DISCARD`），SwapChain 的所有缓冲区与 DWM 共享，所以节约了一次复制，但是 DWM 无法读取正在被使用的缓冲区（比如用作渲染目标），所以 Flip 模式下 SwapChain 至少需要 2 个缓冲区。在 D3D11 中只需要访问将第一个缓冲区作为渲染目标即可，调用`Present`会自动切换；而在 D3D12 中需要手动指定用作渲染目标的缓冲区索引。
 
 ![flip](images/flip.png)
 
@@ -220,14 +203,37 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 
 除此之外，还可以利用全屏模式或全屏窗口可以降低 DWM 引入的延迟，因为此时直接将应用的 Front Buffer 输出到屏幕
 
+- `IDXGIFactory::MakeWindowAssociation`：监听窗口消息，`Alt+Enter` 切换全屏模式，`Print-Screen` 截屏
+- `IDXGISwapChain::SetFullscreenState`：切换全屏模式，通常步骤如下
+
+  1. `IDXGISwapChain::GetContainingOutput` 选择一个合适的屏幕
+  2. `IDXGIOutput::FindClosestMatchingMode` 选择一个合适的屏幕分辨率
+  3. `IDXGISwapChain::ResizeTarget` 调整窗口大小/屏幕分辨率
+  4. 触发 `WM_SIZE` 消息
+     1. 释放所有 SwapChain 相关的 Buffer
+     2. `IDXGISwapChain::ResizeBuffers` 调整 Buffer 大小
+     3. 重新获取 SwapChain 相关的 Buffer
+  5. `IDXGISwapChain::SetFullscreenState` 切换全屏模式
+
+- `DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH` 该创建标志使得全屏模式下调用 `IDXGISwapChain::ResizeTarget` 会自动设置屏幕分辨率
+- 全屏模式下如果 Target 大小和 Buffer 大小不匹配，或 DXGI_MODE_DESC 设置的刷新率与屏幕不匹配，则 Flip 模式会退化为 Blt 模式
+- 有窗口遮挡时自动退出全屏。D3D12 之后不再支持独占全屏，切换全屏状态后其他窗口仍可以显示在全屏窗口上
+- 注意退出全屏模式后再释放 SwapChain
 - 全屏时若缓冲区内容同时被读取到屏幕和写入渲染结果，则会出现画面撕裂，考虑以下 Nvidia 设置中的权衡
   - Off：关闭垂直同步，高 FPS，低延迟，但可能出现画面撕裂
   - On：开启垂直同步，低 FPS，高延迟（FPS 低于刷新率更明显），解决画面撕裂
   - Fast：关闭垂直同步，但当渲染帧率超过屏幕刷新率则丢弃多余帧
   - Adaptive：开启垂直同步，但当渲染帧率低于屏幕刷新率时关闭
   - Adaptive2：开启垂直同步，但帧率限制为屏幕刷新率的一半
-- 使用 `DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING` 和 `DXGI_PRESENT_ALLOW_TEARING` 可以支持屏幕可变刷新率的必要条件
+- 使用 `DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING` 和 `DXGI_PRESENT_ALLOW_TEARING` 是支持屏幕可变刷新率的必要条件
 
-> <https://developer.nvidia.com/blog/advanced-api-performance-swap-chains/>
+### Misc
 
-## D3D
+- [Desktop Duplication API](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/desktop-dup-api)
+- [Improved usage of shared resources and synchronized events](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dxgi-1-2-improvements#improved-usage-of-shared-resources-and-synchronized-events)
+- [Waiting on an event when rendering is unnecessary](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/waiting-when-occluded)
+- [Variable refresh rate displays](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/variable-refresh-rate-displays)
+- [Use DirectX with Advanced Color on high/standard dynamic range displays](https://learn.microsoft.com/en-us/windows/win32/direct3darticles/high-dynamic-range)
+- [Using gamma correction](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/using-gamma-correction)
+
+## Direct3D
