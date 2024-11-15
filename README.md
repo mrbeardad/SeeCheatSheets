@@ -88,9 +88,9 @@
 
 ## Coding
 
-- [代码逻辑](coding.md)
-- [设计模式](dspt.md)
-- [编程语言](langsum.md)
+- [**代码逻辑**](coding.md)
+- [**设计模式**](dspt.md)
+- [**编程语言**](langsum.md)
 
   - [C++](cpp.md) & [CMake](cmake.md)
   - [Rust](rust.md)
@@ -101,16 +101,17 @@
 
 ## OS
 
-- Linux
-
-  - [Linux 操作系统](linux.md)
-  - [Linux 系统接口](linuxapi.md)
-  - [Bash 命令行](bash.md)
-
 - Windows
 
-  - [Win32 系统接口](win32.md)
-  - [Cmd 命令行](cmd.md)
+  - [**Win32**](win32.md)
+  - [**DirectX**](directx.md)
+  - [**Cmd**](cmd.md)
+
+- Linux
+
+  - [Linux](linux.md)
+  - [Unix](linuxapi.md)
+  - [Bash](bash.md)
 
 ## Basics
 

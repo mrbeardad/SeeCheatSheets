@@ -581,12 +581,12 @@
 #endif
 
 #ifdef __cplusplus
-extern "C" { // 使用默认调用约定, 且禁用名字篡改
+extern "C" { // 使用 __cdecl 调用约定, 且禁用名称篡改
 #endif
 
 MYDLL_API int my_func1(LPCWSTR lpszMsg);
 
-MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约定和名字篡改
+MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约定和名称篡改
 
 #ifdef __cplusplus
 } // extern "C"
