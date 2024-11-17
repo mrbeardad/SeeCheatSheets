@@ -59,38 +59,38 @@
 
 ## Game
 
-- [Unity](unity.md)：基于 C++ 和 C# 的重量级 2D 和 3D 游戏引擎
-- [Godot](godot.md)：基于 C++ 和 GDScrip 的轻量级 2D 和 3D 游戏引擎
-- [Flame](flame.md)：基于 Flutter 的轻量 2D 游戏引擎
+- [Unity](unity.md)
+- [Godot](godot.md)
+- [Flame](flame.md)
 
 ## Web
 
-- [HTML](html.md)：超文本标记语言
-- [CSS](css.md)：层叠样式表
-- [JavaScript](js.md)：脚本语言
-- [React](react.md)：基于 Web 的响应式 UI 框架
-- [HTTP](http.md)：超文本传输协议
-- [WAS](was.md)：Web 应用安全
-- [SEO](seo.md)：搜索引擎优化
+- [HTML](html.md)
+- [CSS](css.md)
+- [JavaScript](js.md)
+- [React](react.md)
+- [HTTP](http.md)
+- [WAS](was.md)
+- [SEO](seo.md)
 
 ## Client
 
-- [Flutter](flutter.md)：基于 Dart 的跨平台的响应式 UI 框架
-- [QT](qt.md)：基于 C++ 的跨平台的命令式 UI 框架
+- [Flutter](flutter.md)
+- [QT](qt.md)
 
 ## Server
 
-- [Nginx](nginx.md)：路由转发与负载均衡
-- [Docker](docker.md)：打包并隔离进程的运行环境
-- [K8S](k8s.md)：动态编排容器集群
-- [Redis](redis.md)：结构型数据缓存
-- [PostgreSQL](sql.md)：关系型数据库
+- [Nginx](nginx.md)
+- [Docker](docker.md)
+- [K8S](k8s.md)
+- [Redis](redis.md)
+- [PostgreSQL](sql.md)
 
 ## Coding
 
-- [**代码逻辑**](coding.md)
-- [**设计模式**](dspt.md)
-- [**编程语言**](langsum.md)
+- [代码逻辑](coding.md)
+- [设计模式](dspt.md)
+- [编程语言](langsum.md)
 
   - [C++](cpp.md) & [CMake](cmake.md)
   - [Rust](rust.md)
@@ -103,9 +103,9 @@
 
 - Windows
 
-  - [**Win32**](win32.md)
-  - [**DirectX**](directx.md)
-  - [**Cmd**](cmd.md)
+  - [Win32](win32.md)
+  - [DirectX](directx.md)
+  - [Cmd](cmd.md)
 
 - Linux
 
@@ -122,6 +122,7 @@
   - [汇编语言](asm.md)
   - [操作系统](os.md)
   - [计算机网络](network.md)
+  - [数据库](mysql.md)
   - [数据结构与算法](dsaa.md)
 
 ## Others

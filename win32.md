@@ -1163,6 +1163,7 @@ NTFS 支持事务
 > - `GetFullPathName`
 > - `GetTempPath2`: 返回路径长度最大 MAX_PATH+1, 不会校验路径是否已存在
 > - `GetTempFileName`: 自动或手动创建唯一文件名 `<prefix><uuuu>.TMP`
+> - `SHGetKnownFolderPath`
 
 #### 读写
 

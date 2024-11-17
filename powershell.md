@@ -2,6 +2,17 @@
 
 ## 依赖
 
+- 模块路径
+  - Current user scope - $HOME\Documents\PowerShell\Modules
+  - All users scope - $env:ProgramFiles\PowerShell\Modules
+  - Modules shipped with PowerShell - $PSHOME\Modules
+
+```ps1
+Install-Module # 下载并安装模块
+
+Import-Module # 手动导入模块
+```
+
 ## 变量
 
 ## 运算符
