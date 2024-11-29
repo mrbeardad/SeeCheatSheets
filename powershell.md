@@ -37,7 +37,7 @@ Get-Module
 - 生命周期：第一次引用时构造，退出函数作用域后不可见，不再引用后被 GC 回收
 - 作用域：
 
-  - `env` (环境变量)
+  - `Env` (环境变量)
   - `Global` (作为程序入口的脚本的 Script 作用域即 Global 作用域)
   - `Script` (脚本被直接调用时有独立的 Script 作用域，使用 `.` 加载脚本则与调用者共享作用域)
   - `Local` (Function)
@@ -50,8 +50,7 @@ Get-Module
 $foo = $bar
 $foo = ${bar}
 $foo = [int]$bar
-$Global:foo = $bar
-$Private:foo = $bar
+$Private:foo = $Global:bar
 
 New-Variable
 Clear-Variable # 将变量置为 NULL
@@ -86,7 +85,7 @@ Get-Variable
 
   - `-gt` `-lt` `-le` `-ge` `-eq` `-ne`
   - `-like` `-notlike`
-  - `-match` `-notmatch`
+  - `-match` `-notmatch` `$Matches`
   - `-contains` `-notcontains` `-in` `-notin`
   - `-is` `-isnot` `-as`
   - `? :`
@@ -162,6 +161,7 @@ switch [-regex | -wildcard | -exact] [-casesensitive] (<test-expression>) {
 # 默认按顺序匹配所有子句
 break # 退出 switch
 continue # 若表达式为集合，则跳过该次迭代
+$switch # 枚举器
 ```
 
 ```ps1
@@ -176,6 +176,7 @@ for (<Init>; <Condition>; <Repeat>) {
 foreach ($<item> in $<collection>) {
   <statement list>
 }
+$foreach # 枚举器
 
 ForEach-Object
             [-InputObject <PSObject>]
@@ -188,10 +189,13 @@ ForEach-Object
 try {<statement list>}
 catch [[<error type>][',' <error type>]*] {<statement list>}
 finally {<statement list>}
-```
 
-```ps1
 trap [[<error type>]] {<statement list>}
+
+$? # 上条命令是否成功返回，对于 PowerShell 需要上条命令未抛异常且未写入 Error Steam，对于 Native 需要返回值为 0
+$LASTEXITCODE # 上条 Native 命令的返回值
+$Error # 包含最近发生的错误的数组，0 为最近的错误
+$StackTrace # 最近发生错误时的栈帧
 ```
 
 ## 函数
@@ -203,9 +207,14 @@ function [<scope:>]<name>
   dynamicparam {<statement list>}
   begin {<statement list>}
   process {<statement list>}
-  end {<statement list>}
+  end {<statement list>} # 默认
   clean {<statement list>}
 }
+$args # 包含未被绑定的参数
+$PSBoundParameters # 包含已绑定的参数
+$_ # 包含当前迭代的管道输入对象
+$input # 枚举器，包含所有管道输入对象
+$MyInvocation # 调用者信息
 ```
 
 - [`[CmdletBinding()]`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute) 用于添加一些通用参数
@@ -231,16 +240,36 @@ function [<scope:>]<name>
 
 - [`[OutputType()]`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_outputtypeattribute) 用于设置函数返回值类型
 
+- 任何命令默认都有返回值，函数中调用的所有命令的返回值共同构成函数的返回值，要避免不必要的返回值
+  - `Command | Out-Null`
+  - `Command >$null`
+  - `[void]$expr`
+
 ## 语法
 
 PowerShell 脚本解析有三种模式，详情参见 [about_Parsing](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_parsing)，
 只要脚本语句可以被成功解析为表达式，则使用表达式模式，否则使用参数模式
 
-- 表达式解析：和常见编程语言类似，只不过变量的访问需要 `$`
+- 表达式解析：和常见编程语言类似，只不过变量的访问需要 `$` 且操作符通常 `-` 开头
 
 ```ps1
-'Hello World'
+$null
+
+$true
+$false
+
 32
+1.25
+
+'Hello'
+"World"
+@"raw
+string"@
+
+@(1,2,3)
+@{a=1;b=2;c=3}
+[pscustomobject]@{name='mrbeardad';age=99;}
+
 -not $Quiet
 ```
 
@@ -265,8 +294,8 @@ NativeExe -Arg 1 , 2, 3 $s --% raw toekns
 - `,`: 仅在 PowerShell 参数解析中用于构造数组对象
 - `@(,)`: 构造数组
 - `@{;}`: 构造哈希表
-- `$()`: 嵌入语句
 - `()`: 嵌入表达式
+- `$()`: 嵌入语句
 - `&`: 调用 Command, Script, Script Block, 通常用于间接调用，若需要反射解析则应该使用 `Invoke-Expression`
 - `~`: 用户目录
 - `--`: 不再将 Tokens 解析为 Parameter
