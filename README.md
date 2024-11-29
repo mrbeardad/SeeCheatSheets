@@ -105,6 +105,7 @@
 
   - [Win32](win32.md)
   - [DirectX](directx.md)
+  - [PowerShell](powershell.md)
   - [Cmd](cmd.md)
 
 - Linux

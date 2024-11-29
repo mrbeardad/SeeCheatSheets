@@ -113,6 +113,8 @@ Get-Variable
 <String[]> -join <Delimiter>
 ```
 
+> `-f` 见 [Format item syntax](https://learn.microsoft.com/en-us/dotnet/standard/base-types/composite-formatting#format-item-syntax)
+
 - 重定向
   - `n>`
   - `n>>`
@@ -136,6 +138,7 @@ Get-Variable
 当 native 与 powershell 交互时
 
 - Success Steam 相当于 stdout
+- Error Steam 相当于 stderr
 - Return Value 相当于 stdin
 
 ## 控制流
@@ -207,6 +210,7 @@ function [<scope:>]<name>
 
 - [`[CmdletBinding()]`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute) 用于添加一些通用参数
 - [`[Parameter()]`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters) 用于设置参数属性
+
   - ParameterSetName
   - Mandatory
   - Position
@@ -214,6 +218,17 @@ function [<scope:>]<name>
   - ValueFromPipelineByPropertyName
   - ValueFromRemainingArguments
   - HelpMessage
+
+  ```txt
+  -Name <String>
+
+    Required?                    false
+    Position?                    1
+    Default value                Current directory
+    Accept pipeline input?       false
+    Accept wildcard characters?  false
+  ```
+
 - [`[OutputType()]`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_outputtypeattribute) 用于设置函数返回值类型
 
 ## 语法
@@ -260,11 +275,13 @@ NativeExe -Arg 1 , 2, 3 $s --% raw toekns
 ## 基础命令
 
 - 帮助
+
   - Get-Help -> help
   - Get-Command -> gcm
   - Get-Member -> gm
 
 - 增删改
+
   - New-Item -> ni
   - Clear-Item -> cli
   - Remove-Item -> rm
@@ -273,6 +290,7 @@ NativeExe -Arg 1 , 2, 3 $s --% raw toekns
   - Copy-Item -> cp
 
 - 输入
+
   - Get-Item -> gi
   - Get-ChildItem -> ls
   - ConvertFrom-Json
@@ -280,6 +298,7 @@ NativeExe -Arg 1 , 2, 3 $s --% raw toekns
   - ConvertFrom-Xml
 
 - 过滤
+
   - Select-String -> sls
   - Select-Object -> select
   - Where-Object -> where
