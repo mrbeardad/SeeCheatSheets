@@ -263,8 +263,10 @@ $false
 
 'Hello'
 "World"
-@"raw
-string"@
+@"
+raw
+string
+"@
 
 @(1,2,3)
 @{a=1;b=2;c=3}
@@ -295,7 +297,7 @@ NativeExe -Arg 1 , 2, 3 $s --% raw toekns
 - `@(,)`: 构造数组
 - `@{;}`: 构造哈希表
 - `()`: 嵌入表达式
-- `$()`: 嵌入语句
+- `$()`: 嵌入多条语句
 - `&`: 调用 Command, Script, Script Block, 通常用于间接调用，若需要反射解析则应该使用 `Invoke-Expression`
 - `~`: 用户目录
 - `--`: 不再将 Tokens 解析为 Parameter
