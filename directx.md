@@ -230,6 +230,7 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 ### Misc
 
 - [Desktop Duplication API](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/desktop-dup-api)
+- [Multi-adapter systems](https://learn.microsoft.com/en-us/windows/win32/direct3d12/multi-engine)
 - [Improved usage of shared resources and synchronized events](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dxgi-1-2-improvements#improved-usage-of-shared-resources-and-synchronized-events)
 - [Waiting on an event when rendering is unnecessary](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/waiting-when-occluded)
 - [Variable refresh rate displays](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/variable-refresh-rate-displays)
