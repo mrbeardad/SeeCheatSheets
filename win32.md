@@ -49,7 +49,7 @@
       - [共享内存](#共享内存)
       - [总结](#总结)
     - [异步 IO](#异步-io)
-  - [窗口系统](#窗口系统)
+  - [UI 系统](#ui-系统)
     - [桌面结构](#桌面结构)
     - [窗口状态](#窗口状态)
       - [创建窗口](#创建窗口)
@@ -954,8 +954,8 @@ __except (filter-expression) {
 
 - Service Program
 
-  - `StartServiceCtrlDispatcher` -> `ServiceMain`
-  - `RegisterServiceCtrlHandlerEx` -> `LPHANDLER_FUNCTION_EX` (be called in main thread)
+  - `StartServiceCtrlDispatcher` -> `ServiceMain` (in new thread)
+  - `RegisterServiceCtrlHandlerEx` -> `LPHANDLER_FUNCTION_EX` (in dispatcher thread)
   - `SetServiceStatus`
 
 - User Accounts
@@ -1363,7 +1363,7 @@ Windows 支持三种异步 IO 机制:
   - `BindIoCompletionCallback`
   - 详细内容见 [Thread Pool API](https://learn.microsoft.com/en-us/windows/win32/procthread/thread-pool-api)
 
-## 窗口系统
+## UI 系统
 
 ### 桌面结构
 

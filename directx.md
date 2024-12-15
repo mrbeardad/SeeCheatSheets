@@ -238,3 +238,5 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 - [Using gamma correction](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/using-gamma-correction)
 
 ## Direct3D
+
+### Graphics Pipeline
