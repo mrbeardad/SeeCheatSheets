@@ -240,3 +240,5 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 ## Direct3D
 
 ### Graphics Pipeline
+
+[GLSL: Center or Centroid?  (Or When Shaders Attack!)](https://www.opengl.org/pipeline/article/vol003_6/)
