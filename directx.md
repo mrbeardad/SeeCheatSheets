@@ -241,18 +241,17 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 
 ### Graphics Pipeline
 
-- [LearnOpenGL 变换](https://learnopengl-cn.github.io/01%20Getting%20started/07%20Transformations/)
-- [LearnOpenGL 坐标](https://learnopengl-cn.github.io/01%20Getting%20started/08%20Coordinate%20Systems/)
 - [GLSL: Center or Centroid? (Or When Shaders Attack!)](https://www.opengl.org/pipeline/article/vol003_6/)
 
-1. VS ~ GS
-   1. Local
-   2. World
-   3. (Camera) View
-2. RS
-   1. (Homogeneous) Clip
-   2. (x, y, z, w)
-   3. (x/w, y/w, z/w, 1)
-   4. 裁切
-   5. 属性按重心插值
-3. cvv
+- [Transformations](https://learnopengl-cn.github.io/01%20Getting%20started/07%20Transformations/)
+
+  - 向量与标量运算：加法、乘法
+  - 向量与向量运算：取反、加法、长度、点乘、叉乘
+  - 向量与矩阵运算：单位、平移、旋转、缩放
+
+- [Coordinate Systems](https://learnopengl-cn.github.io/01%20Getting%20started/08%20Coordinate%20Systems/)
+  - 局部空间(Local Space)
+  - 世界空间(World Space)
+  - 观察空间(View Space)
+  - 裁剪空间(Clip Space, 或者称为齐次空间(Homogeneous Space)), [D3DXMatrixPerspectiveFovLH](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovlh)
+  - 屏幕空间(Screen Space)
