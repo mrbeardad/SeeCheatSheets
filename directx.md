@@ -241,6 +241,17 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 
 ### Graphics Pipeline
 
+![Graphics pipeline](images/graphicspipeline.png)
+
+- IA: 将输入数据装配成图元，并附加系统生成值
+
+  - `CreateBuffer`
+  - `IASetVertexBuffers`
+  - `IASetIndexBuffer`
+  - `CreateInputLayout`
+  - `IASetInputLayout`
+  - `IASetPrimitiveTopology`
+
 - [GLSL: Center or Centroid? (Or When Shaders Attack!)](https://www.opengl.org/pipeline/article/vol003_6/)
 
 - [Transformations](https://learnopengl-cn.github.io/01%20Getting%20started/07%20Transformations/)
