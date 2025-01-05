@@ -103,8 +103,9 @@ Subresources 同于引用内部资源，某些资源内部可以包含多个资�
 
 每个元素的格式分为两类，强类型和弱类型。强类型即再创建资源时就指定，且不可再更改，可以被优化。弱类型资源则通过资源视图来引用，只要元素位长相同就可以重新解释为不同的类型。
 
-> **GPU 资源如何与 CPU 内存交互？**  
 > [D3D11_USAGE](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_usage)
+
+**GPU 资源如何与 CPU 内存交互？**
 
 | Resource Usage | Default | Immutable | Dynamic | Staging |
 | -------------- | ------- | --------- | ------- | ------- |
@@ -241,16 +242,24 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 
 ### Graphics Pipeline
 
+> [Graphics pipeline](https://learn.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-graphics-pipeline)
+
 ![Graphics pipeline](images/graphicspipeline.png)
 
-- IA: 将输入数据装配成图元，并附加系统生成值
+#### Input Assembler Stage
 
-  - `CreateBuffer`
-  - `IASetVertexBuffers`
-  - `IASetIndexBuffer`
-  - `CreateInputLayout`
-  - `IASetInputLayout`
-  - `IASetPrimitiveTopology`
+输入装配阶段负责将输入数据装配到渲染管线并附加系统生成值
+
+- `CreateBuffer`
+- `CreateInputLayout`
+- `IASetVertexBuffers`
+- `IASetIndexBuffer`
+- `IASetInputLayout`
+- `IASetPrimitiveTopology`
+
+#### Vertex Shader Stage
+
+节点着色器输入一个节点并输出一个节点，通常负责坐标变换
 
 - [GLSL: Center or Centroid? (Or When Shaders Attack!)](https://www.opengl.org/pipeline/article/vol003_6/)
 
@@ -266,3 +275,40 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
   - 观察空间(View Space)
   - 裁剪空间(Clip Space, 或者称为齐次空间(Homogeneous Space)), [D3DXMatrixPerspectiveFovLH](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovlh)
   - 屏幕空间(Screen Space)
+
+#### Tessellation Stages
+
+镶嵌阶段通常负责动态曲面细分
+
+- Hull-Shader Stage
+- Tessellator Stage
+- Domain Shader Stage
+
+#### Geometry Shader Stage
+
+几何着色器输入一个图元并输出 0 个或多个图元，负责实现多种图形算法
+
+#### Stream Output Stage
+
+流输出阶段可以将几何着色器或节点着色器的输出结果拷贝到新的 Buffer 中
+
+#### Rasterizer Stage
+
+光栅化阶段负责
+
+1. 输入齐次坐标节点
+2. 图元剔除和裁切
+3. 应用透视除法将节点坐标归一化到 DNC
+4. 计算屏幕像素属性，通常需要多重采样、重心插值
+
+#### Pixel Shader Stage
+
+像素着色器
+
+#### Output Merger Stage
+
+输出混合阶段负责
+
+1. 深度测试
+2. 模板测试
+3. 像素混合
