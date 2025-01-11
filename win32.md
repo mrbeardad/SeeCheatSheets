@@ -199,10 +199,10 @@
   - user SID
   - group SIDs
   - logon SID
-  - privileges LUIDs
   - owner SID
   - primary group SID
   - integrity SIDs
+  - privileges LUIDs
   - default DACL
   - restricting SIDs
   - whether impersonation
@@ -223,8 +223,8 @@
     - type flag
     - inherit flags
     - access mask
-      - Generic Access Rights: 被映射到 Object-specific Access Right
       - SACL Access Right: 访问对象 SACL 的权限
+      - Generic Access Rights: 被映射到一组 Standard Access Rights 和 Object-specific Access Right
       - Standard Access Rights: 用于控制对对象本身的操作
         - `DELETE`
         - `READ_CONTROL`
@@ -260,11 +260,11 @@
 
 - security descriptors 中的 SACL 中存储可信级别和强制策略
 
-- ACM: 可信级别校验发生在 DACL 校验之前, 默认拒绝较低可信级别的写入访问
+- **ACM**: 可信级别校验发生在 DACL 校验之前, 默认拒绝较低可信级别的写入访问
 
-- Privileges: 某些系统特权仅允许高可信级别进程运行
+- **Privileges**: 某些系统特权仅允许高可信级别进程运行
 
-- UIPI: 限制低可信级别对高可信级别的访问机制
+- **UIPI**: 限制低可信级别对高可信级别的访问机制
   - 验证窗口句柄
   - 发送窗口消息 (API 调用返回成功, 消息被静默丢弃)
   - Hooks

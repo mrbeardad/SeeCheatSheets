@@ -248,20 +248,18 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 
 #### Input Assembler Stage
 
-输入装配阶段负责将输入数据装配到渲染管线并附加系统生成值
+输入装配阶段负责将输入数据装配到渲染管线并附加系统生成值，对应节点着色器的输入数据的结构类型
 
-- `CreateBuffer`
-- `CreateInputLayout`
-- `IASetVertexBuffers`
-- `IASetIndexBuffer`
-- `IASetInputLayout`
-- `IASetPrimitiveTopology`
+> - `CreateBuffer`
+> - `CreateInputLayout`
+> - `IASetVertexBuffers`
+> - `IASetIndexBuffer`
+> - `IASetInputLayout`
+> - `IASetPrimitiveTopology`
 
 #### Vertex Shader Stage
 
-节点着色器输入一个节点并输出一个节点，通常负责坐标变换
-
-- [GLSL: Center or Centroid? (Or When Shaders Attack!)](https://www.opengl.org/pipeline/article/vol003_6/)
+节点着色器输入一个节点并输出一个节点，节点着色器会处理 IA 阶段输入的每个节点（包括邻接节点），通常负责坐标变换、纹理采样等
 
 - [Transformations](https://learnopengl-cn.github.io/01%20Getting%20started/07%20Transformations/)
 
@@ -270,11 +268,17 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
   - 向量与矩阵运算：单位、平移、旋转、缩放
 
 - [Coordinate Systems](https://learnopengl-cn.github.io/01%20Getting%20started/08%20Coordinate%20Systems/)
+
   - 局部空间(Local Space)
   - 世界空间(World Space)
   - 观察空间(View Space)
   - 裁剪空间(Clip Space, 或者称为齐次空间(Homogeneous Space)), [D3DXMatrixPerspectiveFovLH](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovlh)
   - 屏幕空间(Screen Space)
+
+- [GLSL: Center or Centroid? (Or When Shaders Attack!)](https://www.opengl.org/pipeline/article/vol003_6/)
+
+> - `CreateVertexShader`
+> - `VSSetShader`
 
 #### Tessellation Stages
 
@@ -286,17 +290,22 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 
 #### Geometry Shader Stage
 
-几何着色器输入一个图元并输出 0 个或多个图元，负责实现多种图形算法
+几何着色器输入一个图元（可以包含邻接节点）并输出 tristrip, linestrip 或 pointlist，通常负责实现多种图形算法，比如
+
+- 动态粒子系统
+- 毛发生成
+- 阴影体积生成
+- 等等
 
 #### Stream Output Stage
 
-流输出阶段可以将几何着色器或节点着色器的输出结果拷贝到新的 Buffer 中
+流输出阶段可以将几何着色器或节点着色器的输出结果拷贝到单独的 Buffer 中，输出格式转换为不带邻接节点的 triangle/line/point list，这些 Buffer 可以重新绑定到渲染管线或传输到 CPU
 
 #### Rasterizer Stage
 
 光栅化阶段负责
 
-1. 输入齐次坐标节点
+1. 需要保证光栅化阶段的输入节点的坐标是齐次坐标
 2. 图元剔除和裁切
 3. 应用透视除法将节点坐标归一化到 DNC
 4. 计算屏幕像素属性，通常需要多重采样和属性插值
