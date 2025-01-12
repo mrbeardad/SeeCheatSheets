@@ -251,9 +251,9 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 输入装配阶段负责将输入数据装配到渲染管线并附加系统生成值，对应节点着色器的输入数据的结构类型
 
 > - `CreateBuffer`
-> - `CreateInputLayout`
 > - `IASetVertexBuffers`
 > - `IASetIndexBuffer`
+> - `CreateInputLayout`
 > - `IASetInputLayout`
 > - `IASetPrimitiveTopology`
 
@@ -275,10 +275,11 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
   - 裁剪空间(Clip Space, 或者称为齐次空间(Homogeneous Space)), [D3DXMatrixPerspectiveFovLH](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovlh)
   - 屏幕空间(Screen Space)
 
-- [GLSL: Center or Centroid? (Or When Shaders Attack!)](https://www.opengl.org/pipeline/article/vol003_6/)
-
 > - `CreateVertexShader`
 > - `VSSetShader`
+> - `VSSetSamplers`
+> - `VSSetShaderResourc`
+> - `VSSetConstantBuffers`
 
 #### Tessellation Stages
 
@@ -297,22 +298,47 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 - 阴影体积生成
 - 等等
 
+> - `CreateGeometryShader`
+> - `CreateGeometryShaderWithStreamOutput`
+> - `GSSetShader`
+> - `GSSetSamplers`
+> - `GSSetShaderResourc`
+> - `GSSetConstantBuffers`
+
 #### Stream Output Stage
 
 流输出阶段可以将几何着色器或节点着色器的输出结果拷贝到单独的 Buffer 中，输出格式转换为不带邻接节点的 triangle/line/point list，这些 Buffer 可以重新绑定到渲染管线或传输到 CPU
+
+> - `SOSetTargets`
 
 #### Rasterizer Stage
 
 光栅化阶段负责
 
-1. 需要保证光栅化阶段的输入节点的坐标是齐次坐标
-2. 图元剔除和裁切
-3. 应用透视除法将节点坐标归一化到 DNC
-4. 计算屏幕像素属性，通常需要多重采样和属性插值
+1. 首先需要保证光栅化阶段的输入节点的坐标是未应用透视除法的齐次坐标 (节点坐标系原点位于摄像机中央，x 轴向右、y 轴向上、z 轴向远)
+2. 图元裁切和剔除，包括截头锥体剔除和背向剔除
+3. 应用透视除法将节点坐标归一化到 DNC (-1.0 <= x, y <= 1.0; 0 <= z <= 1.0)
+4. 计算节点的屏幕坐标 (节点坐标系原点位于屏幕左上角，x 轴向右、y 轴向下)
+   1. 将 DNC 缩放至 Viewport 大小
+   2. 再根据 Viewport 设置将像素映射到屏幕坐标
+   3. 最后应用剪刀矩形根据屏幕坐标进行裁切 [What is the purpose of glScissor?](https://gamedev.stackexchange.com/questions/40704/what-is-the-purpose-of-glscissor)
+5. 计算需要填充的像素坐标 [Rasterization Rules](https://learn.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage-rules)
+6. 计算屏幕像素属性，通常需要多重采样和属性插值 [Center or Centroid?](https://www.opengl.org/pipeline/article/vol003_6/)
+
+> - `RSSetViewports`
+> - `RSSetScissorRects`
+> - `CreateRasterizerState1`
+> - `RSSetState`
 
 #### Pixel Shader Stage
 
-像素着色器
+像素着色器输入一个像素输出 0 ~ 8 个像素
+
+> - `CreatePixelShader`
+> - `PSSetShader`
+> - `PSSetSamplers`
+> - `PSSetShaderResourc`
+> - `PSSetConstantBuffers`
 
 #### Output Merger Stage
 
@@ -321,3 +347,10 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 1. 深度测试
 2. 模板测试
 3. 像素混合
+
+> - `CreateDepthStencilState`
+> - `OMSetDepthStencilState`
+> - `CreateBlendState1`
+> - `OMSetBlendState`: [DirectX render to texture alpha blending](https://stackoverflow.com/a/27932112/21201111)
+> - `CreateDepthStencilView`
+> - `OMSetRenderTargets`
