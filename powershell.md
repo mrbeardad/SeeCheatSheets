@@ -61,7 +61,7 @@ Get-Variable
 
 - 特殊变量
   - [Automatic Variable](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables): 存储 PowerShell 的状态
-  - [Preference Variable](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables): 影响 PowerShell 的行为
+  - [Preference Variable](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables): 调整 PowerShell 的行为
 
 ## 运算符
 
@@ -240,7 +240,7 @@ $MyInvocation # 调用者信息
 
 - [`[OutputType()]`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_outputtypeattribute) 用于设置函数返回值类型
 
-- 任何命令默认都有返回值，函数中调用的所有命令的返回值共同构成函数的返回值，要避免不必要的返回值
+- 任何命令默认都有返回值，函数中调用的所有命令的返回值共同构成函数的返回值，若要避免不必要的返回值
   - `Command | Out-Null`
   - `Command >$null`
   - `[void]$expr`
