@@ -1992,7 +1992,10 @@ Raw Input 机制用于直接获取设备的原始输入, 比如获取鼠标相�
 
 #### 输入法编辑
 
-> 参考 [Input Method Manager](https://learn.microsoft.com/en-us/windows/win32/intl/input-method-manager)
+> 参考
+> - [Input Method Manager](https://learn.microsoft.com/en-us/windows/win32/intl/input-method-manager)
+> - [Using an Input Method Editor in a Game](https://learn.microsoft.com/en-us/windows/win32/dxtecharts/using-an-input-method-editor-in-a-game)
+> - [DXUT](https://github.com/microsoft/DXUT/blob/main/Optional/ImeUi.cpp#L1226)
 
 - 输入法编辑器 (IME) 作为 DLL 加载到应用程序, 应用程序利用输入法管理器 (IMM) 接口与 IME 交互
 
@@ -2003,6 +2006,8 @@ Raw Input 机制用于直接获取设备的原始输入, 比如获取鼠标相�
   - 状态窗口: 指示 IME 已打开, 并能设置转换模式
   - 组合窗口: 显示输入字符和转换后的字符
   - 候选窗口: 显示转换字符的候选列表
+
+![ime](images/ime.png)
 
 > - `ImmGetContext`
 > - `ImmReleaseContext`
