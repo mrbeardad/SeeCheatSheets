@@ -968,7 +968,7 @@ __except (filter-expression) {
 
 ## IO 系统
 
-操作系统提供了“内核对象”的机制, 简化了程序对系统中“IO 资源”的使用, 如设备、文件、网络、IPC 等。
+操作系统提供了“内核对象”的机制, 简化了程序对系统中“IO 资源”的使用, 如设备、注册表、文件、管道、网络等。
 
 ### 注册表
 
@@ -1048,25 +1048,25 @@ NTFS 支持事务
 #### 目录结构
 
 - **_C:_**
-  - Windows `%SystemRoot%`: Window 系统目录
+  - Windows (`%SystemRoot%`): Window 系统目录
     - System: 16 位兼容系统目录
     - System32: **64 位**系统目录
     - SystemWOW64: **32 位**系统目录, (**W**indows 32-bit **o**n **W**indows **64**-bit)
     - **注意文件系统重定向，对于 32 位程序，System32 被重定向到 SysWOW64，使用 Sysnative 访问真正的 System32**，具体细节见 [File System Redirector](https://learn.microsoft.com/en-us/windows/win32/winprog64/file-system-redirector)
-  - Program Files `%ProgramFiles%`: 64 位应用程序安装目录 (所有用户)
-  - Program Files (x86) `%ProgramFiles(x86)%`: 32 位应用程序安装目录 (所有用户)
-  - Program Data `%ProgramData%`: 应用程序数据 (所有用户)
+  - Program Files (`%ProgramFiles%`): 64 位应用程序安装目录 (所有用户)
+  - Program Files (x86) (`%ProgramFiles(x86)%`): 32 位应用程序安装目录 (所有用户)
+  - Program Data (`%ProgramData%`): 应用程序数据 (所有用户)
   - Users
-    - username `%USERPROFILE%`
+    - username (`%USERPROFILE%`)
       - AppData
-        - Local `%LOCALAPPDATA%`: 应用程序状态数据 (当前用户)
+        - Local (`%LOCALAPPDATA%`): 应用程序状态数据 (当前用户)
           - Programs: 应用程序安装目录 (当前用户)
-          - Temp `%TEMP%`: 应用程序缓存数据（当前用户（
-        - Roaming `%APPDATA%`: 应用程序配置数据 (当前用户)
+          - Temp (`%TEMP%`): 应用程序缓存数据（当前用户（
+        - Roaming (`%APPDATA%`): 应用程序配置数据 (当前用户)
 
 #### 文件
 
-- 文件: 一个文件由若干个文件流组成, 文件流包含了文件的元数据和数据, 引用文件流 `file.txt:strm:$DATA`, 其中 `$DATA` 为流类型 (可忽略) , 可能需要添加路径 `.\` 以防止文件名被解析为盘符
+- 文件: 一个文件由若干个文件流组成, 文件流包含了文件的元数据和数据, 引用文件流格式 `"filename:stream name:stream type"`, 比如`myfile.dat:stream1:$DATA`, `filename::$DATA`, 可能需要添加路径 `.\` 以防止文件名被解析为盘符
 
   - 唯一对象标识
   - 安全描述符
