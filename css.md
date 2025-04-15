@@ -19,23 +19,23 @@
 
 | 基本选择器 | 语法                     | 权重 |
 | ---------- | ------------------------ | ---- |
-| ID         | `#idname`                | 100  |
-| Class      | `.classname`             | 010  |
-| Element    | `elementname`            | 001  |
-| Attribute  | `[attr]` `[attr@=value]` | 010  |
-| Universal  | `*`                      | 000  |
+| ID         | `#idname`                | 1-0-0  |
+| Class      | `.classname`             | 0-1-0  |
+| Element    | `elementname`            | 0-0-1  |
+| Attribute  | `[attr]` `[attr@=value]` | 0-1-0  |
+| Universal  | `*`                      | 0-0-0  |
 
 | 复合选择器       | 语法                    | 权重 |
 | ---------------- | ----------------------- | ---- |
-| Descendant       | `selector1 selector2`   | 0    |
-| Child            | `selector1 > selector2` | 0    |
-| General sibling  | `selector1 ~ selector2` | 0    |
-| Adjacent sibling | `selector1 + selector2` | 0    |
+| Descendant       | `selector1 selector2`   | 0-0-0    |
+| Child            | `selector1 > selector2` | 0-0-0    |
+| General sibling  | `selector1 ~ selector2` | 0-0-0    |
+| Adjacent sibling | `selector1 + selector2` | 0-0-0    |
 
 | 伪选择器        | 示例           | 备注                   | 权重 |
 | --------------- | -------------- | ---------------------- | ---- |
-| Pseudo classes  | `:hover`       | 指定选定元素的特定状态 | 010  |
-| Pseudo elements | `::first-line` | 指定选定元素的特定部分 | 001  |
+| Pseudo classes  | `:hover`       | 指定选定元素的特定状态 | 0-1-0  |
+| Pseudo elements | `::first-line` | 指定选定元素的特定部分 | 0-0-1  |
 
 ## 层叠与继承
 
