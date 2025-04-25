@@ -686,7 +686,7 @@ DLL 标准搜索路径: (当指定相对路径和无路径文件名) , 更详细
 
 #### 应用部署
 
-> 关于 Windows 运行时环境和打包部署建议见 [Deployment](https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp?view=msvc-170)
+> 关于 Windows 运行时环境和打包部署建议见 [Deployment in Visual C++](https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp?view=msvc-170) 和 [Universal CRT deployment](https://learn.microsoft.com/en-us/cpp/windows/universal-crt-deployment?view=msvc-170)
 
 - 部署方案
 
@@ -696,7 +696,7 @@ DLL 标准搜索路径: (当指定相对路径和无路径文件名) , 更详细
 
 - [C++ 依赖库](https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features)
   - `ucrtbase.dll`
-    - C 标准库, Windows 10 之后系统自带
+    - C 标准库, Windows 10 之后作为系统基本组件
     - 其中还包括一些转发 [API Sets](https://learn.microsoft.com/en-us/windows/win32/apiindex/windows-apisets)
     - 位于 `C:\Program Files (x86)\Windows Kits\10\Redist\10.0.22000.0\ucrt\DLLs\`
   - `libcmt.lib`/`msvcrt.lib`
