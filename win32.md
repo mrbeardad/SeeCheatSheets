@@ -669,20 +669,31 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
 
 #### 搜索路径
 
-DLL 标准搜索路径: (当指定相对路径和无路径文件名) , 更详细 DLL 搜索路径见 [Dll search order](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)
+> 更详细 DLL 搜索顺序见 [Dynamic-link library search order](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)
+
+桌面应用（非 UWP 应用）标准搜索顺序，
+当使用 `LoadLibrary` 或 `LoadLibraryEx` 且文件名未指定路径或指定相对路径时，使用标准搜索顺序，
+如果 DLL 有依赖（静态导入）则默认其依赖加载方式就如同使用不带路径的文件名调用 `LoadLibrary`
 
 1. DLL Redirection (`app.exe.local`)
 2. API sets (`api-*`/`ext-*`)
 3. SxS manifest redirection
 4. Loaded-module list
 5. Known DLLs (`HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\KnownDLLs`)
-6. The package dependency graph of the process
-7. 进程 exe 所在目录
-8. 系统目录 (`C:\Windows\System32`)
-9. 16 位兼容系统目录 (`C:\Windows\System`)
-10. Windows 目录 (`C:\Windows`)
-11. 进程当前目录
-12. 环境变量 PATH
+6. The package dependency graph of the process (`<PackageDependency>` in `<Dependencies>`)
+7. The executable's folder
+8. The system folder (`C:\Windows\System32`)
+9. The 16-bit system folder (`C:\Windows\System`)
+10. The Windows folder (`C:\Windows`)
+11. The current folder
+12. `PATH`
+
+以下方法可以更改搜索路径或顺序
+
+- 关闭安全 DLL 搜索模式（`HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\SafeDllSearchMode` 设置为 0），关闭后 `11. The current folder` 前移至 `8. The system folder` 之前
+- `SetDllDirectory`，删除 `11. The current folder` 并在 `7.` 后添加 `The folder specified by the lpPathName parameter of SetDllDirectory`
+- `LoadLibraryEx(absolutePath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH)`，当加载其依赖时 `7. The executable's folder` 被替换为 `7. The loaded Dll's folder`
+- `LoadLibraryEx(dllName, NULL, LOAD_LIBRARY_SEARCH*)`，仅搜索指定目录
 
 #### 应用部署
 
@@ -695,6 +706,7 @@ DLL 标准搜索路径: (当指定相对路径和无路径文件名) , 更详细
   - 静态链接: 将依赖用 `/MT` 链接参数静态链接到 exe 或 dll, 可能导致同时使用多个不同版本的库
 
 - [C++ 依赖库](https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features)
+
   - `ucrtbase.dll`
     - C 标准库, Windows 10 之后作为系统基本组件
     - 其中还包括一些转发 [API Sets](https://learn.microsoft.com/en-us/windows/win32/apiindex/windows-apisets)
@@ -1996,6 +2008,7 @@ Raw Input 机制用于直接获取设备的原始输入, 比如获取鼠标相�
 #### 输入法编辑
 
 > 参考
+>
 > - [Input Method Manager](https://learn.microsoft.com/en-us/windows/win32/intl/input-method-manager)
 > - [Using an Input Method Editor in a Game](https://learn.microsoft.com/en-us/windows/win32/dxtecharts/using-an-input-method-editor-in-a-game)
 > - [DXUT](https://github.com/microsoft/DXUT/blob/main/Optional/ImeUi.cpp#L1226)
