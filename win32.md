@@ -698,7 +698,6 @@ DLL 标准搜索路径: (当指定相对路径和无路径文件名) , 更详细
   - `ucrtbase.dll`
     - C 标准库, Windows 10 之后作为系统基本组件
     - 其中还包括一些转发 [API Sets](https://learn.microsoft.com/en-us/windows/win32/apiindex/windows-apisets)
-    - 位于 `C:\Program Files (x86)\Windows Kits\10\Redist\10.0.22000.0\ucrt\DLLs\`
   - `libcmt.lib`/`msvcrt.lib`
     - 初始化 CRT 的库, 只能静态链接, 两个 lib 分别用于 `/MT` 和 `/MD`
   - `vcruntime<version>.dll`
@@ -709,6 +708,10 @@ DLL 标准搜索路径: (当指定相对路径和无路径文件名) , 更详细
     - C++ 标准库, 包含 STL 等
     - `<version>` 同上
     - 位于 64 和 32 位系统目录
+
+- 本地部署时
+  - CRT 库安装位置在 `C:\Program Files (x86)\Windows Kits\10\Redist\10.0.22000.0\ucrt\DLLs\`
+  - VC 库安装位置在 `C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Redist\MSVC\14.38.33130\x64\Microsoft.VC143.CRT`
 
 ### 虚拟内存
 
