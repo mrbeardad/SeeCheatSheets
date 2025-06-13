@@ -138,7 +138,6 @@ Get-Variable
 
 - Success Steam 相当于 stdout
 - Error Steam 相当于 stderr
-- Return Value 相当于 stdin
 
 ## 控制流
 
@@ -344,4 +343,4 @@ NativeExe -Arg 1 , 2, 3 $s --% raw toekns
   - ConvertTo-Csv
   - ConvertTo-Xml
 
-> Item 由 PSProvider 提供，比如文件系统、注册表等，见 `Get-PSProvider`
+> Item 由 PSProvider 提供，比如文件系统、注册表、环境、变量等，见 `Get-PSProvider`
