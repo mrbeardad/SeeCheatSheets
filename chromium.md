@@ -5,6 +5,7 @@
 - [Multi-process Architecture](https://www.chromium.org/developers/design-documents/multi-process-architecture/)
 - [Process Model and Site Isolation](https://chromium.googlesource.com/chromium/src/+/main/docs/process_model_and_site_isolation.md)
 - [Sanbox](https://chromium.googlesource.com/chromium/src/+/HEAD/docs/design/sandbox.md)
+- [Chromium UI Platform](https://chromium.googlesource.com/chromium/src.git/+/HEAD/docs/ui/index.md)
 
 ## Threads
 
