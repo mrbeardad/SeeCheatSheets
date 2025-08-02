@@ -262,6 +262,7 @@ $false
 
 'Hello'
 "World"
+"Escaped quote by "" or by `""
 @"
 raw
 string
