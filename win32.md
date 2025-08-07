@@ -86,6 +86,7 @@
     - [编译资源](#编译资源)
     - [字符集](#字符集)
     - [音视频](#音视频)
+    - [驱动](#驱动)
 
 ## 资源系统
 
@@ -125,7 +126,7 @@
   - 安全描述符
   - ...
 - 访问掩码: 该句柄的访问权限掩码
-- 属性标志: 如 Protect, Inherit 等
+- 属性标志: 如 PROTECT_FROM_CLOSE, INHERIT 等
 
 > - `GetHandleInformation`
 > - `SetHandleInformation`
@@ -1070,18 +1071,18 @@ NTFS 支持事务
     - **注意文件系统重定向，对于 32 位程序，System32 被重定向到 SysWOW64，使用 Sysnative 访问真正的 System32**，具体细节见 [File System Redirector](https://learn.microsoft.com/en-us/windows/win32/winprog64/file-system-redirector)
   - Program Files (`%ProgramFiles%`): 64 位应用程序安装目录 (所有用户)
   - Program Files (x86) (`%ProgramFiles(x86)%`): 32 位应用程序安装目录 (所有用户)
-  - Program Data (`%ProgramData%`): 应用程序数据 (所有用户)
+  - ProgramData (`%ProgramData%`): 应用程序数据 (所有用户)
   - Users
     - username (`%USERPROFILE%`)
       - AppData
         - Local (`%LOCALAPPDATA%`): 应用程序状态数据 (当前用户)
           - Programs: 应用程序安装目录 (当前用户)
-          - Temp (`%TEMP%`): 应用程序缓存数据（当前用户（
+          - Temp (`%TEMP%`): 应用程序缓存数据（当前用户）
         - Roaming (`%APPDATA%`): 应用程序配置数据 (当前用户)
 
 #### 文件
 
-- 文件: 一个文件由若干个文件流组成, 文件流包含了文件的元数据和数据, 引用文件流格式 `"filename:stream name:stream type"`, 比如`myfile.dat:stream1:$DATA`, `filename::$DATA`, 可能需要添加路径 `.\` 以防止文件名被解析为盘符
+- 文件: 一个文件由若干个文件流组成, 文件流包含了文件的元数据和数据, 引用文件流格式 `"filename:streamName:streamType"`, 比如`myfile.dat:stream1:$DATA`, `filename::$DATA`, 可能需要添加路径 `.\` 以防止文件名被解析为盘符
 
   - 唯一对象标识
   - 安全描述符
@@ -1304,7 +1305,7 @@ SendMessage(target_hwnd, WM_COPYDATA, hwnd, &data);
   - 可以直接在共享内存中**构造**消息对象, 单次通讯可省去一次拷贝 (构造期间需要加锁, 通常来说构造数据比拷贝更慢)
   - 可以直接在共享内存中**访问并处理**消息对象, 单次通讯可省去一次拷贝 (处理期间需要加锁, 通常来说处理数据比拷贝更慢)
   - 没有缓冲区管理, 没有连接管理, 没有流传输
-  - **适用场景: 传输 Raw Data (数据量大且处理快)**
+  - **适用场景: 传输 Raw Data (数据量大且处理快)、用于实现多播通讯**
 
 ### 异步 IO
 
@@ -1390,8 +1391,10 @@ Windows 支持三种异步 IO 机制:
 
 ![desktop](./images/desktop.png)
 ![taskbar](./images/taskbar.png)
+![appwindow](./images/appwindow.png)
 
 - Desktop Window
+  - Work Area
   - Taskbar
     - Start Button
     - Taskbar Buttons
@@ -1407,7 +1410,6 @@ Windows 支持三种异步 IO 机制:
       - Primary Window (Left double-click)
       - Context Menu (Right-click)
   - Application Window
-    ![appwindow](./images/appwindow.png)
     - Non-Client Area
       - Title Bar
         - Application Icon
@@ -2353,3 +2355,18 @@ Windows 系统中每个 locale 设置包含了 4 个不同的 code pages
 > - [Digital video concepts](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Video_concepts)
 
 ![audio](images/audio.png)
+
+### 驱动
+
+> 参考
+>
+> - [Kernel-mode driver architecture design guide](https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/)
+> - [Developing, Testing, and Deploying Drivers](https://learn.microsoft.com/en-us/windows-hardware/drivers/develop/)
+> - [Windows Driver Frameworks](https://learn.microsoft.com/en-us/windows-hardware/drivers/wdf/)
+> - [Device and driver installation](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/)
+> - [Using Kernel-Mode Driver Framework with Non-PnP Drivers](https://learn.microsoft.com/en-us/windows-hardware/drivers/wdf/using-kernel-mode-driver-framework-with-non-pnp-drivers)
+
+![Driver](images/Driver.png)
+
+- WdfDriverCreate
+- WdfDeviceCreate
