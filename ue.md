@@ -83,3 +83,15 @@ TWeakPtr
 
 配置顺序
 https://dev.epicgames.com/documentation/en-us/unreal-engine/configuration-files-in-unreal-engine#configurationfilehierarchy
+
+## UObjects
+
+```cpp
+AGameModeBase
+
+ACharacter
+APlayerController
+
+UInputMappingContext
+UInputAction
+```

@@ -221,8 +221,9 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
 - 有窗口遮挡时自动退出全屏。D3D12 之后不再支持独占全屏，切换全屏状态后其他窗口仍可以显示在全屏窗口上
 - 注意退出全屏模式后再释放 SwapChain
 - 全屏时若缓冲区内容同时被读取到屏幕和写入渲染结果，则会出现画面撕裂，考虑以下 Nvidia 设置中的权衡
-  - Off：关闭垂直同步，高 FPS，低延迟，但可能出现画面撕裂
-  - On：开启垂直同步，低 FPS，高延迟（FPS 低于刷新率更明显），解决画面撕裂
+  > 注意，FPS和延迟的表现不能一概而论，其根据具体的情况而有所不同，比如渲染帧率和屏幕刷新率的比较、CPU渲染延迟和GPU渲染延迟的比较
+  - Off：关闭垂直同步
+  - On：开启垂直同步
   - Fast：关闭垂直同步，但当渲染帧率超过屏幕刷新率则丢弃多余帧
   - Adaptive：开启垂直同步，但当渲染帧率低于屏幕刷新率时关闭
   - Adaptive2：开启垂直同步，但帧率限制为屏幕刷新率的一半
@@ -274,6 +275,8 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
   - 观察空间(View Space)
   - 裁剪空间(Clip Space, 或者称为齐次空间(Homogeneous Space)), [D3DXMatrixPerspectiveFovLH](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovlh)
   - 屏幕空间(Screen Space)
+  > 将笛卡尔坐标 (x, y, z, 1) 转换为标准化设备坐标 (NDC)，也就是 x 和 y 范围 [-1, 1]，z 范围 [0, 1]，
+  > 使用映射公式 $\frac{Z_f}{Z}\frac{Z-Z_n}{Z_f-Z_n}$ 而非 $\frac{Z-Z_n}{Z_f-Z_n}$，不仅可以在透视除法之前直接使用 w 分量来裁切，还可以将深度的更多精度范围留给近处的物体
 
 > - `CreateVertexShader`
 > - `VSSetShader`
