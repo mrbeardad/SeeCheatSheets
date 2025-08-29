@@ -276,7 +276,7 @@ SwapChain 提交缓冲区给 DWM 时可以使用 `IDXGISwapChain1::Present1` 的
   - 裁剪空间(Clip Space, 或者称为齐次空间(Homogeneous Space)), [D3DXMatrixPerspectiveFovLH](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovlh)
   - 屏幕空间(Screen Space)
   > - FOV 通常使用垂直角度(fovy)，因为屏幕的宽度差异比高度差异更加常见
-  > 将笛卡尔坐标 (x, y, z, 1) 转换为标准化设备坐标 (NDC)，也就是 x 和 y 范围 [-1, 1]，z 范围 [0, 1]，
+  > - 将笛卡尔坐标 (x, y, z, 1) 转换为标准化设备坐标 (NDC)，也就是 x 和 y 范围 [-1, 1]，z 范围 [0, 1]，
   > 使用映射公式 $\frac{Z_f}{Z}\frac{Z-Z_n}{Z_f-Z_n}$ 而非 $\frac{Z-Z_n}{Z_f-Z_n}$，不仅可以在透视除法之前直接使用 w 分量来裁切，还可以将深度的更多精度范围留给近处的物体
 
 > - `CreateVertexShader`
