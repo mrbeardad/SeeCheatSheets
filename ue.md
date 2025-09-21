@@ -71,15 +71,14 @@ TWeakPtr
     - MyProject.Target.cs
     - MyProjectEditor.Target.cs
     - MyProject (Primary game module folder)
-      - Private
-      - Public
       - MyProject.Build.cs
       - Other C++ classes in your game module
-    - ModuleTest
-      - Private
-        - ModuleTestModule.cpp
+    - MyModule
       - Public
-      - ModuleTest.Build.cs
+        - MyModule.h
+      - Private
+        - MyModule.cpp
+      - MyModule.Build.cs
 
 配置顺序
 https://dev.epicgames.com/documentation/en-us/unreal-engine/configuration-files-in-unreal-engine#configurationfilehierarchy
