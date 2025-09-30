@@ -8,10 +8,13 @@
   - `.psm1` 负责主模块代码
   - `.ps1` 拆分的脚本代码
 - 模块导入
-  - 模块安装路径
-    - 当前用户: `$HOME\Documents\PowerShell\Modules`
-    - 所以用户: `$env:ProgramFiles\PowerShell\Modules`
-    - 内置模块: `$PSHOME\Modules`
+  - 导入方式
+    - `. .\Helper.ps1` (导入当前 Scope)
+    - `.\Helper.ps1` (独立 Scope)
+    - `Import-Module Hlper`
+      - 当前用户: `$HOME\Documents\PowerShell\Modules`
+      - 所以用户: `$env:ProgramFiles\PowerShell\Modules`
+      - 内置模块: `$PSHOME\Modules`
   - 符号名字限定
     - 默认无限定
     - 可选限定符 `ModuleName\FunctionName`
@@ -260,9 +263,12 @@ $false
 32
 1.25
 
-'Hello'
-"World"
-"Escaped quote by "" or by `""
+"Double quote expands $i and ${env:Path} and $(Get-Content file) and escape `$"
+'Single quote do not expand any $ and escape `'
+
+"Double quote could be escape by "" or by `" "
+'Single quote could be escape by '' '
+
 @"
 raw
 string

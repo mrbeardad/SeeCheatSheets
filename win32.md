@@ -165,22 +165,22 @@
 
 ![session](./images/session.png)
 
-- Session: 包含单个用户登录会话产生的所有进程和内核对象
+- Session
 
-  - Session 0 由系统创建专门用于运行服务 (Services)
+  - 包含若干 Window Station 对象，服务会话为 Session 0，用户会话为 Session 1 等
   - 不同会话的部分内核对象的默认命名空间不同
 
-- Window Station: 包含一个剪切板、一张原子表和若干 desktop
+- Window Station
 
-  - WinSta0 由系统创建, 唯一能与用户终端设备交互的 Window Station
-  - 同一 Window Station 内仅允许一个 Desktop 访问用户终端设备
+  - 包含一个剪切板、一张原子表和若干 Desktop 对象，系统会为每个用户会话创建 WinSta0
+  - 只允许 WinSta0 中的一个 Desktop 与终端设备交互
+  - 每个进程可以与一个 Window Station 关联
 
-- Desktop: 包含若干 windows, menus, hooks 等用户对象
+- Desktop
 
-  - Winlogon 用于用户登录和 UAC 授权
-  - Default 用于用户应用程序
-  - ScreenSaver 用于屏保
-  - windows, menu, hooks 等用户对象仅能在同一 Desktop 内部访问
+  - 包含若干 windows, menus, hooks 等用户对象，Winlogon 用于用户登录和 UAC 授权，Default 用于用户应用程序
+  - 用户对象仅能在同一 Desktop 内部访问
+  - 每个线程可以与一个 Desktop 关联
 
 #### 访问控制模型
 
@@ -296,14 +296,18 @@
 
 #### 进程创建
 
+进程创建流程：
+
 1. `CreateProcess`
 
    - 对于 GUI 程序, 可控制子进程第一次调用 `CreateWindow` 和 `ShowWindow` 的默认参数, 如位置、大小、nCmdShow 等
    - 对于 CUI 程序, 可控制子进程的控制台窗口的句柄、位置、大小等
 
-2. C Run-Time library (CRT) 入口函数, 负责初始化全局变量等, 然后调用用户程序入口函数
+2. 将静态导入的（依赖）DLL 加载到内存
 
-3. 用户程序入口函数
+3. C Run-Time library (CRT) 入口函数, 负责初始化全局变量等, 然后调用用户程序入口函数
+
+4. 用户程序入口函数
 
    - `main` for **SUBSYSTEM:CONSOLE**, 默认继承父进程控制台窗口或自动创建新控制台窗口
    - `WinMain` for **SUBSYSTEM:WINDOWS**
@@ -314,13 +318,13 @@
    int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd);
    ```
 
-- EXE 搜索路径 (仅当指定无路径的文件名时)
+EXE 搜索路径 (仅当指定无路径的文件名时)
 
 1. 进程 exe 文件所在目录
 2. 进程当前目录
-3. 32 位 Windows 系统目录 (`C:\Windows\System32`)
-4. 16 位 Windows 系统目录 (`C:\Windows\System`)
-5. Windows 系统目录 (`C:\Windows`)
+3. `C:\Windows\System32`
+4. `C:\Windows\System`
+5. `C:\Windows`
 6. 环境变量 PATH
 
 > - `CreateProcess`
@@ -375,10 +379,10 @@
 
   - `TerminateProcess`
 
-- 进程终止结果
+- 进程终止流程
 
-  1. 终止进程内所有线程, 并释放线程资源
-  2. 主线程退出前, 卸载所有动态模块
+  1. 终止进程内所有非主线程, 并释放线程资源
+  2. 主线程退出前, 卸载所有 DLL 模块
   3. 释放其他进程资源, 如关闭内核对象句柄
   4. 设置进程退出码
   5. 触发进程对象
@@ -386,14 +390,14 @@
 - C++ 静态生命周期的变量
   - 仅能保证同一编译单元中的构造和析构顺序, 且析构顺序与构造顺序相反
   - 构造
-    1. `static` (模块加载)
+    1. `static` (模块加载，调用 DllMain 前)
     2. `thread_local` (线程加载)
     3. in-block `static`/`thread_local` (首次调用函数)
   - 析构
     1. `thread_load` (线程退出)
     2. in-block `thread_local` (线程退出)
     3. `std::atexit` 保证在注册时就已初始化的任何 `static` 销毁之前调用
-    4. `static` (模块卸载)
+    4. `static` (模块卸载，调用 DllMain 后)
     5. in-block `static` (模块卸载)
   - **注意: 无法保证变量的析构函数一定会被调用**
 
@@ -648,10 +652,11 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
   - 谨慎在 DllMain 中调用 `LoadLibrary`/`GetModuleHandleEx`/`FreeLibrary`
   - 禁止在 DllMain 中等待线程启动或线程退出
 - 如何优雅地卸载模块
-  1. 提供 Deinitialize 方法发送请求给 Controller 线程
-  2. Controller 线程负责终止其他所有模块相关的线程
-  3. 然后 Controller 作为最后一个模块相关线程退出, 不要调用 `ExitThread` 或 `FreeLibraryAndExitThread` 之类的 Win32 API 退出线程, 否则清理代码不会执行, 比如引用计数不会减少
-  4. 最后在 `DllMain DLL_PROCESS_DETACH` 中销毁静态变量 (如果有的话)
+  1. 使用 `_beginthreadex` 启动线程
+  2. 提供 Deinitialize 方法发送请求给 Controller 线程
+  3. Controller 线程负责终止其他所有模块相关的线程
+  4. 然后 Controller 作为最后一个模块相关线程退出, 不要调用 `ExitThread` 或 `FreeLibraryAndExitThread` 之类的 Win32 API 退出线程, 否则清理代码不会执行, 比如引用计数不会减少
+  5. 最后在 `DllMain DLL_PROCESS_DETACH` 中销毁静态变量 (如果有的话)
 
 > - `LoadLibrary`
 > - `LoadLibraryEx`: 可设置修改标准搜索路径、仅加载资源数据, 通常对同一 dll 不能与 `LoadLibrary` 混用
@@ -708,11 +713,11 @@ MYDLL_API int __stdcall my_func2(LPCWSTR lpszMsg); // 使用 __stdcall 调用约
 
 - [C++ 依赖库](https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features)
 
+  - `msvcrt.dll`
+    - `VS 2015` 之前的旧版 C 运行时
   - `ucrtbase.dll`
     - C 标准库, Windows 10 之后作为系统基本组件
     - 其中还包括一些转发 [API Sets](https://learn.microsoft.com/en-us/windows/win32/apiindex/windows-apisets)
-  - `libcmt.lib`/`msvcrt.lib`
-    - 初始化 CRT 的库, 只能静态链接, 两个 lib 分别用于 `/MT` 和 `/MD`
   - `vcruntime<version>.dll`
     - C++ 运行时库, 包含异常处理、调试支持、运行检测等功能
     - `vcruntime140.dll` 是基础库, `vcruntime140_1.dll` 是扩展库, 后者保证与前者的 ABI 兼容

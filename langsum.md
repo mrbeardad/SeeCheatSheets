@@ -54,6 +54,21 @@
   }
   ```
 
+- C#
+
+  - 程序入口：static Main 函数
+  - 模块结构：一个源文件（Assembly 内部依赖无需导入，外部依赖由项目依赖导入）
+  - 模块导入：符号限定于命名空间
+  - 模块导出：`public`声明
+  - ~~模块初始化~~
+  - 依赖管理：NuGet
+
+  ```cs
+  using System.Collections.Generic;
+
+  namespace MyNs;
+  ```
+
 - Rust
 
   - 程序入口：`src/main.rs` 或 `src/bin/*.rs` 中的 main 函数
@@ -109,7 +124,7 @@
   import 'package:path/to/file.dart' hide bar;
   ```
 
-- TypeScript
+- JavaScript
 
   - 程序入口：任意源文件顺序执行
   - 模块结构：一个源文件
@@ -118,10 +133,10 @@
   - 模块初始化：脚本首次导入立即执行
   - 依赖管理：npm
 
-  ```ts
-  import defaultExport, { foo, bar as alias } from "path/to/module.ts";
-  import * as qualifier from "path/to/module.ts";
-  import "path/to/side_effect.ts";
+  ```js
+  import defaultExport, { foo, bar as alias } from "path/to/file.js";
+  import * as qualifier from "path/to/file.js";
+  import "path/to/side_effect.js";
   ```
 
 - Python
@@ -153,29 +168,48 @@
 
 - C++
 
-  - 变量类型：强类型 + 结构型
+  - 变量类型：强类型
   - 生命周期：声明时构造，退出块作用域时销毁
-  - 拷贝控制：左值深拷贝，右值浅拷贝
+  - 拷贝控制：容器深拷贝，指针浅拷贝，右值移动
+  - 比较运算：逐成员/元素比较
 
   ```cpp
-  auto foo = bar;
-  const auto foo = bar;
-  auto& foo = bar;
-  const auto& foo = bar;
-
+  // 为了可读性，尽量避免使用 auto，特别是内置类型
+  Type foo;
+  Type foo{bar};
   Type foo = bar;
-  const Type foo = bar;
   Type& foo = bar;
   const Type& foo = bar;
 
-  constexpr auto FOO = bar;
+  constexpr Type FOO = bar;
+  ```
+
+- C#
+
+  - 变量类型：强类型
+  - 生命周期：声明时构造，不再引用后被 GC 回收
+  - 拷贝控制：浅拷贝
+  - 比较运算：值类型比较值，引用类型比较指针
+
+  ```cs
+  Type foo;
+  Type foo = new Type(bar);
+  Type foo = new(bar);
+  Type foo = new() { Field = bar };
+  Type foo = new() { ["Index"] = bar };
+  Type foo = new() { add1, add2 };
+
+  ref Type foo = ref bar;
+  ref readonly Type foo = ref bar;
+
+  var foo = bar;
   ```
 
 - Rust
 
-  - 变量类型：强类型 + 结构型
+  - 变量类型：强类型
   - 生命周期：声明时构造，移动或退出块作用域时销毁
-  - 拷贝控制：`Copy` 默认浅拷贝，`Clone` 手动深拷贝
+  - 拷贝控制：默认移动，`Copy` 浅拷贝，`Clone` 手动深拷贝
 
   ```rust
   let foo = bar;
@@ -193,7 +227,7 @@
 
 - Go
 
-  - 变量类型：强类型 + 结构型
+  - 变量类型：强类型
   - 生命周期：声明时构造，退出块作用域后不可见，不再引用后被 GC 回收
   - 拷贝控制：浅拷贝
 
@@ -209,7 +243,7 @@
 
 - Dart
 
-  - 变量类型：强类型 + 引用型
+  - 变量类型：强类型
   - 生命周期：声明时构造，退出块作用域后不可见，不再引用后被 GC 回收
   - 拷贝控制：浅拷贝
 
@@ -224,23 +258,20 @@
   const Type FOO = bar;
   ```
 
-- TypeScript
+- JavaScript
 
-  - 变量类型：强类型 + 引用型
+  - 变量类型：弱类型
   - 生命周期：声明时构造，退出块作用域(`let`)或函数作用域后(`var`)不可见，不再引用后被 GC 回收
   - 拷贝控制：浅拷贝
 
   ```ts
   let foo = bar;
   const foo = bar;
-
-  let foo: Type = bar;
-  const foo: Type = bar;
   ```
 
 - Python
 
-  - 类型系统：弱类型 + 引用型
+  - 类型系统：弱类型
   - 生命周期：第一次赋值时构造，退出函数作用域后不可见，不再引用后被 GC 回收
   - 拷贝控制：浅拷贝
 
