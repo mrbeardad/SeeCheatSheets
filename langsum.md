@@ -189,15 +189,17 @@
   - 变量类型：强类型
   - 生命周期：声明时构造，不再引用后被 GC 回收
   - 拷贝控制：浅拷贝
-  - 比较运算：值类型比较值，引用类型比较指针
+  - 比较运算：值类型逐成员比较值，引用类型比较指针
 
   ```cs
   Type foo;
   Type foo = new Type(bar);
   Type foo = new(bar);
-  Type foo = new() { Field = bar };
+  Type foo = new() { Field = { foo = bar} };
+  Type foo = new() { Field = new() { foo = bar} };
   Type foo = new() { ["Index"] = bar };
   Type foo = new() { add1, add2 };
+  Type foo = [ add1, add2 ];
 
   ref Type foo = ref bar;
   ref readonly Type foo = ref bar;
