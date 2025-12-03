@@ -9,6 +9,7 @@
   - `.ps1` 拆分的脚本代码
 - 模块导入
   - 导入方式
+    - `Add-Type` 导入 .Net 类
     - `. .\Helper.ps1` (导入当前 Scope)
     - `.\Helper.ps1` (独立 Scope)
     - `Import-Module Hlper`
