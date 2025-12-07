@@ -17,12 +17,11 @@
 ## 基础术语
 
 - 特征 (feature)
-- 样本 (sample)
 - 标记 (label)
 - 样例 (example)
 - 模型 (model)
 - 预测 (prediction)
-- 代价函数 (cost function)
+- 损失函数 (loss function)
 - 梯度下降 (gradient descent)
 - 监督学习 (supervised learning)
   - 回归 (regression)
