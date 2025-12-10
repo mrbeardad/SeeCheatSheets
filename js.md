@@ -474,3 +474,17 @@ Object.entries(obj)
 Object.fromEntries(iterable);
 Object.assign(target, ...sources)
 ```
+
+### 类库
+
+#### Promise
+
+1. `new Promise((resolve, reject)=> { })` executor 函数在构造 Promise 时同步执行，内部抛异常被视作 reject
+2. `then(()=> { })` then/catch/finally callback 内部抛异常被视作 reject
+3. `resolve()` resolve/reject 内部异步执行 then/catch/finally callback
+4. `async () => { }` async 函数内部直到第一次await 之前的代码被视作 executor
+5. `await p` await 之间的代码被视作 then/catch/finally callbak
+6. 默认设置下 `--unhandled-rejections=throw`，unhandled reject 在一下情况会触发 `uncaughtException` 而非 `unhandledRejection`
+   1. 未监听 `unhandledRejection`
+   2. when a rejection happens during the command line entry point's ES module static loading phase
+7. 监听 `uncaughtException` 会覆盖默认行为—— exit
