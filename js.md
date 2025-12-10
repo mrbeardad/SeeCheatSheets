@@ -17,6 +17,9 @@
     - [日期时间](#日期时间)
     - [数组](#数组)
     - [对象](#对象)
+    - [类库](#类库)
+      - [Promise](#promise)
+      - [Node Stream](#node-stream)
 
 ## 依赖模块
 
@@ -488,3 +491,55 @@ Object.assign(target, ...sources)
    1. 未监听 `unhandledRejection`
    2. when a rejection happens during the command line entry point's ES module static loading phase
 7. 监听 `uncaughtException` 会覆盖默认行为—— exit
+
+#### Node Stream
+
+- Reading Mode
+  - `readable.readableFlowing === null`
+    - Init Mode，Buffer 中无数据，也不会自动读取数据
+  - `readable.readableFlowing === false`
+    - Pause Mode，自动读取数据填满 Buffer，使用 `readable.read()` 读取数据
+    - 状态转移：
+      - `'readable'`
+      - `readable.pause()`
+      - `readable.unpipe()`，无法从 Init Mode 转换
+  - `readable.readableFlowing === true`
+    - Flowing Mode，自动读取数据填满 Buffer，通过 `'data'` 事件读取数据
+    - 状态转移：
+      - `'data'`，移除 listener 不会变为 Flowing mode
+      - `readable.pipe()`
+      - `readable.resume()`
+
+> Flowing Mode 转为 Pause Mode 并不稳定
+
+- [`Readable`](https://nodejs.org/docs/latest/api/stream.html#implementing-a-readable-stream)
+  - `read(size)`：Pause Mode 中读取小于等于 `size` 的数据或 `null`
+  - `_read()`：实现读取数据，通常调用 `push()`
+  - `push()`：将数据放入缓冲区
+    - `push(buffer)`
+    - `push(string, encoding)`，encoding 默认 `'utf-8'`
+    - `push(null)` 表示 `'end'`
+  - `encoding`：默认读取 Buffer，若指定 `encoding` 则读取 String（将 Buffer 按 encoding 编码）
+  
+```js
+function stringToStream(text) {
+  let sent = false;
+
+  return new Readable({
+    read() {
+      if (!sent) {
+        this.push(text); // push the string
+        sent = true;
+      } else {
+        this.push(null); // signal end of stream
+      }
+    },
+  });
+}
+```
+
+- [`Writable`](https://nodejs.org/docs/latest/api/stream.html#implementing-a-writable-stream)
+  - `write()`：
+    - 和 `readable.push()` 类似
+    - 返回 `false` 表示缓冲区达到了 `highWaterMark`，需要等下次 `'drain'` 再写入
+    - `highWaterMark` 限制字节数、字符数或对象数
