@@ -9,7 +9,7 @@
   - [面向对象](#面向对象)
     - [封装](#封装)
     - [继承](#继承)
-  - [内置类型](#内置类型)
+  - [类库](#类库)
     - [布尔](#布尔)
     - [数字](#数字)
     - [大数](#大数)
@@ -17,9 +17,9 @@
     - [日期时间](#日期时间)
     - [数组](#数组)
     - [对象](#对象)
-    - [类库](#类库)
-      - [Promise](#promise)
-      - [Node Stream](#node-stream)
+    - [Promise](#promise)
+    - [Node Process](#node-process)
+    - [Node Stream](#node-stream)
 
 ## 依赖模块
 
@@ -206,7 +206,7 @@ Child.prototype.getName = function () {
 
 **注**：JS 中继承关系为对象关系而非类关系，可动态变化
 
-## 内置类型
+## 类库
 
 - 基本数据类型
   - undefined
@@ -478,32 +478,29 @@ Object.fromEntries(iterable);
 Object.assign(target, ...sources)
 ```
 
-### 类库
-
-#### Promise
+### Promise
 
 1. `new Promise((resolve, reject)=> { })`
    1. executor 函数在构造 Promise 时同步执行
    2. executor 函数内部抛异常被视作 reject
-   3. `async () => { }` async 函数内部直到第一次await 之前的代码被视作 executor
+   3. `async () => { }` async 函数内部直到第一次 await 之前的代码被视作 executor
 2. `then(()=> { })`
    1. then/catch/finally callback 内部抛异常被视作 reject
    1. `resolve()`/`reject()` 内部异步执行 then/catch/finally callback
    1. `await p` await 之间的代码被视作 then/catch/finally callbak
 3. **只有入口脚本和 Pending IO 会阻止 Node.js 退出，而 Pending Promise 并不能**
-4. **通常 `Promise` 依赖 `stateMachine.on('event', () => { /* ... */ resolve(); })` 等回调来 `resolve`，注意捕获回调函数中的异常并用 `reject()` 传播给 `Promise`**
-5. **通常也需要监听 `stateMachine.on('error', reject)` 事件来传播异常给 `Promise`**
+4. **通常 `Promise` 依赖 `stateMachine.on('event', () => { /* ... */ resolve(); })` 等回调来 `resolve`，注意捕获回调函数中的异常并用 `reject()` 传播给 `Promise`；通常也需要监听 `stateMachine.on('error', reject)` 事件来传播异常给 `Promise`**
 6. **JS 虽然是单线程，没有 data race，但仍存在 race condition，数据可能在 await 期间被其他协程更改，
    所以 await 后不要依赖 await 前的非安全共享数据，特别是 `a += await getB()` 和 `a = await getB() + a`**
 
-#### Node Process
+### Node Process
 
 1. 默认设置下 `--unhandled-rejections=throw`，unhandled reject 在以下情况会触发 `uncaughtException` 而非 `unhandledRejection`
    1. 未监听 `unhandledRejection`
    2. when a rejection happens during the command line entry point's ES module static loading phase
 2. 监听 `uncaughtException` 会覆盖默认行为—— print & exit
 
-#### Node Stream
+### Node Stream
 
 - Reading Mode
   - `readable.readableFlowing === null`
