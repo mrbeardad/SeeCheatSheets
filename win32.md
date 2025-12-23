@@ -87,6 +87,7 @@
     - [字符集](#字符集)
     - [音视频](#音视频)
     - [驱动](#驱动)
+    - [COM](#com)
 
 ## 资源系统
 
@@ -2375,3 +2376,49 @@ Windows 系统中每个 locale 设置包含了 4 个不同的 code pages
 
 - WdfDriverCreate
 - WdfDeviceCreate
+
+### COM
+
+> 参考
+>
+> - [Using COM in Your Windows-Based Program](https://learn.microsoft.com/en-us/windows/win32/learnwin32/module-2--using-com-in-your-windows-program)
+> - [Programming DirectX with COM](https://learn.microsoft.com/en-us/windows/win32/prog-dx-with-com)
+
+COM 是 Windows API 中除了 Win32 之外的另一种 API 类型，很多新的上层系统 API 都以 COM 形式发布，比如 DirectX、WMI 等等。WinRT 则是在 COM 基础上包装了一层，通过 C++ Header Only Library 的形式引用。
+
+```cpp
+HRESULT CoInitializeEx(
+  [in, optional] LPVOID pvReserved,
+  [in]           DWORD  dwCoInit
+);
+```
+
+- 每个**线程**在调用 COM API 之前需要初始化 COM，有些基于 COM 的高级 API 内部会自动调用初始化
+- 每次成功的 `CoInitializeEx` 调用都需要对应一次 `CoUninitialize` 调用才能正确析构
+- 为当前线程初始化 COM 时需要选择线程模型：STA (Single-Threaded Apartments) 或 MTA (Multithreaded Apartments)
+
+  - STA: 一个进程可以存在 0~任意个 STA，需要保证有 Message Loop
+  - MTA: 一个进程最多只能存在 1 个 MTA，所有初始化为 MTA 的线程都属于同一个 MTA
+
+```cpp
+#include <wrl/client.h>
+
+Microsoft::WRL::ComPtr<IFileOpenDialog> fileOpenDialog;
+
+HRESULT hr = CoCreateInstance(
+    CLSID_FileOpenDialog, // CLSID
+    nullptr,              // No aggregation
+    CLSCTX_INPROC_SERVER, // Context
+    IID_PPV_ARGS(&fileOpenDialog)
+);
+
+IUnknown::AddRef
+IUnknown::QueryInterface
+IUnknown::Release
+```
+
+- Object 由 COM Server 提供，Client 只能通过接口指针来间接引用
+- Object 接口只能在 Apartment 内部访问，跨 Apartment 访问需要使用 Proxy/Stub
+- Proxy STA Object 的方法调用会通过 Message 传给 STA 线程
+- Proxy MTA Object 的方法调用会通过 RPC 传给 MTA 工作线程（由 COM 创建）
+- 直接访问 Object 的异步方法和 Proxy 调用同理
