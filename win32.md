@@ -2399,13 +2399,18 @@ HRESULT CoInitializeEx(
 - 为当前线程初始化 COM 时需要选择线程模型
 
   - STA (Single-Threaded Apartments)
-    - 一个进程可以存在 0~任意个 STA
-    - 必要时 COM 会创建 Host STA 线程
+    - 一个进程可以存在 0~任意个 STA，必要时 COM 会创建 Host STA 线程
     - 与 STA 通讯依赖 Message，所以需要保证 STA 线程有 Message Pumping
   - MTA (Multithreaded Apartments)
-    - 一个进程最多只能存在 1 个 MTA，所有初始化为 MTA 的线程都属于同一个 MTA
-    - 必要时 COM 会创建 MTA 工作线程
+    - 一个进程最多只能存在 1 个全局的 MTA，必要时 COM 会创建工作线程加入 MTA
     - 与 MTA 通讯依赖 RPC，RPC 消息可能被 MTA 中任意可用的线程接收
+
+- 以下情况会发生与 STA/MTA 通讯
+
+  - 通过 Proxy/Stub 跨 Apartment 访问接口
+  - Out-Process-Server Object 的方法调用会通过 RPC 传给 Server 进程，再通过 RPC 返回到工作线程，若 Client 是 STA 则会再通过 Message 转发给对应 STA
+
+> 调用方同步等待会调用 `CoWaitForMultipleHandles`，该函数在 STA 中调用时内部会运行 `COM modal loop` 来处理消息避免完全阻塞，类似 `SendMessage`
 
 ```cpp
 class IUnknown
@@ -2437,13 +2442,6 @@ HRESULT hr = CoCreateInstance(
 ```
 
 - COM Server 通过注册表来注册 COM API
-- Object 由 COM Server 提供，Client 只能通过接口指针来间接引用
-- Object 接口只应该在 Apartment 内部访问，跨 Apartment 访问应该使用 Proxy/Stub
+- Client 只能通过接口指针来间接引用，且只应该在 Apartment 内部访问，跨 Apartment 访问应该使用 Proxy/Stub
 - 如果 Client 和 Server 的线程模型不匹配，则 COM 会在已有的或新建对应类型的线程来创建 Object，而 Client 会得到一个 Proxy
-- 以下情况会发生与 STA 和 MTA 通讯
-
-  - 通过 Proxy/Stub 跨 Apartment 访问接口
-  - Out-Process-Server Object 的方法调用会通过 RPC 传给 Server 进程，再通过 RPC 返回到工作线程，若 Client 是 STA 则会再通过 Message 转发给对应 STA
-  - 调用方同步等待会调用 `CoWaitForMultipleHandles`，该函数在 STA 中调用时内部会运行 `COM modal loop` 来处理消息避免完全阻塞，类似 `GetMessage`
-
 - COM 标准只支持古老的 `Begin_*/Finish_*` 式的异步接口，若需要 `callback` 或 `async/await` 形式的异步接口需要自己利用 `CoMarshalInterthreadInterfaceInStream`/`CoGetInterfaceAndReleaseStream` 来实现
