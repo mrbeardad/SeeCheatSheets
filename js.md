@@ -35,6 +35,28 @@ export class Foo { }
 export default ...
 ```
 
+```js
+// CommonJS 与 ModuleJS 最大区别在于导入语句
+
+// i在 CommonJS 中
+// ifoo.js
+conist bar = require("./bar.js"); // CommonJS 的 require 导入是同步的，
+moidule.exports.value = "foo";
+
+// bar.js
+const foo = require("./foo.js"); // 此时 foo.js 的 value 还未导出，导致循环依赖问题
+console.log(foo.value); // undefind
+
+module.exports.value = "bar";
+
+// 在 ModuleJS 中
+// import 和 export 语句首先被解析，以创建该模块的符号表
+// 待所有依赖模块的符号表匹配完成后，才会正式开始执行脚本代码
+// 所以 ModuleJS 中不存在循环依赖的问题
+import { foo } from "./bar.js";
+export const value = "foo";
+```
+
 - 语义版本号
   - `^`前缀表示冻结第一个不为零的版本号
   - `~`前缀表示冻结主版本与次版本号
@@ -490,7 +512,7 @@ Object.assign(target, ...sources)
    1. `await p` await 之间的代码被视作 then/catch/finally callbak
 3. **只有入口脚本和 Pending IO 会阻止 Node.js 退出，而 Pending Promise 并不能**
 4. **通常 `Promise` 依赖 `stateMachine.on('event', () => { /* ... */ resolve(); })` 等回调来 `resolve`，注意捕获回调函数中的异常并用 `reject()` 传播给 `Promise`；通常也需要监听 `stateMachine.on('error', reject)` 事件来传播异常给 `Promise`**
-6. **JS 虽然是单线程，没有 data race，但仍存在 race condition，数据可能在 await 期间被其他协程更改，
+5. **JS 虽然是单线程，没有 data race，但仍存在 race condition，数据可能在 await 期间被其他协程更改，
    所以 await 后不要依赖 await 前的非安全共享数据，特别是 `a += await getB()` 和 `a = await getB() + a`**
 
 ### Node Process
