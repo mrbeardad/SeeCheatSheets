@@ -94,6 +94,7 @@
 - [编程语言](langsum.md)
 
   - [C++](cpp.md) & [CMake](cmake.md)
+  - C#
   - [Rust](rust.md)
   - [Go](go.md)
   - [Dart](dart.md)
