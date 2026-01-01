@@ -3,12 +3,7 @@
 - [深度学习](#深度学习)
   - [张量](#张量)
   - [线性回归](#线性回归)
-    - [](#)
   - [多层感知机](#多层感知机)
-    - [线性层](#线性层)
-    - [激活层](#激活层)
-    - [输出层](#输出层)
-    - [后向传播](#后向传播)
     - [过拟合](#过拟合)
   - [卷积神经网络](#卷积神经网络)
     - [卷积层](#卷积层)
@@ -69,7 +64,7 @@
               C[k,m] += A[i_l,j_n,k] * B[i_l, m, j_n]
 
       # 爱因斯坦求和约定：缩并运算的特殊表示法
-      einsum("ik,kj->ij", A, B)
+      einsum("ijk,imj->km", A, B)
       ```
 
       - 线性代数中向量和矩阵运算即是特殊的缩并运算
@@ -83,25 +78,46 @@
 ## 线性回归
 
 - 线性模型
+  - $\hat{y} = w \cdot x + b$
+  - 用来拟合潜在的目标函数
 - 损失函数
+  - $L=\frac{1}{2B}\sum (\hat{y} - y)^2$
+  - 用来度量预测 (predict) 与目标 (target) 之间的误差
 - 梯度下降
-- 独立同分布假设
-- K 折交叉验证
+  - $w = w - \alpha\frac{\partial L}{\partial w} = w - \alpha\frac{\partial L}{\partial \hat{y}} \frac{\partial \hat{y}}{\partial w} = w - \alpha \cdot \frac{1}{B}\sum (\hat{y} - y) \cdot x$
+  - $b = b - \alpha\frac{\partial L}{\partial b} = b - \alpha\frac{\partial L}{\partial \hat{y}} \frac{\partial \hat{y}}{\partial b} = b - \alpha \cdot \frac{1}{B}\sum (\hat{y} - y)$
+  - 调整参数 $w$ 和 $b$ 使它们朝误差变小的方向前进
+- 训练
 
-###
-
-- 输入层
-- 隐含层
-  - 线性层
-  - 激活层
-- 输出层
-- 前向传播与后向传播 https://zh.d2l.ai/chapter_multilayer-perceptrons/backprop.html#id4
+  - 独立同分布假设：训练集中每个样例之间相互独立没有关联，且训练集中的样例分布与全集相同
+  - 样例 (example)：特征 (feature)、标签 (label)
+  - 数据集：
+    - 训练集：每次 epoch 用来优化模型
+    - 验证集：每次 epoch 用来验证模型是否过拟合
+    - 测试集：仅在最后用来测试模型的真实水平
 
 ## 多层感知机
 
-![fnn](images/fnn.png)
+- 输入层：输入 Tensor，第一维通常是 batch
+- 隐含层
+  - 线性层：提取特征
+  - 激活层：非线性化
+    - ReLU: $g(z)=max\{0,z\}$
+    - tanh: $g(z)=\frac{e^z-e^{-z}}{e^z+e^{-z}}$
+    - sigmoid: $g(z)=\frac{1}{1+e^{-z}}$
+- 输出层：将输入数据映射到特定的输出范围
+  - linear: $\hat{y}=z=Wh+b$
+  - softmax: $\hat{y}_i=\frac{exp(z_i)}{\sum_jexp(z_j)}$
+  - sigmoid: $\hat{y}=\frac{1}{1+exp(-z)}$
 
-> 万能近似定理：⼀个前馈神经⽹络如果具有线性层和⾄少⼀层具有 “挤压” 性质的激活函数（如 sigmoid 等），给定⽹络⾜够数量的隐藏单元，它可以以任意精度来近似任何从⼀个有限维空间到另⼀个有限维空间的 borel 可测函数。
+![mlp](images/mlp.png)
+
+- 前向传播：记录每层的计算结果
+- 后向传播：计算损失函数(L)对输出层(o)的梯度，再将该梯度一层层向前转播即可计算每层的梯度，从而对每层参数应用梯度下降优化算法
+
+![forward_propagation](images/forward_propagation.png)
+
+> 通用近似定理：⼀个前馈神经⽹络如果具有线性层和⾄少⼀层具有 “挤压” 性质的激活函数（如 sigmoid 等），给定⽹络⾜够数量的隐藏单元，它可以以任意精度来近似任何从⼀个有限维空间到另⼀个有限维空间的 borel 可测函数。
 >
 > 隐含层数量的影响：
 >
@@ -109,45 +125,23 @@
 > - `1`: 可以近似任何包含从一个有限空间到另一个有限空间的连续映射的函数
 > - `2`: 可以用有理激活函数以任意精度表示任意决策边界，并且可以近似任何平滑映射到任何精度
 > - `≥3`: 额外的隐藏层可以学习复杂的描述（某种自动特征工程）
-
-### 线性层
-
-线性层也叫全连接层
-
-- 压缩信息，提取特征
-- 整合信息，计算目标
-
-### 激活层
-
-如果不引入激活函数，可以验证，无论多少个线性层，输出都是输入的线性组合。常见激活函数有：
-
-- ReLU: $g(z)=max\{0,z\}$
-- tanh: $g(z)=\frac{e^z-e^{-z}}{e^z+e^{-z}}$
-- sigmoid: $g(z)=\frac{1}{1+e^{-z}}$
-
-### 输出层
-
-假设前⾯已经使⽤若⼲隐藏层提供了⼀组隐藏特征 $h$，输出层的任务就是要对这些特征做⼀些额外变换。常见输出单元有：
-
-- linear: $\hat{y}=z=Wh+b$
-- softmax: $\hat{y}_i=\frac{exp(z_i)}{\sum_jexp(z_j)}$
-- sigmoid: $\hat{y}=\frac{1}{1+exp(-z)}$
-
-### 后向传播
-
-> 关于后向传播算法见 [3Blue1Brown@youtube](https://www.youtube.com/watch?v=Ilg3gGewQ5U&t=464s)
-
-任何能够衡量模型预测值与真实值之间的差异的函数都可以叫做代价函数；通过链式求导与梯度下降可从后往前优化代价函数的参数，从而提高模型的预测性能。
+>
+> 后向传播参考
+>
+> - <https://zh.d2l.ai/chapter_multilayer-perceptrons/backprop.html#id4>
+> - <https://www.youtube.com/watch?v=Ilg3gGewQ5U&t=464s>
 
 ### 过拟合
 
+- 权重衰减：过拟合通常因为参数太过复杂（扭曲），即 W 过大导致的，通过在损失函数中加一项范数来惩罚 W 过大的情况，从而改善过拟合
+  - L1 and L2 Regularization: 1e-3 ~ 1e-4，越大正则化能力越强
+- Dropout：通过往层之间添加噪声可以优化模型的泛化能力
+  - Dropout: 20% ~ 50%, 越大正则化能力越强，放在激活函数后
 - Add more training data
 - Data Augmentations
 - Batch Size: 4 ~ 512，越小泛化能力越强，但训练成本也越高
 - Early Stopping: 验证损失持续不下降则停止训练
 - Batch/Layer Normalisation: 放在激活函数前
-- Dropout: 20% ~ 50%, 越大正则化能力越强。放在激活函数后
-- L1 and L2 Regularization: 1e-3 ~ 1e-4，越大正则化能力越强
 
 ## 卷积神经网络
 
