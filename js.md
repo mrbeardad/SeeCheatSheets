@@ -503,13 +503,13 @@ Object.assign(target, ...sources)
 ### Promise
 
 1. `new Promise((resolve, reject)=> { })`
-   1. executor 函数在构造 Promise 时同步执行
-   2. executor 函数内部抛异常被视作 reject
+   1. executor 函数内部抛异常被视作 reject
+   2. executor 函数在构造 Promise 时同步执行
    3. `async () => { }` async 函数内部直到第一次 await 之前的代码被视作 executor
 2. `then(()=> { })`
    1. then/catch/finally callback 内部抛异常被视作 reject
-   1. `resolve()`/`reject()` 内部异步执行 then/catch/finally callback
-   1. `await p` await 之间的代码被视作 then/catch/finally callbak
+   2. `resolve()`/`reject()` 内部异步执行 then/catch/finally callback
+   3. `await p` await 之间的代码被视作 then/catch/finally callbak
 3. **只有入口脚本和 Pending IO 会阻止 Node.js 退出，而 Pending Promise 并不能**
 4. **通常 `Promise` 依赖 `stateMachine.on('event', () => { /* ... */ resolve(); })` 等回调来 `resolve`，注意捕获回调函数中的异常并用 `reject()` 传播给 `Promise`；通常也需要监听 `stateMachine.on('error', reject)` 事件来传播异常给 `Promise`**
 5. **JS 虽然是单线程，没有 data race，但仍存在 race condition，数据可能在 await 期间被其他协程更改，
