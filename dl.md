@@ -9,6 +9,11 @@
     - [池化层](#池化层)
   - [循环神经网络](#循环神经网络)
   - [Transformer](#transformer)
+  - [模型优化](#模型优化)
+    - [过拟合](#过拟合)
+    - [梯度消失与梯度爆炸](#梯度消失与梯度爆炸)
+    - [环境和分布偏移](#环境和分布偏移)
+    - [Misc](#misc)
   - [Pytorch 框架](#pytorch-框架)
     - [Tensor](#tensor)
     - [Dataset](#dataset)
@@ -19,11 +24,6 @@
     - [Performance Tuning](#performance-tuning)
     - [Overfitting Solution](#overfitting-solution)
     - [Hyperparams Optimization](#hyperparams-optimization)
-  - [模型优化](#模型优化)
-    - [过拟合](#过拟合)
-    - [梯度消失与梯度爆炸](#梯度消失与梯度爆炸)
-    - [环境和分布偏移](#环境和分布偏移)
-    - [Misc](#misc)
 
 ## 张量
 
@@ -65,11 +65,13 @@
         for m:
           for i_l:
             for j_n:
-              C[k,m] += A[i_l,j_n,k] * B[i_l, m, j_n]
+              C[k, m] += A[i_l, j_n, k] * B[i_l, m, j_n]
 
       # 爱因斯坦求和约定：缩并运算的特殊表示法
       einsum("ijk,imj->km", A, B)
       ```
+
+      - 缩并后信息被压缩，缩并轴的元素之间发生信息关联，而自由轴的元素之间相互独立不会发生信息关联
 
       - 线性代数中向量和矩阵运算即是特殊的缩并运算
 
@@ -77,7 +79,7 @@
         - 矩阵-向量积：`(m, n)` • `(n)` -> `(m)`
         - 矩阵乘法：`(m, k)` • `(k, n)` -> `(m, n)`
 
-      - 全连接神经网络层的本质也是缩并运算，即 `X(B, ..., n)` • `W(n, m)` + `b(m)` -> `y(B, ..., m)`
+      - 全连接神经网络层的本质也是缩并运算，将输入的特征轴全部缩并则输出中的每个值都由所有输入特征参与贡献，即 `X(B, n)` • `W(n, m)` + `b(m)` -> `y(B, m)`
 
 ## 线性回归
 
@@ -141,6 +143,29 @@
 
 ![cnn](images/cnn.png)
 
+```py
+def conv2d_batch_tensor_contract(X, K, bias=None):
+    N, H, W, C_in = X.shape
+    K_h, K_w, C_in2, C_out = K.shape
+    assert C_in == C_in2
+
+    H_out = H - K_h + 1
+    W_out = W - K_w + 1
+
+    Y = np.zeros((N, H_out, W_out, C_out))
+
+    for n in range(N):
+        for i in range(H_out):
+            for j in range(W_out):
+                patch = X[n, i:i+K_h, j:j+K_w, :]
+                Y[n, i, j, :] = np.tensordot(patch, K, axes=([0, 1, 2], [0, 1, 2]))
+
+    if bias is not None:
+        Y += bias
+
+    return Y
+```
+
 - 填充：为防止边缘像素参与卷积运算次数过少，对边缘进行 0 填充
 - 步幅：每次移动卷积核的距离
 - 核：通常是三维张量（通道，高度，宽度），通道数等于输入数据的通道数，核的数量等于输出数据的通道数
@@ -161,6 +186,52 @@
 ## Transformer
 
 ![transformer](images/transformer.png)
+
+## 模型优化
+
+### 过拟合
+
+过拟合问题：对训练数据具有较低误差，但对测试数据具有较高误差
+
+解决方案：
+
+- 权重衰减：过拟合通常因为参数太过复杂（扭曲），即 W 过大导致的，通过在损失函数中加一项范数来惩罚 W 过大的情况，从而改善过拟合
+
+  - L1 and L2 Regularization: 1e-3 ~ 1e-4，越大正则化能力越强
+
+- Dropout：通过往层之间添加噪声可以优化模型的泛化能力
+
+  - Dropout: 20% ~ 50%, 越大正则化能力越强，放在激活函数后
+
+- Early Stopping: 验证损失持续不下降则停止训练
+
+### 梯度消失与梯度爆炸
+
+梯度消失与梯度爆炸问题：由于网络中前一层的梯度依赖后一层的梯度，连续相乘导致梯度快速消失或快速增长，使得训练不稳定
+
+解决方案
+
+- Xavier 初始化：通过限制初始权重张量的均值和方差，从而限制梯度的均值和方差
+
+### 环境和分布偏移
+
+| Shift Type      | What Changes? | What Stays Constant? | Note                                |
+| --------------- | ------------- | -------------------- | ----------------------------------- |
+| Covariate Shift | P(X)          | P(Y∣X)               | The "population" looks different.   |
+| Label Shift     | P(Y)          | P(X∣Y)               | The "frequency" of classes changed. |
+| Concept Drift   | P(Y∣X)        | P(X)                 | The "rules" of the world changed.   |
+
+内部协变量偏移问题：网络内部层与层之间的输入分布，会随着权重的变化而变化
+
+解决方案：
+
+- Batch Normalization
+
+### Misc
+
+- Add more training data
+- Data Augmentations
+- Batch Size: 4 ~ 512，越小泛化能力越强，但训练成本也越高
 
 ## Pytorch 框架
 
@@ -361,49 +432,3 @@ pip install optuna
 - Learning Rate
 - Weight Decay
 - Model Architecture
-
-## 模型优化
-
-### 过拟合
-
-过拟合问题：对训练数据具有较低误差，但对测试数据具有较高误差
-
-解决方案：
-
-- 权重衰减：过拟合通常因为参数太过复杂（扭曲），即 W 过大导致的，通过在损失函数中加一项范数来惩罚 W 过大的情况，从而改善过拟合
-
-  - L1 and L2 Regularization: 1e-3 ~ 1e-4，越大正则化能力越强
-
-- Dropout：通过往层之间添加噪声可以优化模型的泛化能力
-
-  - Dropout: 20% ~ 50%, 越大正则化能力越强，放在激活函数后
-
-- Early Stopping: 验证损失持续不下降则停止训练
-
-### 梯度消失与梯度爆炸
-
-梯度消失与梯度爆炸问题：由于网络中前一层的梯度依赖后一层的梯度，连续相乘导致梯度快速消失或快速增长，使得训练不稳定
-
-解决方案
-
-- Xavier 初始化：通过限制初始权重张量的均值和方差，从而限制梯度的均值和方差
-
-### 环境和分布偏移
-
-| Shift Type      | What Changes? | What Stays Constant? | Note                                |
-| --------------- | ------------- | -------------------- | ----------------------------------- |
-| Covariate Shift | P(X)          | P(Y∣X)               | The "population" looks different.   |
-| Label Shift     | P(Y)          | P(X∣Y)               | The "frequency" of classes changed. |
-| Concept Drift   | P(Y∣X)        | P(X)                 | The "rules" of the world changed.   |
-
-内部协变量偏移问题：网络内部层与层之间的输入分布，会随着权重的变化而变化
-
-解决方案：
-
-- Batch Normalization
-
-### Misc
-
-- Add more training data
-- Data Augmentations
-- Batch Size: 4 ~ 512，越小泛化能力越强，但训练成本也越高
