@@ -8,21 +8,25 @@
 ![stars](https://img.shields.io/github/stars/mrbeardad/SeeCheatSheets?style=for-the-badge&color=yellow)
 ![fork](https://img.shields.io/github/forks/mrbeardad/SeeCheatSheets?style=for-the-badge)
 
+![windows](https://skillicons.dev/icons?i=windows)
+![powershell](https://skillicons.dev/icons?i=powershell)
+![c#](https://skillicons.dev/icons?i=cs)
 ![cpp](https://skillicons.dev/icons?i=cpp)
+![js](https://skillicons.dev/icons?i=js)
+![react](https://skillicons.dev/icons?i=react)
+![electron](https://skillicons.dev/icons?i=electron)
+![unreal](https://skillicons.dev/icons?i=unreal)
+![tensorflow](https://skillicons.dev/icons?i=tensorflow)
+
+![linux](https://skillicons.dev/icons?i=linux)
 ![rust](https://skillicons.dev/icons?i=rust)
 ![go](https://skillicons.dev/icons?i=go)
 ![dart](https://skillicons.dev/icons?i=dart)
-![js](https://skillicons.dev/icons?i=js)
 ![python](https://skillicons.dev/icons?i=py)
-
-![windows](https://skillicons.dev/icons?i=windows)
-![linux](https://skillicons.dev/icons?i=linux)
-![qt](https://skillicons.dev/icons?i=qt)
-![react](https://skillicons.dev/icons?i=react)
 ![flutter](https://skillicons.dev/icons?i=flutter)
+![qt](https://skillicons.dev/icons?i=qt)
 ![unity](https://skillicons.dev/icons?i=unity)
 ![godot](https://skillicons.dev/icons?i=godot)
-![pytorch](https://skillicons.dev/icons?i=pytorch)
 
 </div>
 
@@ -54,11 +58,12 @@
 
 ## AI
 
-- [机器学习](ml.md)
 - [深度学习](dl.md)
+- [机器学习](ml.md)
 
 ## Game
 
+- [DirectX](directx.md)
 - [UnrealEngine](ue.md)
 - [Unity](unity.md)
 - [Godot](godot.md)
@@ -76,6 +81,7 @@
 
 ## Client
 
+- Electron
 - [Flutter](flutter.md)
 - [QT](qt.md)
 
@@ -106,14 +112,13 @@
 - Windows
 
   - [Win32](win32.md)
-  - [DirectX](directx.md)
   - [PowerShell](powershell.md)
   - [Cmd](cmd.md)
 
 - Linux
 
-  - [Linux](linux.md)
   - [Unix](linuxapi.md)
+  - [Linux](linux.md)
   - [Bash](bash.md)
 
 ## Basics
