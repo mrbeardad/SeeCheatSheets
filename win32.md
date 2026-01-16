@@ -1692,7 +1692,7 @@ Top-level Window 默认使用屏幕坐标系, Child Window 默认使用客户区
 #### 透明背景
 
 - `WS_EX_LAYERED`: 窗口支持透明度从而可以实现半透明效果和非矩形窗口, 若 Alpha 通道为 0 则透过鼠标事件
-- `WS_EX_TRANSPARENT`: 透过所有鼠标事件
+- `WS_EX_TRANSPARENT`: 在窗户下方的兄弟（由同一线程创建）被绘制之前不绘制窗户。窗口看起来是透明的，因为底层兄弟窗口的部分已经被绘制。
 - `SetLayeredWindowAttributes`: 通过图层混合的方式确认最终的窗口像素 Alpha 通道
 - `UpdateLayeredWindow`: 直接绘制包含 Alpha 通道的像素纹理
 
