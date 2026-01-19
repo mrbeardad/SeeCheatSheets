@@ -28,15 +28,12 @@
 - 张量：`Tensor: shape=(3, 4, 5), dtype=float32`
 
 - 访问
-
   - 切片：`t[0:2]` 得 `(3, 4, 5)` -> `(2, 4, 5)`（轴 0 取前两个元素，轴 0 长度变短）
   - 索引：`t[0,-1]`，得 `(3, 4, 5)` -> `(5)` （轴 0 取第一个元素，轴 1 取最后一个元素，轴 0,1 消失，降两维）
   - 切片+索引：`t[0:2,0,-1]`，得 `(3, 4, 5)` -> `(2)` （轴 0 取前两个元素，轴 0 长度变短，轴 1 取第一个元素，轴 2 取最后一个元素，轴 1,2 消失，降两维）
 
 - 运算
-
   - 逐元素运算符，如 `+` `-` `*` `/` `**` 等，需要两个 Tensor 具有相同的 dtype 和尽量相同的 shape
-
     - 广播机制：对两个 shape 不同的 Tensor 进行逐元素运算时，会尝试扩张两个 Tensor 以让它们 shape 一样
       1. 从最右边的维度开始比较两个 Tensor
       2. 如果每对维度都是，相等的或其中一个为 1 或 0（没有该维度）
@@ -44,16 +41,12 @@
       4. 比如两个维度为 `(3, 1, 4) + (3, 4)` 的 Tensor 广播为 `(3, 3, 4) + (3, 3, 4)`
 
   - 降维运算
-
     - 求和：例如将 Tensor `(3, 4, 5)` 对轴 0, 2 进行求和
-
       1. 轴 0 元素为 `(4, 5)`，求和后轴 0 消失得 `(4, 5)`
       2. 轴 2 元素为 `()`，求和后轴 2 消失得 `(4)`
-
       - 避免降维：通常可以指定参数 `keepdims=True` 使求和后保持轴长度为 1，即 `(3, 4, 5)` -> `(1, 4, 1)`
 
     - 缩并：例如将 Tensor A `(3, 4, 5)` 和 B `(3, 1, 4)` 对轴 0_a, 1_a 和 0_b, 2_b 进行缩并
-
       1. 对 A 的轴编号（指标） `(i, j, k)`，对 B 的轴编号 `(l, m, n)`
       2. 缩并轴 `i`, `l` 具有相同长度 3，缩并轴 `j`, `n` 具有相同长度 4，允许缩并
       3. 自由轴排列得最终结果 Tensor 的 shape 为 `(k, m)` 即 `(5, 1)`
@@ -74,7 +67,6 @@
       - **全连接神经网络层的本质也是缩并运算，将输入的特征轴全部缩并则输出中的每个值都由所有输入特征参与贡献**，即 `X(B, n)` • `W(n, m)` + `b(m)` -> `y(B, m)`
 
       - 线性代数中向量和矩阵运算即是特殊的缩并运算
-
         - 点积：`(n)` • `(n)` -> `()`
         - 矩阵-向量积：`(m, n)` • `(n)` -> `(m)`
         - 矩阵乘法：`(m, k)` • `(k, n)` -> `(m, n)`
@@ -92,7 +84,6 @@
   - $b = b - \alpha\frac{\partial L}{\partial b} = b - \alpha\frac{\partial L}{\partial \hat{y}} \frac{\partial \hat{y}}{\partial b} = b - \alpha \cdot \frac{1}{B}\sum (\hat{y} - y)$
   - 调整参数 $w$ 和 $b$ 使它们朝误差变小的方向前进
 - 训练
-
   - 独立同分布假设：训练集中每个样例之间相互独立没有关联，且训练集中的样例分布与真实环境相同
   - 样例 (example)：特征 (feature)、标签 (label)
   - 数据集：
@@ -102,12 +93,14 @@
 
 ## 前馈神经网络
 
-> 通用近似定理：⼀个前馈神经⽹络如果包含至少一个具有非多形式激活函数的隐藏层，则它可以模拟任何可测函数
+> 通用近似定理：⼀个前馈神经⽹络如果包含至少一个具有非多项式激活函数的隐藏层，则它可以模拟任何可测函数
 >
 > - 0 层: 只能表示线性可分函数或决策
 > - 1 层: 可以近似任何包含从一个有限空间到另一个有限空间的连续映射的函数
 > - 2 层: 可以用有理激活函数以任意精度表示任意决策边界，并且可以近似任何平滑映射到任何精度
 > - ≥3 层: 额外的隐藏层可以学习复杂的描述（某种自动特征工程）
+
+![mlp](images/mlp.png)
 
 - 输入层：输入 Tensor，第一维通常是 batch
 - 隐含层
@@ -121,12 +114,10 @@
   - softmax: $\hat{y}_i=\frac{exp(z_i)}{\sum_jexp(z_j)}$
   - sigmoid: $\hat{y}=\frac{1}{1+exp(-z)}$
 
-![mlp](images/mlp.png)
+![forward_propagation](images/forward_propagation.png)
 
 - 前向传播：记录每层的计算结果
 - 后向传播：隐藏层的梯度依赖上一层的输出和下一层的梯度，所以先计算损失函数(L)对输出层(o)的梯度，再将该梯度一层层向前转播即可计算每层的梯度，从而对每层参数应用梯度下降优化算法
-
-![forward_propagation](images/forward_propagation.png)
 
 > 后向传播参考
 >
@@ -137,58 +128,44 @@
 
 ![cnn](images/cnn.png)
 
-```py
-def conv2d_batch_tensor_contract(X, K, bias=None):
-    N, H, W, C_in = X.shape
-    K_h, K_w, C_in2, C_out = K.shape
-    assert C_in == C_in2
-
-    H_out = H - K_h + 1
-    W_out = W - K_w + 1
-
-    Y = np.zeros((N, H_out, W_out, C_out))
-
-    for n in range(N):
-        for i in range(H_out):
-            for j in range(W_out):
-                patch = X[n, i:i+K_h, j:j+K_w, :]
-                Y[n, i, j, :] = np.tensordot(patch, K, axes=([0, 1, 2], [0, 1, 2]))
-
-    if bias is not None:
-        Y += bias
-
-    return Y
-```
-
 ![pooling](images/pooling.png)
 
 - CNN
-
   - 填充：为防止边缘像素参与卷积运算次数过少，对边缘进行 0 填充
   - 步幅：每次移动卷积核的距离
   - 卷积核：
     - **非全连接（局部性）**
     - **共享参数（平移不变性）**
   - 汇聚层：
-    - **只取最大值，相当于添加噪声，降低特征模式在卷积核中的位置敏感性（局部性）**
+    - 减少内存使用
+    - **只取最大值，降低特征模式在卷积核中的位置敏感性（平移不变性）**
+
+![nin](images/nin.png)
 
 - NiN
+  - 1x1 卷积层：学习到跨通道间的特征
+  - GAP：避免使用全连接层，大大降低内存使用和过拟合现象
 
-  - 1x1
-  - GAP
+![resnet](images/resnet.png)
 
 - ResNet
-
-  - Skip Connection
+  - Skip Connection：让网络可以学习并跳过某个块，保证较深的网络总是至少要和较浅网络一样好
 
 - DenseNet
-  - Concatenation
+  - Concatenation：前面层的输出共同参与当前层的计算
 
 ## 循环神经网络
 
 ![rnn](images/rnn.png)
 
+- 输入 (Batch, Sequence, Features)
+- 输出：通常只取最后一个时间步的输出 (Batch, Output)
+
 ![lstm](images/lstm.png)
+
+![deeprnn](images/deeprnn.png)
+
+![binrnn](images/binrnn.png)
 
 ## Transformer
 
@@ -203,11 +180,9 @@ def conv2d_batch_tensor_contract(X, K, bias=None):
 解决方案：
 
 - 权重衰减：过拟合通常表现为拟合函数太过复杂（扭曲），即 W 过大导致的，通过在损失函数中加一项范数来惩罚 W 过大的情况，从而改善过拟合
-
   - L1 and L2 Regularization: 1e-3 ~ 1e-4，越大正则化能力越强
 
 - Dropout：通过往层之间添加噪声可以优化模型的泛化能力
-
   - Dropout: 20% ~ 50%, 越大正则化能力越强，放在激活函数后
 
 - Early Stopping: 验证损失持续不下降则停止训练
@@ -332,18 +307,15 @@ model = MyNeuralNetwork()
 ```
 
 - Hidden Neurons
-
   - `input * 2 / 3 + output`
   - `(input + output) / 2`
   - `sqrt(input * output)`
 
 - Structed Pruning
-
   - 提高运算速度
   - 提高泛化能力
 
 - Convolution Layer
-
   - $n_o=\frac{(n_i-f+2p)}{s}+1$
   - valid: 不填充
   - same: 填充使得卷积后输出大小与输入一致
