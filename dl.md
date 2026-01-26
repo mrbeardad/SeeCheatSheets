@@ -62,7 +62,7 @@
       einsum("ijk,imj->km", A, B)
       ```
 
-      - **缩并后信息被压缩到新的 Tensor 中，缩并轴的元素之间发生信息关联，而自由轴的元素之间相互独立不会发生信息关联**
+      - **缩并后信息被压缩到新的 Tensor 中，缩并轴的元素之间发生信息交互，而自由轴的元素之间相互独立不会发生信息交互**
 
       - **全连接神经网络层的本质也是缩并运算，将输入的特征轴全部缩并则输出中的每个值都由所有输入特征参与贡献**，即 `X(B, n)` • `W(n, m)` + `b(m)` -> `y(B, m)`
 
@@ -143,7 +143,7 @@
 ![nin](images/nin.png)
 
 - NiN
-  - 1x1 卷积层：学习到跨通道间的特征
+  - 1x1 卷积层：学习到更复杂的跨通道的特征
   - GAP：避免使用全连接层，大大降低内存使用和过拟合现象
 
 ![resnet](images/resnet.png)
@@ -158,6 +158,8 @@
 
 ![rnn](images/rnn.png)
 
+- $\mathbf{H}_t = \phi(\mathbf{X}_t \mathbf{W}_{xh} + \mathbf{H}_{t-1} \mathbf{W}_{hh}  + \mathbf{b}_h)$
+- $\mathbf{O}_t = \mathbf{H}_t \mathbf{W}_{hq} + \mathbf{b}_q$
 - 输入 (Batch, Sequence, Features)
 - 输出：通常只取最后一个时间步的输出 (Batch, Output)
 
@@ -167,9 +169,97 @@
 
 ![binrnn](images/binrnn.png)
 
+![seq2seq](images/seq2seq.png)
+
 ## Transformer
 
 ![transformer](images/transformer.png)
+
+![mha](images/mha.png)
+
+- 人类大脑
+  1. 输入
+  2. 过滤（前馈神经网络）
+     > filter out & filter in ?
+  3. 关联（多头注意力）
+
+- 多头注意力：$Attention(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$
+
+| Step               | Operation         | Intuition                                                                                        |
+| ------------------ | ----------------- | ------------------------------------------------------------------------------------------------ |
+| 1. Project         | $W \cdot X$       | 仅进行线性转换以保留空间特征并映射到某个子空间                                                   |
+| 1. Score           | $Q \cdot K^T$     | 计算每对 Query 与 Key 的相似度，想象二维向量点积，若两方向相同则点积很大，若两方向正交则点积为 0 |
+| 2. Weights         | $Softmax(Scores)$ | 计算每个 Query 对每个 Key 的相关度概率                                                           |
+| 3. Context         | $Weights \cdot V$ | 合并相关信息构造成新的 token                                                                     |
+| 4. Mask (optional) | $Output + Mask$   | Decoder中每个 Query 仅能看到当前时间步之前的 Key                                                 |
+
+```py
+class MultiHeadAttention(tf.keras.layers.Layer):
+    def __init__(self, d_model, num_heads):
+        super(MultiHeadAttention, self).__init__()
+        self.num_heads = num_heads
+        self.d_model = d_model
+
+        # d_model must be divisible by num_heads
+        assert d_model % num_heads == 0
+        self.depth = d_model // num_heads # Dimensionality of each head
+
+        # Linear layers for Query, Key, Value
+        self.wq = tf.keras.layers.Dense(d_model)
+        self.wk = tf.keras.layers.Dense(d_model)
+        self.wv = tf.keras.layers.Dense(d_model)
+
+        # Final linear layer
+        self.dense = tf.keras.layers.Dense(d_model)
+
+    def split_heads(self, x, batch_size):
+        # Original Shape: (batch_size, seq_len, d_model)
+        # Reshape to: (batch_size, seq_len, num_heads, depth)
+        x = tf.reshape(x, (batch_size, -1, self.num_heads, self.depth))
+        # Transpose to: (batch_size, num_heads, seq_len, depth)
+        # We put num_heads dimension before seq_len to process heads in parallel
+        return tf.transpose(x, perm=[0, 2, 1, 3])
+
+    def call(self, v, k, q, mask):
+        batch_size = tf.shape(q)[0]
+
+        # 1. Linear projections
+        q = self.wq(q)  # (batch_size, seq_len, d_model)
+        k = self.wk(k)
+        v = self.wv(v)
+
+        # 2. Split heads
+        q = self.split_heads(q, batch_size) # (batch_size, num_heads, seq_len_q, depth)
+        k = self.split_heads(k, batch_size) # (batch_size, num_heads, seq_len_k, depth)
+        v = self.split_heads(v, batch_size)
+
+        # 3. Scaled Dot-Product Attention
+        # Matmul Q and K transpose -> (batch_size, num_heads, seq_len_q, seq_len_k)
+        matmul_qk = tf.matmul(q, k, transpose_b=True)
+
+        # Scale by square root of depth (to keep gradients stable)
+        dk = tf.cast(tf.shape(k)[-1], tf.float32)
+        scaled_attention_logits = matmul_qk / tf.math.sqrt(dk)
+
+        # 4. Apply Mask (Optional)
+        # If mask is present, we set masked positions to -1e9 (very negative number)
+        # so softmax makes them zero.
+        if mask is not None:
+            scaled_attention_logits += (mask * -1e9)
+
+        # 5. Softmax to get attention weights (0 to 1)
+        attention_weights = tf.nn.softmax(scaled_attention_logits, axis=-1)
+
+        # 6. Multiply by V
+        output = tf.matmul(attention_weights, v) # (batch_size, num_heads, seq_len_q, depth)
+
+        # 7. Concatenate heads back together
+        output = tf.transpose(output, perm=[0, 2, 1, 3]) # (batch_size, seq_len_q, num_heads, depth)
+        output = tf.reshape(output, (batch_size, -1, self.d_model)) # (batch_size, seq_len_q, d_model)
+
+        # 8. Final dense layer
+        return self.dense(output)
+```
 
 ## 模型优化
 
