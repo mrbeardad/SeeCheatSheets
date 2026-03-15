@@ -83,9 +83,13 @@ cargo install pkg
 
 ## 依赖
 
-- 包内部的依赖由`mod`语句导入
 - 包外部的依赖由`Cargo.toml`导入
-- 一个包可以包含至多一个 lib crate(`src/lib.rs`)和任意数量 bin crate(`src/main.rs`, `src/bin/name.rs`)
+- 包内部的依赖由`mod`语句导入
+  - 包可视作由 mod 构成的树状结构，`mod` 语句即引入子节点，根节点是 `lib.rs`
+  - 当前 mod 可访问的成员包括
+    - 祖先节点的所有 public 和 private 成员
+    - 从当前节点出发，路径中的所有 mod 都可访问的成员
+- crate 类似 C++ 中的 target, 一个包可以包含至多一个 lib crate(`src/lib.rs`)和任意数量 bin crate(`src/main.rs`, `src/bin/name.rs`)
 
 ## 变量
 
