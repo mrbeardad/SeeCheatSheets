@@ -1,5 +1,7 @@
 # Unreal Engine
 
+## Editor
+
 ## C++
 
 UE 将 C++ 改造得接近动态语言（比如 C#）以简化编程的同时保证性能。
@@ -85,12 +87,26 @@ https://dev.epicgames.com/documentation/en-us/unreal-engine/configuration-files-
 
 ## UObjects
 
-```cpp
-AGameModeBase
+Engine-level singletons
 
-ACharacter
-APlayerController
+- `UEngine` → global engine instance
+- `UGameInstance` → persists across levels
 
-UInputMappingContext
-UInputAction
-```
+Per-world objects
+
+- `UWorld` → represents the game world
+- `ULevel` → contains actors
+
+Gameplay framework (per world)
+
+- `AGameMode` (server-only)
+- `AGameState`
+- `APlayerController`
+- `APawn` / `ACharacter`
+- `APlayerState`
+
+Everything else
+
+- `AActor` → entities in the world
+- `UActorComponent` → behavior modules
+- Assets (`UStaticMesh`, `UMaterial`, etc.)
