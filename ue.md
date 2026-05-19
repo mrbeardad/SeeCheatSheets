@@ -156,11 +156,36 @@ Gameplay framework (per world)
 - `AGameMode` (server-only)
 - `AGameState`
 - `APlayerController`
-- `APawn` / `ACharacter`
 - `APlayerState`
+- `APawn` / `ACharacter`
 
 Everything else
 
 - `AActor` → entities in the world
 - `UActorComponent` → behavior modules
 - Assets (`UStaticMesh`, `UMaterial`, etc.)
+
+## Path
+
+UE 中常见路径概念：
+
+- **物理文件路径**：磁盘上的真实路径，通常位于项目的 `Content/` 目录下，例如 `Content/Characters/Hero.uasset`
+- **打包后路径**：Cook/Package 后资源仍对应原始目录结构，但实际可能存放在 `.pak` / `.ucas` 等包文件中
+- **虚拟挂载路径**：运行时通过 Mount Point 将物理目录映射到虚拟路径，例如项目 `Content/` 通常挂载为 `/Game/`
+- **Package Name / Long Package Name**：资源包的虚拟路径，不包含扩展名，例如 `/Game/Characters/Hero`
+
+`UObject` 名称相关 API：
+
+- `GetName()`：只返回对象自身名字，不包含 Outer / Package，例如 `Hero`
+- `GetPathName()`：返回对象路径，包含 Outer 链；对资源对象通常就是 Object Path，例如 `/Game/Characters/Hero.Hero`
+- `GetFullName()`：返回完整名字，等价于 `ClassName + " " + GetPathName()`，例如 `SkeletalMesh /Game/Characters/Hero.Hero`
+
+常用示例：
+
+```text
+Content/Characters/Hero.uasset          # 物理文件路径
+/Game/Characters/Hero                   # Long Package Name
+Hero                                    # GetName()
+/Game/Characters/Hero.Hero              # GetPathName()
+SkeletalMesh /Game/Characters/Hero.Hero # GetFullName()
+```
