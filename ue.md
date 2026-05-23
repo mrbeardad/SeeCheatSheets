@@ -154,8 +154,8 @@ Per-world objects
 Gameplay framework (per world)
 
 - `AGameMode` (server-only)
-- `AGameState`
 - `APlayerController`
+- `AGameState`
 - `APlayerState`
 - `APawn` / `ACharacter`
 
