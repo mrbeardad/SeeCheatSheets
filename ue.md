@@ -2,7 +2,9 @@
 
 ## Editor
 
-### Level Editor
+### UI
+
+![ue_ui](images/ue_ui.png)
 
 **Viewport 导航**
 
@@ -57,6 +59,17 @@
 - `Ctrl + G`: 编组
 - `Shift + G`: 解组
 
+### Workflow
+
+1. 创建世界
+2. 创建资产或 C++ Class
+3. 利用继承和组合创建可放置到世界中的 Actors
+4. 将 Actors 放置到世界（实例化）
+5. 创建世界子系统，控制世界与多个Actors之间的交互逻辑
+6. 最终游戏画面来自与镜头和Viewport，通过调整镜头参数和Widgets等来实现最终效果
+
+> 游戏开发和 UI 开发类似，状态决定画面，事件更新状态
+
 ## C++
 
 UE 将 C++ 改造得接近动态语言（比如 C#）以简化编程的同时保证性能。
@@ -73,24 +86,19 @@ UE 将 C++ 改造得接近动态语言（比如 C#）以简化编程的同时保
     - 强引用：Root Set, `UProperty`, `TArray`, `TStrongObjectPtr` 等
     - `AActor` 和 `UActorComponent` 在销毁时会将它们的强引用置空
 - 反射系统
+  - `UCLASS()`
+  - `UINTERFACE()`
+  - `USTRUCT()`
+  - `UENUM()`
+  - `UPROPERTY()`
+  - `UFUNCTION()`
+  - `UPARAM()`
+  - `UDELEGATE()`
 - 序列化
 - 自动初始化
 - 网络复制
-  - 同步属性
-  - 远程方法
-
-宏定义，用于辅助定义类型
-
-```cpp
-UCLASS()
-UINTERFACE()
-USTRUCT()
-UENUM()
-UPROPERTY()
-UFUNCTION()
-UPARAM()
-UDELEGATE()
-```
+  - 自动同步属性
+  - 远程方法调用
 
 基础类型
 
