@@ -67,11 +67,18 @@
 1. 创建 `Level` / `World`
 2. 创建资产、Blueprint 或 C++ Class
 3. 用继承和组合定义可放进世界的 `Actor`
-4. 将 `Actor` 放置到世界中，形成 instance
+4. 将 `Actor` 放置到世界中
 5. 用 `Subsystem`、`GameMode`、`Controller`、`Component` 等组织交互逻辑
 6. 最终画面来自 `Camera` + `Viewport` + `Widget`
 
 > 游戏开发和 UI 开发类似：状态决定画面，事件更新状态。
+
+## Blueprint
+
+- 蓝图可视作一个高级 C++ Class, 继承自某个 Base Class
+- UE 中的 Class 基于原型设计模式, 所以同样可以将类视作一个资产 (CDO实例)
+- UE 中很多数据的拷贝是浅拷贝(引用), 特别是大多数资产(通过 Path 引用)
+- 不同于 C++ Class 用 UPROPERTY 和 UFUNCTION 封装数据与逻辑, 蓝图用 Event Graph 同时封装数据与逻辑
 
 ## C++
 
