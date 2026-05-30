@@ -127,9 +127,24 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 - C++ constructor: 初始化 CDO 和 default subobject，不要依赖 `World`
 - `PostInitProperties()`: 属性初始化后
 - `PostLoad()`: 从磁盘反序列化后
-- `BeginPlay()`: 进入 gameplay
+- `BeginPlay()`: 进入 gameplay, 最好在这里去检测 Editor 设置的属性
 - `Tick()`: 每帧更新，需显式开启
 - `EndPlay()` / `Destroyed()`: Actor 退出世界或销毁
+
+**Outer vs Owner**
+
+| 概念    | 作用域    | 核心含义                         | 典型用途                         |
+| ------- | --------- | -------------------------------- | -------------------------------- |
+| `Outer` | `UObject` | 这个 object 在哪个 object 下面   | object path、package、序列化、查找 |
+| `Owner` | `AActor`  | 这个 Actor 归哪个 Actor 负责/控制 | RPC、network ownership、relevancy |
+
+```cpp
+UMyObject* Obj = NewObject<UMyObject>(this); // this 是 Obj 的 Outer
+WeaponActor->SetOwner(PlayerController);     // PlayerController 是 WeaponActor 的 Owner
+```
+
+- `Outer` 不等于 `Owner`；`Owner` 不会改变 object path / Outer
+- `Owner` 也不等于 attach parent；transform 层级看 `AttachToComponent()` / `RootComponent`
 
 **GC**
 
