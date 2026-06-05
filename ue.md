@@ -62,17 +62,6 @@
 - `Ctrl + G`: Group
 - `Shift + G`: Ungroup
 
-### Workflow
-
-1. 创建 `Level` / `World`
-2. 创建资产、Blueprint 或 C++ Class
-3. 用继承和组合定义可放进世界的 `Actor`
-4. 将 `Actor` 放置到世界中
-5. 用 `Subsystem`、`GameMode`、`Controller`、`Component` 等组织交互逻辑
-6. 最终画面来自 `Camera` + `Viewport` + `Widget`
-
-> 游戏开发和 UI 开发类似：状态决定画面，事件更新状态。
-
 ## Blueprint
 
 - 蓝图可视作一个高级 C++ Class, 继承自某个 Base Class
@@ -183,13 +172,6 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 - `GameMode` 不复制；跨端状态放 `GameState` / `PlayerState`
 
 ### Modules
-
-引擎启动大致顺序：
-
-1. 初始化 Core / Engine 等底层系统
-2. 加载 engine module 和 project module
-3. 初始化 `UObject` 系统与 class metadata
-4. 加载 map / asset，创建 `World`
 
 典型项目结构：
 
