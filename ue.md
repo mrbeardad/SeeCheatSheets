@@ -62,12 +62,12 @@
 - `Ctrl + G`: Group
 - `Shift + G`: Ungroup
 
-## Blueprint
+### Blueprint
 
 - 蓝图可视作一个高级 C++ Class, 继承自某个 Base Class
+- 不同于 C++ Class 用 UPROPERTY 和 UFUNCTION 封装数据与逻辑, 蓝图用 Event Graph 同时封装数据与逻辑
 - UE 中的 Class 基于原型设计模式, 所以同样可以将类视作一个资产 (CDO实例)
 - UE 中很多数据的拷贝是浅拷贝(引用), 特别是大多数资产(通过 Path 引用)
-- 不同于 C++ Class 用 UPROPERTY 和 UFUNCTION 封装数据与逻辑, 蓝图用 Event Graph 同时封装数据与逻辑
 
 ## C++
 
@@ -131,21 +131,6 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 - `Tick()`: 每帧更新，需显式开启
 - `EndPlay()` / `Destroyed()`: Actor 退出世界或销毁
 
-**Outer vs Owner**
-
-| 概念    | 作用域    | 核心含义                         | 典型用途                         |
-| ------- | --------- | -------------------------------- | -------------------------------- |
-| `Outer` | `UObject` | 这个 object 在哪个 object 下面   | object path、package、序列化、查找 |
-| `Owner` | `AActor`  | 这个 Actor 归哪个 Actor 负责/控制 | RPC、network ownership、relevancy |
-
-```cpp
-UMyObject* Obj = NewObject<UMyObject>(this); // this 是 Obj 的 Outer
-WeaponActor->SetOwner(PlayerController);     // PlayerController 是 WeaponActor 的 Owner
-```
-
-- `Outer` 不等于 `Owner`；`Owner` 不会改变 object path / Outer
-- `Owner` 也不等于 attach parent；transform 层级看 `AttachToComponent()` / `RootComponent`
-
 **GC**
 
 - UE GC 是 mark-sweep，不是普通引用计数
@@ -174,6 +159,21 @@ WeaponActor->SetOwner(PlayerController);     // PlayerController 是 WeaponActor
 - 构造函数里拿 `GetWorld()` 常常不可靠
 - `CDO` 会运行构造函数，构造函数逻辑必须能安全作用于默认对象
 - `UPROPERTY` 容器应使用 UE 容器，如 `TArray<TObjectPtr<UObjectType>>`
+
+**Outer vs Owner**
+
+| 概念    | 作用域    | 核心含义                          | 典型用途                           |
+| ------- | --------- | --------------------------------- | ---------------------------------- |
+| `Outer` | `UObject` | 这个 object 在哪个 object 下面    | object path、package、序列化、查找 |
+| `Owner` | `AActor`  | 这个 Actor 归哪个 Actor 负责/控制 | RPC、network ownership、relevancy  |
+
+```cpp
+UMyObject* Obj = NewObject<UMyObject>(this); // this 是 Obj 的 Outer
+WeaponActor->SetOwner(PlayerController);     // PlayerController 是 WeaponActor 的 Owner
+```
+
+- `Outer` 不等于 `Owner`；`Owner` 不会改变 object path / Outer
+- `Owner` 也不等于 attach parent；transform 层级看 `AttachToComponent()` / `RootComponent`
 
 ### Replication
 
