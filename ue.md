@@ -66,7 +66,7 @@
 
 - 蓝图可视作一个高级 C++ Class, 继承自某个 Base Class
 - 不同于 C++ Class 用 UPROPERTY 和 UFUNCTION 封装数据与逻辑, 蓝图用 Event Graph 同时封装数据与逻辑
-- UE 中的 Class 基于原型设计模式, 所以同样可以将类视作一个资产 (CDO实例)
+- UE 中的 Class 基于原型设计模式, 可以将 CDO 实例视作一个资产
 - UE 中很多数据的拷贝是浅拷贝(引用), 特别是大多数资产(通过 Path 引用)
 
 ## C++
@@ -151,15 +151,6 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 | `TStrongObjectPtr<T>`             | 非 `UPROPERTY` 场景下强持有 `UObject`           |
 | `TSharedPtr<T>` / `TSharedRef<T>` | 管理非 `UObject` 的原生 C++ 对象                |
 
-易错点：
-
-- `UPROPERTY() UObject*` 可以使用，历史代码中很常见；UE5 成员变量更推荐 `UPROPERTY() TObjectPtr<T>`
-- 非 `UPROPERTY` 的 `UObject*` 裸指针如果没有其他 GC 可见引用持有，不能阻止 GC
-- `TSharedPtr` 不要管理 `UObject`
-- 构造函数里拿 `GetWorld()` 常常不可靠
-- `CDO` 会运行构造函数，构造函数逻辑必须能安全作用于默认对象
-- `UPROPERTY` 容器应使用 UE 容器，如 `TArray<TObjectPtr<UObjectType>>`
-
 **Outer vs Owner**
 
 | 概念    | 作用域    | 核心含义                          | 典型用途                           |
@@ -226,13 +217,6 @@ MyProject/
 - `UGameInstance`: 跨 level 存活，适合保存会话级状态
 - `ULocalPlayer`: 本地玩家入口，split screen 时可有多个
 
-**Per-world objects**
-
-- `UWorld`: 一个运行中的世界
-- `ULevel`: `World` 中的关卡数据块
-- `AWorldSettings`: level 级配置
-- `ALevelScriptActor`: Level Blueprint 的运行时实例
-
 **Gameplay framework**
 
 - `AGameMode`: server-only，定义规则、spawn、胜负等
@@ -241,6 +225,13 @@ MyProject/
 - `APlayerState`: replicated，玩家状态，通常跨 pawn 存活
 - `APlayerController`: 玩家输入与控制入口
 - `APawn` / `ACharacter`: 可被 controller possessed 的实体
+
+**Per-world objects**
+
+- `UWorld`: 一个运行中的世界
+- `ULevel`: `World` 中的关卡数据块
+- `AWorldSettings`: level 级配置
+- `ALevelScriptActor`: Level Blueprint 的运行时实例
 
 **World entities**
 
