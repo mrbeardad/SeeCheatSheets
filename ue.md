@@ -2,7 +2,7 @@
 
 ## Editor
 
-### UI
+### Level Editor
 
 ![ue_ui](images/ue_ui.png)
 
@@ -62,12 +62,86 @@
 - `Ctrl + G`: Group
 - `Shift + G`: Ungroup
 
+### Node Graph
+
+适用于 Blueprint Graph、Material Graph 等多数节点编辑器。
+
+- `RMB + drag`: 平移 graph
+- `Mouse Wheel`: 缩放
+- `Home`: 缩放到选中节点
+- `LMB drag` 空白处: 框选节点
+- `Q`: 水平对齐选中节点
+- `RMB click` 空白处: 打开节点搜索 / Action Menu
+- `LMB drag` pin 到 pin: 连接
+- `LMB drag` pin 到空白处: 按 pin 类型过滤创建节点
+- `Alt + LMB click` pin: 断开该 pin 所有连接
+- `Ctrl + LMB drag` pin: 移动该 pin 的所有连接
+- `C`: 给选中节点添加 Comment
+- `Ctrl + C/V/X`: 复制 / 粘贴 / 剪切节点
+- `Ctrl + D`: Duplicate 节点
+- `Delete`: 删除节点
+- `Ctrl + Z/Y`: 撤销 / 重做
+- `Ctrl + F`: 当前 Blueprint / graph 内查找
+- `Ctrl + Shift + F`: Find in Blueprints
+- `Ctrl + S`: 保存
+- `F7`: Compile Blueprint
+- `F9`: Toggle Breakpoint（Blueprint）
+- Blueprint 创建: `B + LMB` Branch, `S + LMB` Sequence, `D + LMB` Delay, `P + LMB` BeginPlay
+- Blueprint 变量: `Ctrl + drag` 到 graph 为 Get, `Alt + drag` 到 graph 为 Set
+- Material 创建: `1/2/3/4 + LMB` Constant, `S + LMB` ScalarParameter, `V + LMB` VectorParameter, `T + LMB` TextureSample, `M + LMB` Multiply, `L + LMB` Lerp, `A + LMB` Add
+
+### Material
+
+- `Material` 定义表面如何被渲染，本质是生成 shader 的 node graph
+- 常用 PBR 输入：`Base Color`、`Metallic`、`Roughness`、`Normal`、`Emissive Color`、`Opacity` / `Opacity Mask`
+- 各输入属性都可以由 texture、constant 或 node expression 计算得到；常量适合快速调参，纹理适合空间变化细节
+- `Material Domain`: `Surface` 最常用；还有 `Post Process`、`Deferred Decal`、`UI` 等
+- `Blend Mode`: `Opaque` 性能最好；`Masked` 用 alpha test；`Translucent` 最贵且有排序 / lighting 限制
+- `Shading Model`: 决定光照模型，如 `Default Lit`、`Unlit`、`Subsurface`、`Clear Coat`
+- `Texture Sample` 通常配合 `UV` / `TexCoord`；`Normal Map` 需要接到 `Normal`，注意 texture compression / sRGB
+- `ScalarParameter` / `VectorParameter` / `TextureParameter` 可在 `Material Instance` 中覆盖，不改 graph
+- `Material Instance` 复用父材质 shader，适合做同一套材质的颜色、贴图、强度变体
+- `Dynamic Material Instance` 可在 runtime 改参数；常用于受击闪烁、溶解、血条、交互高亮
+- `Static Switch Parameter` 会产生 shader permutation，适合开关功能，但过多会增加编译和包体成本
+- `Material Parameter Collection` 是全局参数表，适合天气、时间、全局风向等跨多个材质共享的数据
+- 性能重点看 shader instructions、texture sample 数、overdraw、translucency、复杂分支和过多 permutation
+
+重要输入属性：
+
+| Property                | 要点                                              |
+| ----------------------- | ------------------------------------------------- |
+| `Base Color`            | 表面基础颜色，不包含光照                          |
+| `Metallic`              | 金属度，通常非金属 `0`、金属 `1`，少用中间值      |
+| `Specular`              | 非金属高光强度，默认 `0.5`，多数情况不用改        |
+| `Roughness`             | 粗糙度；`0` 镜面，`1` 漫反射，最常调的质感参数    |
+| `Normal`                | 法线贴图输入，增加表面细节，不改变真实几何        |
+| `Emissive Color`        | 自发光颜色，可用于发光物、UI、Unlit 效果          |
+| `Opacity`               | 半透明透明度，仅 `Translucent` 等 blend mode 有效 |
+| `Opacity Mask`          | 裁剪透明度，用于 `Masked`，常配合 foliage / hair  |
+| `Ambient Occlusion`     | 局部环境遮蔽，增强缝隙暗部                        |
+| `World Position Offset` | 顶点阶段偏移几何，常用于风吹草、波浪、简单变形    |
+| `Refraction`            | 折射，常用于玻璃 / 水，通常依赖 translucent       |
+| `Pixel Depth Offset`    | 像素深度偏移，可软化交界，但可能影响深度相关效果  |
+| `Subsurface Color`      | 次表面散射颜色，需对应 `Shading Model`            |
+| `Clear Coat`            | 额外清漆层强度，车漆、涂层材质常用                |
+
 ### Blueprint
 
 - 蓝图可视作一个高级 C++ Class, 继承自某个 Base Class
 - 不同于 C++ Class 用 UPROPERTY 和 UFUNCTION 封装数据与逻辑, 蓝图用 Event Graph 同时封装数据与逻辑
 - UE 中的 Class 基于原型设计模式, 可以将 CDO 实例视作一个资产
 - UE 中很多数据的拷贝是浅拷贝(引用), 特别是大多数资产(通过 Path 引用)
+
+### Data Table
+
+- `DataTable` 是基于 `UScriptStruct` 的二维配置表资产：每行是一个 struct instance，每列对应 struct property
+- `Row Name` 是每行唯一 key，类型本质是 `FName`；查表通常用 `DataTable + RowName`
+- C++ 行结构常继承 `FTableRowBase`，并用 `USTRUCT(BlueprintType)` / `UPROPERTY()` 暴露给 Editor / Blueprint
+- Blueprint 常用节点：`Get Data Table Row`、`Get Data Table Row Names`、`Does Data Table Row Exist`
+- `FDataTableRowHandle` = `DataTable` 引用 + `RowName`，适合在 Blueprint / 资产里引用某一行
+- 数据可在 Editor 内编辑，也可从 `CSV` / `JSON` 导入；列名需匹配 struct property
+- 适合静态配置数据，例如 item、skill、enemy stats、dialogue id；不适合频繁运行时修改或保存玩家存档
+- 表里引用资产时优先考虑 soft reference，避免加载 DataTable 时连带加载大量资源
 
 ## C++
 
