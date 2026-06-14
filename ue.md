@@ -105,6 +105,24 @@
 - `Static Switch Parameter` 会产生 shader permutation，适合开关功能，但过多会增加编译和包体成本
 - `Material Parameter Collection` 是全局参数表，适合天气、时间、全局风向等跨多个材质共享的数据
 - 性能重点看 shader instructions、texture sample 数、overdraw、translucency、复杂分支和过多 permutation
+- PBR (Physically Based Rendering)
+
+```txt
+Diffuse =
+    LightColor *
+    BaseColor *
+    (1 - Metallic);
+
+Specular =
+    LightColor *
+    ReflectionStrength * // affected by Roughness and Specular
+    ReflectionColor; // lerp(0.04, BaseColor, Metallic);
+
+FinalColor =
+    Diffuse +
+    Specular +
+    Emissive;
+```
 
 重要输入属性：
 
@@ -125,13 +143,6 @@
 | `Subsurface Color`      | 次表面散射颜色，需对应 `Shading Model`            |
 | `Clear Coat`            | 额外清漆层强度，车漆、涂层材质常用                |
 
-### Blueprint
-
-- 蓝图可视作一个高级 C++ Class, 继承自某个 Base Class
-- 不同于 C++ Class 用 UPROPERTY 和 UFUNCTION 封装数据与逻辑, 蓝图用 Event Graph 同时封装数据与逻辑
-- UE 中的 Class 基于原型设计模式, 可以将 CDO 实例视作一个资产
-- UE 中很多数据的拷贝是浅拷贝(引用), 特别是大多数资产(通过 Path 引用)
-
 ### Data Table
 
 - `DataTable` 是基于 `UScriptStruct` 的二维配置表资产：每行是一个 struct instance，每列对应 struct property
@@ -142,6 +153,13 @@
 - 数据可在 Editor 内编辑，也可从 `CSV` / `JSON` 导入；列名需匹配 struct property
 - 适合静态配置数据，例如 item、skill、enemy stats、dialogue id；不适合频繁运行时修改或保存玩家存档
 - 表里引用资产时优先考虑 soft reference，避免加载 DataTable 时连带加载大量资源
+
+### Blueprint
+
+- 蓝图可视作一个高级 C++ Class, 继承自某个 Base Class
+- 不同于 C++ Class 用 UPROPERTY 和 UFUNCTION 封装数据与逻辑, 蓝图用 Event Graph 同时封装数据与逻辑
+- UE 中的 Class 基于原型设计模式, 可以将 CDO 实例视作一个资产
+- UE 中很多数据的拷贝是浅拷贝(引用), 特别是大多数资产(通过 Path 引用)
 
 ## C++
 
