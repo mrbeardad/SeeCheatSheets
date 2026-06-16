@@ -1,5 +1,324 @@
 # Unreal Engine
 
+## Project Structure
+
+> [Epic C++ Coding Standard](https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine)
+
+UE 项目结构围绕 project descriptor、module、target、asset 目录组织：
+
+- `.uproject`: project descriptor，记录 module、plugin、engine association 等
+- `Source/`: C++ source，按 module 拆分
+- `Content/`: `.uasset` / `.umap` 等项目资产，通常挂载到 `/Game/`
+- `Config/`: `.ini` 配置，按层级覆盖
+- `Plugins/`: 项目级 plugin，每个 plugin 可有自己的 `Source/`、`Content/`
+- `Intermediate/`: UBT / UHT 生成的中间文件，不应依赖或提交
+- `Binaries/`: 编译产物，通常不提交
+- `Saved/`: log、autosave、local config、crash data，通常不提交
+- `DerivedDataCache/`: shader、texture 等派生缓存，可再生成
+
+关键边界：
+
+| 概念    | 文件                     | 作用                                        |
+| ------- | ------------------------ | ------------------------------------------- |
+| Project | `.uproject`              | 项目描述，声明 module、plugin、Engine 版本  |
+| Plugin  | `.uplugin`               | 可复用功能包，可包含 code module 和资产     |
+| Target  | `*.Target.cs`            | 最终构建目标，如 Game / Editor / Server     |
+| Module  | `*.Build.cs` + `Source/` | C++ 编译、链接、加载单元                    |
+| Package | `.uasset` / `.umap`      | 资产序列化单元，运行时通过 object path 引用 |
+
+典型 C++ 项目结构：
+
+```text
+MyProject/
+  MyProject.uproject
+  Config/
+    DefaultEngine.ini
+    DefaultGame.ini
+  Content/
+  Source/
+    MyProject.Target.cs
+    MyProjectEditor.Target.cs
+    MyProject/
+      MyProject.Build.cs
+      Public/
+      Private/
+    MyProjectEditor/
+      MyProjectEditor.Build.cs
+      Private/
+  Plugins/
+    MyPlugin/
+      MyPlugin.uplugin
+      Source/
+        MyPlugin/
+        MyPluginEditor/
+```
+
+### Module
+
+`Module` 是 UE 的 C++ 编译、链接和加载单元，不是 C++20 `module`，也不是 namespace。
+项目和 plugin 都可以包含多个 module。
+
+常见拆法：
+
+- Runtime module: gameplay / runtime code，可进入 packaged build
+- Editor module: editor-only 工具代码，不应进入 packaged build
+- Plugin module: plugin 内的 runtime / editor code
+
+`*.Build.cs`：
+
+- 由 `Unreal Build Tool` 读取，声明依赖、include path、编译选项
+- `PublicDependencyModuleNames`: public header 暴露了依赖 module 的类型 / 函数时使用
+- `PrivateDependencyModuleNames`: 只在 `.cpp` 或 private header 中使用依赖时使用，优先选这个
+- `Public/`: 对其他 module 暴露的 header
+- `Private/`: module 内部实现和内部 header
+
+| 场景                                 | 放法                           |
+| ------------------------------------ | ------------------------------ |
+| gameplay runtime code                | Runtime module                 |
+| 自定义 editor panel、asset action    | Editor module                  |
+| public header 用到了依赖 module 类型 | `PublicDependencyModuleNames`  |
+| 只有 `.cpp` 使用依赖 module          | `PrivateDependencyModuleNames` |
+| 需要被其他 module include 的 API     | 放 `Public/`                   |
+| 只给本 module 使用的实现细节         | 放 `Private/`                  |
+
+加载入口：
+
+- 默认 game module 通常用 `IMPLEMENT_PRIMARY_GAME_MODULE`
+- 普通 module 可实现 `IModuleInterface`
+- `StartupModule()`: module 加载后注册类型、菜单、扩展点等
+- `ShutdownModule()`: module 卸载前清理注册项
+- runtime module 不应依赖 `UnrealEd` 等 editor-only module
+- 少量 editor 条件代码可用 `#if WITH_EDITOR`，复杂工具逻辑应拆 Editor module
+
+### Target
+
+`Target` 定义最终构建目标，决定编译哪些 module、以什么规则编译。
+
+- `MyProject.Target.cs`: game/runtime target
+- `MyProjectEditor.Target.cs`: editor target，可包含 Editor module
+- 常见 target type: `Game`、`Editor`、`Client`、`Server`
+- `Target.cs` 管 project-level build；`Build.cs` 管 module-level build
+
+## Runtime System
+
+UE Runtime 的核心不是普通 C++ class hierarchy，而是 `UObject`、Reflection、Serialization、GC、Blueprint、Assets 共同组成的对象系统。
+原生 C++ 和 `UObject` 体系可以混用，但构造规则、生命周期、指针语义和反射可见性不同。
+理解 UE 代码时先判断对象属于普通 C++、`UObject`、`AActor` / `UActorComponent`，再判断它由谁创建、持有、序列化和回收。
+
+### UObject
+
+#### Reflection
+
+UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++ RTTI。
+
+| Macro          | 用途                                       |
+| -------------- | ------------------------------------------ |
+| `UCLASS()`     | 声明 `UObject` 派生类                      |
+| `UINTERFACE()` | 声明 UE Interface                          |
+| `USTRUCT()`    | 声明可反射结构体                           |
+| `UENUM()`      | 声明可反射枚举                             |
+| `UPROPERTY()`  | 属性暴露、序列化、GC 引用跟踪、Replication |
+| `UFUNCTION()`  | 函数暴露、RPC、Blueprint 调用              |
+| `UPARAM()`     | 修饰函数参数                               |
+| `UDELEGATE()`  | 声明 delegate 类型                         |
+
+常见 specifier：
+
+- `BlueprintType`: 类型可作为 Blueprint 变量
+- `Blueprintable`: 类可被 Blueprint 继承
+- `BlueprintReadOnly` / `BlueprintReadWrite`: 属性可读 / 可写
+- `EditDefaultsOnly`: 只在 Class Default / Blueprint 默认值中编辑
+- `EditInstanceOnly`: 只在 instance 上编辑
+- `EditAnywhere`: 默认值和 instance 都可编辑
+- `VisibleAnywhere`: 可见但不可编辑
+- `Transient`: 不序列化到磁盘
+- `Replicated`: 属性参与网络复制
+
+#### 基础能力
+
+`UObject` 提供：
+
+- Reflection / metadata
+- Serialization / asset loading
+- Garbage Collection
+- Network Replication 基础能力
+- Blueprint 暴露与调用
+- Class Default Object（`CDO`）和默认属性系统
+
+#### 构造
+
+**C++ constructor 与 CDO**
+
+- 每个 `UClass` 有一个 Class Default Object（`CDO`），保存该 class 的默认属性
+- 同一个 C++ constructor 会用于构造 CDO 和创建 instance；不要假设 `this` 一定是 gameplay instance
+- `UObject` constructor 不支持自定义参数；运行时参数通常用 setter / init function / deferred spawn 传入
+- Blueprint class 的默认值也会体现在对应 generated class / CDO 上
+- 普通 instance 会从 class default / archetype 拷贝默认属性，再进入后续初始化流程
+- constructor 适合设置 native 默认值和 default subobject，不适合做 gameplay 初始化
+- constructor 中不要依赖 `World`、运行时 Actor 关系、Editor 中配置好的 instance 值
+- `CreateDefaultSubobject<T>()` 只应在 constructor 中调用，常用于创建默认 `UActorComponent`
+
+**构造途径**
+
+| 目标                       | API                                                   | 要点                                      |
+| -------------------------- | ----------------------------------------------------- | ----------------------------------------- |
+| default subobject          | `CreateDefaultSubobject<T>()`                         | 只在 constructor 中用，成为 class 默认结构 |
+| 普通 `UObject`             | `NewObject<T>(Outer)`                                 | 运行时创建，必须考虑 `Outer` 和 GC 可达性 |
+| `AActor`                   | `UWorld::SpawnActor<T>()`                             | Actor 由 `UWorld` 管理，不用 `NewObject`  |
+| 延迟初始化 `AActor`        | `SpawnActorDeferred<T>()` + `FinishSpawningActor()`   | spawn 后、construction 前设置参数         |
+| 加载已有 asset / object    | `LoadObject<T>()` / `StaticLoadObject()`              | 从 object path 反序列化对象               |
+| 复制已有 object            | `DuplicateObject<T>()`                                | 复制 object / subobject 图                |
+
+- 不要用 `new` / `delete` 管理 `UObject`
+- `.uasset` / `.umap` 本质上是 `UPackage` 序列化结果，加载路径会走反序列化而不是普通构造
+
+**构造期 Hook**
+
+| Hook                          | 触发场景                         | 备注                                      |
+| ----------------------------- | -------------------------------- | ----------------------------------------- |
+| C++ constructor               | CDO、spawn、load 等对象创建路径   | 设置 native default / default subobject   |
+| `PostInitProperties()`        | constructor 后、属性初始化后      | 通用 `UObject` hook                       |
+| `PostLoad()`                  | 从磁盘 / package 反序列化后       | load path；和 `PostActorCreated()` 互斥   |
+| `PostActorCreated()`          | Actor 被 spawn / editor 创建后    | Actor spawn path；construction 前         |
+| `OnConstruction()`            | Actor construction script 阶段    | Actor-only；对应 Blueprint Construction Script |
+| `PreInitializeComponents()`   | Actor components 初始化前         | Actor-only；通常晚于 construction         |
+| `PostInitializeComponents()`  | Actor components 初始化后         | Actor-only；进入 `BeginPlay()` 前         |
+
+#### 生命周期
+
+- 构造期逻辑优先看上一节；不要把 constructor 当作 gameplay init
+- `BeginPlay()`: 进入 gameplay，适合依赖 `World`、其他 Actor、Editor 配置值的初始化
+- `Tick()`: 每帧更新，需显式开启
+- `EndPlay()` / `Destroyed()`: Actor 退出世界或销毁
+
+#### GC
+
+- UE GC 是 mark-sweep，不是普通引用计数
+- 从 Root Set 出发，沿 `UPROPERTY` / reflected container 等可见引用标记对象
+- 未被标记的 `UObject` 会在 GC 时回收，GC 通常在帧间执行
+- `AddToRoot()` / `RemoveFromRoot()` 可手动加入 Root Set，慎用
+- `AActor` 的生命周期主要由 `UWorld` 管理，销毁用 `Destroy()`
+- `UActorComponent` 生命周期通常跟随 owner `AActor`
+
+#### 指针规则
+
+| 类型                              | 用途                                            |
+| --------------------------------- | ----------------------------------------------- |
+| `TObjectPtr<T>`                   | UE5 推荐的 `UObject` 成员引用，配合 `UPROPERTY` |
+| `TWeakObjectPtr<T>`               | 弱引用 `UObject`，对象销毁后可检测失效          |
+| `TSoftObjectPtr<T>`               | 软引用资产，记录路径，可延迟加载                |
+| `TSubclassOf<T>`                  | 限制 Class 类型必须继承自 `T`                   |
+| `TStrongObjectPtr<T>`             | 非 `UPROPERTY` 场景下强持有 `UObject`           |
+| `TSharedPtr<T>` / `TSharedRef<T>` | 管理非 `UObject` 的原生 C++ 对象                |
+
+#### Outer vs Owner
+
+| 概念    | 作用域    | 核心含义                          | 典型用途                           |
+| ------- | --------- | --------------------------------- | ---------------------------------- |
+| `Outer` | `UObject` | 这个 object 在哪个 object 下面    | object path、package、序列化、查找 |
+| `Owner` | `AActor`  | 这个 Actor 归哪个 Actor 负责/控制 | RPC、network ownership、relevancy  |
+
+```cpp
+UMyObject* Obj = NewObject<UMyObject>(this); // this 是 Obj 的 Outer
+WeaponActor->SetOwner(PlayerController);     // PlayerController 是 WeaponActor 的 Owner
+```
+
+- `Outer` 不等于 `Owner`；`Owner` 不会改变 object path / Outer
+- `Owner` 也不等于 attach parent；transform 层级看 `AttachToComponent()` / `RootComponent`
+
+#### Replication
+
+- Replication 只从 server 同步到 client
+- `UPROPERTY(Replicated)`: 同步属性，需在 `GetLifetimeReplicatedProps()` 注册
+- `ReplicatedUsing=OnRep_X`: client 收到属性更新后回调
+- RPC 本质是通过网络调用 `UFUNCTION`
+- `Server` RPC: client 请求 server 执行，常用于输入意图
+- `Client` RPC: server 指定某个 owning client 执行
+- `NetMulticast` RPC: server 广播到相关 client
+- `GameMode` 不复制；跨端状态放 `GameState` / `PlayerState`
+
+### Blueprint
+
+- 蓝图可视作一个高级 C++ Class, 继承自某个 Base Class
+- 不同于 C++ Class 用 UPROPERTY 和 UFUNCTION 封装数据与逻辑, 蓝图用 Event Graph 同时封装数据与逻辑
+- UE 中的 Class 基于原型设计模式, 可以将 CDO 实例视作一个资产
+- UE 中很多数据的拷贝是浅拷贝(引用), 特别是大多数资产(通过 Path 引用)
+
+### Assets
+
+#### 路径概念
+
+- **物理文件路径**：磁盘真实路径，例如 `Content/Characters/Hero.uasset`
+- **打包后路径**：Cook / Package 后仍保留逻辑目录，但物理上可能在 `.pak` / `.ucas`
+- **Mount Point**：虚拟挂载点，例如项目 `Content/` 通常挂载到 `/Game/`
+- **Long Package Name**：不带扩展名的 package 路径，例如 `/Game/Characters/Hero`
+- **Object Path**：对象完整路径，例如 `/Game/Characters/Hero.Hero`
+- **Subobject Path**：非 top-level object 路径，通常在 root object 后用 `:` 接 subpath，例如 `/Game/Maps/Main.Main:PersistentLevel.Actor_0.Component`
+- **Class Path**：Blueprint 生成类路径常见形式，例如 `/Game/BP_Hero.BP_Hero_C`
+
+#### 名称 API
+
+- `GetName()`: 对象自身名字，不含 Outer / Package，例如 `Hero`
+- `GetPathName()`: 包含 Outer 链；top-level object 通常是 `/Package/Asset.Asset`，非根对象通常带 `:SubPath`
+- `GetFullName()`: `ClassName + " " + GetPathName()`，例如 `SkeletalMesh /Game/Characters/Hero.Hero`
+- `GetOuter()`: 所属外层对象，资源对象的 Outer 通常是 `UPackage`
+
+```text
+Content/Characters/Hero.uasset          # 物理文件路径
+/Game/Characters/Hero                   # Long Package Name
+Hero                                    # GetName()
+/Game/Characters/Hero.Hero              # Object Path / GetPathName()
+SkeletalMesh /Game/Characters/Hero.Hero # GetFullName()
+/Game/Maps/Main.Main:PersistentLevel.Actor_0.Component # subobject path
+```
+
+#### 引用方式
+
+- Hard Reference: 直接引用资产，加载当前对象时会连带加载依赖
+- Soft Reference: 只记录路径，需要时异步 / 手动加载，适合大资源和可选资源
+- `ConstructorHelpers::FObjectFinder`: 构造期硬查找资产，只适合默认资源绑定
+- `TSoftObjectPtr::LoadSynchronous()`: 同步加载软引用，简单但可能卡顿
+- `StreamableManager`: 异步加载软引用资源
+
+## Gameplay Framework
+
+### 对象层级
+
+**Engine-level singletons**
+
+- `UEngine`: global engine instance
+- `UGameInstance`: 跨 level 存活，适合保存会话级状态
+- `ULocalPlayer`: 本地玩家入口，split screen 时可有多个
+
+**Gameplay framework**
+
+- `AGameMode`: server-only，定义规则、spawn、胜负等
+- `AGameSession`: server-only，登录、会话、匹配相关
+- `AGameState`: replicated，全局游戏状态
+- `APlayerState`: replicated，玩家状态，通常跨 pawn 存活
+- `APlayerController`: 玩家输入与控制入口
+- `APawn` / `ACharacter`: 可被 controller possessed 的实体
+
+**Per-world objects**
+
+- `UWorld`: 一个运行中的世界
+- `ULevel`: `World` 中的关卡数据块
+- `AWorldSettings`: level 级配置
+- `ALevelScriptActor`: Level Blueprint 的运行时实例
+
+**World entities**
+
+- `AActor`: 世界中的实体，有 transform，可 spawn / destroy
+- `UActorComponent`: Actor 的行为模块，无独立 transform
+- `USceneComponent`: 带 transform 的 component，可组成层级
+
+### 运行时关系
+
+- `GameMode` 只在 server 存在，client 用 `GameState` 获取同步后的规则状态
+- `PlayerController` 不等于角色本体，角色本体通常是 `Pawn` / `Character`
+- `Pawn` 被 `Controller` possess 后才有控制来源
+- `ActorComponent` 用组合拆行为，避免 `Actor` 继承层级膨胀
+
 ## Editor
 
 ### Level Editor
@@ -153,223 +472,3 @@ FinalColor =
 - 数据可在 Editor 内编辑，也可从 `CSV` / `JSON` 导入；列名需匹配 struct property
 - 适合静态配置数据，例如 item、skill、enemy stats、dialogue id；不适合频繁运行时修改或保存玩家存档
 - 表里引用资产时优先考虑 soft reference，避免加载 DataTable 时连带加载大量资源
-
-### Blueprint
-
-- 蓝图可视作一个高级 C++ Class, 继承自某个 Base Class
-- 不同于 C++ Class 用 UPROPERTY 和 UFUNCTION 封装数据与逻辑, 蓝图用 Event Graph 同时封装数据与逻辑
-- UE 中的 Class 基于原型设计模式, 可以将 CDO 实例视作一个资产
-- UE 中很多数据的拷贝是浅拷贝(引用), 特别是大多数资产(通过 Path 引用)
-
-## C++
-
-UE 用 C++ 扩展出接近动态语言的开发体验，核心是 `UObject`、Reflection、Serialization、GC、Blueprint、Network Replication。
-原生 C++ 和 `UObject` 体系可以混用，但生命周期、指针和构造规则不同。
-
-> [Epic C++ Coding Standard](https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine)
-
-### Reflection
-
-UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++ RTTI。
-
-| Macro          | 用途                                       |
-| -------------- | ------------------------------------------ |
-| `UCLASS()`     | 声明 `UObject` 派生类                      |
-| `UINTERFACE()` | 声明 UE Interface                          |
-| `USTRUCT()`    | 声明可反射结构体                           |
-| `UENUM()`      | 声明可反射枚举                             |
-| `UPROPERTY()`  | 属性暴露、序列化、GC 引用跟踪、Replication |
-| `UFUNCTION()`  | 函数暴露、RPC、Blueprint 调用              |
-| `UPARAM()`     | 修饰函数参数                               |
-| `UDELEGATE()`  | 声明 delegate 类型                         |
-
-常见 specifier：
-
-- `BlueprintType`: 类型可作为 Blueprint 变量
-- `Blueprintable`: 类可被 Blueprint 继承
-- `BlueprintReadOnly` / `BlueprintReadWrite`: 属性可读 / 可写
-- `EditDefaultsOnly`: 只在 Class Default / Blueprint 默认值中编辑
-- `EditInstanceOnly`: 只在 instance 上编辑
-- `EditAnywhere`: 默认值和 instance 都可编辑
-- `VisibleAnywhere`: 可见但不可编辑
-- `Transient`: 不序列化到磁盘
-- `Replicated`: 属性参与网络复制
-
-### UObject
-
-`UObject` 提供：
-
-- Reflection / metadata
-- Serialization / asset loading
-- Garbage Collection
-- Network Replication 基础能力
-- Blueprint 暴露与调用
-- Class Default Object（`CDO`）和默认属性系统
-
-**构造**
-
-- `CreateDefaultSubobject<T>()`: 只在构造函数中创建 default subobject，常用于 `UActorComponent`
-- `NewObject<T>()`: 运行时创建 `UObject`
-- `SpawnActor<T>()`: 运行时创建 `AActor`，由 `UWorld` 管理
-- `LoadObject<T>()` / `StaticLoadObject()`: 从 object path 加载资产
-- `.uasset` / `.umap` 本质上是 `UPackage` 序列化结果
-
-**生命周期**
-
-- C++ constructor: 初始化 CDO 和 default subobject，不要依赖 `World`
-- `PostInitProperties()`: 属性初始化后
-- `PostLoad()`: 从磁盘反序列化后
-- `BeginPlay()`: 进入 gameplay, 最好在这里去检测 Editor 设置的属性
-- `Tick()`: 每帧更新，需显式开启
-- `EndPlay()` / `Destroyed()`: Actor 退出世界或销毁
-
-**GC**
-
-- UE GC 是 mark-sweep，不是普通引用计数
-- 从 Root Set 出发，沿 `UPROPERTY` / reflected container 等可见引用标记对象
-- 未被标记的 `UObject` 会在 GC 时回收，GC 通常在帧间执行
-- `AddToRoot()` / `RemoveFromRoot()` 可手动加入 Root Set，慎用
-- `AActor` 的生命周期主要由 `UWorld` 管理，销毁用 `Destroy()`
-- `UActorComponent` 生命周期通常跟随 owner `AActor`
-
-**指针规则**
-
-| 类型                              | 用途                                            |
-| --------------------------------- | ----------------------------------------------- |
-| `TObjectPtr<T>`                   | UE5 推荐的 `UObject` 成员引用，配合 `UPROPERTY` |
-| `TWeakObjectPtr<T>`               | 弱引用 `UObject`，对象销毁后可检测失效          |
-| `TSoftObjectPtr<T>`               | 软引用资产，记录路径，可延迟加载                |
-| `TSubclassOf<T>`                  | 限制 Class 类型必须继承自 `T`                   |
-| `TStrongObjectPtr<T>`             | 非 `UPROPERTY` 场景下强持有 `UObject`           |
-| `TSharedPtr<T>` / `TSharedRef<T>` | 管理非 `UObject` 的原生 C++ 对象                |
-
-**Outer vs Owner**
-
-| 概念    | 作用域    | 核心含义                          | 典型用途                           |
-| ------- | --------- | --------------------------------- | ---------------------------------- |
-| `Outer` | `UObject` | 这个 object 在哪个 object 下面    | object path、package、序列化、查找 |
-| `Owner` | `AActor`  | 这个 Actor 归哪个 Actor 负责/控制 | RPC、network ownership、relevancy  |
-
-```cpp
-UMyObject* Obj = NewObject<UMyObject>(this); // this 是 Obj 的 Outer
-WeaponActor->SetOwner(PlayerController);     // PlayerController 是 WeaponActor 的 Owner
-```
-
-- `Outer` 不等于 `Owner`；`Owner` 不会改变 object path / Outer
-- `Owner` 也不等于 attach parent；transform 层级看 `AttachToComponent()` / `RootComponent`
-
-### Replication
-
-- Replication 只从 server 同步到 client
-- `UPROPERTY(Replicated)`: 同步属性，需在 `GetLifetimeReplicatedProps()` 注册
-- `ReplicatedUsing=OnRep_X`: client 收到属性更新后回调
-- RPC 本质是通过网络调用 `UFUNCTION`
-- `Server` RPC: client 请求 server 执行，常用于输入意图
-- `Client` RPC: server 指定某个 owning client 执行
-- `NetMulticast` RPC: server 广播到相关 client
-- `GameMode` 不复制；跨端状态放 `GameState` / `PlayerState`
-
-### Modules
-
-典型项目结构：
-
-```text
-MyProject/
-  Source/
-    MyProject.Target.cs
-    MyProjectEditor.Target.cs
-    MyProject/
-      MyProject.Build.cs
-      Public/
-      Private/
-    MyModule/
-      MyModule.Build.cs
-      Public/
-        MyModule.h
-      Private/
-        MyModule.cpp
-```
-
-`*.Build.cs` 关键点：
-
-- `PublicDependencyModuleNames`: Public header 需要暴露的依赖
-- `PrivateDependencyModuleNames`: 只在 Private 实现中使用的依赖
-- `Public/`: 对其他 module 暴露
-- `Private/`: module 内部实现
-
-配置文件优先级参考：[Configuration File Hierarchy](https://dev.epicgames.com/documentation/en-us/unreal-engine/configuration-files-in-unreal-engine#configurationfilehierarchy)
-
-## Gameplay Framework
-
-### 对象层级
-
-**Engine-level singletons**
-
-- `UEngine`: global engine instance
-- `UGameInstance`: 跨 level 存活，适合保存会话级状态
-- `ULocalPlayer`: 本地玩家入口，split screen 时可有多个
-
-**Gameplay framework**
-
-- `AGameMode`: server-only，定义规则、spawn、胜负等
-- `AGameSession`: server-only，登录、会话、匹配相关
-- `AGameState`: replicated，全局游戏状态
-- `APlayerState`: replicated，玩家状态，通常跨 pawn 存活
-- `APlayerController`: 玩家输入与控制入口
-- `APawn` / `ACharacter`: 可被 controller possessed 的实体
-
-**Per-world objects**
-
-- `UWorld`: 一个运行中的世界
-- `ULevel`: `World` 中的关卡数据块
-- `AWorldSettings`: level 级配置
-- `ALevelScriptActor`: Level Blueprint 的运行时实例
-
-**World entities**
-
-- `AActor`: 世界中的实体，有 transform，可 spawn / destroy
-- `UActorComponent`: Actor 的行为模块，无独立 transform
-- `USceneComponent`: 带 transform 的 component，可组成层级
-
-### 运行时关系
-
-- `GameMode` 只在 server 存在，client 用 `GameState` 获取同步后的规则状态
-- `PlayerController` 不等于角色本体，角色本体通常是 `Pawn` / `Character`
-- `Pawn` 被 `Controller` possess 后才有控制来源
-- `ActorComponent` 用组合拆行为，避免 `Actor` 继承层级膨胀
-
-## Assets And Paths
-
-### 路径概念
-
-- **物理文件路径**：磁盘真实路径，例如 `Content/Characters/Hero.uasset`
-- **打包后路径**：Cook / Package 后仍保留逻辑目录，但物理上可能在 `.pak` / `.ucas`
-- **Mount Point**：虚拟挂载点，例如项目 `Content/` 通常挂载到 `/Game/`
-- **Long Package Name**：不带扩展名的 package 路径，例如 `/Game/Characters/Hero`
-- **Object Path**：对象完整路径，例如 `/Game/Characters/Hero.Hero`
-- **Subobject Path**：非 top-level object 路径，通常在 root object 后用 `:` 接 subpath，例如 `/Game/Maps/Main.Main:PersistentLevel.Actor_0.Component`
-- **Class Path**：Blueprint 生成类路径常见形式，例如 `/Game/BP_Hero.BP_Hero_C`
-
-### 名称 API
-
-- `GetName()`: 对象自身名字，不含 Outer / Package，例如 `Hero`
-- `GetPathName()`: 包含 Outer 链；top-level object 通常是 `/Package/Asset.Asset`，非根对象通常带 `:SubPath`
-- `GetFullName()`: `ClassName + " " + GetPathName()`，例如 `SkeletalMesh /Game/Characters/Hero.Hero`
-- `GetOuter()`: 所属外层对象，资源对象的 Outer 通常是 `UPackage`
-
-```text
-Content/Characters/Hero.uasset          # 物理文件路径
-/Game/Characters/Hero                   # Long Package Name
-Hero                                    # GetName()
-/Game/Characters/Hero.Hero              # Object Path / GetPathName()
-SkeletalMesh /Game/Characters/Hero.Hero # GetFullName()
-/Game/Maps/Main.Main:PersistentLevel.Actor_0.Component # subobject path
-```
-
-### 引用方式
-
-- Hard Reference: 直接引用资产，加载当前对象时会连带加载依赖
-- Soft Reference: 只记录路径，需要时异步 / 手动加载，适合大资源和可选资源
-- `ConstructorHelpers::FObjectFinder`: 构造期硬查找资产，只适合默认资源绑定
-- `TSoftObjectPtr::LoadSynchronous()`: 同步加载软引用，简单但可能卡顿
-- `StreamableManager`: 异步加载软引用资源
