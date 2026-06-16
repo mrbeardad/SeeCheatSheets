@@ -107,7 +107,16 @@ UE Runtime 的核心不是普通 C++ class hierarchy，而是 `UObject`、Reflec
 
 ### UObject
 
-#### Reflection
+`UObject` 是 UE runtime object model 的基础，提供：
+
+- Reflection / metadata
+- Serialization / asset loading
+- Garbage Collection
+- Network Replication 基础能力
+- Blueprint 暴露与调用
+- Class Default Object（`CDO`）和默认属性系统
+
+#### 反射
 
 UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++ RTTI。
 
@@ -133,17 +142,6 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 - `VisibleAnywhere`: 可见但不可编辑
 - `Transient`: 不序列化到磁盘
 - `Replicated`: 属性参与网络复制
-
-#### 基础能力
-
-`UObject` 提供：
-
-- Reflection / metadata
-- Serialization / asset loading
-- Garbage Collection
-- Network Replication 基础能力
-- Blueprint 暴露与调用
-- Class Default Object（`CDO`）和默认属性系统
 
 #### 构造
 
@@ -246,39 +244,98 @@ WeaponActor->SetOwner(PlayerController);     // PlayerController 是 WeaponActor
 
 ### Assets
 
-#### 路径概念
+UE asset 不是直接用磁盘路径访问，而是通过 package name / object path 访问。
+物理文件先被注册到 mount point，再转换成 long package name，最后定位到 package 内的 `UObject`。
 
-- **物理文件路径**：磁盘真实路径，例如 `Content/Characters/Hero.uasset`
-- **打包后路径**：Cook / Package 后仍保留逻辑目录，但物理上可能在 `.pak` / `.ucas`
-- **Mount Point**：虚拟挂载点，例如项目 `Content/` 通常挂载到 `/Game/`
-- **Long Package Name**：不带扩展名的 package 路径，例如 `/Game/Characters/Hero`
-- **Object Path**：对象完整路径，例如 `/Game/Characters/Hero.Hero`
-- **Subobject Path**：非 top-level object 路径，通常在 root object 后用 `:` 接 subpath，例如 `/Game/Maps/Main.Main:PersistentLevel.Actor_0.Component`
-- **Class Path**：Blueprint 生成类路径常见形式，例如 `/Game/BP_Hero.BP_Hero_C`
+```text
+Content/Characters/Hero.uasset
+  -> /Game/Characters/Hero
+  -> /Game/Characters/Hero.Hero
+```
+
+#### 虚拟文件系统
+
+- 这里的 virtual file system 主要指 asset package namespace / mount point，不是普通磁盘文件 API
+- UE 的资产路径是虚拟 package path，不是操作系统文件路径
+- `Content/` 通常挂载到 `/Game/`
+- Engine content 通常挂载到 `/Engine/`
+- Plugin content 通常挂载到 `/<PluginName>/`
+- C++ 反射类型不在 `Content/`，路径通常是 `/Script/<ModuleName>.<TypeName>`
+- 自定义挂载点可通过 package 系统注册，核心是把物理目录映射到虚拟 package root
+- Cook / Package 后物理文件可能进入 `.pak` / `.ucas`，但虚拟 package path 基本保持稳定
+- 只有已注册 mount point 的路径才能在 package 系统中解析
+
+常见映射：
+
+| 物理来源                         | 虚拟根路径        | 示例                                      |
+| -------------------------------- | ----------------- | ----------------------------------------- |
+| `Content/`                       | `/Game/`          | `/Game/Characters/Hero`                   |
+| `Engine/Content/`                | `/Engine/`        | `/Engine/EngineMaterials/DefaultMaterial` |
+| `Plugins/MyPlugin/Content/`      | `/MyPlugin/`      | `/MyPlugin/Items/Sword`                   |
+| C++ reflected type in `Engine`   | `/Script/Engine`  | `/Script/Engine.Actor`                    |
+| C++ reflected type in game module | `/Script/MyProject` | `/Script/MyProject.MyActor`             |
+
+#### Package / Object 路径
+
+| 概念                    | 形式                                      | 含义                                      |
+| ----------------------- | ----------------------------------------- | ----------------------------------------- |
+| Physical File Path      | `Content/Characters/Hero.uasset`          | 磁盘文件；Editor / source control 层面    |
+| Mount Point             | `/Game/`                                  | 虚拟根，把物理目录映射进 package namespace |
+| Long Package Name       | `/Game/Characters/Hero`                   | package 名，不带扩展名、不含对象名        |
+| Package File Name       | `Hero.uasset` / `Main.umap`               | package 在磁盘上的文件                    |
+| Top-level Object Path   | `/Game/Characters/Hero.Hero`              | package 内 top-level object               |
+| Subobject Path          | `/Game/Maps/Main.Main:PersistentLevel.X`  | top-level object 下的 subobject           |
+| Blueprint Generated Class | `/Game/BP_Hero.BP_Hero_C`               | Blueprint asset 生成的 `UClass`           |
+| Native Class Path       | `/Script/Engine.Actor`                    | C++ 反射类型，不对应 `Content/` 文件      |
+
+易混点：
+
+- `/Game/Foo/Bar` 是 package name，不是文件夹路径；磁盘上通常对应 `Content/Foo/Bar.uasset`
+- `/Game/Foo/Bar.Bar` 才是 object path，`.` 后面是 package 内对象名
+- asset 文件名和 top-level object 名通常相同，但概念上不是一回事
+- `.umap` 也是 package，只是主要保存 `UWorld` / `ULevel` 相关对象
+- `/Script/Module.Type` 是 native reflected type path，不表示 `Source/` 被挂载
 
 #### 名称 API
 
-- `GetName()`: 对象自身名字，不含 Outer / Package，例如 `Hero`
-- `GetPathName()`: 包含 Outer 链；top-level object 通常是 `/Package/Asset.Asset`，非根对象通常带 `:SubPath`
-- `GetFullName()`: `ClassName + " " + GetPathName()`，例如 `SkeletalMesh /Game/Characters/Hero.Hero`
-- `GetOuter()`: 所属外层对象，资源对象的 Outer 通常是 `UPackage`
-
-```text
-Content/Characters/Hero.uasset          # 物理文件路径
-/Game/Characters/Hero                   # Long Package Name
-Hero                                    # GetName()
-/Game/Characters/Hero.Hero              # Object Path / GetPathName()
-SkeletalMesh /Game/Characters/Hero.Hero # GetFullName()
-/Game/Maps/Main.Main:PersistentLevel.Actor_0.Component # subobject path
-```
+| API / 类型             | 结果示例                                  | 备注                                      |
+| ---------------------- | ----------------------------------------- | ----------------------------------------- |
+| `GetName()`            | `Hero`                                    | 对象自身名字，不含 package / outer        |
+| `GetPathName()`        | `/Game/Characters/Hero.Hero`              | object path；非 top-level object 会带 `:` |
+| `GetFullName()`        | `SkeletalMesh /Game/Characters/Hero.Hero` | class name + object path                  |
+| `GetOuter()`           | `UPackage` / outer object                 | asset 的 outer 通常是 `UPackage`          |
+| `FPackageName`         | package path conversion                   | filename / long package name / mount point |
+| `FTopLevelAssetPath`   | `/Game/Characters/Hero.Hero`              | top-level asset，不含 subobject path      |
+| `FSoftObjectPath`      | `/Game/Maps/Main.Main:SubPath`            | soft reference，可包含 subobject path     |
 
 #### 引用方式
 
-- Hard Reference: 直接引用资产，加载当前对象时会连带加载依赖
-- Soft Reference: 只记录路径，需要时异步 / 手动加载，适合大资源和可选资源
-- `ConstructorHelpers::FObjectFinder`: 构造期硬查找资产，只适合默认资源绑定
-- `TSoftObjectPtr::LoadSynchronous()`: 同步加载软引用，简单但可能卡顿
-- `StreamableManager`: 异步加载软引用资源
+- Hard Reference: 直接引用资产；加载当前对象时可能连带加载依赖
+- Soft Reference: 只记录 object path，需要时手动 / 异步加载
+- `TSoftObjectPtr<T>`: soft object reference，适合大资源、可选资源、跨关卡资源
+- `TSoftClassPtr<T>`: soft class reference，常用于 Blueprint class
+- `ConstructorHelpers::FObjectFinder`: constructor 中硬查找默认资产，只适合 native 默认绑定
+- `TSoftObjectPtr::LoadSynchronous()`: 同步加载，简单但可能卡顿
+- `StreamableManager`: 异步加载 soft reference
+
+Editor 中选择资产不必然等于 hard reference，关键看属性类型：
+
+| 场景                                     | 引用类型        | 影响                                      |
+| ---------------------------------------- | --------------- | ----------------------------------------- |
+| `UPROPERTY() TObjectPtr<UTexture2D>`      | Hard Reference  | 引用者加载时，目标资产也需要加载          |
+| `UPROPERTY() UStaticMesh*`                | Hard Reference  | UE4 / 裸指针写法，本质仍是 hard object ref |
+| Blueprint 变量类型是具体 asset class      | Hard Reference  | 默认值里选资产会序列化硬引用              |
+| Component 默认属性里指定 mesh / material  | Hard Reference  | 常见于 Blueprint / Actor 默认资源         |
+| `TSoftObjectPtr<UTexture2D>`              | Soft Reference  | Editor 可选资产，但保存的是 object path   |
+| `TSoftClassPtr<AActor>`                   | Soft Reference  | 常用于引用 Blueprint class                |
+| DataTable / config 中保存 asset path      | Soft Reference  | 通常避免配置表加载时连带加载大量资产      |
+
+判断规则：
+
+- 如果属性是 `UObject*` / `TObjectPtr<T>` / Blueprint object reference，Editor 中选资产通常形成 hard reference
+- 如果属性是 `TSoftObjectPtr<T>` / `TSoftClassPtr<T>` / `FSoftObjectPath`，Editor 中选资产通常形成 soft reference
+- hard reference 会影响加载链、cook 依赖和内存占用；大型可选资源优先考虑 soft reference
+- 可用 Reference Viewer / Size Map 检查资产引用链和意外加载依赖
 
 ## Gameplay Framework
 
