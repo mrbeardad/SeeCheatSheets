@@ -58,37 +58,25 @@ MyProject/
 `Module` 是 UE 的 C++ 编译、链接和加载单元，不是 C++20 `module`，也不是 namespace。
 项目和 plugin 都可以包含多个 module。
 
-常见拆法：
-
-- Runtime module: gameplay / runtime code，可进入 packaged build
-- Editor module: editor-only 工具代码，不应进入 packaged build
-- Plugin module: plugin 内的 runtime / editor code
-
-`*.Build.cs`：
-
-- 由 `Unreal Build Tool` 读取，声明依赖、include path、编译选项
-- `PublicDependencyModuleNames`: public header 暴露了依赖 module 的类型 / 函数时使用
-- `PrivateDependencyModuleNames`: 只在 `.cpp` 或 private header 中使用依赖时使用，优先选这个
-- `Public/`: 对其他 module 暴露的 header
-- `Private/`: module 内部实现和内部 header
-
-| 场景                                 | 放法                           |
-| ------------------------------------ | ------------------------------ |
-| gameplay runtime code                | Runtime module                 |
-| 自定义 editor panel、asset action    | Editor module                  |
-| public header 用到了依赖 module 类型 | `PublicDependencyModuleNames`  |
-| 只有 `.cpp` 使用依赖 module          | `PrivateDependencyModuleNames` |
-| 需要被其他 module include 的 API     | 放 `Public/`                   |
-| 只给本 module 使用的实现细节         | 放 `Private/`                  |
+| 关注点       | 规则                                                                 |
+| ------------ | -------------------------------------------------------------------- |
+| 类型         | Runtime module 进 packaged build；Editor module 只放 editor-only 代码 |
+| `Build.cs`   | 给 UBT 声明依赖、include path、编译选项                               |
+| public 依赖  | public header 暴露依赖类型 / 函数时用 `PublicDependencyModuleNames`    |
+| private 依赖 | 只在 `.cpp` 或 private header 中使用时用 `PrivateDependencyModuleNames` |
+| 目录         | `Public/` 给其他 module include；`Private/` 放内部实现                |
+| editor 依赖  | runtime module 不应依赖 `UnrealEd`；复杂 editor 逻辑拆 Editor module   |
 
 加载入口：
 
 - 默认 game module 通常用 `IMPLEMENT_PRIMARY_GAME_MODULE`
-- 普通 module 可实现 `IModuleInterface`
-- `StartupModule()`: module 加载后注册类型、菜单、扩展点等
-- `ShutdownModule()`: module 卸载前清理注册项
-- runtime module 不应依赖 `UnrealEd` 等 editor-only module
-- 少量 editor 条件代码可用 `#if WITH_EDITOR`，复杂工具逻辑应拆 Editor module
+- 普通 module 可实现 `IModuleInterface`，在 `StartupModule()` / `ShutdownModule()` 注册和清理扩展点
+
+编译产物不固定等于一个 `.dll` 或 `.lib`：
+
+- Editor / modular build: 常见为 `UnrealEditor-MyModule.dll`
+- Windows `.lib`: 多数是 import library，用于链接 `.dll`
+- monolithic build: 多个 module 静态链接进最终 `.exe`
 
 ### Target
 
@@ -98,6 +86,9 @@ MyProject/
 - `MyProjectEditor.Target.cs`: editor target，可包含 Editor module
 - 常见 target type: `Game`、`Editor`、`Client`、`Server`
 - `Target.cs` 管 project-level build；`Build.cs` 管 module-level build
+- `Target` 通常对应最终可执行构建产物；Windows game / client / server target 常见产物是 `.exe`
+- Editor target 通常不是生成一个独立项目 editor `.exe`，而是构建供 `UnrealEditor.exe` 加载的 editor/game module `.dll`
+- packaged monolithic game 中，target 会把需要的 module 链接进最终 `.exe`
 
 ## Runtime System
 
@@ -147,14 +138,14 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 
 **C++ constructor 与 CDO**
 
-- 每个 `UClass` 有一个 Class Default Object（`CDO`），保存该 class 的默认属性
-- 同一个 C++ constructor 会用于构造 CDO 和创建 instance；不要假设 `this` 一定是 gameplay instance
-- `UObject` constructor 不支持自定义参数；运行时参数通常用 setter / init function / deferred spawn 传入
-- Blueprint class 的默认值也会体现在对应 generated class / CDO 上
+- 每个 `UClass` 都有 Class Default Object（`CDO`）；Blueprint 默认值也会落到 generated class / `CDO`
+- C++ constructor 会用于构造 `CDO` 和 instance；不要假设 `this` 是 gameplay instance
 - 普通 instance 会从 class default / archetype 拷贝默认属性，再进入后续初始化流程
-- constructor 适合设置 native 默认值和 default subobject，不适合做 gameplay 初始化
+- constructor 适合设置 native default 和 default subobject，不适合做 gameplay init
 - constructor 中不要依赖 `World`、运行时 Actor 关系、Editor 中配置好的 instance 值
-- `CreateDefaultSubobject<T>()` 只应在 constructor 中调用，常用于创建默认 `UActorComponent`
+- `UObject` constructor 不支持自定义参数；运行时参数用 setter / init function / deferred spawn
+- `CreateDefaultSubobject<T>(Name)` 只应在 constructor 中用；它不只是调用 constructor，还会创建带 Outer / archetype 关系的 default subobject template
+- default subobject 的 `Name` 是稳定身份，影响 Blueprint 继承、序列化默认值和实例复制；不要随意改名或条件创建
 
 **构造途径**
 
@@ -237,10 +228,24 @@ WeaponActor->SetOwner(PlayerController);     // PlayerController 是 WeaponActor
 
 ### Blueprint
 
-- 蓝图可视作一个高级 C++ Class, 继承自某个 Base Class
-- 不同于 C++ Class 用 UPROPERTY 和 UFUNCTION 封装数据与逻辑, 蓝图用 Event Graph 同时封装数据与逻辑
-- UE 中的 Class 基于原型设计模式, 可以将 CDO 实例视作一个资产
-- UE 中很多数据的拷贝是浅拷贝(引用), 特别是大多数资产(通过 Path 引用)
+Blueprint 本质是资产化的 `UClass` 扩展：继承 native class 或另一个 Blueprint class，保存默认属性、component tree、graph 和 generated class。
+
+| 关注点        | 要点                                                                          |
+| ------------- | ----------------------------------------------------------------------------- |
+| Class / CDO   | Blueprint 编译后生成 `UBlueprintGeneratedClass`，默认值落在该 class 的 `CDO` |
+| Graph         | Event Graph / Function Graph 会编译成 Blueprint VM 执行的数据 / glue          |
+| 变量          | Blueprint 变量本质是 reflected property；默认值序列化在 asset / CDO 中        |
+| 组件          | Blueprint component tree 叠加在 C++ default subobject 之上                    |
+| 资产引用      | object reference 通常是 hard reference；soft reference 保存 object path       |
+| 运行时实例    | spawn / load 时从 class default / archetype 复制默认值，再进入 Actor 生命周期 |
+
+易混点：
+
+- 修改 Blueprint 默认值是在改 class default，不是改某个已运行 instance
+- Construction Script 可能在 Editor 中频繁执行，不适合放昂贵逻辑或持久副作用
+- Blueprint 里引用具体资产 / class 容易形成 hard reference，影响加载链和 cook 依赖
+- Blueprint class 路径常见形式是 `/Game/BP_Hero.BP_Hero_C`，不是 `.uasset` 文件路径
+- 性能敏感、复杂循环、底层系统优先放 C++，Blueprint 适合组合、配置和高层 gameplay glue
 
 ### Assets
 
