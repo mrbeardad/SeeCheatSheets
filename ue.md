@@ -58,14 +58,14 @@ MyProject/
 `Module` 是 UE 的 C++ 编译、链接和加载单元，不是 C++20 `module`，也不是 namespace。
 项目和 plugin 都可以包含多个 module。
 
-| 关注点       | 规则                                                                 |
-| ------------ | -------------------------------------------------------------------- |
-| 类型         | Runtime module 进 packaged build；Editor module 只放 editor-only 代码 |
-| `Build.cs`   | 给 UBT 声明依赖、include path、编译选项                               |
-| public 依赖  | public header 暴露依赖类型 / 函数时用 `PublicDependencyModuleNames`    |
+| 关注点       | 规则                                                                    |
+| ------------ | ----------------------------------------------------------------------- |
+| 类型         | Runtime module 进 packaged build；Editor module 只放 editor-only 代码   |
+| `Build.cs`   | 给 UBT 声明依赖、include path、编译选项                                 |
+| public 依赖  | public header 暴露依赖类型 / 函数时用 `PublicDependencyModuleNames`     |
 | private 依赖 | 只在 `.cpp` 或 private header 中使用时用 `PrivateDependencyModuleNames` |
-| 目录         | `Public/` 给其他 module include；`Private/` 放内部实现                |
-| editor 依赖  | runtime module 不应依赖 `UnrealEd`；复杂 editor 逻辑拆 Editor module   |
+| 目录         | `Public/` 给其他 module include；`Private/` 放内部实现                  |
+| editor 依赖  | runtime module 不应依赖 `UnrealEd`；复杂 editor 逻辑拆 Editor module    |
 
 加载入口：
 
@@ -140,38 +140,38 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 
 - 每个 `UClass` 都有 Class Default Object（`CDO`）；Blueprint 默认值也会落到 generated class / `CDO`
 - C++ constructor 会用于构造 `CDO` 和 instance；不要假设 `this` 是 gameplay instance
-- 普通 instance 会从 class default / archetype 拷贝默认属性，再进入后续初始化流程
+- 普通 instance 会从 `CDO` 拷贝默认属性，再进入后续初始化流程
 - constructor 适合设置 native default 和 default subobject，不适合做 gameplay init
-- constructor 中不要依赖 `World`、运行时 Actor 关系、Editor 中配置好的 instance 值
-- `UObject` constructor 不支持自定义参数；运行时参数用 setter / init function / deferred spawn
-- `CreateDefaultSubobject<T>(Name)` 只应在 constructor 中用；它不只是调用 constructor，还会创建带 Outer / archetype 关系的 default subobject template
-- default subobject 的 `Name` 是稳定身份，影响 Blueprint 继承、序列化默认值和实例复制；不要随意改名或条件创建
+- `CreateDefaultSubobject<T>(Name)` 只应在 constructor 中用；它不只是调用 constructor，还会创建带 Outer 关系的 default subobject template
 
 **构造途径**
 
-| 目标                       | API                                                   | 要点                                      |
-| -------------------------- | ----------------------------------------------------- | ----------------------------------------- |
-| default subobject          | `CreateDefaultSubobject<T>()`                         | 只在 constructor 中用，成为 class 默认结构 |
-| 普通 `UObject`             | `NewObject<T>(Outer)`                                 | 运行时创建，必须考虑 `Outer` 和 GC 可达性 |
-| `AActor`                   | `UWorld::SpawnActor<T>()`                             | Actor 由 `UWorld` 管理，不用 `NewObject`  |
-| 延迟初始化 `AActor`        | `SpawnActorDeferred<T>()` + `FinishSpawningActor()`   | spawn 后、construction 前设置参数         |
-| 加载已有 asset / object    | `LoadObject<T>()` / `StaticLoadObject()`              | 从 object path 反序列化对象               |
-| 复制已有 object            | `DuplicateObject<T>()`                                | 复制 object / subobject 图                |
+| 目标                    | API                                                 | 与 `CDO` / template 的关系                                                                 | 要点                                                                  |
+| ----------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Class Default Object    | engine 内部创建 `UClass` 默认对象                   | `CDO` 是默认值来源；构造它本身时不会“拷贝自己”，native class 通常以父类 `CDO` 为 archetype | 每个 `UClass` 一个，Blueprint 默认值最终落到 generated class 的 `CDO` |
+| default subobject       | `CreateDefaultSubobject<T>()`                       | 创建 default subobject template；不是简单“从 owner CDO 拷贝一个普通对象”                   | 只在 constructor 中用，成为 class 默认结构                            |
+| 普通 `UObject`          | `NewObject<T>(Outer)`                               | 未传 `Template` 时通常以 `Class` 的 `CDO` 初始化属性；传入 `Template` 时复制该 template    | 运行时创建，必须考虑 `Outer` 和 GC 可达性                             |
+| `AActor`                | `UWorld::SpawnActor<T>()`                           | 默认以 Actor class 的 `CDO` / archetype 初始化；`FActorSpawnParameters::Template` 可覆盖   | Actor 由 `UWorld` 管理，不用 `NewObject`                              |
+| 延迟初始化 `AActor`     | `SpawnActorDeferred<T>()` + `FinishSpawningActor()` | 初始对象仍来自 `CDO` / template；延迟的是 construction script / component 初始化等后续阶段 | spawn 后、construction 前设置参数                                     |
+| 加载已有 asset / object | `LoadObject<T>()` / `StaticLoadObject()`            | 不能简单理解为只拷贝 `CDO`；加载对象会先有默认初始化，再用 package 序列化数据覆盖          | 从 object path 反序列化对象                                           |
+| 复制已有 object         | `DuplicateObject<T>()`                              | 主要复制源对象及 subobject 图；源对象才是 template，不是目标 class 的 `CDO`                | 复制 object / subobject 图                                            |
 
 - 不要用 `new` / `delete` 管理 `UObject`
+- “从 `CDO` 拷贝”主要指 reflected property 默认值初始化；普通 C++ 成员仍按 C++ 构造规则处理
+- UE 构造底层更通用的概念是 `Template` / `Archetype`；没有显式 template 时，运行时新建对象通常退回到 class `CDO`
 - `.uasset` / `.umap` 本质上是 `UPackage` 序列化结果，加载路径会走反序列化而不是普通构造
 
 **构造期 Hook**
 
-| Hook                          | 触发场景                         | 备注                                      |
-| ----------------------------- | -------------------------------- | ----------------------------------------- |
-| C++ constructor               | CDO、spawn、load 等对象创建路径   | 设置 native default / default subobject   |
-| `PostInitProperties()`        | constructor 后、属性初始化后      | 通用 `UObject` hook                       |
-| `PostLoad()`                  | 从磁盘 / package 反序列化后       | load path；和 `PostActorCreated()` 互斥   |
-| `PostActorCreated()`          | Actor 被 spawn / editor 创建后    | Actor spawn path；construction 前         |
-| `OnConstruction()`            | Actor construction script 阶段    | Actor-only；对应 Blueprint Construction Script |
-| `PreInitializeComponents()`   | Actor components 初始化前         | Actor-only；通常晚于 construction         |
-| `PostInitializeComponents()`  | Actor components 初始化后         | Actor-only；进入 `BeginPlay()` 前         |
+| Hook                         | 触发场景                        | 备注                                           |
+| ---------------------------- | ------------------------------- | ---------------------------------------------- |
+| C++ constructor              | CDO、spawn、load 等对象创建路径 | 设置 native default / default subobject        |
+| `PostInitProperties()`       | constructor 后、属性初始化后    | 通用 `UObject` hook                            |
+| `PostLoad()`                 | 从磁盘 / package 反序列化后     | load path；和 `PostActorCreated()` 互斥        |
+| `PostActorCreated()`         | Actor 被 spawn / editor 创建后  | Actor spawn path；construction 前              |
+| `OnConstruction()`           | Actor construction script 阶段  | Actor-only；对应 Blueprint Construction Script |
+| `PreInitializeComponents()`  | Actor components 初始化前       | Actor-only；通常晚于 construction              |
+| `PostInitializeComponents()` | Actor components 初始化后       | Actor-only；进入 `BeginPlay()` 前              |
 
 #### 生命周期
 
@@ -230,14 +230,14 @@ WeaponActor->SetOwner(PlayerController);     // PlayerController 是 WeaponActor
 
 Blueprint 本质是资产化的 `UClass` 扩展：继承 native class 或另一个 Blueprint class，保存默认属性、component tree、graph 和 generated class。
 
-| 关注点        | 要点                                                                          |
-| ------------- | ----------------------------------------------------------------------------- |
-| Class / CDO   | Blueprint 编译后生成 `UBlueprintGeneratedClass`，默认值落在该 class 的 `CDO` |
-| Graph         | Event Graph / Function Graph 会编译成 Blueprint VM 执行的数据 / glue          |
-| 变量          | Blueprint 变量本质是 reflected property；默认值序列化在 asset / CDO 中        |
-| 组件          | Blueprint component tree 叠加在 C++ default subobject 之上                    |
-| 资产引用      | object reference 通常是 hard reference；soft reference 保存 object path       |
-| 运行时实例    | spawn / load 时从 class default / archetype 复制默认值，再进入 Actor 生命周期 |
+| 关注点      | 要点                                                                          |
+| ----------- | ----------------------------------------------------------------------------- |
+| Class / CDO | Blueprint 编译后生成 `UBlueprintGeneratedClass`，默认值落在该 class 的 `CDO`  |
+| Graph       | Event Graph / Function Graph 会编译成 Blueprint VM 执行的数据 / glue          |
+| 变量        | Blueprint 变量本质是 reflected property；默认值序列化在 asset / CDO 中        |
+| 组件        | Blueprint component tree 叠加在 C++ default subobject 之上                    |
+| 资产引用    | object reference 通常是 hard reference；soft reference 保存 object path       |
+| 运行时实例  | spawn / load 时从 class default / archetype 复制默认值，再进入 Actor 生命周期 |
 
 易混点：
 
@@ -265,33 +265,33 @@ Content/Characters/Hero.uasset
 - `Content/` 通常挂载到 `/Game/`
 - Engine content 通常挂载到 `/Engine/`
 - Plugin content 通常挂载到 `/<PluginName>/`
-- C++ 反射类型不在 `Content/`，路径通常是 `/Script/<ModuleName>.<TypeName>`
+- C++ 反射类型通常挂载到 `/Script/<ModuleName>.<TypeName>`
 - 自定义挂载点可通过 package 系统注册，核心是把物理目录映射到虚拟 package root
 - Cook / Package 后物理文件可能进入 `.pak` / `.ucas`，但虚拟 package path 基本保持稳定
 - 只有已注册 mount point 的路径才能在 package 系统中解析
 
 常见映射：
 
-| 物理来源                         | 虚拟根路径        | 示例                                      |
-| -------------------------------- | ----------------- | ----------------------------------------- |
-| `Content/`                       | `/Game/`          | `/Game/Characters/Hero`                   |
-| `Engine/Content/`                | `/Engine/`        | `/Engine/EngineMaterials/DefaultMaterial` |
-| `Plugins/MyPlugin/Content/`      | `/MyPlugin/`      | `/MyPlugin/Items/Sword`                   |
-| C++ reflected type in `Engine`   | `/Script/Engine`  | `/Script/Engine.Actor`                    |
-| C++ reflected type in game module | `/Script/MyProject` | `/Script/MyProject.MyActor`             |
+| 物理来源                          | 虚拟根路径          | 示例                                      |
+| --------------------------------- | ------------------- | ----------------------------------------- |
+| `Content/`                        | `/Game/`            | `/Game/Characters/Hero`                   |
+| `Engine/Content/`                 | `/Engine/`          | `/Engine/EngineMaterials/DefaultMaterial` |
+| `Plugins/MyPlugin/Content/`       | `/MyPlugin/`        | `/MyPlugin/Items/Sword`                   |
+| C++ reflected type in `Engine`    | `/Script/Engine`    | `/Script/Engine.Actor`                    |
+| C++ reflected type in game module | `/Script/MyProject` | `/Script/MyProject.MyActor`               |
 
 #### Package / Object 路径
 
-| 概念                    | 形式                                      | 含义                                      |
-| ----------------------- | ----------------------------------------- | ----------------------------------------- |
-| Physical File Path      | `Content/Characters/Hero.uasset`          | 磁盘文件；Editor / source control 层面    |
-| Mount Point             | `/Game/`                                  | 虚拟根，把物理目录映射进 package namespace |
-| Long Package Name       | `/Game/Characters/Hero`                   | package 名，不带扩展名、不含对象名        |
-| Package File Name       | `Hero.uasset` / `Main.umap`               | package 在磁盘上的文件                    |
-| Top-level Object Path   | `/Game/Characters/Hero.Hero`              | package 内 top-level object               |
-| Subobject Path          | `/Game/Maps/Main.Main:PersistentLevel.X`  | top-level object 下的 subobject           |
-| Blueprint Generated Class | `/Game/BP_Hero.BP_Hero_C`               | Blueprint asset 生成的 `UClass`           |
-| Native Class Path       | `/Script/Engine.Actor`                    | C++ 反射类型，不对应 `Content/` 文件      |
+| 概念                      | 形式                                     | 含义                                       |
+| ------------------------- | ---------------------------------------- | ------------------------------------------ |
+| Physical File Path        | `Content/Characters/Hero.uasset`         | 磁盘文件；Editor / source control 层面     |
+| Mount Point               | `/Game/`                                 | 虚拟根，把物理目录映射进 package namespace |
+| Long Package Name         | `/Game/Characters/Hero`                  | package 名，不带扩展名、不含对象名         |
+| Package File Name         | `Hero.uasset` / `Main.umap`              | package 在磁盘上的文件                     |
+| Top-level Object Path     | `/Game/Characters/Hero.Hero`             | package 内 top-level object                |
+| Subobject Path            | `/Game/Maps/Main.Main:PersistentLevel.X` | top-level object 下的 subobject            |
+| Blueprint Generated Class | `/Game/BP_Hero.BP_Hero_C`                | Blueprint asset 生成的 `UClass`            |
+| Native Class Path         | `/Script/Engine.Actor`                   | C++ 反射类型，不对应 `Content/` 文件       |
 
 易混点：
 
@@ -303,15 +303,15 @@ Content/Characters/Hero.uasset
 
 #### 名称 API
 
-| API / 类型             | 结果示例                                  | 备注                                      |
-| ---------------------- | ----------------------------------------- | ----------------------------------------- |
-| `GetName()`            | `Hero`                                    | 对象自身名字，不含 package / outer        |
-| `GetPathName()`        | `/Game/Characters/Hero.Hero`              | object path；非 top-level object 会带 `:` |
-| `GetFullName()`        | `SkeletalMesh /Game/Characters/Hero.Hero` | class name + object path                  |
-| `GetOuter()`           | `UPackage` / outer object                 | asset 的 outer 通常是 `UPackage`          |
-| `FPackageName`         | package path conversion                   | filename / long package name / mount point |
-| `FTopLevelAssetPath`   | `/Game/Characters/Hero.Hero`              | top-level asset，不含 subobject path      |
-| `FSoftObjectPath`      | `/Game/Maps/Main.Main:SubPath`            | soft reference，可包含 subobject path     |
+| API / 类型           | 结果示例                                  | 备注                                       |
+| -------------------- | ----------------------------------------- | ------------------------------------------ |
+| `GetName()`          | `Hero`                                    | 对象自身名字，不含 package / outer         |
+| `GetPathName()`      | `/Game/Characters/Hero.Hero`              | object path；非 top-level object 会带 `:`  |
+| `GetFullName()`      | `SkeletalMesh /Game/Characters/Hero.Hero` | class name + object path                   |
+| `GetOuter()`         | `UPackage` / outer object                 | asset 的 outer 通常是 `UPackage`           |
+| `FPackageName`       | package path conversion                   | filename / long package name / mount point |
+| `FTopLevelAssetPath` | `/Game/Characters/Hero.Hero`              | top-level asset，不含 subobject path       |
+| `FSoftObjectPath`    | `/Game/Maps/Main.Main:SubPath`            | soft reference，可包含 subobject path      |
 
 #### 引用方式
 
@@ -325,22 +325,10 @@ Content/Characters/Hero.uasset
 
 Editor 中选择资产不必然等于 hard reference，关键看属性类型：
 
-| 场景                                     | 引用类型        | 影响                                      |
-| ---------------------------------------- | --------------- | ----------------------------------------- |
-| `UPROPERTY() TObjectPtr<UTexture2D>`      | Hard Reference  | 引用者加载时，目标资产也需要加载          |
-| `UPROPERTY() UStaticMesh*`                | Hard Reference  | UE4 / 裸指针写法，本质仍是 hard object ref |
-| Blueprint 变量类型是具体 asset class      | Hard Reference  | 默认值里选资产会序列化硬引用              |
-| Component 默认属性里指定 mesh / material  | Hard Reference  | 常见于 Blueprint / Actor 默认资源         |
-| `TSoftObjectPtr<UTexture2D>`              | Soft Reference  | Editor 可选资产，但保存的是 object path   |
-| `TSoftClassPtr<AActor>`                   | Soft Reference  | 常用于引用 Blueprint class                |
-| DataTable / config 中保存 asset path      | Soft Reference  | 通常避免配置表加载时连带加载大量资产      |
-
-判断规则：
-
-- 如果属性是 `UObject*` / `TObjectPtr<T>` / Blueprint object reference，Editor 中选资产通常形成 hard reference
-- 如果属性是 `TSoftObjectPtr<T>` / `TSoftClassPtr<T>` / `FSoftObjectPath`，Editor 中选资产通常形成 soft reference
-- hard reference 会影响加载链、cook 依赖和内存占用；大型可选资源优先考虑 soft reference
-- 可用 Reference Viewer / Size Map 检查资产引用链和意外加载依赖
+- `UObject*` / `TObjectPtr<T>` / Blueprint object reference：通常形成 hard reference，引用者加载时目标资产也会进入加载链
+- `TSoftObjectPtr<T>` / `TSoftClassPtr<T>` / `FSoftObjectPath`：保存 object path，通常形成 soft reference，需要时再加载
+- Component 默认 mesh / material、Blueprint 默认值里选具体资产，常见是 hard reference
+- 大型可选资源优先 soft reference；用 Reference Viewer / Size Map 查意外依赖
 
 ## Gameplay Framework
 
