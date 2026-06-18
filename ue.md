@@ -282,16 +282,15 @@ Content/Characters/Hero.uasset
 
 #### Package / Object 路径
 
-| 概念                      | 形式                                     | 含义                                       |
-| ------------------------- | ---------------------------------------- | ------------------------------------------ |
-| Physical File Path        | `Content/Characters/Hero.uasset`         | 磁盘文件；Editor / source control 层面     |
-| Mount Point               | `/Game/`                                 | 虚拟根，把物理目录映射进 package namespace |
-| Long Package Name         | `/Game/Characters/Hero`                  | package 名，不带扩展名、不含对象名         |
-| Package File Name         | `Hero.uasset` / `Main.umap`              | package 在磁盘上的文件                     |
-| Top-level Object Path     | `/Game/Characters/Hero.Hero`             | package 内 top-level object                |
-| Subobject Path            | `/Game/Maps/Main.Main:PersistentLevel.X` | top-level object 下的 subobject            |
-| Blueprint Generated Class | `/Game/BP_Hero.BP_Hero_C`                | Blueprint asset 生成的 `UClass`            |
-| Native Class Path         | `/Script/Engine.Actor`                   | C++ 反射类型，不对应 `Content/` 文件       |
+| 概念                      | 形式                                                          | 含义                                       |
+| ------------------------- | ------------------------------------------------------------- | ------------------------------------------ |
+| Physical File Path        | `Content/Characters/Hero.uasset` / `Content/Levels/Main.umap` | 磁盘文件                                   |
+| Mount Point               | `/Game/`                                                      | 虚拟根，把物理目录映射进 package namespace |
+| Long Package Name         | `/Game/Characters/Hero`                                       | package 名，不带扩展名、不含对象名         |
+| Top-level Object Path     | `/Game/Characters/Hero.Hero`                                  | package 内 top-level object                |
+| Subobject Path            | `/Game/Maps/Main.Main:PersistentLevel.X`                      | top-level object 下的 subobject            |
+| Blueprint Generated Class | `/Game/BP_Hero.BP_Hero_C`                                     | Blueprint asset 生成的 `UClass`            |
+| Native Class Path         | `/Script/Engine.Actor`                                        | C++ 反射类型，不对应 `Content/` 文件       |
 
 易混点：
 
@@ -332,7 +331,40 @@ Editor 中选择资产不必然等于 hard reference，关键看属性类型：
 
 ## Gameplay Framework
 
-### 对象层级
+### Runtime 层级
+
+Gameplay runtime 的主线是：`GameInstance` 保存跨关卡会话状态，`World` 承载当前运行世界，`GameMode` 定义当前世界规则，`PlayerController` 表示玩家控制入口，`Pawn` / `Character` 是当前被控制的身体。
+
+```text
+UEngine
+  -> UGameInstance
+    -> ULocalPlayer
+      -> APlayerController
+    -> UWorld
+      -> ULevel
+      -> AGameMode / AGameState
+      -> APlayerController
+      -> APawn / ACharacter
+      -> other Actors / Components
+```
+
+关键生命周期：
+
+| 对象                | 生命周期 / 所属                                      | 主要职责                                      |
+| ------------------- | ---------------------------------------------------- | --------------------------------------------- |
+| `UGameInstance`     | 游戏会话级，通常跨 `OpenLevel()` 存活                | 跨关卡状态、save slot、全局配置、session data |
+| `UWorld`            | 当前运行世界实例，不等于 `.umap` 文件                | Actor 容器、timer、physics、navigation 等     |
+| `ULevel`            | `World` 中的关卡数据块                               | 承载关卡内 Actor 数据                         |
+| `AGameMode`         | 当前 `World` 的规则对象，server-only                 | 规则、spawn、胜负、match flow                 |
+| `AGameState`        | 当前 `World` 的全局可观察状态，可复制                | 波数、比分、倒计时、目标状态等                |
+| `APlayerController` | `World` 中的 Actor；本地玩家也由 `ULocalPlayer` 指向 | 输入、视角入口、possession、UI input mode     |
+| `APawn`             | 可被 `Controller` possess 的 Actor                   | 被控制的实体                                  |
+| `ACharacter`        | 带 `CharacterMovementComponent` 的 Pawn              | 常用人形角色                                  |
+
+`.umap` 是磁盘资产；`UWorld` 是运行时世界对象；`ULevel` 是 `World` 内部的关卡数据块。
+简单地图通常只有 `PersistentLevel`，streaming / World Partition 会让一个 `World` 包含多个 level 数据块。
+
+### 对象类别
 
 **Engine-level singletons**
 
@@ -364,10 +396,60 @@ Editor 中选择资产不必然等于 hard reference，关键看属性类型：
 
 ### 运行时关系
 
-- `GameMode` 只在 server 存在，client 用 `GameState` 获取同步后的规则状态
-- `PlayerController` 不等于角色本体，角色本体通常是 `Pawn` / `Character`
+- `GameMode` 属于当前 `World`，不是全局 manager；切换地图 / `World` 时通常重建
+- `GameMode` 只在 server / authority 侧存在；单机游戏本质是本地同时运行 authority 逻辑，因此仍应按 server-only 规则对象理解
+- client / UI / 表现逻辑不应依赖 `GameMode`；需要同步或被观察的全局状态放 `GameState`
+- `PlayerController` 不等于角色本体；它表示玩家控制入口，通常比当前 `Pawn` 活得久
+- `Pawn` / `Character` 表示当前被控制的身体；死亡、换车、切角色常见做法是替换 Pawn，而不是销毁 PlayerController
 - `Pawn` 被 `Controller` possess 后才有控制来源
+- `APlayerController` 不是由 `AGameMode` 持有；它本质上是 `World` 中的 Actor，本地玩家路径中也由 `ULocalPlayer` 指向
+- `GameMode` 参与创建、初始化、重启玩家，但真正承载 Actor 的容器是 `UWorld`
 - `ActorComponent` 用组合拆行为，避免 `Actor` 继承层级膨胀
+
+典型玩家启动流程：
+
+```text
+OpenLevel / enter World
+  -> create UWorld and load Level Actors
+  -> create GameMode / GameState
+  -> create PlayerController
+  -> GameMode choose PlayerStart
+  -> GameMode spawn DefaultPawnClass
+  -> PlayerController possess Pawn
+  -> BeginPlay gameplay
+```
+
+`GameMode` 默认会尝试为玩家生成 `DefaultPawnClass` 并让 `PlayerController` possess 它；设置好 `DefaultPawnClass` 后，通常不需要手动 `SpawnActor()` 玩家角色。
+
+常见相关 hook / API：
+
+| API / Hook                               | 作用                              |
+| ---------------------------------------- | --------------------------------- |
+| `InitGame()`                             | 初始化当前 `GameMode`             |
+| `PreLogin()` / `Login()` / `PostLogin()` | 玩家连接 / 登录流程               |
+| `HandleStartingNewPlayer()`              | 处理新玩家开始游戏                |
+| `RestartPlayer()`                        | 生成 / 重生玩家入口               |
+| `ChoosePlayerStart()`                    | 选择出生点                        |
+| `SpawnDefaultPawnFor()`                  | 生成默认 Pawn                     |
+| `GetDefaultPawnClassForController()`     | 决定某个 Controller 使用哪个 Pawn |
+
+`PlayerStart` 是出生点候选；多个 `PlayerStart` 通常只是多个候选点，不会天然生成多个玩家角色。
+场景中出现两个玩家角色时，优先检查：
+
+- 是否手动放了一个 `Pawn` / `Character` 并设置 `Auto Possess Player = Player 0`
+- 当前 `GameMode.DefaultPawnClass` 是否又自动生成了一个 Pawn
+- 当前 map 的 `World Settings -> GameMode Override` 是否覆盖了项目默认 `GameMode`
+
+常见边界：
+
+| 状态 / 逻辑             | 常见归属                                    |
+| ----------------------- | ------------------------------------------- |
+| save slot、跨关卡选择   | `GameInstance` / `GameInstanceSubsystem`    |
+| 当前关卡规则、胜负判断  | `GameMode`                                  |
+| 当前关卡可观察全局状态  | `GameState`                                 |
+| 玩家输入、视角、UI 模式 | `PlayerController` / `LocalPlayerSubsystem` |
+| 当前可死亡 / 可替换身体 | `Pawn` / `Character`                        |
+| 玩家分数、名字、队伍    | `PlayerState`                               |
 
 ## Editor
 
