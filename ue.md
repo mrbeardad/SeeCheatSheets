@@ -136,14 +136,6 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 
 #### 构造
 
-**C++ constructor 与 CDO**
-
-- 每个 `UClass` 都有 Class Default Object（`CDO`）；Blueprint 默认值也会落到 generated class / `CDO`
-- C++ constructor 会用于构造 `CDO` 和 instance；不要假设 `this` 是 gameplay instance
-- 普通 instance 会从 `CDO` 拷贝默认属性，再进入后续初始化流程
-- constructor 适合设置 native default 和 default subobject，不适合做 gameplay init
-- `CreateDefaultSubobject<T>(Name)` 只应在 constructor 中用；它不只是调用 constructor，还会创建带 Outer 关系的 default subobject template
-
 **构造途径**
 
 | 目标                    | API                                                 | 与 `CDO` / template 的关系                                                                 | 要点                                                                  |
@@ -161,17 +153,24 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 - UE 构造底层更通用的概念是 `Template` / `Archetype`；没有显式 template 时，运行时新建对象通常退回到 class `CDO`
 - `.uasset` / `.umap` 本质上是 `UPackage` 序列化结果，加载路径会走反序列化而不是普通构造
 
-**构造期 Hook**
+**构造流程**
 
-| Hook                         | 触发场景                        | 备注                                           |
-| ---------------------------- | ------------------------------- | ---------------------------------------------- |
-| C++ constructor              | CDO、spawn、load 等对象创建路径 | 设置 native default / default subobject        |
-| `PostInitProperties()`       | constructor 后、属性初始化后    | 通用 `UObject` hook                            |
-| `PostLoad()`                 | 从磁盘 / package 反序列化后     | load path；和 `PostActorCreated()` 互斥        |
-| `PostActorCreated()`         | Actor 被 spawn / editor 创建后  | Actor spawn path；construction 前              |
-| `OnConstruction()`           | Actor construction script 阶段  | Actor-only；对应 Blueprint Construction Script |
-| `PreInitializeComponents()`  | Actor components 初始化前       | Actor-only；通常晚于 construction              |
-| `PostInitializeComponents()` | Actor components 初始化后       | Actor-only；进入 `BeginPlay()` 前              |
+| 函数 / 阶段                   | 触发场景                                   | 备注                                                                                                                                               |
+| ----------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C++ constructor               | `CDO`、spawn、load 等对象创建路径          | 设置 native default / default subobject；不要假设 `this` 是 gameplay instance                                                                      |
+| `PostInitProperties()`        | constructor 后、属性初始化后               | 通用 `UObject` 初始化函数；CDO 创建也会走到这里，修改属性可能影响 class 默认状态                                                                   |
+| Blueprint Class Defaults 应用 | `UBlueprintGeneratedClass` CDO 创建 / 重建 | 不是常规 gameplay 回调；在 native constructor / `PostInitProperties()` 基础默认值之后应用 Blueprint 默认值 / component templates；CDO 至此生成完毕 |
+| `PostLoad()`                  | 从磁盘 / package 反序列化后                | load path；和 `PostActorCreated()` 互斥                                                                                                            |
+| `PostActorCreated()`          | Actor 被 spawn / editor 创建后             | Actor spawn path；construction 前                                                                                                                  |
+| `OnConstruction()`            | Actor construction script 阶段             | Actor-only；对应 Blueprint Construction Script；作用于 Actor instance                                                                              |
+| `PreInitializeComponents()`   | Actor components 初始化前                  | Actor-only；通常晚于 construction                                                                                                                  |
+| `PostInitializeComponents()`  | Actor components 初始化后                  | Actor-only；进入 `BeginPlay()` 前                                                                                                                  |
+
+补充：
+
+- 每个 `UClass` 都有 Class Default Object（`CDO`），作为 class 级默认对象和普通 instance 的默认值来源
+- native CDO 主要来自 C++ constructor / default subobject；Blueprint CDO 还会叠加 Blueprint asset 中保存的 Class Defaults 和 component templates
+- `CreateDefaultSubobject<T>(Name)` 只应在 constructor 中用；它创建的是带 Outer 关系的 default subobject template
 
 #### 生命周期
 
@@ -337,15 +336,26 @@ Gameplay runtime 的主线是：`GameInstance` 保存跨关卡会话状态，`Wo
 
 ```text
 UEngine
-  -> UGameInstance
-    -> ULocalPlayer
-      -> APlayerController
+  -> FWorldContext
+    -> UGameInstance
+      -> ULocalPlayer
+        -> APlayerController references
     -> UWorld
-      -> ULevel
-      -> AGameMode / AGameState
-      -> APlayerController
-      -> APawn / ACharacter
-      -> other Actors / Components
+      -> GameMode reference
+      -> GameState reference
+        -> PlayerArray[]
+          -> APlayerState
+      -> Levels[]
+        -> ULevel
+          -> Actors[]
+            -> AGameMode / AGameState / APlayerState
+            -> APlayerController
+            -> APawn / ACharacter
+            -> other Actors / Components
+
+APlayerController
+  -> PlayerState reference
+  -> Pawn reference
 ```
 
 关键生命周期：
@@ -421,9 +431,9 @@ OpenLevel / enter World
 
 `GameMode` 默认会尝试为玩家生成 `DefaultPawnClass` 并让 `PlayerController` possess 它；设置好 `DefaultPawnClass` 后，通常不需要手动 `SpawnActor()` 玩家角色。
 
-常见相关 hook / API：
+常见相关函数 / API：
 
-| API / Hook                               | 作用                              |
+| API / 函数                               | 作用                              |
 | ---------------------------------------- | --------------------------------- |
 | `InitGame()`                             | 初始化当前 `GameMode`             |
 | `PreLogin()` / `Login()` / `PostLogin()` | 玩家连接 / 登录流程               |
