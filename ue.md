@@ -339,7 +339,7 @@ UEngine
   -> FWorldContext
     -> UGameInstance
       -> ULocalPlayer
-        -> APlayerController references
+        -> references APlayerController
     -> UWorld
       -> GameMode reference
       -> GameState reference
@@ -348,8 +348,9 @@ UEngine
       -> Levels[]
         -> ULevel
           -> Actors[]
-            -> AGameMode / AGameState / APlayerState
+            -> AGameMode / AGameState
             -> APlayerController
+            -> APlayerState
             -> APawn / ACharacter
             -> other Actors / Components
 
@@ -358,63 +359,77 @@ APlayerController
   -> Pawn reference
 ```
 
-关键生命周期：
+核心对象：
 
-| 对象                | 生命周期 / 所属                                      | 主要职责                                      |
-| ------------------- | ---------------------------------------------------- | --------------------------------------------- |
-| `UGameInstance`     | 游戏会话级，通常跨 `OpenLevel()` 存活                | 跨关卡状态、save slot、全局配置、session data |
-| `UWorld`            | 当前运行世界实例，不等于 `.umap` 文件                | Actor 容器、timer、physics、navigation 等     |
-| `ULevel`            | `World` 中的关卡数据块                               | 承载关卡内 Actor 数据                         |
-| `AGameMode`         | 当前 `World` 的规则对象，server-only                 | 规则、spawn、胜负、match flow                 |
-| `AGameState`        | 当前 `World` 的全局可观察状态，可复制                | 波数、比分、倒计时、目标状态等                |
-| `APlayerController` | `World` 中的 Actor；本地玩家也由 `ULocalPlayer` 指向 | 输入、视角入口、possession、UI input mode     |
-| `APawn`             | 可被 `Controller` possess 的 Actor                   | 被控制的实体                                  |
-| `ACharacter`        | 带 `CharacterMovementComponent` 的 Pawn              | 常用人形角色                                  |
+| 类别               | 对象 / 类型              | 生命周期 / 所属                       | 主要职责 / 要点                                        |
+| ------------------ | ------------------------ | ------------------------------------- | ------------------------------------------------------ |
+| Engine context     | `UEngine`                | engine 全局                           | 管理 world context、viewport、engine 级服务            |
+| Engine context     | `FWorldContext`          | engine 内部上下文                     | 追踪 `UWorld` / `UGameInstance` / travel / PIE context |
+| Session            | `UGameInstance`          | 游戏会话级，通常跨 `OpenLevel()` 存活 | 跨关卡状态、save slot、全局配置、session data          |
+| Local player       | `ULocalPlayer`           | 本地玩家槽位，split screen 时可有多个 | 本地输入、viewport、引用本地 `PlayerController`        |
+| World              | `UWorld`                 | 当前运行世界实例，不等于 `.umap` 文件 | levels、Actor、timer、physics、navigation、trace       |
+| World              | `ULevel`                 | `World` 中的关卡数据块                | 承载 `Actors[]`                                        |
+| World              | `AWorldSettings`         | level 级 Actor                        | level 配置                                             |
+| World              | `ALevelScriptActor`      | Level Blueprint 的运行时实例          | 本关专用事件编排                                       |
+| Gameplay framework | `AGameMode`              | 当前 `World` 规则对象，server-only    | 规则决策、spawn、胜负、match flow                      |
+| Gameplay framework | `AGameSession`           | server-only                           | 登录、会话、匹配相关                                   |
+| Gameplay framework | `AGameState`             | 当前 `World` 公共状态，可复制         | 波数、比分、倒计时、目标状态、`PlayerArray`            |
+| Gameplay framework | `APlayerState`           | 单个玩家的公共状态，通常跨 pawn 存活  | 玩家名、分数、队伍、match 内玩家数据                   |
+| Gameplay framework | `APlayerController`      | `World` 中的 Actor，本地玩家也会引用  | 输入、视角入口、possession、UI input mode              |
+| Gameplay framework | `APawn` / `ACharacter`   | 可被 `Controller` possess 的 Actor    | 当前被控制的身体；`Character` 带人形 movement          |
+| World entity       | `AActor`                 | `ULevel.Actors[]` 中的世界实体        | transform、spawn / destroy、component owner            |
+| World entity       | `UActorComponent`        | Actor 的子对象                        | 行为模块，无 transform                                 |
+| World entity       | `USceneComponent`        | Actor 的空间 component                | 带 transform，可组成 attach 层级                       |
+| Subsystem          | `UGameInstanceSubsystem` | 跟随 `GameInstance`，跨关卡           | save slot、settings、全局配置                          |
+| Subsystem          | `UWorldSubsystem`        | 跟随当前 `World`，切关卡重建          | spawn director、weather、objective registry            |
+| Subsystem          | `ULocalPlayerSubsystem`  | 每个 `ULocalPlayer` 一份              | input mapping、本地 UI 偏好                            |
+| Subsystem          | `UEngineSubsystem`       | engine 级                             | 普通 gameplay 项目较少用                               |
 
 `.umap` 是磁盘资产；`UWorld` 是运行时世界对象；`ULevel` 是 `World` 内部的关卡数据块。
 简单地图通常只有 `PersistentLevel`，streaming / World Partition 会让一个 `World` 包含多个 level 数据块。
 
-### 对象类别
-
-**Engine-level singletons**
-
-- `UEngine`: global engine instance
-- `UGameInstance`: 跨 level 存活，适合保存会话级状态
-- `ULocalPlayer`: 本地玩家入口，split screen 时可有多个
-
-**Gameplay framework**
-
-- `AGameMode`: server-only，定义规则、spawn、胜负等
-- `AGameSession`: server-only，登录、会话、匹配相关
-- `AGameState`: replicated，全局游戏状态
-- `APlayerState`: replicated，玩家状态，通常跨 pawn 存活
-- `APlayerController`: 玩家输入与控制入口
-- `APawn` / `ACharacter`: 可被 controller possessed 的实体
-
-**Per-world objects**
-
-- `UWorld`: 一个运行中的世界
-- `ULevel`: `World` 中的关卡数据块
-- `AWorldSettings`: level 级配置
-- `ALevelScriptActor`: Level Blueprint 的运行时实例
-
-**World entities**
-
-- `AActor`: 世界中的实体，有 transform，可 spawn / destroy
-- `UActorComponent`: Actor 的行为模块，无独立 transform
-- `USceneComponent`: 带 transform 的 component，可组成层级
-
 ### 运行时关系
 
-- `GameMode` 属于当前 `World`，不是全局 manager；切换地图 / `World` 时通常重建
-- `GameMode` 只在 server / authority 侧存在；单机游戏本质是本地同时运行 authority 逻辑，因此仍应按 server-only 规则对象理解
-- client / UI / 表现逻辑不应依赖 `GameMode`；需要同步或被观察的全局状态放 `GameState`
-- `PlayerController` 不等于角色本体；它表示玩家控制入口，通常比当前 `Pawn` 活得久
-- `Pawn` / `Character` 表示当前被控制的身体；死亡、换车、切角色常见做法是替换 Pawn，而不是销毁 PlayerController
-- `Pawn` 被 `Controller` possess 后才有控制来源
-- `APlayerController` 不是由 `AGameMode` 持有；它本质上是 `World` 中的 Actor，本地玩家路径中也由 `ULocalPlayer` 指向
-- `GameMode` 参与创建、初始化、重启玩家，但真正承载 Actor 的容器是 `UWorld`
-- `ActorComponent` 用组合拆行为，避免 `Actor` 继承层级膨胀
+运行时关系先分清三条主线：**容器 / 引用**、**控制 / 身体**、**规则 / 状态**。
+
+**容器 / 引用关系**
+
+| 主体            | 关系                                  | 含义                                                                   |
+| --------------- | ------------------------------------- | ---------------------------------------------------------------------- |
+| `UEngine`       | `WorldContexts[] -> FWorldContext`    | engine 可同时追踪 editor、PIE、preview、game 等多个 world              |
+| `FWorldContext` | references `UGameInstance` / `UWorld` | 把当前运行上下文、world、travel 信息关联起来                           |
+| `UWorld`        | owns `Levels[]` / `PersistentLevel`   | `World` 是运行时容器，level 是其中的 Actor 数据块                      |
+| `ULevel`        | owns `Actors[]`                       | `AGameMode`、`AGameState`、`PlayerController`、`Pawn` 等本质都是 Actor |
+| `UWorld`        | references `GameMode` / `GameState`   | 语义上直接访问当前规则对象和公共状态，但 Actor 仍在 level 中           |
+| `UGameInstance` | owns `LocalPlayers[]`                 | 本地玩家槽位；split screen 时可有多个                                  |
+| `ULocalPlayer`  | references `APlayerController`        | 本地玩家入口指向当前 world 中的控制器 Actor                            |
+
+**控制 / 身体关系**
+
+| 关系                              | 要点                                                                    |
+| --------------------------------- | ----------------------------------------------------------------------- |
+| `PlayerController -> Pawn`        | `PlayerController` 是控制入口，`Pawn` / `Character` 是当前身体          |
+| `Controller::Possess(Pawn)`       | Pawn 被 possess 后才有控制来源                                          |
+| `PlayerController` 生命周期       | 通常比当前 Pawn 久；死亡、换车、切角色常替换 Pawn 而不是销毁 Controller |
+| `PlayerController -> PlayerState` | 玩家 match/world 内公共状态，如分数、名字、队伍                         |
+| `GameState.PlayerArray[]`         | 观察所有玩家的 `PlayerState`                                            |
+
+**规则 / 状态 / 数据归属**
+
+| 状态 / 逻辑             | 常见归属                                    | 原则                                                   |
+| ----------------------- | ------------------------------------------- | ------------------------------------------------------ |
+| 当前关卡规则、胜负判断  | `GameMode`                                  | `GameMode` 做规则决策，server-only                     |
+| 当前关卡可观察全局状态  | `GameState`                                 | UI / client 读这里，不直接依赖 `GameMode`              |
+| 玩家分数、名字、队伍    | `PlayerState`                               | 单个玩家的公共状态，通常可复制                         |
+| 玩家输入、视角、UI 模式 | `PlayerController` / `LocalPlayerSubsystem` | 本地玩家控制入口                                       |
+| 当前可死亡 / 可替换身体 | `Pawn` / `Character` / component            | 血量、移动、动画等当前身体状态跟随 Pawn                |
+| save slot、跨关卡选择   | `GameInstance` / `GameInstanceSubsystem`    | 跨 `OpenLevel()` 存活                                  |
+| 持久化存档              | `USaveGame`                                 | 落盘数据；进入关卡后再恢复到 Actor / GameState         |
+| 本关专用事件编排        | `ALevelScriptActor`                         | 强绑定当前地图；通用 world service 用 `WorldSubsystem` |
+
+单机游戏本质上也在本地运行 authority 逻辑；仍建议按 server-only / replicated state 的边界组织代码，避免以后扩展和 UI 耦合出问题。
+
+### 玩家启动 / Spawn
 
 典型玩家启动流程：
 
@@ -449,6 +464,133 @@ OpenLevel / enter World
 - 是否手动放了一个 `Pawn` / `Character` 并设置 `Auto Possess Player = Player 0`
 - 当前 `GameMode.DefaultPawnClass` 是否又自动生成了一个 Pawn
 - 当前 map 的 `World Settings -> GameMode Override` 是否覆盖了项目默认 `GameMode`
+
+### Actor / Component
+
+Actor / Component 的主线是“实体 + 能力组合”，不要只靠继承堆 gameplay 类型。
+
+| 类型              | 核心含义                              | 典型用途                                  |
+| ----------------- | ------------------------------------- | ----------------------------------------- |
+| `AActor`          | `World` 中可 spawn / destroy 的实体   | 门、敌人、拾取物、投射物、触发器          |
+| `UActorComponent` | 挂在 Actor 上的行为模块，无 transform | health、inventory、interaction、combat    |
+| `USceneComponent` | 带 transform 的 component，可 attach  | mesh、camera、spring arm、collision shape |
+
+- `AActor` 的 transform 通常来自 `RootComponent`
+- `USceneComponent` 继承自 `UActorComponent`，但额外参与空间层级
+- 没有空间意义的能力优先用 `UActorComponent`，例如 `HealthComponent`
+- 需要位置 / 旋转 / attach 的对象用 `USceneComponent`，例如 mesh、camera、collision shape
+
+典型组合：
+
+```text
+ACharacter
+  -> CapsuleComponent // RootComponent
+    -> Mesh
+    -> SpringArm
+      -> Camera
+  -> HealthComponent
+  -> CombatComponent
+```
+
+### Subsystem
+
+`Subsystem` 是挂在某个生命周期域上的 service，适合替代“每张图都要手放的 manager actor”。
+
+| 需求                                 | 常见归属                | 原因                         |
+| ------------------------------------ | ----------------------- | ---------------------------- |
+| save slot、settings、跨关卡配置      | `GameInstanceSubsystem` | 跟随 `GameInstance`，跨关卡  |
+| 当前关卡刷怪、天气、目标注册         | `WorldSubsystem`        | 跟随当前 `World`，切关卡重建 |
+| Enhanced Input mapping、本地 UI 偏好 | `LocalPlayerSubsystem`  | 每个本地玩家一份             |
+| 某张地图一次性过场 / 机关编排        | `ALevelScriptActor`     | 强绑定当前 level             |
+| 某个 Actor 的能力                    | `ActorComponent`        | 依附实体，可复用             |
+
+- `WorldSubsystem` 不应硬引用某张地图里的具体 Actor；用注册、tag、interface 或关卡脚本注入更清晰
+- `LevelScriptActor` 不适合承载通用 gameplay 系统，避免多地图复制粘贴
+- `GameInstance` 可保存跨关卡状态，但复杂项目更推荐拆到 `GameInstanceSubsystem`
+
+### Input / Camera
+
+Enhanced Input 的主线是：`LocalPlayer` 持有 mapping context，`PlayerController` / `Pawn` 绑定响应，`Pawn` 执行动作。
+
+| 概念                                          | 作用                                              |
+| --------------------------------------------- | ------------------------------------------------- |
+| `UInputAction`                                | 输入意图和值，如 Move、Look、Jump、Interact       |
+| `UInputMappingContext`                        | 按键 / 手柄输入到 `InputAction` 的映射集合        |
+| `UEnhancedInputLocalPlayerSubsystem`          | 给某个 `ULocalPlayer` 添加 / 移除 mapping context |
+| `SetupPlayerInputComponent()`                 | 当前 Pawn 被 possess 后绑定输入响应函数           |
+| `FInputModeGameOnly` / `UIOnly` / `GameAndUI` | 控制输入路由到 game / UI 和焦点行为               |
+
+常见边界：
+
+| 逻辑                          | 常见归属                                    |
+| ----------------------------- | ------------------------------------------- |
+| 添加 / 切换 mapping context   | `PlayerController` / `LocalPlayerSubsystem` |
+| UI input mode、鼠标显示、暂停 | `PlayerController`                          |
+| 移动、跳跃、攻击执行          | `Pawn` / `Character` / component            |
+| 重生后仍存在的控制入口        | `PlayerController`                          |
+
+Camera 关系：
+
+- `PlayerController` 持有 `ControlRotation`，表示玩家视角意图
+- `CameraComponent` 常放在 `Pawn` / `Character` 上，但最终 view target 由 `PlayerController` 控制
+- `SpringArm` 常用于第三人称相机距离、碰撞避让、lag smoothing、跟随 control rotation
+- `SetViewTargetWithBlend()` 可切换到独立 camera actor，用于过场、死亡视角、观察目标
+
+常见第三人称设置：
+
+```text
+Character bUseControllerRotationYaw = false
+CharacterMovement bOrientRotationToMovement = true
+SpringArm bUsePawnControlRotation = true
+```
+
+### Collision Query
+
+Collision Query 是“问世界里有什么”，不同于 physics simulation 的真实物理响应。
+
+| Query     | 含义                        | 典型用途                       |
+| --------- | --------------------------- | ------------------------------ |
+| LineTrace | 一条线从 start 到 end       | 射击、交互视线、点击、视线检测 |
+| Sweep     | 一个形状从 start 移动到 end | 近战轨迹、粗射线、高速命中检测 |
+| Overlap   | 一个形状放在某位置查重叠    | 爆炸范围、触发区、拾取范围     |
+
+- Sweep 有运动路径，适合“移动中的形状检测”；Overlap 只有当前范围，适合“范围内有什么”
+- `Single` 返回一个主要命中；`Multi` 返回多个命中 / overlap 结果
+- `Trace Channel` 是查询使用的问题类型，如 `Visibility`、`Camera`、自定义 `Interact` / `WeaponTrace`
+- `Object Channel` 是目标对象类型，如 `Pawn`、`WorldStatic`、`PhysicsBody`
+- 命中结果由 `Collision Enabled`、object type、channel、response、query params、shape 共同决定
+
+常见 channel：
+
+| Channel       | 用途                       |
+| ------------- | -------------------------- |
+| `Visibility`  | 通用视线 / 点击 / 简单交互 |
+| `Camera`      | 相机阻挡、spring arm 避障  |
+| `Interact`    | 自定义玩家交互检测         |
+| `WeaponTrace` | 自定义武器 / 近战命中检测  |
+| `AISight`     | 自定义 AI 视线遮挡         |
+
+排查 trace 打不到对象时优先检查：debug draw、start/end、channel、目标 collision enabled、目标 response、ignored actors、目标组件是否有 collision。
+
+### Tick / Timer / Async
+
+UE gameplay 更新优先考虑事件驱动，其次 timer，最后才是 tick。
+
+| 机制                         | 用途                                         | 注意                                    |
+| ---------------------------- | -------------------------------------------- | --------------------------------------- |
+| `Tick()` / `TickComponent()` | 每帧 gameplay 更新，如相机平滑、追踪、插值   | 不要每帧全局搜索 / 低频检查             |
+| `FTimerManager`              | 延迟 / 周期执行，如 cooldown、回血、延迟开门 | 依赖 `World`，不要在 constructor 用     |
+| Latent Action                | Blueprint 流程等待，如 `Delay`               | 不阻塞线程，依赖 world context          |
+| Async Task                   | 后台计算 / IO / 数据解析                     | 修改 UObject / Actor 前回到 game thread |
+| Tick Group                   | 控制 tick 相对 physics / camera 的顺序       | 相机抖动、物理后读位置时检查            |
+
+常见判断：
+
+- 每帧连续变化：`Tick`
+- 固定时间后 / 周期触发：`Timer`
+- 蓝图流程等待：latent action
+- 耗时纯计算 / IO：async，结果回 game thread 应用
+- 不确定线程安全时，默认认为 `UObject` / `Actor` 操作必须在 game thread
 
 常见边界：
 
