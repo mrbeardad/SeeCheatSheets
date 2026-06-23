@@ -53,6 +53,18 @@ MyProject/
         MyPluginEditor/
 ```
 
+### Target
+
+`Target` 定义最终构建目标，决定编译哪些 module、以什么规则编译。
+
+- `MyProject.Target.cs`: game/runtime target
+- `MyProjectEditor.Target.cs`: editor target，可包含 Editor module
+- 常见 target type: `Game`、`Editor`、`Client`、`Server`
+- `Target.cs` 管 project-level build；`Build.cs` 管 module-level build
+- `Target` 通常对应最终可执行构建产物；Windows game / client / server target 常见产物是 `.exe`
+- Editor target 通常不是生成一个独立项目 editor `.exe`，而是构建供 `UnrealEditor.exe` 加载的 editor/game module `.dll`
+- packaged monolithic game 中，target 会把需要的 module 链接进最终 `.exe`
+
 ### Module
 
 `Module` 是 UE 的 C++ 编译、链接和加载单元，不是 C++20 `module`，也不是 namespace。
@@ -77,18 +89,6 @@ MyProject/
 - Editor / modular build: 常见为 `UnrealEditor-MyModule.dll`
 - Windows `.lib`: 多数是 import library，用于链接 `.dll`
 - monolithic build: 多个 module 静态链接进最终 `.exe`
-
-### Target
-
-`Target` 定义最终构建目标，决定编译哪些 module、以什么规则编译。
-
-- `MyProject.Target.cs`: game/runtime target
-- `MyProjectEditor.Target.cs`: editor target，可包含 Editor module
-- 常见 target type: `Game`、`Editor`、`Client`、`Server`
-- `Target.cs` 管 project-level build；`Build.cs` 管 module-level build
-- `Target` 通常对应最终可执行构建产物；Windows game / client / server target 常见产物是 `.exe`
-- Editor target 通常不是生成一个独立项目 editor `.exe`，而是构建供 `UnrealEditor.exe` 加载的 editor/game module `.dll`
-- packaged monolithic game 中，target 会把需要的 module 链接进最终 `.exe`
 
 ## Runtime System
 
@@ -188,7 +188,7 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 - `AActor` 的生命周期主要由 `UWorld` 管理，销毁用 `Destroy()`
 - `UActorComponent` 生命周期通常跟随 owner `AActor`
 
-#### 指针规则
+#### 引用规则
 
 | 类型                              | 用途                                            |
 | --------------------------------- | ----------------------------------------------- |
@@ -339,7 +339,9 @@ UEngine
   -> FWorldContext
     -> UGameInstance
       -> ULocalPlayer
-        -> references APlayerController
+        -> APlayerController references
+          -> PlayerState reference
+          -> Pawn reference
     -> UWorld
       -> GameMode reference
       -> GameState reference
@@ -348,15 +350,10 @@ UEngine
       -> Levels[]
         -> ULevel
           -> Actors[]
-            -> AGameMode / AGameState
+            -> AGameMode / AGameState / APlayerState
             -> APlayerController
-            -> APlayerState
             -> APawn / ACharacter
             -> other Actors / Components
-
-APlayerController
-  -> PlayerState reference
-  -> Pawn reference
 ```
 
 核心对象：
@@ -380,10 +377,10 @@ APlayerController
 | World entity       | `AActor`                 | `ULevel.Actors[]` 中的世界实体        | transform、spawn / destroy、component owner            |
 | World entity       | `UActorComponent`        | Actor 的子对象                        | 行为模块，无 transform                                 |
 | World entity       | `USceneComponent`        | Actor 的空间 component                | 带 transform，可组成 attach 层级                       |
-| Subsystem          | `UGameInstanceSubsystem` | 跟随 `GameInstance`，跨关卡           | save slot、settings、全局配置                          |
-| Subsystem          | `UWorldSubsystem`        | 跟随当前 `World`，切关卡重建          | spawn director、weather、objective registry            |
-| Subsystem          | `ULocalPlayerSubsystem`  | 每个 `ULocalPlayer` 一份              | input mapping、本地 UI 偏好                            |
 | Subsystem          | `UEngineSubsystem`       | engine 级                             | 普通 gameplay 项目较少用                               |
+| Subsystem          | `UGameInstanceSubsystem` | 跟随 `GameInstance`，跨关卡           | save slot、settings、全局配置                          |
+| Subsystem          | `ULocalPlayerSubsystem`  | 每个 `ULocalPlayer` 一份              | input mapping、本地 UI 偏好                            |
+| Subsystem          | `UWorldSubsystem`        | 跟随当前 `World`，切关卡重建          | spawn director、weather、objective registry            |
 
 `.umap` 是磁盘资产；`UWorld` 是运行时世界对象；`ULevel` 是 `World` 内部的关卡数据块。
 简单地图通常只有 `PersistentLevel`，streaming / World Partition 会让一个 `World` 包含多个 level 数据块。
@@ -418,14 +415,14 @@ APlayerController
 
 | 状态 / 逻辑             | 常见归属                                    | 原则                                                   |
 | ----------------------- | ------------------------------------------- | ------------------------------------------------------ |
+| save slot、跨关卡选择   | `GameInstance` / `GameInstanceSubsystem`    | 跨 `OpenLevel()` 存活                                  |
+| 玩家输入、视角、UI 模式 | `PlayerController` / `LocalPlayerSubsystem` | 本地玩家控制入口                                       |
+| 本关专用事件编排        | `ALevelScriptActor` / `WorldSubsystem`      | 强绑定当前地图；通用 world service 用 `WorldSubsystem` |
 | 当前关卡规则、胜负判断  | `GameMode`                                  | `GameMode` 做规则决策，server-only                     |
 | 当前关卡可观察全局状态  | `GameState`                                 | UI / client 读这里，不直接依赖 `GameMode`              |
 | 玩家分数、名字、队伍    | `PlayerState`                               | 单个玩家的公共状态，通常可复制                         |
-| 玩家输入、视角、UI 模式 | `PlayerController` / `LocalPlayerSubsystem` | 本地玩家控制入口                                       |
 | 当前可死亡 / 可替换身体 | `Pawn` / `Character` / component            | 血量、移动、动画等当前身体状态跟随 Pawn                |
-| save slot、跨关卡选择   | `GameInstance` / `GameInstanceSubsystem`    | 跨 `OpenLevel()` 存活                                  |
 | 持久化存档              | `USaveGame`                                 | 落盘数据；进入关卡后再恢复到 Actor / GameState         |
-| 本关专用事件编排        | `ALevelScriptActor`                         | 强绑定当前地图；通用 world service 用 `WorldSubsystem` |
 
 单机游戏本质上也在本地运行 authority 逻辑；仍建议按 server-only / replicated state 的边界组织代码，避免以后扩展和 UI 耦合出问题。
 
