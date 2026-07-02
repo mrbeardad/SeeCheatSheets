@@ -248,6 +248,34 @@ $MyInvocation # 调用者信息
   - `Command >$null`
   - `[void]$expr`
 
+## 编码
+
+PowerShell 字符串是 .NET `string`，内部按 UTF-16 存储；与 console、native command、文件交互时都需要在 strings 与 bytes 之间转换。
+
+```ps1
+chcp 65001 > $null
+
+[Console]::InputEncoding = [Text.UTF8Encoding]::new()  # console bytes -> PowerShell strings
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new() # PowerShell strings -> console bytes
+$OutputEncoding = [Text.UTF8Encoding]::new()           # PowerShell strings -> native command bytes
+
+Get-Content .\a.txt -Encoding utf8
+Set-Content .\a.txt -Encoding utf8
+Out-File .\a.txt -Encoding utf8
+```
+
+| 设置                        | 方向                                       | 典型影响                                                                            |
+| --------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `chcp 65001`                | Windows console code page                  | 将 legacy console code page 切到 UTF-8，影响 console 对 bytes 的解释                |
+| `[Console]::InputEncoding`  | console bytes -> PowerShell strings        | 读取键盘/console 输入时的解码                                                       |
+| `[Console]::OutputEncoding` | PowerShell strings -> console bytes        | 写到 console 时的编码；通常也影响 native command bytes -> PowerShell strings 的解码 |
+| `$OutputEncoding`           | PowerShell strings -> native command bytes | 管道传给 native command stdin 时的编码                                              |
+| `-Encoding`                 | file bytes <-> PowerShell strings          | `Get-Content` / `Set-Content` / `Out-File` 等文件 IO 的编码                         |
+
+- Native command 的 IO 本质是 bytes，不携带编码信息。Windows console 程序通常按 console code page 编解码，code page 可由 `chcp` 修改；因此 PowerShell 读取 native command stdout/stderr 时，通常用 `[Console]::OutputEncoding` 将 bytes 解码成 PowerShell strings。例外是很多现代 native command 不管 console code page，固定或优先使用 UTF-8。
+
+- 文件 IO 的编码由读写文件的 cmdlet / operator 决定，不受 `[Console]::*Encoding` 和 `$OutputEncoding` 影响。PowerShell 7 的文本文件 IO 默认通常是 `utf8NoBOM`，需要兼容旧工具时显式使用 `-Encoding`。
+
 ## 语法
 
 PowerShell 脚本解析有三种模式，详情参见 [about_Parsing](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_parsing)，
