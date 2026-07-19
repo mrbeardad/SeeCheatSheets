@@ -1,400 +1,499 @@
 # Unreal Engine Learning Roadmap
 
-目标：学习完后，只要给定美术资产，就能独立制作一个完整可运行的单机游戏。
+目标：理解并掌握 Unreal Engine 的基础概念、核心机制和主要子系统；最终在 AI agent + MCP 辅助下，能够判断设计、指导实现、诊断问题，并完成一个可运行的单机游戏。
 
-这份路线图偏向给后续 agent 使用：学习时不要只按 UE 子系统平铺推进，而要围绕“能交付 playable game”的能力链组织知识。
+AI agent / MCP 只改变操作方式，不改变学习目标：
 
-## 总目标
+- 必须掌握决定架构、正确性、性能和调试方向的知识
+- 具体 API 签名、Editor 点击路径、重复配置和批量资产操作可以按需查询或交给 agent
+- agent 生成的代码、Blueprint 和资产配置必须能理解其作用、归属、生命周期和风险
+- 不要求熟练记忆所有操作，但必须知道 UE 为什么这样工作，以及系统之间如何协作
 
-最终应具备以下能力：
+## 学习范围判断
 
-- `gameplay loop`: 输入、角色、交互、战斗 / 解谜 / 收集、胜负条件
-- `content integration`: 导入并配置 mesh、material、animation、audio、VFX、UI
-- `runtime architecture`: 理解 `UObject` / `Actor` / `Component` / `Subsystem` / `GameInstance` / `GameMode`
-- `data driven`: 使用 `DataTable`、`PrimaryDataAsset`、soft reference、配置表组织游戏内容
-- `persistence`: save / load、settings、checkpoint
-- `production polish`: camera、feedback、UI、sound、VFX、lighting、post-process
-- `optimization`: profiling、LOD、collision、tick、asset loading、packaging
+每个主题按三种深度处理：
 
-核心判断标准：不是“知道每个系统是什么”，而是知道这些系统在一个游戏项目里如何协作。
-
-## 学习顺序
+| 深度 | 判断标准 | 例子 |
+| --- | --- | --- |
+| 必须掌握 | 影响架构、ownership、lifecycle、正确性、性能或诊断 | `UObject`、Gameplay Framework、asset reference、collision、game thread |
+| 理解并会选择 | 需要知道用途、流程、边界和取舍，不必记全 API | Behavior Tree vs StateTree、Lumen vs baked lighting、Asset Manager |
+| 可交给 agent | 重复、机械、易验证且不改变核心设计 | Editor 点击、批量命名 / 导入、创建样板类、填写重复配置 |
 
-1. Runtime / `UObject` / Gameplay Framework
-2. C++ / Blueprint Bridge / Gameplay 架构
-3. Asset Pipeline
-4. Animation / Material / Mesh / LOD
-5. Lighting / Post Process / Environment
-6. Physics / Collision / Movement
-7. AI / Enemy Behavior / Navigation
-8. UI / Audio / VFX
-9. Profiling / Packaging / Polish
+判断原则：如果 agent 做错后，必须依靠该知识才能发现或修复，就不能跳过。
 
-## 1. Runtime 架构与 Gameplay Framework
+## 学习主线
 
-优先级最高，比渲染、物理、音频更早。
+学习顺序以依赖关系为主，不按 Editor 面板或 API 数量展开：
 
-重点：
+```text
+Object Model / Runtime
+  -> Gameplay Framework
+  -> Gameplay Architecture / Data
+  -> World / Asset / Loading
+  -> Collision / Movement / Physics
+  -> Animation / AI
+  -> Rendering / Environment
+  -> UI / Audio / VFX
+  -> Debugging / Profiling / Packaging
+```
 
-- `UObject`、`AActor`、`UActorComponent`、`USceneComponent`
-- `UWorld`、`ULevel`、`UGameInstance`
-- `AGameMode`、`AGameState`、`APlayerController`、`APawn`、`ACharacter`
-- object lifecycle：constructor、`PostLoad()`、`BeginPlay()`、`Tick()`、`EndPlay()`
-- `CDO`、default subobject、runtime object、asset object 的区别
-- `UPROPERTY`、GC、hard reference、soft reference、async loading
-- `Subsystem`：`GameInstanceSubsystem`、`WorldSubsystem`、`LocalPlayerSubsystem`
-- Enhanced Input、camera、spawn、possession、collision query
-- `FTimerManager`、latent action、async task、game thread、tick group
+每阶段遵循：
 
-阶段产物：
+```text
+主要结构与核心流程
+  -> ownership / lifecycle / data flow
+  -> 相邻方案的选择边界
+  -> 常见错误与诊断
+  -> 最小实验
+  -> 整理进 ue.md
+```
 
-- 一个 C++ gameplay prototype
-- 包含玩家控制、交互物、状态管理、关卡切换、保存进度
+## 当前进度
 
-易忘点：
+`ue.md` 已覆盖以下内容：
 
-- constructor 主要初始化 `CDO` 和 default subobject，不要依赖 `World`
-- `GameMode` server-only，单机也应理解其职责边界
-- `PlayerController` 不是角色本体，角色通常是 `Pawn` / `Character`
-- `Outer`、`Owner`、attach parent 是三套不同关系
+- Project / Plugin / Target / Module / Package
+- `UObject`、Reflection、CDO、构造、生命周期、GC、引用、`Outer` / `Owner`
+- Blueprint bridge、asset path、hard / soft reference
+- Gameplay Framework、spawn / possession、Actor / Component / Subsystem
+- gameplay communication、data-driven、Gameplay Tags
+- Enhanced Input、camera、collision query、Tick / Timer / Async
+- Save Game、state machine
+- Level Editor、node graph、Material 基础
 
-## 2. C++ / Blueprint Bridge 与 Gameplay 架构
+这些内容不必重新泛读。后续通过 recall、画流程和最小实验加深；答不出边界或无法诊断时，再回到对应章节补缺。
 
-这一层决定能不能把游戏做完整，而不是只做 demo。
+## 1. Object Model 与 Runtime
 
-重点：
+这是 UE 其余系统的共同基础，必须形成稳定心智模型。
 
-- C++ / Blueprint bridge：
-  - `UCLASS` / `USTRUCT` / `UENUM` / `UINTERFACE`
-  - `UFUNCTION` / `UPROPERTY` metadata
-  - `BlueprintCallable`、`BlueprintPure`、`BlueprintImplementableEvent`、`BlueprintNativeEvent`
-  - `ExposeOnSpawn`、`EditDefaultsOnly`、`EditInstanceOnly`、`BlueprintReadOnly` / `BlueprintReadWrite`
-  - Construction Script、Blueprint debugging、Find in Blueprints
-  - Blueprint Interface、Event Dispatcher、delegate、soft class reference
-- Actor vs Component 的职责拆分
-- C++ 和 Blueprint 的边界：核心逻辑 C++，可调参数和表现 Blueprint
-- `UDataAsset` / `UPrimaryDataAsset` / `DataTable`
-- item、skill、enemy、level config 的数据建模
-- `Gameplay Tags`
-- event、delegate、interface、message-style communication
-- save game：`USaveGame`、slot、versioning
-- simple state machine：player state、enemy state、game flow state
+### 必须掌握
 
-阶段产物：
+- 普通 C++ object、`UObject`、`AActor`、`UActorComponent`、asset object 的区别
+- Reflection、Serialization、GC、CDO、default object system 如何协作
+- constructor、`PostInitProperties()`、`PostLoad()`、`OnConstruction()`、`BeginPlay()`、`Tick()`、`EndPlay()` 的适用边界
+- class、instance、archetype、CDO、default subobject
+- `Outer`、Owner、attach parent、World context 是不同关系
+- strong / weak / soft reference；引用对 GC、loading、cook 的影响
+- game thread、Tick、Timer、latent action、async task 的基本边界
+- Editor world、PIE world、game world 不是同一个运行环境
 
-- 一个灰盒 gameplay vertical slice
-- 使用 placeholder mesh / basic HUD text / debug feedback，不要求最终 UI、音效、特效
-- 至少包含玩家、交互、一个规则目标、胜负条件、存档或 checkpoint
+### 理解即可
 
-设计原则：
+- object flags、package flags、GC 内部 mark / sweep 细节
+- engine loop 和 task graph 的底层实现
+- UObject serialization 的高级定制入口
 
-- 先拆数据，再写逻辑；能用配置表达的内容不要硬编码
-- `ActorComponent` 适合拆可复用行为，避免 `Actor` 继承层级膨胀
-- `Blueprint` 适合表现、装配、调参，不适合承载复杂核心规则
-- save data 不应直接保存大量运行时对象引用
-- 需要给 designer / future self 调的参数，用 metadata 明确暴露边界
+### 最小验收
 
-## 3. Asset Pipeline 与资源管理
+- 给任意对象说明：谁创建、谁持有、属于哪个 World、何时可用、何时销毁
+- 解释为什么 constructor 中不能依赖 runtime World
+- 诊断一次 dangling reference、GC 丢失引用或错误 World context 问题
 
-目标是：给一套美术资产后，能接入、整理、引用、打包，并在 packaged build 中正常运行。
+## 2. Gameplay Framework 与游戏启动流程
 
-重点：
+重点不是背 class hierarchy，而是掌握一次游戏从启动到玩家可控制角色的完整流程。
 
-- Static Mesh / Skeletal Mesh 导入流程
-- FBX / glTF / texture 命名和目录规范
-- collision setup：simple collision、complex collision、physics asset
-- Skeleton、Animation Sequence、Animation Blueprint、BlendSpace、Montage
-- texture 设置：sRGB、compression、normal map、mipmap、virtual texture
-- material instance 参数化
-- soft reference、asset streaming、Asset Manager
-- `Primary Asset Type`、`Primary Asset Id`、`PrimaryAssetLabel`
-- chunk、cook rule、asset audit、Reference Viewer
-- redirector、Fix Up Redirectors
-- cook / package 后资源路径和加载行为
+### 必须掌握
 
-阶段产物：
+- Engine -> GameInstance -> World -> Level 的生命周期关系
+- `GameMode`、`GameState`、`PlayerController`、`PlayerState`、`Pawn` / `Character` 的职责
+- map load、player join、spawn、possess、input binding、camera view 的主流程
+- `GameMode` 是规则和 spawn policy，不是通用全局状态容器
+- `PlayerController` 表示控制者；`Pawn` 是可被替换、死亡和重生的受控实体
+- Actor / Component / Subsystem / Level Blueprint 的选择边界
+- travel / level transition 时哪些对象保留，哪些重建
+- Enhanced Input 的 LocalPlayer、Mapping Context、Input Action 和 Pawn response 链路
 
-- 导入并配置一套角色、场景、道具、音效、VFX 资产
-- 项目能在 packaged build 中正确加载资源
-- 用 `Primary Asset` 管理一类可动态加载内容，例如 item、enemy、level
+### 理解并会选择
 
-易忘点：
+- `GameInstanceSubsystem`、`WorldSubsystem`、`LocalPlayerSubsystem`
+- seamless travel 与 multiplayer-specific framework；单机阶段了解职责即可
+- World Partition、level streaming、Level Instance 的用途差异
 
-- DataTable / DataAsset 中引用大资产时优先考虑 soft reference
-- texture 的 `sRGB` 和 compression 设置错误会直接影响材质结果
-- Editor 下能加载，不代表 packaged build 中路径和引用一定正确
-- 改名 / 移动资产后及时检查 redirector 和引用链
+### 最小验收
 
-## 4. Animation、Materials 与 Rendering Performance
+- 画出启动到 `BeginPlay()`、玩家生成、possession、input 生效的流程
+- 实现角色死亡 -> unpossess / destroy -> respawn -> repossess
+- 实现 main menu -> game level -> pause -> restart -> return menu
 
-目标是把“程序上可玩”的游戏做成“看起来完整”。
+## 3. C++ / Blueprint 边界与 Gameplay 架构
 
-重点：
+目标是能设计稳定接口和状态归属，而不是学习尽可能多的 Blueprint node。
 
-- Static Mesh / Skeletal Mesh 渲染路径概念
-- Material：PBR、shader permutation、material instance、dynamic material instance
-- `Opaque` / `Masked` / `Translucent` / `Deferred Decal` / `UI` material 的成本和限制
-- LOD、Nanite、HLOD、culling、draw call、instancing
-- Animation：AnimBP、state machine、blend、slot、montage、root motion、IK
-- Post Process Volume：exposure、bloom、color grading、DOF、motion blur、outline
+### 必须掌握
 
-阶段产物：
+- `UCLASS`、`USTRUCT`、`UENUM`、`UINTERFACE`、`UPROPERTY`、`UFUNCTION` 的语义
+- `BlueprintCallable`、`BlueprintPure`、`BlueprintImplementableEvent`、`BlueprintNativeEvent`
+- C++ 定义规则、状态和协议；Blueprint 负责装配、表现和调参
+- direct call、interface、delegate / Event Dispatcher、message 的选择
+- Actor composition、Component 复用与继承层级的取舍
+- state machine 的 state、transition、enter / exit 和 interruption
+- gameplay state 与 animation state 的区别
+- gameplay event 的发出者、消费者、时序和解绑生命周期
 
-- 角色动画切换自然
-- 材质可通过 instance 调参
-- gameplay 事件能驱动 material / animation / VFX
-- 基础性能不因材质、透明、粒子、LOD 明显崩坏
+### 理解并会选择
 
-易忘点：
+- Blueprint Function Library、Blueprint Macro Library
+- Gameplay Message Subsystem
+- plugin / module 作为功能边界
+- GAS：普通单机项目不必早学；大量 ability、attribute、effect、prediction 需求出现时再学
 
-- `Static Switch Parameter` 会产生 shader permutation
-- `Translucent` 通常昂贵，并且有排序和 lighting 限制
-- Animation Montage 适合动作片段触发，AnimBP state machine 适合持续状态
+### 可交给 agent
 
-## 5. Lighting 与环境
+- 创建样板 `UCLASS` / Component / Interface 文件
+- Blueprint node 的机械连接和变量暴露
+- metadata 和 API 签名查询
 
-不要只学参数，要学场景制作决策。
+### 最小验收
 
-重点：
+- 把一个功能拆成 C++ rule、Component state、Blueprint presentation
+- 能说明每个变量的唯一 owner，以及谁可以修改它
+- 避免 circular dependency、全局搜索对象和滥用 cast
 
-- Static / Stationary / Movable light
-- Lumen、shadow、reflection、ambient occlusion
-- SkyAtmosphere、DirectionalLight、SkyLight、ExponentialHeightFog
-- lightmap、baked lighting 的基本概念
-- exposure、tone mapping、color grading
-- indoor / outdoor / stylized / realistic 的常见配置
-- lighting 对性能的影响
+## 4. Data-driven、Asset 与 Loading
 
-阶段产物：
+目标是理解“代码、配置、运行时状态、资产、存档”如何分离。
 
-- 能为一个关卡建立基础氛围
-- 能判断并修正常见问题：过暗、过曝、发灰、噪点、阴影闪烁、反射异常、性能过高
+### 必须掌握
 
-易忘点：
+- Definition / Config、runtime state、behavior、save snapshot 四层
+- package、asset、object path、class path、mount point
+- hard reference、soft reference、weak reference 的 loading 和生命周期差异
+- sync / async loading，以及加载完成前对象不可用
+- stable ID 与 display name / asset path 的区别
+- `DataTable`、`DataAsset`、`PrimaryDataAsset` 的数据模型和适用边界
+- `Gameplay Tags` 用于分类 / 状态 / 条件，不替代唯一 ID 和数值字段
+- `USaveGame` 只保存稳定、可序列化的恢复数据
+- Editor 能找到资产不代表 cook / packaged build 一定包含资产
 
-- lighting、post-process、material 会共同决定最终画面，不要只改一个系统
-- movable shadow、translucency、反射和全局光照通常是性能重点
+### 理解并会选择
 
-## 6. Physics、Collision 与 Movement
+- Asset Registry、Asset Manager、`PrimaryAssetId`
+- primary asset scan、load bundle、cook rule、chunk
+- redirector、Reference Viewer、Size Map、Asset Audit
+- Data Registry：需要跨来源统一查询数据时再深入
 
-围绕 gameplay 使用物理，不要一开始钻太底层。
+### 可交给 agent
 
-重点：
+- 按既定 schema 创建 DataAsset / DataTable row
+- 批量检查 ID、路径、命名和字段范围
+- Fix Up Redirectors、批量移动和重复配置，但操作前后需检查引用
 
-- collision channel、object type、trace channel、profile
-- overlap vs hit vs trace
-- `CharacterMovementComponent`
-- physics simulation、constraint、force、impulse
-- physics asset、ragdoll 基础
-- projectile、melee hit detection、interaction trace
-- navigation mesh 与 AI movement 基础
+### 最小验收
 
-阶段产物：
+- 用 ID 查 definition，再用 soft reference 异步加载表现资产
+- 保存并恢复玩家和 world actor 的最小稳定状态
+- 在 packaged build 验证动态加载资产确实被 cook
 
-- 玩家移动、拾取、攻击命中、机关触发、弹射物、简单物理物件都能工作
+## 5. Collision、Movement 与 Physics
 
-易忘点：
+先掌握 gameplay 所需的空间规则，再按项目需要深入 physics simulation。
 
-- collision response 是双方共同决定的
-- trace channel 和 object channel 的用途不同
-- `CharacterMovementComponent` 不是普通 physics simulation
+### 必须掌握
 
-## 7. AI、Enemy Behavior 与 Navigation
+- collision enabled、object type、trace channel、response、profile 的组合关系
+- overlap、hit、line trace、sweep 的语义和适用场景
+- query 与 physics simulation 的区别
+- collision 通常属于 `PrimitiveComponent`，不是抽象 Actor 自身
+- `CharacterMovementComponent` 是 character movement model，不是普通刚体 simulation
+- frame-rate independence、delta time、velocity、acceleration 的基本关系
+- projectile、melee、interaction、trigger 的常见检测方案及失败边界
+- debug draw、collision visualization、hit result 的诊断方法
 
-目标是能做出基本可信的 enemy / NPC 行为，而不是只会移动到目标点。
+### 理解并会选择
 
-重点：
+- force、impulse、constraint、physical material、Physics Asset、ragdoll
+- sub-stepping、continuous collision detection
+- Chaos 的底层 solver 细节按项目需要学习
 
-- `AIController`、`Pawn` possession、team / target 关系
-- NavMesh、`NavMeshBoundsVolume`、`UNavigationSystemV1`
-- `MoveTo`、path following、acceptance radius、partial path
-- `Behavior Tree`、`Blackboard`
-- `EQS`、`AIPerception`、sight / hearing
-- `StateTree`
-- simple finite state machine 和 UE AI 工具的取舍
-- patrol、chase、attack、retreat、search、return home
+### 可交给 agent
 
-阶段产物：
+- 按规则创建 collision profile
+- 给 mesh 批量生成 simple collision
+- 重复放置 trigger、constraint 和 debug fixture
 
-- 一个 enemy prototype
-- 能巡逻、感知玩家、追击、攻击、丢失目标后回到巡逻
+### 最小验收
 
-易忘点：
+- 实现 interaction trace、melee sweep、projectile hit、overlap trigger
+- 能系统排查 trace 打不到、overlap 不触发、hit 重复触发
+- 解释高速物体穿透和 collision response 双方配置问题
 
-- NavMesh 只解决可走路径，不解决行为决策
-- `Behavior Tree` 适合较复杂 AI，简单敌人可先用 FSM / component
-- 感知、攻击距离、碰撞、动画事件需要一起调
+## 6. Animation
 
-## 8. UI、Audio、VFX
+目标是理解 gameplay、animation graph 和时间点事件如何协作。
 
-这三个系统决定游戏完整度和反馈质量。
+### 必须掌握
 
-### UI
+- Skeleton、Skeletal Mesh、Animation Sequence、AnimInstance / AnimBP 的关系
+- locomotion data -> state machine / BlendSpace -> final pose 的主流程
+- AnimBP state machine 处理持续动画状态；Montage 处理一次性动作片段
+- slot、section、blend in / out、Montage interruption
+- AnimNotify / Notify State 只提供动画时间点，不应成为核心规则的唯一来源
+- root motion vs in-place movement 的 ownership 差异
+- gameplay state、movement state、animation state 需要分离但保持同步
+- animation thread 与 gameplay thread 的基本边界；AnimBP 中避免任意访问不安全状态
 
-重点：
+### 理解并会选择
 
-- UMG、Widget Blueprint、HUD、menu、settings、pause
-- UI 和 gameplay 数据同步
-- `CommonUI`
-- widget lifecycle：`OnInitialized`、`Construct`、`Destruct`
-- binding 性能、event-driven UI update
-- input mode、focus、input routing、gamepad navigation
-- DPI scaling、safe zone、resolution / fullscreen settings
-- input rebinding
-- health bar、inventory、dialogue、tooltip、UI animation
+- IK、Control Rig、retargeting、motion warping
+- sync group、layered blend、linked Anim Graph
+- animation compression 和 update rate optimization
 
-### Audio
+### 可交给 agent
 
-重点：
+- 创建基础 state machine / BlendSpace 和重复 transition
+- 批量 retarget、设置 slot、添加规范化 Notify
+- 查询具体 animation node 和 property
 
-- Sound Wave、Sound Cue / MetaSound
-- attenuation、spatialization、mix、bus、volume class
-- `SoundClass`、`SoundMix`、`Submix`
-- concurrency、randomization、loop、fade
-- MetaSound 参数
-- gameplay event 触发音效
-- UI sound、ambient、music state transition
-- settings menu 控制 master / music / SFX volume，并持久化
+### 最小验收
 
-### VFX
+- 完成 idle / walk / run / jump locomotion
+- 完成 input -> gameplay rule -> Montage -> hit window -> recovery / interruption
+- 能排查 montage 不播放、slot 不生效、root motion 冲突和状态卡死
 
-重点：
+## 7. AI 与 Navigation
 
-- Niagara System / Emitter
-- spawn at location / attach to actor / parameter control
-- hit effect、loop effect、trail、area effect
-- material + Niagara 配合
+目标是理解“感知、决策、移动、执行”四层，而不是只会拼 Behavior Tree node。
 
-阶段产物：
+### 必须掌握
 
-- 一个完整 feedback loop：
-  - 按键有响应
-  - 攻击有动画、声音、命中特效
-  - UI 状态变化及时
-  - 成功 / 失败 / 受击 / 拾取等事件都有反馈
-- settings / pause / gamepad navigation / volume control 可用
+- `AIController` possession、Pawn、NavMesh、path following 的关系
+- perception data 只是 observation，不等于 truth 或 decision
+- target selection、state、transition、action execution 的归属
+- patrol、detect、chase、attack、lose target、search、return 的完整状态流
+- movement request 可能失败、被取消、部分可达或因目标销毁失效
+- AI gameplay rule、animation、collision 和 damage 的协作
 
-## 9. Debugging、Profiling、Packaging
+### 理解并会选择
 
-这是从 demo 到可交付游戏的分界线。
+- 简单 FSM：少量明确、互斥状态
+- Behavior Tree：持续决策、条件组合和 task 编排
+- StateTree：层级状态、transition 和 task 组合
+- EQS：环境候选位置 / 对象的评分选择
+- `AIPerception` sight / hearing 的更新和遗忘行为
 
-重点：
+### 可交给 agent
 
-- PIE vs Standalone vs packaged build 差异
-- log、breakpoint、Blueprint debugger、Visual Logger
-- `stat unit`、`stat game`、`stat gpu`、Unreal Insights
-- tick cost、GC、asset loading hitch、shader compile、overdraw
-- config、scalability、input settings
-- `Development` / `Shipping` build configuration
-- `Project Settings`
-- `DefaultEngine.ini` / `DefaultGame.ini` / config hierarchy
-- cook、package、pak / io store、shipping build
-- prerequisites、command line args、save path
-- crash log、crash dump 和 save compatibility
+- 创建 Blackboard key、Behavior Tree / StateTree 基础结构
+- 配置 patrol point 和测试场景
+- 重复调参，但状态定义和 transition 规则必须自己掌握
 
-阶段产物：
+### 最小验收
 
-- 能打出一个别人机器上可运行的包
-- 能定位常见运行时问题
-- 能列出平台 packaging checklist
+- enemy 完成 patrol -> detect -> chase -> attack -> lose -> return
+- 覆盖 unreachable target、target destroyed、death interruption
+- 使用 Visual Logger / debug state 解释 AI 为什么做出某个行为
 
-易忘点：
+## 8. Rendering、Material 与 Environment
 
-- Editor 正常不等于 packaged build 正常
-- Standalone、Development packaged、Shipping packaged 都可能有行为差异
-- 性能问题先 profiling，不要凭感觉优化
-- `Tick`、动态加载、透明材质、粒子、shadow、animation graph 都可能成为瓶颈
+不要求成为 rendering engineer，但必须掌握最终画面由哪些阶段和数据共同决定。
 
-## 最小完整项目目标
+### 必须掌握
 
-建议用一个 10-15 分钟的单机关卡验证学习成果。
+- mesh -> material -> lighting -> post-process -> final image 的主流程
+- PBR 中 Base Color、Metallic、Roughness、Normal、Emissive 的含义
+- Material、Material Instance、Dynamic Material Instance 的关系
+- `Opaque`、`Masked`、`Translucent` 的渲染和成本差异
+- texture 的 sRGB、compression、normal map、mipmap
+- Static Mesh / Skeletal Mesh、LOD、Nanite、HLOD、culling、instancing
+- light mobility、shadow、reflection、global illumination 的基本取舍
+- exposure、tone mapping、color grading 为什么会改变材质观感
+- CPU frame、GPU frame、draw call、shader cost、overdraw 的基本概念
+
+### 理解并会选择
+
+- Lumen vs baked lighting
+- Forward vs Deferred rendering
+- Virtual Shadow Maps、Virtual Textures
+- shader permutation 和 PSO 对编译 / 运行的影响
+- advanced shader、render pass、RDG 按项目需求深入
+
+### 可交给 agent
+
+- 创建 Material Instance、批量设置 texture import / LOD
+- 搭建常规 SkyAtmosphere、fog、light actor
+- 批量检查昂贵 translucent material 和缺失 LOD
+
+### 最小验收
+
+- 能从 mesh、material、texture、lighting、post-process 分层排查画面问题
+- 做一个可参数化材质和一个 runtime feedback 材质
+- 使用 GPU profiling 识别一次 overdraw、shadow 或 material bottleneck
+
+## 9. UI、Audio 与 VFX
+
+这些是独立子系统，但应通过 gameplay event 消费状态，不反向拥有核心规则。
+
+### UI 必须掌握
+
+- Widget tree、layout、anchor、DPI scaling、widget lifecycle
+- gameplay state 到 UI 的 event-driven update
+- input mode、focus、mouse / keyboard / gamepad navigation
+- viewport widget、world-space widget、HUD 的用途差异
+- pause、settings、menu 与 gameplay input 的路由
+
+### Audio 必须掌握
+
+- Sound Wave、Sound Cue / MetaSound、Audio Component 的关系
+- attenuation、spatialization、concurrency、loop、fade
+- SoundClass、SoundMix、Submix 的职责
+- one-shot、ambient、music state 和 UI sound 的生命周期
+
+### VFX 必须掌握
+
+- Niagara System、Emitter、module、parameter 的结构
+- spawn at location、attach、pooled / persistent effect 的生命周期
+- gameplay event 驱动 VFX；loop effect 必须有明确停止时机
+- material、Niagara、light 和 audio 的反馈协作
+
+### 理解并会选择
+
+- CommonUI、MVVM
+- MetaSound graph 深入设计
+- Niagara simulation stage、GPU particle 和高级 data interface
+
+### 可交给 agent
+
+- Widget tree、常规 layout、重复 style
+- SoundClass / Mix、Niagara 参数的批量接线
+- 常规 hit / pickup / menu feedback 的资产装配
+
+### 最小验收
+
+- main menu、HUD、pause、settings 能用 keyboard / mouse 和 gamepad 完成
+- attack / hit / pickup / success / failure 有一致的 animation、audio、VFX、UI 反馈
+- 能排查 UI focus、widget 重复构造、声音叠加和 loop VFX 泄漏
+
+## 10. Debugging、Profiling 与 Packaging
+
+这是基础能力，不是项目末尾才学习的发布细节。
+
+### 必须掌握
+
+- PIE、Standalone、Development packaged、Shipping packaged 的环境差异
+- log category、breakpoint、assert、`ensure`、Blueprint debugger
+- 从 reproduction -> observation -> hypothesis -> minimal test -> fix -> regression 的诊断流程
+- `stat unit`、`stat game`、`stat gpu` 和 Unreal Insights 分别回答什么问题
+- game thread、render thread、GPU、GC、asset loading hitch 的基本定位
+- config hierarchy、cook、stage、package 的区别
+- editor-only dependency、missing cooked asset、路径 / case、save path 等常见 packaged 问题
+- 性能优化必须先确定目标硬件、场景和 frame budget
+
+### 理解并会选择
+
+- Automation Test、Functional Test、Gauntlet 的覆盖层级
+- crash log、call stack、minidump
+- pak / IoStore、chunk、prerequisite、platform packaging
+
+### 可交给 agent
+
+- 执行 build / test / package 命令并收集 log
+- 搜索 log、整理 profile capture、比较前后数据
+- 创建测试样板；测试目标、fixture 和 assertion 仍需自己判断
+
+### 最小验收
+
+- 能从 clean build 打出 Development 和 Shipping package
+- 独立诊断一次 runtime bug、asset loading bug 和性能问题
+- 能判断 agent 的“已完成”是否真的经过 compile、run 和 packaged 验证
+
+## 最小完整项目
+
+使用一个 10–15 分钟的单机关卡贯穿学习。项目是验证知识的载体，不取代逐阶段理解。
 
 必须包含：
 
-- main menu
-- settings
-- pause menu
-- level transition
-- restart level
-- return to menu
-- respawn / checkpoint
-- `GameInstance` 保存跨关卡 runtime state
-- level streaming / World Partition / Level Instance 至少理解取舍
-- player controller / character
-- camera
-- interaction
-- 至少一种核心玩法：战斗、解谜、收集、潜行、平台跳跃任选其一
+- main menu、settings、pause、restart、return to menu
+- level transition、respawn / checkpoint、save / load
+- player、camera、input、interaction
+- 一种核心玩法：战斗、解谜、收集、潜行或平台跳跃
 - enemy / obstacle / puzzle object
-- win / lose condition
-- save / load 或 checkpoint
-- HUD
-- animation
-- material instance
-- sound effect
-- background music 或 ambient sound
-- Niagara VFX
-- lighting
-- post-process
+- data-driven definition 和 soft-loaded asset
+- animation、material、UI、audio、Niagara、lighting、post-process
 - packaged build
 
 验收标准：
 
-- 没有 editor-only 依赖
-- packaged build 可运行
-- 新开机器或 clean build 后资源引用正常
-- gameplay loop 闭环
-- 场景切换、重开、返回菜单流程闭环
-- UI / Audio / VFX 有基本反馈
-- 性能问题能通过 profiling 给出原因
-- Development packaged 和 Shipping packaged 都至少验证一次
+- 能解释主要对象的 ownership、lifecycle 和通信关系
+- 能画出 input -> rule -> state -> presentation -> save 的数据流
+- 能说明每个核心系统为什么放在当前 class / component / subsystem
+- 不依赖 agent 也能判断实现是否符合 UE 机制
+- agent 操作失败时，能确定应检查哪个 subsystem、生命周期或工具
+- clean build 和 packaged build 中 gameplay loop 完整
+- 性能结论来自 profiling，不凭感觉优化
 
-## Agent 辅助学习方式
+## AI Agent / MCP 的正确定位
 
-后续让 agent 辅助学习时，默认把 agent 当作“老师”，不是资料检索器。
-目标是由 agent 直接讲清楚知识、建立心智模型、指出边界和坑点，并带着学习者完成理解与练习；不要只列概念清单后让学习者去别处自学。
+### 适合交给 agent
 
-优先按以下方式推进：
+- 查找具体 API、metadata、console command 和 Editor 菜单位置
+- 创建样板 C++ / Blueprint、重复连接和常规资产配置
+- 批量导入、命名、移动、设置 property、生成检查报告
+- 执行 compile、Automation Test、PIE、package 并读取 log
+- 根据明确 schema 创建 DataAsset / DataTable / Material Instance
+- 用 MCP inspect object、asset、actor、graph 和当前 Editor state
 
-1. 每次只学习一个阶段或一个小主题
-2. 先基于 `ue.md` 已有内容判断“已学过什么”和“本次真正新增什么”
-3. 由 agent 用个人速查笔记风格讲解新内容：先给结论，再解释机制、生命周期、API 和易错点
-4. 对抽象概念要补充 UE 中的具体场景，例如玩家生成、交互、相机、输入、存档、关卡切换
-5. 需要时给出最小 C++ / Blueprint 实践路径，但重点是帮助理解，不是直接写项目代码
-6. 用检查问题或小练习确认是否真正理解
-7. 学完后把精炼结论整理回 `ue.md`
+### 不应外包理解
 
-教学时避免：
+- class / object / asset / world 的关系
+- ownership、lifecycle、reference、loading、thread boundary
+- Gameplay Framework 的职责和游戏启动流程
+- 状态归属、通信方式和 C++ / Blueprint 边界
+- collision、animation、AI、rendering 的核心数据流
+- 性能瓶颈的分类和 packaged build 的失败机制
+- 游戏规则、验收条件和设计取舍
 
-- 只写“概念简介”而不解释为什么、什么时候用、和其他系统怎么协作
-- 把内容扩写成面向新手的完整教程或大量背景科普
-- 没区分 `ue.md` 已有内容和当前阶段新增内容
-- 直接跳到项目实现，忽略知识讲解和理解确认
-
-推荐 prompt：
+### 使用 MCP 时的检查闭环
 
 ```text
-我正在按 ueplan.md 学习 UE。现在学习第 X 阶段的 Y 主题。
-请先基于 ue.md 判断我已经学过什么，再像老师一样讲解本主题的新内容。
-要求：
-1. 先给核心结论和心智模型
-2. 解释 UE 中的关键类型 / API 为什么存在、什么时候用
-3. 讲清生命周期或工作流程，并指出和已学系统的关系
-4. 列出常见坑、边界条件和错误心智模型
-5. 给一个最小 C++ / Blueprint 实践练习
-6. 给验收方式 / 常见失败现象
-7. 说明 packaged build 注意点（如果相关）
-8. 最后给适合整理进 ue.md 的笔记摘要
+先理解本次操作涉及的 UE 概念
+  -> 让 agent inspect 当前状态
+  -> 明确预期变更
+  -> agent 执行机械操作
+  -> 回读 property / compile / run
+  -> 自己解释结果为什么正确
 ```
 
-## 学习记录建议
+不要把“tool call 成功”当作“UE 行为正确”。MCP 的价值是减少操作成本、暴露状态和加快验证，而不是替代理解。
 
-每个主题学完后，在 `ue.md` 中追加：
+## 学习 Prompt
 
-- 关键结论
-- 类型 / API
-- 生命周期
-- 易错点
-- 与其他系统的关系
-- 最小代码片段
+```text
+我正在按 ueplan.md 学习第 X 阶段的 Y 主题。
+请先根据 ue.md 判断已经掌握的内容，只讲真正新增或需要纠正的部分。
 
-不要把笔记写成完整教程；目标是未来快速搜索和回忆。
+要求：
+1. 先讲主要结构、核心流程和心智模型
+2. 解释关键对象的 owner、lifecycle、reference 和 data flow
+3. 说明相邻方案的选择边界，不堆砌 API
+4. 列出错误心智模型、常见坑和诊断顺序
+5. 明确哪些知识必须掌握，哪些操作细节可以交给 agent / MCP
+6. 给一个用于验证理解的最小实验
+7. 用检查问题确认我能独立解释，而不只是让 agent 完成操作
+8. 最后给适合整理进 ue.md 的速查摘要
+```
+
+每个主题学完后，向 `ue.md` 整理：
+
+- 主要结构与核心流程
+- 关键类型及职责
+- ownership / lifecycle / reference
+- 方案选择规则
+- 易错点和诊断顺序
+- 最小代码或流程示例
+
+不要记录长篇背景、完整 API 清单和可随时由 agent 查询的 Editor 操作步骤。
+
+## 延后内容
+
+以下不是 UE 基础主线，出现实际需求后再学习：
+
+- multiplayer / replication 深入机制
+- GAS、Mass、复杂 PCG
+- Sequencer / Control Rig 的专业制作流程
+- dedicated server、platform certification、DLC / chunking
+- Engine source 修改、custom rendering pass、Chaos solver 内部实现
+- 大规模 World Partition production pipeline
+
+延后不表示不重要；它们需要以前面的对象模型、Gameplay Framework、资产、线程和 profiling 知识为基础。

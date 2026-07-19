@@ -325,8 +325,6 @@ Content/Characters/Hero.uasset
 - `.umap` 也是 package，只是主要保存 `UWorld` / `ULevel` 相关对象
 - `/Script/Module.Type` 是 native reflected type path，不表示 `Source/` 被挂载
 
-#### 名称 API
-
 | API / 类型 | 结果示例 | 备注 |
 | --- | --- | --- |
 | `GetName()` | `Hero` | 对象自身名字，不含 package / outer |
@@ -353,6 +351,33 @@ Editor 中选择资产不必然等于 hard reference，关键看属性类型：
 - `TSoftObjectPtr<T>` / `TSoftClassPtr<T>` / `FSoftObjectPath`：保存 object path，通常形成 soft reference，需要时再加载
 - Component 默认 mesh / material、Blueprint 默认值里选具体资产，常见是 hard reference
 - 大型可选资源优先 soft reference；用 Reference Viewer / Size Map 查意外依赖
+
+#### Cook 资产发现
+
+`cook inclusion` 和 runtime loading 是两条独立维度：
+
+```text
+Cook: 资产是否进入 packaged build
+Load: 已包含的资产何时进入内存
+```
+
+- hard reference 通常会被 cooker 沿依赖图发现并包含，但也会扩大加载依赖链
+- soft reference 只解决“通过路径引用、可延迟加载”，不等于目标一定被 cook
+- cooker 从 cook roots 出发收集资产及依赖；常见 roots 包括指定 maps、Project Packaging 配置、`Asset Manager` 的 `Primary Asset` rule、`PrimaryAssetLabel`、plugin / 额外 cook directory
+- `Asset Manager` 适合给动态内容建立明确的发现和 cook 规则；definition 内仍可用 soft reference 延迟加载 mesh、icon、sound 等表现资产
+- runtime 拼接的字符串路径通常无法被静态依赖扫描可靠发现，应通过 `PrimaryAssetId`、显式资产列表或 cook rule 纳入
+- Editor 可访问完整项目 Content / Asset Registry；Editor 中能加载不代表 packaged build 中存在该资产
+
+典型动态资产流程：
+
+```text
+配置 Primary Asset Type / scan path
+  -> Asset Manager 发现 PrimaryAssetId
+  -> cook rule 将所需资产纳入 package
+  -> runtime 按 PrimaryAssetId / soft reference 异步加载
+```
+
+packaged build 加载失败时按顺序检查：asset path、scan path / `PrimaryAssetId`、cook rule、cook log、runtime load log；不要先假设是 async loading API 问题。
 
 ## Gameplay Framework
 
@@ -412,39 +437,13 @@ UEngine
 `.umap` 是磁盘资产；`UWorld` 是运行时世界对象；`ULevel` 是 `World` 内部的关卡数据块。
 简单地图通常只有 `PersistentLevel`，streaming / World Partition 会让一个 `World` 包含多个 level 数据块。
 
-### 运行时关系
+关键边界：
 
-运行时关系先分清三条主线：**容器 / 引用**、**控制 / 身体**、**规则 / 状态**。
-
-**容器 / 引用关系**
-
-| 生命周期域 | 功能归属 / 扩展方式 |
-| --- | --- |
-| `UEngine` | engine 全局上下文；管理 editor、PIE、preview、game 等多个 world context |
-| `UGameInstance` | 跨关卡 session 逻辑与数据；复杂全局服务优先拆到 `UGameInstanceSubsystem` |
-| `UWorld` | 当前 world / 关卡运行域；管理关卡内通常可复用的逻辑与数据，常用 `UWorldSubsystem` 扩展 |
-| `ULevel` | `World` 中的 Actor 数据块；`AGameMode`、`AGameState`、`PlayerController`、`Pawn` 等本质都在 level actor 集合中；本关专用逻辑可用 `ALevelScriptActor` / Level Blueprint 扩展 |
-
-**控制 / 身体关系**
-
-| 生命周期域 | 关系 / 扩展点 | 数据 / 逻辑归属 |
-| --- | --- | --- |
-| `ULocalPlayer` | references `APlayerController` | 本地玩家槽位，通常跨关卡；本地玩家相关逻辑与数据可用 `ULocalPlayerSubsystem` 扩展 |
-| `APlayerController` | possesses `Pawn` / `Character` | 当前 world 中的控制入口；通常跨 Pawn 生命周期，管理输入、视角、UI、possession |
-| `APlayerState` | referenced by `PlayerController` | match/world 内玩家公共状态；通常跨 Pawn 生命周期，保存分数、名字、队伍等可复制数据 |
-| `APawn` / `ACharacter` | possessed by `Controller`; extended by `ActorComponent` | 当前被控制的身体；管理角色生命周期内的移动、战斗、血量、动画等逻辑与数据；可用 `ActorComponent` 拆分可复用能力 |
-
-**GameMode / Match 关系**
-
-| 生命周期域 / 对象 | 功能归属 / 扩展方式 |
-| --- | --- |
-| `AGameMode` | 当前 world 的 server-only 规则入口；管理登录、spawn、重生、胜负、match flow 等规则决策 |
-| `AGameSession` | server-only 会话对象；管理登录许可、session、匹配相关逻辑，通常由 `GameMode` 使用 |
-| `AGameState` | 当前 world 的可复制公共状态；包含 `PlayerArray[]` 用于观察所有玩家的 `APlayerState`；client / UI 应读这里，而不是直接依赖 `GameMode` |
-| `APlayerState` | 单个玩家的可复制公共状态；保存玩家名、分数、队伍等通常跨 Pawn 生命周期的数据 |
-| `APlayerController` | 单个玩家在当前 world 的控制入口；存在于 server 和 owning client，不在所有 client 上作为公共状态存在；连接 `GameMode` spawn / restart 结果与当前 Pawn；公共玩家数据放 `APlayerState` |
-
-单机游戏本质上也在本地运行 authority 逻辑；仍建议按 server-only / replicated state 的边界组织代码，避免以后扩展和 UI 耦合出问题。
+- `GameInstance` 跨普通 map travel；`World`、`GameMode`、`GameState` 和 `WorldSubsystem` 随 World 重建
+- `PlayerController` 是控制入口，通常跨 Pawn 生命周期；死亡 / 换角色时替换并重新 possess Pawn
+- `GameMode` 做 server-only 规则决策；client / UI 需要观察的公共状态放 `GameState` / `PlayerState`
+- `ULocalPlayer` 表示本地玩家槽位，不等于当前 World 中的 `PlayerController`
+- 单机也运行 authority 逻辑，仍按规则与可观察状态的边界组织代码
 
 ### 玩家启动 / Spawn
 
@@ -817,131 +816,66 @@ Input Attack
 
 不要让 AnimBP transition graph 成为核心 gameplay 规则唯一来源；动画提供表现和时机，最终规则仍回到 C++ / component。
 
-## Editor
-
-### Level Editor
-
-![ue_ui](images/ue_ui.png)
-
-**Viewport 导航**
-
-- `LMB + drag`: 前后移动 / 左右旋转
-- `MMB + drag`: 平移镜头
-- `RMB + drag`: 自由旋转镜头
-- `RMB + W/A/S/D`: WASD 飞行模式
-- `RMB + Q/E`: 下降 / 上升
-- `RMB + C/Z`: 拉远 / 拉近 FOV
-- `F`: 聚焦选中对象
-- `Alt + LMB + drag`: 围绕枢轴旋转
-- `Alt + MMB + drag`: 平移
-- `Alt + RMB + drag`: 推拉缩放
-
-**变换工具**
-
-- `Q`: 选择
-- `W`: 移动
-- `E`: 旋转
-- `R`: 缩放
-- `Space`: 切换变换工具（Move / Rotate / Scale）
-- `V`: 顶点吸附（移动时按住）
-- `End`: 吸附到地面
-
-**视图切换**
-
-- `G`: Game View，隐藏 editor-only 可视元素
-- `Alt + 2`: Wireframe
-- `Alt + 3`: Unlit
-- `Alt + 4`: Lit
-- `Ctrl + R`: 切换 Realtime
-- `F11`: Viewport 全屏
-
-**选择**
-
-- `LMB click`: 选中 Actor
-- `Ctrl + LMB click`: 切换选中 / 取消选中
-- `Shift + LMB click`: 追加选中
-- `Ctrl + Alt + LMB drag`: 框选
-- `Ctrl + A`: 全选
-- `Esc`: 取消全部选中
-- `Ctrl + Alt + A`: 选中所有同类型 Actor
-
-**编辑**
-
-- `Ctrl + Z`: 撤销
-- `Ctrl + Y`: 重做
-- `Ctrl + C/V/X`: 复制 / 粘贴 / 剪切
-- `Ctrl + D`: Duplicate
-- `Delete`: 删除
-- `H`: 隐藏选中
-- `Ctrl + H`: 显示全部
-- `Ctrl + B`: 在 Content Browser 中定位
-- `Ctrl + E`: 打开选中资源 / 编辑相关资产
-- `Ctrl + G`: Group
-- `Shift + G`: Ungroup
-
-### Node Graph
-
-适用于 Blueprint Graph、Material Graph 等多数节点编辑器。
-
-- `RMB + drag`: 平移 graph
-- `Mouse Wheel`: 缩放
-- `Home`: 缩放到选中节点
-- `LMB drag` 空白处: 框选节点
-- `Q`: 水平对齐选中节点
-- `RMB click` 空白处: 打开节点搜索 / Action Menu
-- `LMB drag` pin 到 pin: 连接
-- `LMB drag` pin 到空白处: 按 pin 类型过滤创建节点
-- `Alt + LMB click` pin: 断开该 pin 所有连接
-- `Ctrl + LMB drag` pin: 移动该 pin 的所有连接
-- `C`: 给选中节点添加 Comment
-- `Ctrl + C/V/X`: 复制 / 粘贴 / 剪切节点
-- `Ctrl + D`: Duplicate 节点
-- `Delete`: 删除节点
-- `Ctrl + Z/Y`: 撤销 / 重做
-- `Ctrl + F`: 当前 Blueprint / graph 内查找
-- `Ctrl + Shift + F`: Find in Blueprints
-- `Ctrl + S`: 保存
-- `F7`: Compile Blueprint
-- `F9`: Toggle Breakpoint（Blueprint）
-- Blueprint 创建: `B + LMB` Branch, `S + LMB` Sequence, `D + LMB` Delay, `P + LMB` BeginPlay
-- Blueprint 变量: `Ctrl + drag` 到 graph 为 Get, `Alt + drag` 到 graph 为 Set
-- Material 创建: `1/2/3/4 + LMB` Constant, `S + LMB` ScalarParameter, `V + LMB` VectorParameter, `T + LMB` TextureSample, `M + LMB` Multiply, `L + LMB` Lerp, `A + LMB` Add
+## Rendering
 
 ### Material
 
-- `Material` 定义表面如何被渲染，本质是生成 shader 的 node graph
-- 常用 PBR 输入：`Base Color`、`Metallic`、`Roughness`、`Normal`、`Emissive Color`、`Opacity` / `Opacity Mask`
-- 各输入属性都可以由 texture、constant 或 node expression 计算得到；常量适合快速调参，纹理适合空间变化细节
-- `Material Domain`: `Surface` 最常用；还有 `Post Process`、`Deferred Decal`、`UI` 等
-- `Blend Mode`: `Opaque` 性能最好；`Masked` 用 alpha test；`Translucent` 最贵且有排序 / lighting 限制
-- `Shading Model`: 决定光照模型，如 `Default Lit`、`Unlit`、`Subsurface`、`Clear Coat`
+Material graph 定义 shader；Material Instance 覆盖已暴露参数；Dynamic Material Instance 在 runtime 修改参数。
+
+| 维度 | 作用 / 选择 |
+| --- | --- |
+| `Material Domain` | `Surface` 最常用；另有 `Post Process`、`Deferred Decal`、`UI` 等 |
+| `Blend Mode` | `Opaque` 成本最低；`Masked` 做裁剪；`Translucent` 成本高且有排序 / lighting 限制 |
+| `Shading Model` | 选择光照模型，如 `Default Lit`、`Unlit`、`Subsurface`、`Clear Coat` |
+| Material Instance | 复用父材质并覆盖 scalar / vector / texture parameter，不改 graph |
+| Dynamic Material Instance | runtime 参数变化，如受击闪烁、溶解、血条、交互高亮 |
+| `Static Switch Parameter` | 产生 shader permutation；适合功能分支，过多会增加编译和包体成本 |
+| `Material Parameter Collection` | 跨多个材质共享全局参数，如天气、时间、风向 |
+
 - `Texture Sample` 通常配合 `UV` / `TexCoord`；`Normal Map` 需要接到 `Normal`，注意 texture compression / sRGB
-- `ScalarParameter` / `VectorParameter` / `TextureParameter` 可在 `Material Instance` 中覆盖，不改 graph
-- `Material Instance` 复用父材质 shader，适合做同一套材质的颜色、贴图、强度变体
-- `Dynamic Material Instance` 可在 runtime 改参数；常用于受击闪烁、溶解、血条、交互高亮
-- `Static Switch Parameter` 会产生 shader permutation，适合开关功能，但过多会增加编译和包体成本
-- `Material Parameter Collection` 是全局参数表，适合天气、时间、全局风向等跨多个材质共享的数据
 - 性能重点看 shader instructions、texture sample 数、overdraw、translucency、复杂分支和过多 permutation
-- PBR (Physically Based Rendering)
 
-```txt
-Diffuse =
-    LightColor *
-    BaseColor *
-    (1 - Metallic);
+```
+最终颜色
+= Diffuse + Specular + Emissive
 
-Specular =
-    LightColor *
-    ReflectionStrength * // affected by Roughness and Specular
-    ReflectionColor; // lerp(0.04, BaseColor, Metallic);
+Diffuse
+≈ (1 - Metallic) × (1 - Fresnel) × BaseColor × Light × N·L
 
-FinalColor =
-    Diffuse +
-    Specular +
-    Emissive;
+Specular
+≈ Fresnel × F0 × BRDF(Roughness) × Light × N·L
+
+F0
+= lerp(0.08 × Specular, BaseColor, Metallic)
+= (1 - Metallic) × (0.08 × Specular) + Metallic × BaseColor
 ```
 
-重要输入属性：
+- Base Color: 决定材质颜色
+  - 非金属: 主要影响 Diffuse 颜色
+  - 金属: 主要影响 Specular 反射颜色
+
+- Metallic: 决定颜色主要走哪条路径
+  - 0: 非金属，Diffuse 为主
+    - 光进入材质内部，经过散射后离开
+    - 颜色主要由 Base Color 决定
+    - 与观察角关系弱
+    - 表现为“物体自身的颜色”
+  - 1: 金属，Diffuse 消失，Specular 使用 Base Color
+    - 光在表面直接反射
+    - 颜色主要来自光源/环境（金属时由 Base Color 决定反射颜色）
+    - 强烈受观察角影响（Fresnel）
+    - 受 Roughness 影响高光的锐利程度
+    - 表现为“表面的反光”
+
+- Specular: 控制非金属的 F0（默认即可）
+  - 增大: 正视角反射增强
+  - 金属通常不使用它控制颜色
+
+- Roughness: 控制 Specular 的形状
+  - 小: 镜面、锐利高光
+  - 大: 粗糙、模糊反射
+
+PBR 重要输入：
 
 | Property | 要点 |
 | --- | --- |
@@ -959,3 +893,36 @@ FinalColor =
 | `Pixel Depth Offset` | 像素深度偏移，可软化交界，但可能影响深度相关效果 |
 | `Subsurface Color` | 次表面散射颜色，需对应 `Shading Model` |
 | `Clear Coat` | 额外清漆层强度，车漆、涂层材质常用 |
+
+## Editor
+
+### Level Editor
+
+![ue_ui](images/ue_ui.png)
+
+只保留 UE 特有或高频定位操作；通用选择、复制、撤销等快捷键不记录。
+
+| 操作 | 快捷键 |
+| --- | --- |
+| 飞行导航 | `RMB + W/A/S/D`，`Q/E` 下降 / 上升 |
+| 聚焦选中 | `F` |
+| 围绕枢轴旋转 | `Alt + LMB + drag` |
+| Move / Rotate / Scale | `W` / `E` / `R`，`Space` 切换 |
+| 顶点 / 地面吸附 | 移动时 `V` / `End` |
+| Game View | `G` |
+| Wireframe / Unlit / Lit | `Alt + 2/3/4` |
+| Content Browser 定位 / 打开资产 | `Ctrl + B` / `Ctrl + E` |
+
+### Node Graph
+
+适用于 Blueprint Graph、Material Graph 等多数节点编辑器。
+
+| 操作 | 快捷键 / 方式 |
+| --- | --- |
+| 按 pin 类型创建节点 | 从 pin 拖到空白处 |
+| 断开 / 移动 pin 的全部连接 | `Alt + LMB` / `Ctrl + LMB drag` |
+| 当前 graph / 全项目查找 | `Ctrl + F` / `Ctrl + Shift + F` |
+| Compile / breakpoint | `F7` / `F9` |
+| Blueprint 变量 Get / Set | `Ctrl + drag` / `Alt + drag` |
+| 常用 Blueprint 节点 | `B/S/D/P + LMB`: Branch / Sequence / Delay / BeginPlay |
+| 常用 Material 节点 | `1/2/3/4/S/V/T/M/L/A + LMB`: Constant / Parameter / Texture / Math |
