@@ -18,13 +18,13 @@ UE 项目结构围绕 project descriptor、module、target、asset 目录组织�
 
 关键边界：
 
-| 概念 | 文件 | 作用 |
-| --- | --- | --- |
-| Project | `.uproject` | 项目描述，声明 module、plugin、Engine 版本 |
-| Plugin | `.uplugin` | 可复用功能包，可包含 code module 和资产 |
-| Target | `*.Target.cs` | 最终构建目标，如 Game / Editor / Server |
-| Module | `*.Build.cs` + `Source/` | C++ 编译、链接、加载单元 |
-| Package | `.uasset` / `.umap` | 资产序列化单元，运行时通过 object path 引用 |
+| 概念    | 文件                     | 作用                                        |
+| ------- | ------------------------ | ------------------------------------------- |
+| Project | `.uproject`              | 项目描述，声明 module、plugin、Engine 版本  |
+| Plugin  | `.uplugin`               | 可复用功能包，可包含 code module 和资产     |
+| Target  | `*.Target.cs`            | 最终构建目标，如 Game / Editor / Server     |
+| Module  | `*.Build.cs` + `Source/` | C++ 编译、链接、加载单元                    |
+| Package | `.uasset` / `.umap`      | 资产序列化单元，运行时通过 object path 引用 |
 
 典型 C++ 项目结构：
 
@@ -70,14 +70,14 @@ MyProject/
 `Module` 是 UE 的 C++ 编译、链接和加载单元，不是 C++20 `module`，也不是 namespace。
 项目和 plugin 都可以包含多个 module。
 
-| 关注点 | 规则 |
-| --- | --- |
-| 类型 | Runtime module 进 packaged build；Editor module 只放 editor-only 代码 |
-| `Build.cs` | 给 UBT 声明依赖、include path、编译选项 |
-| public 依赖 | public header 暴露依赖类型 / 函数时用 `PublicDependencyModuleNames` |
+| 关注点       | 规则                                                                    |
+| ------------ | ----------------------------------------------------------------------- |
+| 类型         | Runtime module 进 packaged build；Editor module 只放 editor-only 代码   |
+| `Build.cs`   | 给 UBT 声明依赖、include path、编译选项                                 |
+| public 依赖  | public header 暴露依赖类型 / 函数时用 `PublicDependencyModuleNames`     |
 | private 依赖 | 只在 `.cpp` 或 private header 中使用时用 `PrivateDependencyModuleNames` |
-| 目录 | `Public/` 给其他 module include；`Private/` 放内部实现 |
-| editor 依赖 | runtime module 不应依赖 `UnrealEd`；复杂 editor 逻辑拆 Editor module |
+| 目录         | `Public/` 给其他 module include；`Private/` 放内部实现                  |
+| editor 依赖  | runtime module 不应依赖 `UnrealEd`；复杂 editor 逻辑拆 Editor module    |
 
 加载入口：
 
@@ -111,68 +111,68 @@ UE Runtime 的核心不是普通 C++ class hierarchy，而是 `UObject`、Reflec
 
 UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++ RTTI。
 
-| Macro | 用途 |
-| --- | --- |
-| `UCLASS()` | 声明 `UObject` 派生类 |
-| `UINTERFACE()` | 声明 UE Interface |
-| `USTRUCT()` | 声明可反射结构体 |
-| `UENUM()` | 声明可反射枚举 |
-| `UPROPERTY()` | 属性暴露、序列化、GC 引用跟踪、Replication |
-| `UFUNCTION()` | 函数暴露、RPC、Blueprint 调用 |
-| `UPARAM()` | 修饰函数参数 |
-| `UDELEGATE()` | 声明 delegate 类型 |
+| Macro          | 用途                                       |
+| -------------- | ------------------------------------------ |
+| `UCLASS()`     | 声明 `UObject` 派生类                      |
+| `UINTERFACE()` | 声明 UE Interface                          |
+| `USTRUCT()`    | 声明可反射结构体                           |
+| `UENUM()`      | 声明可反射枚举                             |
+| `UPROPERTY()`  | 属性暴露、序列化、GC 引用跟踪、Replication |
+| `UFUNCTION()`  | 函数暴露、RPC、Blueprint 调用              |
+| `UPARAM()`     | 修饰函数参数                               |
+| `UDELEGATE()`  | 声明 delegate 类型                         |
 
 反射宏不只是“让 UE 看见 C++ 类型”，也是 C++ / Blueprint bridge 的基础：C++ 定义稳定协议、核心规则和状态转移，Blueprint 负责装配、默认值、表现反馈和关卡 glue。
 
 常见 type / class specifier：
 
-| Specifier | 作用 | 常见用途 / 注意 |
-| --- | --- | --- |
-| `BlueprintType` | 类型可作为 Blueprint 变量 | 常用于 `USTRUCT`、`UENUM`、data object |
-| `Blueprintable` | class 可被 Blueprint 继承 | 常用于 C++ gameplay base class |
-| `Abstract` | class 不能直接实例化 | 只作为基类或协议层 |
-| `NotBlueprintable` | 禁止 Blueprint 继承 | 底层类或不希望 BP 扩展的类型 |
+| Specifier          | 作用                      | 常见用途 / 注意                        |
+| ------------------ | ------------------------- | -------------------------------------- |
+| `BlueprintType`    | 类型可作为 Blueprint 变量 | 常用于 `USTRUCT`、`UENUM`、data object |
+| `Blueprintable`    | class 可被 Blueprint 继承 | 常用于 C++ gameplay base class         |
+| `Abstract`         | class 不能直接实例化      | 只作为基类或协议层                     |
+| `NotBlueprintable` | 禁止 Blueprint 继承       | 底层类或不希望 BP 扩展的类型           |
 
 常见 `UPROPERTY` specifier：
 
-| Specifier | 作用 | 用途 / 注意 |
-| --- | --- | --- |
-| `EditDefaultsOnly` | 只在 class default / BP 默认值中编辑 | 类型级参数，例如 `MaxHealth`、`AttackRange` |
-| `EditInstanceOnly` | 只在 placed instance 上编辑 | 关卡特例，例如某扇门的 `RequiredKeyId` |
-| `EditAnywhere` | 默认值和 instance 都可编辑 | 方便但边界更松，避免滥用 |
-| `VisibleAnywhere` | Details 可见但不可编辑 | runtime state 或组件引用 |
-| `BlueprintReadOnly` | Blueprint 可读不可写 | 状态给 BP 展示；修改优先走 C++ API |
-| `BlueprintReadWrite` | Blueprint 可读写 | 慎用；容易绕过状态修改副作用 |
-| `Transient` | 不序列化到磁盘 | runtime cache / 临时对象引用 |
-| `Replicated` | 属性参与网络复制 | 需在 `GetLifetimeReplicatedProps()` 注册 |
-| `ReplicatedUsing=OnRep_X` | 复制后在 client 调回调 | UI / 表现响应复制状态变化 |
-| `meta=(ExposeOnSpawn="true")` | spawn 节点暴露初始化参数 | projectile damage、spawn config、item id |
-| `meta=(AllowPrivateAccess="true")` | private property 仍可被反射暴露 | 常配合 private component pointer |
+| Specifier                          | 作用                                 | 用途 / 注意                                 |
+| ---------------------------------- | ------------------------------------ | ------------------------------------------- |
+| `EditDefaultsOnly`                 | 只在 class default / BP 默认值中编辑 | 类型级参数，例如 `MaxHealth`、`AttackRange` |
+| `EditInstanceOnly`                 | 只在 placed instance 上编辑          | 关卡特例，例如某扇门的 `RequiredKeyId`      |
+| `EditAnywhere`                     | 默认值和 instance 都可编辑           | 方便但边界更松，避免滥用                    |
+| `VisibleAnywhere`                  | Details 可见但不可编辑               | runtime state 或组件引用                    |
+| `BlueprintReadOnly`                | Blueprint 可读不可写                 | 状态给 BP 展示；修改优先走 C++ API          |
+| `BlueprintReadWrite`               | Blueprint 可读写                     | 慎用；容易绕过状态修改副作用                |
+| `Transient`                        | 不序列化到磁盘                       | runtime cache / 临时对象引用                |
+| `Replicated`                       | 属性参与网络复制                     | 需在 `GetLifetimeReplicatedProps()` 注册    |
+| `ReplicatedUsing=OnRep_X`          | 复制后在 client 调回调               | UI / 表现响应复制状态变化                   |
+| `meta=(ExposeOnSpawn="true")`      | spawn 节点暴露初始化参数             | projectile damage、spawn config、item id    |
+| `meta=(AllowPrivateAccess="true")` | private property 仍可被反射暴露      | 常配合 private component pointer            |
 
 常见 `UFUNCTION` / delegate specifier：
 
-| Specifier | 作用 | 用途 / 注意 |
-| --- | --- | --- |
-| `BlueprintCallable` | Blueprint 可调用 C++ 函数 | 有执行 pin，适合命令式操作 |
-| `BlueprintPure` | Blueprint 纯读取函数 | 不应修改状态、spawn、播放音效 |
-| `BlueprintImplementableEvent` | C++ 声明、Blueprint 实现 | 表现钩子；BP 不实现也不应影响核心规则 |
-| `BlueprintNativeEvent` | C++ 有默认实现，Blueprint 可覆盖 | 默认实现写 `_Implementation()` |
-| `BlueprintAssignable` | Blueprint 可绑定 multicast delegate | 常用于 `OnHealthChanged`、`OnOpened` |
-| `BlueprintAuthorityOnly` | 只应在 authority 端执行 | 网络规则提示，不等于完整安全边界 |
+| Specifier                     | 作用                                | 用途 / 注意                           |
+| ----------------------------- | ----------------------------------- | ------------------------------------- |
+| `BlueprintCallable`           | Blueprint 可调用 C++ 函数           | 有执行 pin，适合命令式操作            |
+| `BlueprintPure`               | Blueprint 纯读取函数                | 不应修改状态、spawn、播放音效         |
+| `BlueprintImplementableEvent` | C++ 声明、Blueprint 实现            | 表现钩子；BP 不实现也不应影响核心规则 |
+| `BlueprintNativeEvent`        | C++ 有默认实现，Blueprint 可覆盖    | 默认实现写 `_Implementation()`        |
+| `BlueprintAssignable`         | Blueprint 可绑定 multicast delegate | 常用于 `OnHealthChanged`、`OnOpened`  |
+| `BlueprintAuthorityOnly`      | 只应在 authority 端执行             | 网络规则提示，不等于完整安全边界      |
 
 #### 构造
 
 **构造途径**
 
-| 目标 | API | 与 `CDO` / template 的关系 | 要点 |
-| --- | --- | --- | --- |
-| Class Default Object | engine 内部创建 `UClass` 默认对象 | `CDO` 是默认值来源；构造它本身时不会“拷贝自己”，native class 通常以父类 `CDO` 为 archetype | 每个 `UClass` 一个，Blueprint 默认值最终落到 generated class 的 `CDO` |
-| default subobject | `CreateDefaultSubobject<T>()` | 创建 default subobject template；不是简单“从 owner CDO 拷贝一个普通对象” | 只在 constructor 中用，成为 class 默认结构 |
-| 普通 `UObject` | `NewObject<T>(Outer)` | 未传 `Template` 时通常以 `Class` 的 `CDO` 初始化属性；传入 `Template` 时复制该 template | 运行时创建，必须考虑 `Outer` 和 GC 可达性 |
-| `AActor` | `UWorld::SpawnActor<T>()` | 默认以 Actor class 的 `CDO` / archetype 初始化；`FActorSpawnParameters::Template` 可覆盖 | Actor 由 `UWorld` 管理，不用 `NewObject` |
-| 延迟初始化 `AActor` | `SpawnActorDeferred<T>()` + `FinishSpawningActor()` | 初始对象仍来自 `CDO` / template；延迟的是 construction script / component 初始化等后续阶段 | spawn 后、construction 前设置参数 |
-| 加载已有 asset / object | `LoadObject<T>()` / `StaticLoadObject()` | 不能简单理解为只拷贝 `CDO`；加载对象会先有默认初始化，再用 package 序列化数据覆盖 | 从 object path 反序列化对象 |
-| 复制已有 object | `DuplicateObject<T>()` | 主要复制源对象及 subobject 图；源对象才是 template，不是目标 class 的 `CDO` | 复制 object / subobject 图 |
+| 目标                    | API                                                 | 与 `CDO` / template 的关系                                                                 | 要点                                                                  |
+| ----------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Class Default Object    | engine 内部创建 `UClass` 默认对象                   | `CDO` 是默认值来源；构造它本身时不会“拷贝自己”，native class 通常以父类 `CDO` 为 archetype | 每个 `UClass` 一个，Blueprint 默认值最终落到 generated class 的 `CDO` |
+| default subobject       | `CreateDefaultSubobject<T>()`                       | 创建 default subobject template；不是简单“从 owner CDO 拷贝一个普通对象”                   | 只在 constructor 中用，成为 class 默认结构                            |
+| 普通 `UObject`          | `NewObject<T>(Outer)`                               | 未传 `Template` 时通常以 `Class` 的 `CDO` 初始化属性；传入 `Template` 时复制该 template    | 运行时创建，必须考虑 `Outer` 和 GC 可达性                             |
+| `AActor`                | `UWorld::SpawnActor<T>()`                           | 默认以 Actor class 的 `CDO` / archetype 初始化；`FActorSpawnParameters::Template` 可覆盖   | Actor 由 `UWorld` 管理，不用 `NewObject`                              |
+| 延迟初始化 `AActor`     | `SpawnActorDeferred<T>()` + `FinishSpawningActor()` | 初始对象仍来自 `CDO` / template；延迟的是 construction script / component 初始化等后续阶段 | spawn 后、construction 前设置参数                                     |
+| 加载已有 asset / object | `LoadObject<T>()` / `StaticLoadObject()`            | 不能简单理解为只拷贝 `CDO`；加载对象会先有默认初始化，再用 package 序列化数据覆盖          | 从 object path 反序列化对象                                           |
+| 复制已有 object         | `DuplicateObject<T>()`                              | 主要复制源对象及 subobject 图；源对象才是 template，不是目标 class 的 `CDO`                | 复制 object / subobject 图                                            |
 
 - 不要用 `new` / `delete` 管理 `UObject`
 - “从 `CDO` 拷贝”主要指 reflected property 默认值初始化；普通 C++ 成员仍按 C++ 构造规则处理
@@ -181,16 +181,16 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 
 **构造流程**
 
-| 函数 / 阶段 | 触发场景 | 备注 |
-| --- | --- | --- |
-| C++ constructor | `CDO`、spawn、load 等对象创建路径 | 设置 native default / default subobject；不要假设 `this` 是 gameplay instance |
-| `PostInitProperties()` | constructor 后、属性初始化后 | 通用 `UObject` 初始化函数；CDO 创建也会走到这里，修改属性可能影响 class 默认状态 |
+| 函数 / 阶段                   | 触发场景                                   | 备注                                                                                                                                               |
+| ----------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C++ constructor               | `CDO`、spawn、load 等对象创建路径          | 设置 native default / default subobject；不要假设 `this` 是 gameplay instance                                                                      |
+| `PostInitProperties()`        | constructor 后、属性初始化后               | 通用 `UObject` 初始化函数；CDO 创建也会走到这里，修改属性可能影响 class 默认状态                                                                   |
 | Blueprint Class Defaults 应用 | `UBlueprintGeneratedClass` CDO 创建 / 重建 | 不是常规 gameplay 回调；在 native constructor / `PostInitProperties()` 基础默认值之后应用 Blueprint 默认值 / component templates；CDO 至此生成完毕 |
-| `PostLoad()` | 从磁盘 / package 反序列化后 | load path；和 `PostActorCreated()` 互斥 |
-| `PostActorCreated()` | Actor 被 spawn / editor 创建后 | Actor spawn path；construction 前 |
-| `OnConstruction()` | Actor construction script 阶段 | Actor-only；对应 Blueprint Construction Script；作用于 Actor instance |
-| `PreInitializeComponents()` | Actor components 初始化前 | Actor-only；通常晚于 construction |
-| `PostInitializeComponents()` | Actor components 初始化后 | Actor-only；进入 `BeginPlay()` 前 |
+| `PostLoad()`                  | 从磁盘 / package 反序列化后                | load path；和 `PostActorCreated()` 互斥                                                                                                            |
+| `PostActorCreated()`          | Actor 被 spawn / editor 创建后             | Actor spawn path；construction 前                                                                                                                  |
+| `OnConstruction()`            | Actor construction script 阶段             | Actor-only；对应 Blueprint Construction Script；作用于 Actor instance                                                                              |
+| `PreInitializeComponents()`   | Actor components 初始化前                  | Actor-only；通常晚于 construction                                                                                                                  |
+| `PostInitializeComponents()`  | Actor components 初始化后                  | Actor-only；进入 `BeginPlay()` 前                                                                                                                  |
 
 补充：
 
@@ -216,21 +216,21 @@ UE Reflection 由 `UnrealHeaderTool` 解析宏生成元数据，不是标准 C++
 
 #### 引用规则
 
-| 类型 | 用途 |
-| --- | --- |
-| `TObjectPtr<T>` | UE5 推荐的 `UObject` 成员引用，配合 `UPROPERTY` |
-| `TWeakObjectPtr<T>` | 弱引用 `UObject`，对象销毁后可检测失效 |
-| `TSoftObjectPtr<T>` | 软引用资产，记录路径，可延迟加载 |
-| `TSubclassOf<T>` | 限制 Class 类型必须继承自 `T` |
-| `TStrongObjectPtr<T>` | 非 `UPROPERTY` 场景下强持有 `UObject` |
-| `TSharedPtr<T>` / `TSharedRef<T>` | 管理非 `UObject` 的原生 C++ 对象 |
+| 类型                              | 用途                                            |
+| --------------------------------- | ----------------------------------------------- |
+| `TObjectPtr<T>`                   | UE5 推荐的 `UObject` 成员引用，配合 `UPROPERTY` |
+| `TWeakObjectPtr<T>`               | 弱引用 `UObject`，对象销毁后可检测失效          |
+| `TSoftObjectPtr<T>`               | 软引用资产，记录路径，可延迟加载                |
+| `TSubclassOf<T>`                  | 限制 Class 类型必须继承自 `T`                   |
+| `TStrongObjectPtr<T>`             | 非 `UPROPERTY` 场景下强持有 `UObject`           |
+| `TSharedPtr<T>` / `TSharedRef<T>` | 管理非 `UObject` 的原生 C++ 对象                |
 
 #### Outer vs Owner
 
-| 概念 | 作用域 | 核心含义 | 典型用途 |
-| --- | --- | --- | --- |
-| `Outer` | `UObject` | 这个 object 在哪个 object 下面 | object path、package、序列化、查找 |
-| `Owner` | `AActor` | 这个 Actor 归哪个 Actor 负责/控制 | RPC、network ownership、relevancy |
+| 概念    | 作用域    | 核心含义                          | 典型用途                           |
+| ------- | --------- | --------------------------------- | ---------------------------------- |
+| `Outer` | `UObject` | 这个 object 在哪个 object 下面    | object path、package、序列化、查找 |
+| `Owner` | `AActor`  | 这个 Actor 归哪个 Actor 负责/控制 | RPC、network ownership、relevancy  |
 
 ```cpp
 UMyObject* Obj = NewObject<UMyObject>(this); // this 是 Obj 的 Outer
@@ -255,14 +255,14 @@ WeaponActor->SetOwner(PlayerController);     // PlayerController 是 WeaponActor
 
 Blueprint 本质是资产化的 `UClass` 扩展：继承 native class 或另一个 Blueprint class，保存默认属性、component tree、graph 和 generated class。
 
-| 关注点 | 要点 |
-| --- | --- |
-| Class / CDO | Blueprint 编译后生成 `UBlueprintGeneratedClass`，默认值落在该 class 的 `CDO` |
-| Graph | Event Graph / Function Graph 会编译成 Blueprint VM 执行的数据 / glue |
-| 变量 | Blueprint 变量本质是 reflected property；默认值序列化在 asset / CDO 中 |
-| 组件 | Blueprint component tree 叠加在 C++ default subobject 之上 |
-| 资产引用 | object reference 通常是 hard reference；soft reference 保存 object path |
-| 运行时实例 | spawn / load 时从 class default / archetype 复制默认值，再进入 Actor 生命周期 |
+| 关注点      | 要点                                                                          |
+| ----------- | ----------------------------------------------------------------------------- |
+| Class / CDO | Blueprint 编译后生成 `UBlueprintGeneratedClass`，默认值落在该 class 的 `CDO`  |
+| Graph       | Event Graph / Function Graph 会编译成 Blueprint VM 执行的数据 / glue          |
+| 变量        | Blueprint 变量本质是 reflected property；默认值序列化在 asset / CDO 中        |
+| 组件        | Blueprint component tree 叠加在 C++ default subobject 之上                    |
+| 资产引用    | object reference 通常是 hard reference；soft reference 保存 object path       |
+| 运行时实例  | spawn / load 时从 class default / archetype 复制默认值，再进入 Actor 生命周期 |
 
 易混点：
 
@@ -297,25 +297,25 @@ Content/Characters/Hero.uasset
 
 常见映射：
 
-| 物理来源 | 虚拟根路径 | 示例 |
-| --- | --- | --- |
-| `Content/` | `/Game/` | `/Game/Characters/Hero` |
-| `Engine/Content/` | `/Engine/` | `/Engine/EngineMaterials/DefaultMaterial` |
-| `Plugins/MyPlugin/Content/` | `/MyPlugin/` | `/MyPlugin/Items/Sword` |
-| C++ reflected type in `Engine` | `/Script/Engine` | `/Script/Engine.Actor` |
-| C++ reflected type in game module | `/Script/MyProject` | `/Script/MyProject.MyActor` |
+| 物理来源                          | 虚拟根路径          | 示例                                      |
+| --------------------------------- | ------------------- | ----------------------------------------- |
+| `Content/`                        | `/Game/`            | `/Game/Characters/Hero`                   |
+| `Engine/Content/`                 | `/Engine/`          | `/Engine/EngineMaterials/DefaultMaterial` |
+| `Plugins/MyPlugin/Content/`       | `/MyPlugin/`        | `/MyPlugin/Items/Sword`                   |
+| C++ reflected type in `Engine`    | `/Script/Engine`    | `/Script/Engine.Actor`                    |
+| C++ reflected type in game module | `/Script/MyProject` | `/Script/MyProject.MyActor`               |
 
 #### Package / Object 路径
 
-| 概念 | 形式 | 含义 |
-| --- | --- | --- |
-| Physical File Path | `Content/Characters/Hero.uasset` / `Content/Levels/Main.umap` | 磁盘文件 |
-| Mount Point | `/Game/` | 虚拟根，把物理目录映射进 package namespace |
-| Long Package Name | `/Game/Characters/Hero` | package 名，不带扩展名、不含对象名 |
-| Top-level Object Path | `/Game/Characters/Hero.Hero` | package 内 top-level object |
-| Subobject Path | `/Game/Maps/Main.Main:PersistentLevel.X` | top-level object 下的 subobject |
-| Blueprint Generated Class | `/Game/BP_Hero.BP_Hero_C` | Blueprint asset 生成的 `UClass` |
-| Native Class Path | `/Script/Engine.Actor` | C++ 反射类型，不对应 `Content/` 文件 |
+| 概念                      | 形式                                                          | 含义                                       |
+| ------------------------- | ------------------------------------------------------------- | ------------------------------------------ |
+| Physical File Path        | `Content/Characters/Hero.uasset` / `Content/Levels/Main.umap` | 磁盘文件                                   |
+| Mount Point               | `/Game/`                                                      | 虚拟根，把物理目录映射进 package namespace |
+| Long Package Name         | `/Game/Characters/Hero`                                       | package 名，不带扩展名、不含对象名         |
+| Top-level Object Path     | `/Game/Characters/Hero.Hero`                                  | package 内 top-level object                |
+| Subobject Path            | `/Game/Maps/Main.Main:PersistentLevel.X`                      | top-level object 下的 subobject            |
+| Blueprint Generated Class | `/Game/BP_Hero.BP_Hero_C`                                     | Blueprint asset 生成的 `UClass`            |
+| Native Class Path         | `/Script/Engine.Actor`                                        | C++ 反射类型，不对应 `Content/` 文件       |
 
 易混点：
 
@@ -325,15 +325,15 @@ Content/Characters/Hero.uasset
 - `.umap` 也是 package，只是主要保存 `UWorld` / `ULevel` 相关对象
 - `/Script/Module.Type` 是 native reflected type path，不表示 `Source/` 被挂载
 
-| API / 类型 | 结果示例 | 备注 |
-| --- | --- | --- |
-| `GetName()` | `Hero` | 对象自身名字，不含 package / outer |
-| `GetPathName()` | `/Game/Characters/Hero.Hero` | object path；非 top-level object 会带 `:` |
-| `GetFullName()` | `SkeletalMesh /Game/Characters/Hero.Hero` | class name + object path |
-| `GetOuter()` | `UPackage` / outer object | asset 的 outer 通常是 `UPackage` |
-| `FPackageName` | package path conversion | filename / long package name / mount point |
-| `FTopLevelAssetPath` | `/Game/Characters/Hero.Hero` | top-level asset，不含 subobject path |
-| `FSoftObjectPath` | `/Game/Maps/Main.Main:SubPath` | soft reference，可包含 subobject path |
+| API / 类型           | 结果示例                                  | 备注                                       |
+| -------------------- | ----------------------------------------- | ------------------------------------------ |
+| `GetName()`          | `Hero`                                    | 对象自身名字，不含 package / outer         |
+| `GetPathName()`      | `/Game/Characters/Hero.Hero`              | object path；非 top-level object 会带 `:`  |
+| `GetFullName()`      | `SkeletalMesh /Game/Characters/Hero.Hero` | class name + object path                   |
+| `GetOuter()`         | `UPackage` / outer object                 | asset 的 outer 通常是 `UPackage`           |
+| `FPackageName`       | package path conversion                   | filename / long package name / mount point |
+| `FTopLevelAssetPath` | `/Game/Characters/Hero.Hero`              | top-level asset，不含 subobject path       |
+| `FSoftObjectPath`    | `/Game/Maps/Main.Main:SubPath`            | soft reference，可包含 subobject path      |
 
 #### 引用方式
 
@@ -410,29 +410,29 @@ UEngine
 
 核心对象：
 
-| 类别 | 对象 / 类型 | 生命周期 / 所属 | 主要职责 / 要点 |
-| --- | --- | --- | --- |
-| Engine context | `UEngine` | engine 全局 | 管理 world context、viewport、engine 级服务 |
-| Engine context | `FWorldContext` | engine 内部上下文 | 追踪 `UWorld` / `UGameInstance` / travel / PIE context |
-| Session | `UGameInstance` | 游戏会话级，通常跨 `OpenLevel()` 存活 | 跨关卡状态、save slot、全局配置、session data |
-| Local player | `ULocalPlayer` | 本地玩家槽位，split screen 时可有多个 | 本地输入、viewport、引用本地 `PlayerController` |
-| World | `UWorld` | 当前运行世界实例，不等于 `.umap` 文件 | levels、Actor、timer、physics、navigation、trace |
-| World | `ULevel` | `World` 中的关卡数据块 | 承载 `Actors[]` |
-| World | `AWorldSettings` | level 级 Actor | level 配置 |
-| World | `ALevelScriptActor` | 属于某个 `ULevel` | Level Blueprint 的运行时实例，本关专用事件编排 |
-| Gameplay framework | `AGameMode` | 当前 `World` 规则对象，server-only | 规则决策、spawn、胜负、match flow |
-| Gameplay framework | `AGameSession` | server-only | 登录、会话、匹配相关 |
-| Gameplay framework | `AGameState` | 当前 `World` 公共状态，可复制 | 波数、比分、倒计时、目标状态、`PlayerArray` |
-| Gameplay framework | `APlayerState` | 单个玩家的公共状态，通常跨 pawn 存活 | 玩家名、分数、队伍、match 内玩家数据 |
-| Gameplay framework | `APlayerController` | `World` 中的 Actor，本地玩家也会引用 | 输入、视角入口、possession、UI input mode |
-| Gameplay framework | `APawn` / `ACharacter` | 可被 `Controller` possess 的 Actor | 当前被控制的身体；`Character` 带人形 movement |
-| World entity | `AActor` | `ULevel.Actors[]` 中的世界实体 | transform、spawn / destroy、component owner |
-| World entity | `UActorComponent` | Actor 的子对象 | 行为模块，无 transform |
-| World entity | `USceneComponent` | Actor 的空间 component | 带 transform，可组成 attach 层级 |
-| Subsystem | `UEngineSubsystem` | engine 级 | 普通 gameplay 项目较少用 |
-| Subsystem | `UGameInstanceSubsystem` | 跟随 `GameInstance`，跨关卡 | save slot、settings、全局配置 |
-| Subsystem | `ULocalPlayerSubsystem` | 每个 `ULocalPlayer` 一份 | input mapping、本地 UI 偏好 |
-| Subsystem | `UWorldSubsystem` | 跟随当前 `World`，切关卡重建 | spawn director、weather、objective registry |
+| 类别               | 对象 / 类型              | 生命周期 / 所属                       | 主要职责 / 要点                                        |
+| ------------------ | ------------------------ | ------------------------------------- | ------------------------------------------------------ |
+| Engine context     | `UEngine`                | engine 全局                           | 管理 world context、viewport、engine 级服务            |
+| Engine context     | `FWorldContext`          | engine 内部上下文                     | 追踪 `UWorld` / `UGameInstance` / travel / PIE context |
+| Session            | `UGameInstance`          | 游戏会话级，通常跨 `OpenLevel()` 存活 | 跨关卡状态、save slot、全局配置、session data          |
+| Local player       | `ULocalPlayer`           | 本地玩家槽位，split screen 时可有多个 | 本地输入、viewport、引用本地 `PlayerController`        |
+| World              | `UWorld`                 | 当前运行世界实例，不等于 `.umap` 文件 | levels、Actor、timer、physics、navigation、trace       |
+| World              | `ULevel`                 | `World` 中的关卡数据块                | 承载 `Actors[]`                                        |
+| World              | `AWorldSettings`         | level 级 Actor                        | level 配置                                             |
+| World              | `ALevelScriptActor`      | 属于某个 `ULevel`                     | Level Blueprint 的运行时实例，本关专用事件编排         |
+| Gameplay framework | `AGameMode`              | 当前 `World` 规则对象，server-only    | 规则决策、spawn、胜负、match flow                      |
+| Gameplay framework | `AGameSession`           | server-only                           | 登录、会话、匹配相关                                   |
+| Gameplay framework | `AGameState`             | 当前 `World` 公共状态，可复制         | 波数、比分、倒计时、目标状态、`PlayerArray`            |
+| Gameplay framework | `APlayerState`           | 单个玩家的公共状态，通常跨 pawn 存活  | 玩家名、分数、队伍、match 内玩家数据                   |
+| Gameplay framework | `APlayerController`      | `World` 中的 Actor，本地玩家也会引用  | 输入、视角入口、possession、UI input mode              |
+| Gameplay framework | `APawn` / `ACharacter`   | 可被 `Controller` possess 的 Actor    | 当前被控制的身体；`Character` 带人形 movement          |
+| World entity       | `AActor`                 | `ULevel.Actors[]` 中的世界实体        | transform、spawn / destroy、component owner            |
+| World entity       | `UActorComponent`        | Actor 的子对象                        | 行为模块，无 transform                                 |
+| World entity       | `USceneComponent`        | Actor 的空间 component                | 带 transform，可组成 attach 层级                       |
+| Subsystem          | `UEngineSubsystem`       | engine 级                             | 普通 gameplay 项目较少用                               |
+| Subsystem          | `UGameInstanceSubsystem` | 跟随 `GameInstance`，跨关卡           | save slot、settings、全局配置                          |
+| Subsystem          | `ULocalPlayerSubsystem`  | 每个 `ULocalPlayer` 一份              | input mapping、本地 UI 偏好                            |
+| Subsystem          | `UWorldSubsystem`        | 跟随当前 `World`，切关卡重建          | spawn director、weather、objective registry            |
 
 `.umap` 是磁盘资产；`UWorld` 是运行时世界对象；`ULevel` 是 `World` 内部的关卡数据块。
 简单地图通常只有 `PersistentLevel`，streaming / World Partition 会让一个 `World` 包含多个 level 数据块。
@@ -464,15 +464,15 @@ OpenLevel / enter World
 
 常见相关函数 / API：
 
-| API / 函数 | 作用 |
-| --- | --- |
-| `InitGame()` | 初始化当前 `GameMode` |
-| `PreLogin()` / `Login()` / `PostLogin()` | 玩家连接 / 登录流程 |
-| `HandleStartingNewPlayer()` | 处理新玩家开始游戏 |
-| `RestartPlayer()` | 生成 / 重生玩家入口 |
-| `ChoosePlayerStart()` | 选择出生点 |
-| `SpawnDefaultPawnFor()` | 生成默认 Pawn |
-| `GetDefaultPawnClassForController()` | 决定某个 Controller 使用哪个 Pawn |
+| API / 函数                               | 作用                              |
+| ---------------------------------------- | --------------------------------- |
+| `InitGame()`                             | 初始化当前 `GameMode`             |
+| `PreLogin()` / `Login()` / `PostLogin()` | 玩家连接 / 登录流程               |
+| `HandleStartingNewPlayer()`              | 处理新玩家开始游戏                |
+| `RestartPlayer()`                        | 生成 / 重生玩家入口               |
+| `ChoosePlayerStart()`                    | 选择出生点                        |
+| `SpawnDefaultPawnFor()`                  | 生成默认 Pawn                     |
+| `GetDefaultPawnClassForController()`     | 决定某个 Controller 使用哪个 Pawn |
 
 `PlayerStart` 是出生点候选；多个 `PlayerStart` 通常只是多个候选点，不会天然生成多个玩家角色。
 场景中出现两个玩家角色时，优先检查：
@@ -485,12 +485,12 @@ OpenLevel / enter World
 
 Actor / Component 的主线是“实体 + 能力组合”，不要只靠继承堆 gameplay 类型。
 
-| 层级 | 核心含义 / 职责 | 典型用途 / 边界 |
-| --- | --- | --- |
-| `AActor` | `World` 中可 spawn / destroy 的实体；负责 world identity、transform、组件组合、对外高层行为 | 门、敌人、拾取物、投射物；不要承载所有可复用规则 |
-| `UActorComponent` | 挂在 Actor 上的行为模块，无 transform；负责可复用能力、局部状态、public API、事件通知 | health、inventory、interaction、combat |
-| `USceneComponent` | 带 transform，可 attach，参与空间层级 | mesh、camera、spring arm、collision shape |
-| Blueprint child | 继承 C++ Actor / Component 后做装配和调参 | mesh、sound、VFX、默认参数、少量 glue |
+| 层级              | 核心含义 / 职责                                                                             | 典型用途 / 边界                                  |
+| ----------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `AActor`          | `World` 中可 spawn / destroy 的实体；负责 world identity、transform、组件组合、对外高层行为 | 门、敌人、拾取物、投射物；不要承载所有可复用规则 |
+| `UActorComponent` | 挂在 Actor 上的行为模块，无 transform；负责可复用能力、局部状态、public API、事件通知       | health、inventory、interaction、combat           |
+| `USceneComponent` | 带 transform，可 attach，参与空间层级                                                       | mesh、camera、spring arm、collision shape        |
+| Blueprint child   | 继承 C++ Actor / Component 后做装配和调参                                                   | mesh、sound、VFX、默认参数、少量 glue            |
 
 - `AActor` 的 transform 通常来自 `RootComponent`
 - `USceneComponent` 继承自 `UActorComponent`，但额外参与空间层级
@@ -525,13 +525,13 @@ ACharacter
 
 `Subsystem` 是自动挂在某个生命周期域上的 service，适合替代“每张图都要手放的 manager actor”。
 
-| 需求 | 常见归属 | 原因 |
-| --- | --- | --- |
-| save slot、settings、跨关卡配置 | `GameInstanceSubsystem` | 跟随 `GameInstance`，跨关卡 |
-| 当前关卡刷怪、天气、目标注册 | `WorldSubsystem` | 跟随当前 `World`，切关卡重建 |
-| Enhanced Input mapping、本地 UI 偏好 | `LocalPlayerSubsystem` | 每个本地玩家一份 |
-| 某张地图一次性过场 / 机关编排 | `ALevelScriptActor` | 强绑定当前 level |
-| 某个 Actor 的能力 | `ActorComponent` | 依附实体，可复用 |
+| 需求                                 | 常见归属                | 原因                         |
+| ------------------------------------ | ----------------------- | ---------------------------- |
+| save slot、settings、跨关卡配置      | `GameInstanceSubsystem` | 跟随 `GameInstance`，跨关卡  |
+| 当前关卡刷怪、天气、目标注册         | `WorldSubsystem`        | 跟随当前 `World`，切关卡重建 |
+| Enhanced Input mapping、本地 UI 偏好 | `LocalPlayerSubsystem`  | 每个本地玩家一份             |
+| 某张地图一次性过场 / 机关编排        | `ALevelScriptActor`     | 强绑定当前 level             |
+| 某个 Actor 的能力                    | `ActorComponent`        | 依附实体，可复用             |
 
 - `WorldSubsystem` 不应硬引用某张地图里的具体 Actor；用注册、tag、interface 或关卡脚本注入更清晰
 - `LevelScriptActor` 不适合承载通用 gameplay 系统，避免多地图复制粘贴
@@ -543,12 +543,12 @@ ACharacter
 
 `direct call`、`interface`、`delegate`、`message` 都是常见通信方式；UE 中主要注意 Blueprint、反射和对象生命周期带来的边界。
 
-| 方式 | UE 中常见形态 | 备注 |
-| --- | --- | --- |
-| direct call | C++ 指针调用 / Blueprint object reference | 关系明确时最清晰 |
-| interface | `UINTERFACE` / Blueprint Interface | C++ 调 BP interface 优先用 `Execute_X()` |
-| delegate | dynamic multicast delegate / Event Dispatcher | UI / 临时对象注意绑定和解绑 |
-| message | `GameplayMessageSubsystem` | 跨系统广播事实，不替代 replication / save |
+| 方式        | UE 中常见形态                                 | 备注                                      |
+| ----------- | --------------------------------------------- | ----------------------------------------- |
+| direct call | C++ 指针调用 / Blueprint object reference     | 关系明确时最清晰                          |
+| interface   | `UINTERFACE` / Blueprint Interface            | C++ 调 BP interface 优先用 `Execute_X()`  |
+| delegate    | dynamic multicast delegate / Event Dispatcher | UI / 临时对象注意绑定和解绑               |
+| message     | `GameplayMessageSubsystem`                    | 跨系统广播事实，不替代 replication / save |
 
 `GameplayMessageSubsystem` 是 gameplay message 方案：通常用 `GameplayTag` 做 channel，用 `USTRUCT` 做 message body。
 
@@ -565,12 +565,12 @@ Message: FItemPickedUpMessage { Picker, ItemId, Count }
 
 数据驱动的主线是把静态内容、运行时状态、行为执行、持久化快照分开。
 
-| 层级 | 含义 | 例子 |
-| --- | --- | --- |
-| Definition / Config | 静态配置，描述“这是什么” | `UItemDefinition`、DataTable row、skill config |
-| Runtime State | 运行时结果，描述“现在怎样” | `CurrentHealth`、cooldown、`ItemId + Count` |
-| Actor / Component | 行为执行 | `TryPickup()`、`ApplyDamage()`、`CanActivateSkill()` |
-| Save Data | 恢复游戏所需的稳定快照 | `LevelId`、`SaveId`、`ItemId + Count` |
+| 层级                | 含义                       | 例子                                                 |
+| ------------------- | -------------------------- | ---------------------------------------------------- |
+| Definition / Config | 静态配置，描述“这是什么”   | `UItemDefinition`、DataTable row、skill config       |
+| Runtime State       | 运行时结果，描述“现在怎样” | `CurrentHealth`、cooldown、`ItemId + Count`          |
+| Actor / Component   | 行为执行                   | `TryPickup()`、`ApplyDamage()`、`CanActivateSkill()` |
+| Save Data           | 恢复游戏所需的稳定快照     | `LevelId`、`SaveId`、`ItemId + Count`                |
 
 规则：
 
@@ -581,11 +581,11 @@ Message: FItemPickedUpMessage { Picker, ItemId, Count }
 
 静态配置资产选择：
 
-| 类型 | 适合场景 | 要点 |
-| --- | --- | --- |
-| `DataTable` | 大量结构一致的表格数据 | row struct 继承 `FTableRowBase`；`RowName` 是 key |
-| `UDataAsset` | 一个资产表达一份复杂配置 | weapon、skill、loot table、enemy config |
-| `UPrimaryDataAsset` | 需要 `Asset Manager` 管理的主内容资产 | item、enemy、level、ability 等按 type / id 加载 |
+| 类型                | 适合场景                              | 要点                                              |
+| ------------------- | ------------------------------------- | ------------------------------------------------- |
+| `DataTable`         | 大量结构一致的表格数据                | row struct 继承 `FTableRowBase`；`RowName` 是 key |
+| `UDataAsset`        | 一个资产表达一份复杂配置              | weapon、skill、loot table、enemy config           |
+| `UPrimaryDataAsset` | 需要 `Asset Manager` 管理的主内容资产 | item、enemy、level、ability 等按 type / id 加载   |
 
 `TSoftObjectPtr` / `TSoftClassPtr` 是 soft reference：保存 object path，不立即加载具体资产。
 `Asset Manager` 管 `Primary Asset` 的发现、按 `PrimaryAssetId` 加载、卸载、cook / chunk / audit。
@@ -609,22 +609,22 @@ Enemy.Type.Undead
 Faction.Enemy
 ```
 
-| 需求 | 更适合 |
-| --- | --- |
-| 互斥流程状态 | `enum` |
-| 可叠加分类 / 状态 / 效果 | `Gameplay Tags` |
-| 层级匹配和数据驱动条件 | `Gameplay Tags` / `FGameplayTagQuery` |
-| 可调用能力 | interface |
-| 唯一内容身份 | `ItemId` / `FPrimaryAssetId` |
+| 需求                     | 更适合                                |
+| ------------------------ | ------------------------------------- |
+| 互斥流程状态             | `enum`                                |
+| 可叠加分类 / 状态 / 效果 | `Gameplay Tags`                       |
+| 层级匹配和数据驱动条件   | `Gameplay Tags` / `FGameplayTagQuery` |
+| 可调用能力               | interface                             |
+| 唯一内容身份             | `ItemId` / `FPrimaryAssetId`          |
 
 常用类型：
 
-| 类型 | 用途 |
-| --- | --- |
-| `FGameplayTag` | 单个 tag |
+| 类型                    | 用途                                          |
+| ----------------------- | --------------------------------------------- |
+| `FGameplayTag`          | 单个 tag                                      |
 | `FGameplayTagContainer` | 一组 tag，支持 `HasTag` / `HasAny` / `HasAll` |
-| `FGameplayTagQuery` | 复杂 AND / OR / NOT 条件 |
-| `UGameplayTagsManager` | 查询已注册 tag，例如 `RequestGameplayTag()` |
+| `FGameplayTagQuery`     | 复杂 AND / OR / NOT 条件                      |
+| `UGameplayTagsManager`  | 查询已注册 tag，例如 `RequestGameplayTag()`   |
 
 注册方式：
 
@@ -658,22 +658,22 @@ FGameplayTagContainer BlockedOwnerTags;
 
 Enhanced Input 的主线是：`LocalPlayer` 持有 mapping context，`PlayerController` / `Pawn` 绑定响应，`Pawn` 执行动作。
 
-| 概念 | 作用 |
-| --- | --- |
-| `UInputAction` | 输入意图和值，如 Move、Look、Jump、Interact |
-| `UInputMappingContext` | 按键 / 手柄输入到 `InputAction` 的映射集合 |
-| `UEnhancedInputLocalPlayerSubsystem` | 给某个 `ULocalPlayer` 添加 / 移除 mapping context |
-| `SetupPlayerInputComponent()` | 当前 Pawn 被 possess 后绑定输入响应函数 |
-| `FInputModeGameOnly` / `UIOnly` / `GameAndUI` | 控制输入路由到 game / UI 和焦点行为 |
+| 概念                                          | 作用                                              |
+| --------------------------------------------- | ------------------------------------------------- |
+| `UInputAction`                                | 输入意图和值，如 Move、Look、Jump、Interact       |
+| `UInputMappingContext`                        | 按键 / 手柄输入到 `InputAction` 的映射集合        |
+| `UEnhancedInputLocalPlayerSubsystem`          | 给某个 `ULocalPlayer` 添加 / 移除 mapping context |
+| `SetupPlayerInputComponent()`                 | 当前 Pawn 被 possess 后绑定输入响应函数           |
+| `FInputModeGameOnly` / `UIOnly` / `GameAndUI` | 控制输入路由到 game / UI 和焦点行为               |
 
 常见边界：
 
-| 逻辑 | 常见归属 |
-| --- | --- |
-| 添加 / 切换 mapping context | `PlayerController` / `LocalPlayerSubsystem` |
-| UI input mode、鼠标显示、暂停 | `PlayerController` |
-| 移动、跳跃、攻击执行 | `Pawn` / `Character` / component |
-| 重生后仍存在的控制入口 | `PlayerController` |
+| 逻辑                          | 常见归属                                    |
+| ----------------------------- | ------------------------------------------- |
+| 添加 / 切换 mapping context   | `PlayerController` / `LocalPlayerSubsystem` |
+| UI input mode、鼠标显示、暂停 | `PlayerController`                          |
+| 移动、跳跃、攻击执行          | `Pawn` / `Character` / component            |
+| 重生后仍存在的控制入口        | `PlayerController`                          |
 
 Camera 关系：
 
@@ -695,19 +695,19 @@ SpringArm bUsePawnControlRotation = true
 Collision Query 是“问世界里有什么”，不同于 physics simulation 的真实物理响应。
 UE collision 的核心设置通常在 `UPrimitiveComponent` 上，而不是直接设置在 `AActor` 上；Actor 只是持有参与碰撞的 primitive component，例如 capsule、mesh、box、sphere。
 
-| Query | 含义 | 典型用途 |
-| --- | --- | --- |
-| LineTrace | 一条线从 start 到 end | 射击、交互视线、点击、视线检测 |
-| Sweep | 一个形状从 start 移动到 end | 近战轨迹、粗射线、高速命中检测 |
-| Overlap | 一个形状放在某位置查重叠 | 爆炸范围、触发区、拾取范围 |
+| Query     | 含义                        | 典型用途                       |
+| --------- | --------------------------- | ------------------------------ |
+| LineTrace | 一条线从 start 到 end       | 射击、交互视线、点击、视线检测 |
+| Sweep     | 一个形状从 start 移动到 end | 近战轨迹、粗射线、高速命中检测 |
+| Overlap   | 一个形状放在某位置查重叠    | 爆炸范围、触发区、拾取范围     |
 
 三条常用维度：
 
-| 维度 | 设置 API | 查询 API / 形式 | 含义 |
-| --- | --- | --- | --- |
-| Object Type | `SetCollisionObjectType(...)` | `ByObjectType(...)` | 按“目标是什么类型”筛对象，例如 Pawn、WorldStatic、PhysicsBody |
-| Channel Response | `SetCollisionResponseToChannel(...)` | `ByChannel(...)` | 用某个 trace channel 发问，目标按自身 response 回答 |
-| Profile | `SetCollisionProfileName(...)` | `ByProfile(...)` | 套用 / 使用一整套 collision preset，通常包含 `CollisionEnabled`、`ObjectType`、`ResponseToChannels` |
+| 维度             | 设置 API                             | 查询 API / 形式     | 含义                                                                                                |
+| ---------------- | ------------------------------------ | ------------------- | --------------------------------------------------------------------------------------------------- |
+| Object Type      | `SetCollisionObjectType(...)`        | `ByObjectType(...)` | 按“目标是什么类型”筛对象，例如 Pawn、WorldStatic、PhysicsBody                                       |
+| Channel Response | `SetCollisionResponseToChannel(...)` | `ByChannel(...)`    | 用某个 trace channel 发问，目标按自身 response 回答                                                 |
+| Profile          | `SetCollisionProfileName(...)`       | `ByProfile(...)`    | 套用 / 使用一整套 collision preset，通常包含 `CollisionEnabled`、`ObjectType`、`ResponseToChannels` |
 
 - Sweep 有运动路径，适合“移动中的形状检测”；Overlap 只有当前范围，适合“范围内有什么”
 - `Single` 返回一个主要命中；`Multi` 返回多个命中 / overlap 结果
@@ -717,13 +717,13 @@ UE collision 的核心设置通常在 `UPrimitiveComponent` 上，而不是直�
 
 常见 channel：
 
-| Channel | 用途 |
-| --- | --- |
-| `Visibility` | 通用视线 / 点击 / 简单交互 |
-| `Camera` | 相机阻挡、spring arm 避障 |
-| `Interact` | 自定义玩家交互检测 |
-| `WeaponTrace` | 自定义武器 / 近战命中检测 |
-| `AISight` | 自定义 AI 视线遮挡 |
+| Channel       | 用途                       |
+| ------------- | -------------------------- |
+| `Visibility`  | 通用视线 / 点击 / 简单交互 |
+| `Camera`      | 相机阻挡、spring arm 避障  |
+| `Interact`    | 自定义玩家交互检测         |
+| `WeaponTrace` | 自定义武器 / 近战命中检测  |
+| `AISight`     | 自定义 AI 视线遮挡         |
 
 排查 trace 打不到对象时优先检查：debug draw、start/end、channel、目标 collision enabled、目标 response、ignored actors、目标组件是否有 collision。
 
@@ -731,13 +731,13 @@ UE collision 的核心设置通常在 `UPrimitiveComponent` 上，而不是直�
 
 UE gameplay 更新优先考虑事件驱动，其次 timer，最后才是 tick。
 
-| 机制 | 用途 | 注意 |
-| --- | --- | --- |
-| `Tick()` / `TickComponent()` | 每帧 gameplay 更新，如相机平滑、追踪、插值 | 不要每帧全局搜索 / 低频检查 |
-| `FTimerManager` | 延迟 / 周期执行，如 cooldown、回血、延迟开门 | 依赖 `World`，不要在 constructor 用 |
-| Latent Action | Blueprint 流程等待，如 `Delay` | 不阻塞线程，依赖 world context |
-| Async Task | 后台计算 / IO / 数据解析 | 修改 UObject / Actor 前回到 game thread |
-| Tick Group | 控制 tick 相对 physics / camera 的顺序 | 相机抖动、物理后读位置时检查 |
+| 机制                         | 用途                                         | 注意                                    |
+| ---------------------------- | -------------------------------------------- | --------------------------------------- |
+| `Tick()` / `TickComponent()` | 每帧 gameplay 更新，如相机平滑、追踪、插值   | 不要每帧全局搜索 / 低频检查             |
+| `FTimerManager`              | 延迟 / 周期执行，如 cooldown、回血、延迟开门 | 依赖 `World`，不要在 constructor 用     |
+| Latent Action                | Blueprint 流程等待，如 `Delay`               | 不阻塞线程，依赖 world context          |
+| Async Task                   | 后台计算 / IO / 数据解析                     | 修改 UObject / Actor 前回到 game thread |
+| Tick Group                   | 控制 tick 相对 physics / camera 的顺序       | 相机抖动、物理后读位置时检查            |
 
 常见判断：
 
@@ -761,11 +761,11 @@ UE gameplay 更新优先考虑事件驱动，其次 timer，最后才是 tick。
 
 状态机用于管理互斥流程状态；`Gameplay Tags` 用于可叠加分类和条件。
 
-| 状态对象 | 示例状态 | 常见归属 |
-| --- | --- | --- |
-| Enemy | `Idle` / `Patrol` / `Chase` / `Attack` / `Dead` | enemy actor / AI component / `StateTree` |
-| Player | `Normal` / `Attacking` / `Interacting` / `Dead` | character / combat component |
-| GameFlow | `MainMenu` / `Loading` / `Playing` / `Paused` / `Won` / `Lost` | `GameMode` / `GameInstanceSubsystem` |
+| 状态对象 | 示例状态                                                       | 常见归属                                 |
+| -------- | -------------------------------------------------------------- | ---------------------------------------- |
+| Enemy    | `Idle` / `Patrol` / `Chase` / `Attack` / `Dead`                | enemy actor / AI component / `StateTree` |
+| Player   | `Normal` / `Attacking` / `Interacting` / `Dead`                | character / combat component             |
+| GameFlow | `MainMenu` / `Loading` / `Playing` / `Paused` / `Won` / `Lost` | `GameMode` / `GameInstanceSubsystem`     |
 
 最小状态机应集中切换入口：
 
@@ -822,15 +822,15 @@ Input Attack
 
 Material graph 定义 shader；Material Instance 覆盖已暴露参数；Dynamic Material Instance 在 runtime 修改参数。
 
-| 维度 | 作用 / 选择 |
-| --- | --- |
-| `Material Domain` | `Surface` 最常用；另有 `Post Process`、`Deferred Decal`、`UI` 等 |
-| `Blend Mode` | `Opaque` 成本最低；`Masked` 做裁剪；`Translucent` 成本高且有排序 / lighting 限制 |
-| `Shading Model` | 选择光照模型，如 `Default Lit`、`Unlit`、`Subsurface`、`Clear Coat` |
-| Material Instance | 复用父材质并覆盖 scalar / vector / texture parameter，不改 graph |
-| Dynamic Material Instance | runtime 参数变化，如受击闪烁、溶解、血条、交互高亮 |
-| `Static Switch Parameter` | 产生 shader permutation；适合功能分支，过多会增加编译和包体成本 |
-| `Material Parameter Collection` | 跨多个材质共享全局参数，如天气、时间、风向 |
+| 维度                            | 作用 / 选择                                                                      |
+| ------------------------------- | -------------------------------------------------------------------------------- |
+| `Material Domain`               | `Surface` 最常用；另有 `Post Process`、`Deferred Decal`、`UI` 等                 |
+| `Blend Mode`                    | `Opaque` 成本最低；`Masked` 做裁剪；`Translucent` 成本高且有排序 / lighting 限制 |
+| `Shading Model`                 | 选择光照模型，如 `Default Lit`、`Unlit`、`Subsurface`、`Clear Coat`              |
+| Material Instance               | 复用父材质并覆盖 scalar / vector / texture parameter，不改 graph                 |
+| Dynamic Material Instance       | runtime 参数变化，如受击闪烁、溶解、血条、交互高亮                               |
+| `Static Switch Parameter`       | 产生 shader permutation；适合功能分支，过多会增加编译和包体成本                  |
+| `Material Parameter Collection` | 跨多个材质共享全局参数，如天气、时间、风向                                       |
 
 - `Texture Sample` 通常配合 `UV` / `TexCoord`；`Normal Map` 需要接到 `Normal`，注意 texture compression / sRGB
 - 性能重点看 shader instructions、texture sample 数、overdraw、translucency、复杂分支和过多 permutation
@@ -877,22 +877,22 @@ F0
 
 PBR 重要输入：
 
-| Property | 要点 |
-| --- | --- |
-| `Base Color` | 表面基础颜色，不包含光照 |
-| `Metallic` | 金属度，通常非金属 `0`、金属 `1`，少用中间值 |
-| `Specular` | 非金属高光强度，默认 `0.5`，多数情况不用改 |
-| `Roughness` | 粗糙度；`0` 镜面，`1` 漫反射，最常调的质感参数 |
-| `Normal` | 法线贴图输入，增加表面细节，不改变真实几何 |
-| `Emissive Color` | 自发光颜色，可用于发光物、UI、Unlit 效果 |
-| `Opacity` | 半透明透明度，仅 `Translucent` 等 blend mode 有效 |
-| `Opacity Mask` | 裁剪透明度，用于 `Masked`，常配合 foliage / hair |
-| `Ambient Occlusion` | 局部环境遮蔽，增强缝隙暗部 |
-| `World Position Offset` | 顶点阶段偏移几何，常用于风吹草、波浪、简单变形 |
-| `Refraction` | 折射，常用于玻璃 / 水，通常依赖 translucent |
-| `Pixel Depth Offset` | 像素深度偏移，可软化交界，但可能影响深度相关效果 |
-| `Subsurface Color` | 次表面散射颜色，需对应 `Shading Model` |
-| `Clear Coat` | 额外清漆层强度，车漆、涂层材质常用 |
+| Property                | 要点                                              |
+| ----------------------- | ------------------------------------------------- |
+| `Base Color`            | 表面基础颜色，不包含光照                          |
+| `Metallic`              | 金属度，通常非金属 `0`、金属 `1`，少用中间值      |
+| `Specular`              | 非金属高光强度，默认 `0.5`，多数情况不用改        |
+| `Roughness`             | 粗糙度；`0` 镜面，`1` 漫反射，最常调的质感参数    |
+| `Normal`                | 法线贴图输入，增加表面细节，不改变真实几何        |
+| `Emissive Color`        | 自发光颜色，可用于发光物、UI、Unlit 效果          |
+| `Opacity`               | 半透明透明度，仅 `Translucent` 等 blend mode 有效 |
+| `Opacity Mask`          | 裁剪透明度，用于 `Masked`，常配合 foliage / hair  |
+| `Ambient Occlusion`     | 局部环境遮蔽，增强缝隙暗部                        |
+| `World Position Offset` | 顶点阶段偏移几何，常用于风吹草、波浪、简单变形    |
+| `Refraction`            | 折射，常用于玻璃 / 水，通常依赖 translucent       |
+| `Pixel Depth Offset`    | 像素深度偏移，可软化交界，但可能影响深度相关效果  |
+| `Subsurface Color`      | 次表面散射颜色，需对应 `Shading Model`            |
+| `Clear Coat`            | 额外清漆层强度，车漆、涂层材质常用                |
 
 ## Editor
 
@@ -900,29 +900,76 @@ PBR 重要输入：
 
 ![ue_ui](images/ue_ui.png)
 
-只保留 UE 特有或高频定位操作；通用选择、复制、撤销等快捷键不记录。
+### Level Editor
 
-| 操作 | 快捷键 |
-| --- | --- |
-| 飞行导航 | `RMB + W/A/S/D`，`Q/E` 下降 / 上升 |
-| 聚焦选中 | `F` |
-| 围绕枢轴旋转 | `Alt + LMB + drag` |
-| Move / Rotate / Scale | `W` / `E` / `R`，`Space` 切换 |
-| 顶点 / 地面吸附 | 移动时 `V` / `End` |
-| Game View | `G` |
-| Wireframe / Unlit / Lit | `Alt + 2/3/4` |
-| Content Browser 定位 / 打开资产 | `Ctrl + B` / `Ctrl + E` |
+![ue_ui](images/ue_ui.png)
+
+**Viewport 导航**
+
+- `LMB + drag`: 前后移动 / 左右旋转
+- `MMB + drag`: 平移镜头
+- `RMB + drag`: 自由旋转镜头
+- `RMB + W/A/S/D`: WASD 飞行模式
+- `RMB + Q/E`: 下降 / 上升
+- `RMB + C/Z`: 拉远 / 拉近 FOV
+- `F`: 聚焦选中对象
+- `Alt + LMB + drag`: 围绕枢轴旋转
+- `Alt + MMB + drag`: 平移
+- `Alt + RMB + drag`: 推拉缩放
+
+**变换工具**
+
+- `Q`: 选择
+- `W`: 移动
+- `E`: 旋转
+- `R`: 缩放
+- `Space`: 切换变换工具（Move / Rotate / Scale）
+- `V`: 顶点吸附（移动时按住）
+- `End`: 吸附到地面
+
+**视图切换**
+
+- `G`: Game View，隐藏 editor-only 可视元素
+- `Alt + 2`: Wireframe
+- `Alt + 3`: Unlit
+- `Alt + 4`: Lit
+- `Ctrl + R`: 切换 Realtime
+- `F11`: Viewport 全屏
+
+**选择**
+
+- `LMB click`: 选中 Actor
+- `Ctrl + LMB click`: 切换选中 / 取消选中
+- `Shift + LMB click`: 追加选中
+- `Ctrl + Alt + LMB drag`: 框选
+- `Ctrl + A`: 全选
+- `Esc`: 取消全部选中
+- `Ctrl + Alt + A`: 选中所有同类型 Actor
+
+**编辑**
+
+- `Ctrl + Z`: 撤销
+- `Ctrl + Y`: 重做
+- `Ctrl + C/V/X`: 复制 / 粘贴 / 剪切
+- `Ctrl + D`: Duplicate
+- `Delete`: 删除
+- `H`: 隐藏选中
+- `Ctrl + H`: 显示全部
+- `Ctrl + B`: 在 Content Browser 中定位
+- `Ctrl + E`: 打开选中资源 / 编辑相关资产
+- `Ctrl + G`: Group
+- `Shift + G`: Ungroup
 
 ### Node Graph
 
 适用于 Blueprint Graph、Material Graph 等多数节点编辑器。
 
-| 操作 | 快捷键 / 方式 |
-| --- | --- |
-| 按 pin 类型创建节点 | 从 pin 拖到空白处 |
-| 断开 / 移动 pin 的全部连接 | `Alt + LMB` / `Ctrl + LMB drag` |
-| 当前 graph / 全项目查找 | `Ctrl + F` / `Ctrl + Shift + F` |
-| Compile / breakpoint | `F7` / `F9` |
-| Blueprint 变量 Get / Set | `Ctrl + drag` / `Alt + drag` |
-| 常用 Blueprint 节点 | `B/S/D/P + LMB`: Branch / Sequence / Delay / BeginPlay |
-| 常用 Material 节点 | `1/2/3/4/S/V/T/M/L/A + LMB`: Constant / Parameter / Texture / Math |
+| 操作                       | 快捷键 / 方式                                                      |
+| -------------------------- | ------------------------------------------------------------------ |
+| 按 pin 类型创建节点        | 从 pin 拖到空白处                                                  |
+| 断开 / 移动 pin 的全部连接 | `Alt + LMB` / `Ctrl + LMB drag`                                    |
+| 当前 graph / 全项目查找    | `Ctrl + F` / `Ctrl + Shift + F`                                    |
+| Compile / breakpoint       | `F7` / `F9`                                                        |
+| Blueprint 变量 Get / Set   | `Ctrl + drag` / `Alt + drag`                                       |
+| 常用 Blueprint 节点        | `B/S/D/P + LMB`: Branch / Sequence / Delay / BeginPlay             |
+| 常用 Material 节点         | `1/2/3/4/S/V/T/M/L/A + LMB`: Constant / Parameter / Texture / Math |
